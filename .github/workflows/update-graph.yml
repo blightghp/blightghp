@@ -1,0 +1,32 @@
+name: Atualizar Gráfico Animado
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Roda todo dia à meia noite
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-graph:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+
+      - name: Run Animation Script
+        run: node scripts/animate_graph.cjs
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/activity_flow.svg
+          git commit -m "chore: atualizar gráfico animado" || exit 0
+          git push

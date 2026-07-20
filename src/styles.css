@@ -1,0 +1,337 @@
+/* Reset agressivo padrão. Sem margens fantasmas atrapalhando o canvas. */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+:root {
+  font-family: 'Outfit', sans-serif;
+  color-scheme: dark;
+  background-color: #000000;
+  color: #e6edf3;
+  overflow: hidden;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: #000000;
+  position: relative;
+}
+
+/* Container do Canvas WebGL - O palco principal da simulação */
+#canvas-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+/* Painel Glassmorphism - Estética limpa e funcional, refração de vidro no blur */
+.glass-panel {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  width: 320px;
+  max-height: calc(100vh - 50px);
+  overflow-y: auto;
+  z-index: 10;
+  
+  background: rgba(10, 15, 30, 0.65);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(0, 160, 255, 0.25);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.8),
+              0 0 20px 0 rgba(0, 140, 255, 0.1);
+              
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel:hover {
+  border-color: rgba(0, 180, 255, 0.4);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.9),
+              0 0 30px 2px rgba(0, 140, 255, 0.15);
+}
+
+/* Customizando a barra de rolagem pra não ficar aquela coisa feia do navegador */
+.glass-panel::-webkit-scrollbar {
+  width: 4px;
+}
+.glass-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.glass-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 140, 255, 0.3);
+  border-radius: 2px;
+}
+
+/* Cabeçalho do Painel */
+.panel-header {
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #ffffff 30%, #58a6ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 15px rgba(88, 166, 255, 0.15);
+}
+
+.subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #58a6ff;
+  letter-spacing: 1px;
+  margin-top: 4px;
+  opacity: 0.85;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 140, 255, 0), rgba(0, 140, 255, 0.4) 20%, rgba(0, 140, 255, 0.4) 80%, rgba(0, 140, 255, 0));
+  margin: 18px 0;
+}
+
+.section-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(230, 237, 243, 0.5);
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+/* Controles e Sliders - Mantendo a legibilidade dos dados empíricos */
+.control-group {
+  margin-bottom: 16px;
+}
+
+.control-group label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: rgba(230, 237, 243, 0.85);
+  margin-bottom: 8px;
+}
+
+.val-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #58a6ff;
+  background: rgba(0, 140, 255, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 140, 255, 0.2);
+}
+
+/* Um trato fino nos inputs de range pra ficarem elegantes */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  transition: background 0.3s;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 5px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  background: #58a6ff;
+  cursor: pointer;
+  margin-top: -5px;
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 10px rgba(0, 140, 255, 0.6);
+  transition: transform 0.15s, background-color 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: #8cc2ff;
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.3);
+}
+
+/* Switch Toggles pra ligar e desligar áreas do cérebro na força bruta */
+.toggle-group {
+  margin-bottom: 12px;
+}
+
+.switch-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: rgba(230, 237, 243, 0.85);
+}
+
+.switch-container input {
+  display: none;
+}
+
+.slider {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  transition: background-color 0.3s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.switch-container input:checked + .slider {
+  background-color: #007acc;
+  box-shadow: 0 0 8px rgba(0, 122, 204, 0.4);
+}
+
+.switch-container input:checked + .slider::before {
+  transform: translateX(16px);
+}
+
+/* Rodapé do painel - Dicas rápidas de navegação */
+.panel-footer {
+  font-size: 10px;
+  color: rgba(230, 237, 243, 0.4);
+  line-height: 1.4;
+  text-align: center;
+}
+/* Overlay Matemático do Cálculo Bayesiano - Posicionado estrategicamente sem cobrir a rede */
+.math-overlay {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 800px;
+  background: rgba(10, 15, 30, 0.4);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(0, 160, 255, 0.2);
+  border-radius: 12px;
+  padding: 24px 32px;
+  z-index: 10;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 140, 255, 0.08);
+  transition: all 0.4s ease;
+}
+
+.math-overlay:hover {
+  background: rgba(10, 15, 30, 0.6);
+  border-color: rgba(0, 180, 255, 0.4);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 140, 255, 0.15);
+}
+
+.math-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #8cc2ff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+.math-formula {
+  font-size: 22px;
+  color: #ffffff;
+  margin: 16px 0;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(0, 140, 255, 0.4);
+}
+
+.math-desc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: rgba(230, 237, 243, 0.7);
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.bayesian-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.stat-row.highlight {
+  color: #80c8ff;
+  font-weight: bold;
+  border-bottom: none;
+  font-size: 0.95rem;
+}
+.intensity-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+}
+.glass-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: white;
+  padding: 0.5rem 0.8rem;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(128, 200, 255, 0.8);
+  box-shadow: 0 0 10px rgba(128, 200, 255, 0.4);
+}
+.intensity-level {
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #4aaeff;
+}

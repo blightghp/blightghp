@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulador Bayesiano Formalista</title>
+    <!-- Importando as fontes pra manter a elegância visual (Outfit & JetBrains Mono) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script type="module" src="/src/main.ts" defer></script>
+    
+    <!-- Injetando o MathJax no motor pra renderizar os modelos bayesianos com fidelidade de paper científico -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+  </head>
+
+  <body>
+    <!-- O Canvas WebGL sagrado onde a mágica acontece -->
+    <div id="canvas-container"></div>
+
+    <!-- Interface flutuante com aquele efeito Glassmorphism refinado -->
+    <div class="glass-panel" id="ui-panel">
+      <div class="panel-header">
+        <h1 class="title">SINAPSE FORMALISTA</h1>
+        <div class="subtitle">Análise Computacional 3D</div>
+      </div>
+      
+      <div class="divider"></div>
+
+      <!-- Controles dinâmicos da geometria -->
+      <div class="control-group">
+        <label for="rotation-speed">
+          <span>Velocidade de Rotação</span>
+          <span class="val-display" id="rot-speed-val">1.0x</span>
+        </label>
+        <input type="range" id="rotation-speed" min="0" max="3" step="0.1" value="1.0" />
+      </div>
+
+      <div class="control-group">
+        <label for="pulse-speed">
+          <span>Pulsos Elétricos (Latência)</span>
+          <span class="val-display" id="pulse-speed-val">1.0x</span>
+        </label>
+        <input type="range" id="pulse-speed" min="0.1" max="3.0" step="0.1" value="1.0" />
+      </div>
+
+      <div class="control-group">
+        <label for="pulse-count">
+          <span>Frequência Sináptica (Hz)</span>
+          <span class="val-display" id="pulse-count-val">120</span>
+        </label>
+        <input type="range" id="pulse-count" min="10" max="300" step="10" value="120" />
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Ajustes pesados de pós-processamento GPU -->
+      <div class="section-title">SHADER BLOOM (NEON)</div>
+
+      <div class="control-group">
+        <label for="bloom-strength">
+          <span>Intensidade Fotônica</span>
+          <span class="val-display" id="bloom-strength-val">1.5</span>
+        </label>
+        <input type="range" id="bloom-strength" min="0" max="4" step="0.1" value="1.5" />
+      </div>
+
+      <div class="control-group">
+        <label for="bloom-radius">
+          <span>Espalhamento do Brilho</span>
+          <span class="val-display" id="bloom-radius-val">0.6</span>
+        </label>
+        <input type="range" id="bloom-radius" min="0" max="2" step="0.05" value="0.6" />
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Dissecando a anatomia cerebral estruturalmente -->
+      <div class="section-title">DISSECAÇÃO ANATÔMICA</div>
+      
+      <div class="toggle-group">
+        <label class="switch-container">
+          <input type="checkbox" id="toggle-left-hemi" checked />
+          <span class="slider"></span>
+          <span>Hemisfério Esquerdo</span>
+        </label>
+      </div>
+
+      <div class="toggle-group">
+        <label class="switch-container">
+          <input type="checkbox" id="toggle-right-hemi" checked />
+          <span class="slider"></span>
+          <span>Hemisfério Direito</span>
+        </label>
+      </div>
+
+      <div class="toggle-group">
+        <label class="switch-container">
+          <input type="checkbox" id="toggle-cerebellum" checked />
+          <span class="slider"></span>
+          <span>Cerebelo (Inferência Motor)</span>
+        </label>
+      </div>
+
+      <div class="toggle-group">
+        <label class="switch-container">
+          <input type="checkbox" id="toggle-stem" checked />
+          <span class="slider"></span>
+          <span>Tronco Cerebral</span>
+        </label>
+      </div>
+
+      <div class="divider"></div>
+      
+      <!-- Footerzinho discreto -->
+      <div class="panel-footer">
+        Análise algorítmica interativa em tempo real. Segure para rotacionar, role para aproximar.
+      </div>
+    </div>
+    
+    <!-- HUD Bayesiano interativo -->
+    <div class="glass-panel math-overlay" id="bayesian-hud">
+      <div class="math-title">Inferência Bayesiana de Atividade Neural</div>
+      <div class="math-formula">
+        $$ P(\Theta | D) = \frac{P(D | \Theta) P(\Theta)}{P(D)} $$
+      </div>
+      
+      <div class="bayesian-stats">
+        <div class="stat-row">
+          <span>Prior $P(\Theta)$</span>
+          <span id="prior-val">0.50</span>
+        </div>
+        <div class="stat-row">
+          <span>Likelihood $P(D | \Theta)$</span>
+          <span id="likelihood-val">0.75</span>
+        </div>
+        <div class="stat-row highlight">
+          <span>Posterior $P(\Theta | D)$</span>
+          <span id="posterior-val">0.82</span>
+        </div>
+      </div>
+
+      <div class="intensity-controls">
+        <button id="btn-intensity-down" class="glass-btn">[-] Reduzir Estímulo</button>
+        <div class="intensity-level">Nível de Excitação: <span id="excitation-val">Alto</span></div>
+        <button id="btn-intensity-up" class="glass-btn">[+] Aumentar Estímulo</button>
+      </div>
+      
+      <div class="math-desc">
+        Ajuste a intensidade dos estímulos. O modelo atualiza as crenças probabilísticas da rede sináptica em tempo real, refletindo na densidade e velocidade dos relâmpagos neurais.
+      </div>
+    </div>
+  </body>
+</html>
