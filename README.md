@@ -18,7 +18,7 @@
 
 [![Sinapse Formalista — Simulador Neural Interativo 3D](assets/brain.gif?v=2)](https://blightghp.github.io/blightghp/)
 
-<sub>▲ Rede neural tempestuosa animada — clique para abrir o simulador interativo com HUD Bayesiano</sub>
+<sub>▲ clique para abrir o simulador interativo</sub>
 
 <br>
 
