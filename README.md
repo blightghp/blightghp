@@ -1,10 +1,6 @@
 <div align="center">
 
-<samp>TO THE TRAINED EYE, THERE ARE NO COINCIDENCES.</samp>
-
-# Gabriel Pinheiro · blightghp
-
-**Sistemas nativos, interfaces precisas e modelos que transformam dados em percepção.**
+<samp>TO THE TRAINED EYE, THERE ARE NO COINCIDENCES...</samp>
 
 [![Validar ecossistema](https://github.com/blightghp/blightghp/actions/workflows/ci.yml/badge.svg)](https://github.com/blightghp/blightghp/actions/workflows/ci.yml)
 [![GitHub Pages](https://github.com/blightghp/blightghp/actions/workflows/deploy.yml/badge.svg)](https://github.com/blightghp/blightghp/actions/workflows/deploy.yml)
@@ -13,7 +9,7 @@
   <img src="assets/brain.gif?v=3" width="760" alt="Cérebro neural 3D girando lentamente enquanto impulsos sinápticos percorrem conexões azuis" />
 </a>
 
-<sub>▲ Clique no cérebro para explorar o motor neural 3D — órbita, camadas anatômicas, bloom e inferência Bayesiana em tempo real.</sub>
+<sub>▲ Clique no cérebro para explorar o motor neural 3D para ajustar a órbita, as camadas anatômicas, o bloom e fazer a inferência Bayesiana em tempo real para modulação sináptica...</sub>
 
 </div>
 
@@ -21,7 +17,7 @@
 
 ### Um ecossistema, duas camadas, uma topologia
 
-O experimento acima não é um vídeo decorativo. O mesmo grafo procedural alimenta a experiência web, o GIF reproduzível do perfil e o aplicativo desktop. A interface TypeScript conversa com um runtime Rust via Tauri; entradas são validadas por schema e invariantes visuais são protegidos por Vitest.
+A "brincadeira" acima é a prova do potencial de uso do ecossistema Rust aliado à comunicação com sistemas web... O mesmo grafo procedural alimenta a experiência web, o GIF reproduzível do perfil e o aplicativo desktop. O que eu fiz? A interface TypeScript conversa com um runtime Rust via Tauri e as entradas são validadas por schema, enquanto invariantes visuais são protegidos por Vitest.
 
 | Camada | Tecnologia | Papel no sistema |
 | :-- | :-- | :-- |
@@ -51,12 +47,30 @@ evidence → Zod schema → TypeScript state → Three.js graph
                        Vitest + Cargo + GitHub Pages
 ```
 
-### O que está vivo aqui
+## Sobre mim
 
-- **Cérebro procedural determinístico:** hemisférios, cerebelo, tronco e corpo caloso emergem de funções matemáticas com seed estável.
-- **Sinais que seguem a rede:** cada luz percorre arestas reais e carrega uma trilha sináptica, sem partículas soltas fingindo conectividade.
-- **Mesmo motor, múltiplas superfícies:** navegador no GitHub Pages, WebView do Tauri e captura automatizada do hero do perfil.
-- **Fundo adaptativo:** o hero usa transparência indexada e preserva contraste nos temas claro e escuro do GitHub.
+> *"Tenho interesse especial pelos pontos de encontro entre lógica, linguagem, biologia e computação. É nesse espaço interdisciplinar que desenvolvo meus projetos, pesquisas e experimentos."*
+
+Sou pesquisador por vocação e desenvolvedor pela necessidade de transformar ideias em artefatos verificáveis. Minha curiosidade percorre diferentes domínios do conhecimento — linguística, psicologia, neurociências, lógica, matemática, ciência de dados e engenharia de software — sempre guiada pela mesma pergunta: **como sistemas complexos representam informação, produzem significado e aprendem**.
+
+Tenho especial apreço pelo rigor formal. A lógica, a matemática, a estatística e a arquitetura de software fornecem os instrumentos necessários para construir hipóteses explícitas, modelos consistentes e inferências reproduzíveis. Ao mesmo tempo, acredito que nenhum formalismo é suficiente quando isolado da realidade que pretende descrever. Por isso, procuro integrar esses modelos à riqueza da linguagem, à dinâmica dos sistemas biológicos e às múltiplas formas pelas quais a cognição humana emerge e se transforma.
+
+Vejo a pesquisa como um processo de síntese entre precisão e criatividade. Interessa-me construir pontes entre abstração matemática e fenômenos concretos, entre algoritmos e comportamento, entre teoria e implementação. Cada projeto representa uma tentativa de compreender um aspecto dessa arquitetura mais ampla, em que computação, cognição e linguagem deixam de ser campos independentes para formar diferentes perspectivas sobre um mesmo sistema.
+
+Este perfil reúne parte dessa trajetória. Os repositórios aqui publicados refletem meu interesse por desenvolvimento de software, modelagem formal, visualização de sistemas complexos, psicometria, linguística teórica, neurociências e ciência de dados. Mais do que produtos acabados, eles constituem laboratórios de investigação, nos quais novas hipóteses são continuamente formuladas, testadas e refinadas.
+
+---
+
+> **Áreas de interesse**
+>
+> - Lógica formal e filosofia da lógica
+> - Linguística teórica e gramática gerativa
+> - Psicometria, neuropsicologia e aprendizagem
+> - Ciência de dados e modelagem estatística
+> - Engenharia de software e arquitetura de sistemas
+> - Inteligência Artificial e sistemas complexos
+> - Matemática aplicada e teoria da computação
+> - Neurociências cognitivas e biologia da cognição
 
 <div align="center">
   <img src="assets/activity_flow.svg?v=3" width="850" alt="Fluxo longitudinal de contribuições no GitHub" />
