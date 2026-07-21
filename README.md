@@ -49,15 +49,9 @@ evidence → Zod schema → TypeScript state → Three.js graph
 
 ## Sobre mim
 
-> *"Tenho interesse especial pelos pontos de encontro entre lógica, linguagem, biologia e computação. É nesse espaço interdisciplinar que desenvolvo meus projetos, pesquisas e experimentos."*
+> *"Interesso-me pelas regiões de fronteira em que a lógica encontra a linguagem, a computação encontra a biologia e o rigor formal precisa aprender a conviver com a ambiguidade, a historicidade e a complexidade dos fenômenos humanos."*
 
-Sou pesquisador por vocação e desenvolvedor pela necessidade de transformar ideias em artefatos verificáveis. Minha curiosidade percorre diferentes domínios do conhecimento — linguística, psicologia, neurociências, lógica, matemática, ciência de dados e engenharia de software — sempre guiada pela mesma pergunta: **como sistemas complexos representam informação, produzem significado e aprendem**.
-
-Tenho especial apreço pelo rigor formal. A lógica, a matemática, a estatística e a arquitetura de software fornecem os instrumentos necessários para construir hipóteses explícitas, modelos consistentes e inferências reproduzíveis. Ao mesmo tempo, acredito que nenhum formalismo é suficiente quando isolado da realidade que pretende descrever. Por isso, procuro integrar esses modelos à riqueza da linguagem, à dinâmica dos sistemas biológicos e às múltiplas formas pelas quais a cognição humana emerge e se transforma.
-
-Vejo a pesquisa como um processo de síntese entre precisão e criatividade. Interessa-me construir pontes entre abstração matemática e fenômenos concretos, entre algoritmos e comportamento, entre teoria e implementação. Cada projeto representa uma tentativa de compreender um aspecto dessa arquitetura mais ampla, em que computação, cognição e linguagem deixam de ser campos independentes para formar diferentes perspectivas sobre um mesmo sistema.
-
-Este perfil reúne parte dessa trajetória. Os repositórios aqui publicados refletem meu interesse por desenvolvimento de software, modelagem formal, visualização de sistemas complexos, psicometria, linguística teórica, neurociências e ciência de dados. Mais do que produtos acabados, eles constituem laboratórios de investigação, nos quais novas hipóteses são continuamente formuladas, testadas e refinadas.
+Atuo entre pesquisa e desenvolvimento, articulando linguística, cognição, aprendizagem, ciência de dados e engenharia de software. Busco transformar perguntas complexas em modelos, sistemas e experimentos sem reduzir os fenômenos àquilo que pode ser facilmente mensurado, preservando, sempre que possível, o equilíbrio entre precisão formal, sensibilidade interpretativa e abertura interdisciplinar.
 
 ---
 
