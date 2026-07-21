@@ -1,129 +1,88 @@
-import { createServer } from 'vite';
-import puppeteer from 'puppeteer';
-import GIFEncoder from 'gif-encoder-2';
-import fs from 'fs';
-import path from 'path';
-import { PNG } from 'pngjs';
-import { fileURLToPath } from 'url';
+import { createServer } from "vite";
+import puppeteer from "puppeteer";
+import GIFEncoder from "gif-encoder-2";
+import fs from "node:fs";
+import path from "node:path";
+import { PNG } from "pngjs";
+import { fileURLToPath } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const directory = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.resolve(directory, "..");
+const outputPath = path.join(projectRoot, "assets", "brain.gif");
+const width = 760;
+const height = 430;
+const frameCount = 60;
+const frameDelay = 120;
+const loopDuration = (frameCount * frameDelay) / 1000;
+const transparentKey = 0x000000;
 
-// A cena usa AdditiveBlending (exige fundo preto de verdade pra não estourar as cores),
-// então em vez de depender do canal alpha do WebGL/headless Chrome (instável em ambientes
-// headless com renderização por software), a gente captura em preto sólido e recorta por
-// luminância: qualquer pixel bem próximo do preto vira transparente no GIF. O resultado se
-// adapta a qualquer fundo (claro ou escuro) em vez de ficar preso numa cor fixa.
-const LUMA_THRESHOLD = 70;
-const TRANSPARENT_KEY = 0x000000;
-
-function keyOutBlack(png) {
-  const { data } = png;
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i], g = data[i + 1], b = data[i + 2];
-    if (Math.max(r, g, b) <= LUMA_THRESHOLD) {
-      // Zera RGB também: mantém o "vazio" byte-idêntico entre frames, o que deixa o
-      // otimizador de delta do encoder comprimir bem mais o fundo estático.
-      data[i] = 0;
-      data[i + 1] = 0;
-      data[i + 2] = 0;
-      data[i + 3] = 0;
+function keyOutBackground(png) {
+  for (let offset = 0; offset < png.data.length; offset += 4) {
+    const red = png.data[offset];
+    const green = png.data[offset + 1];
+    const blue = png.data[offset + 2];
+    if (Math.max(red, green, blue) <= 68) {
+      png.data[offset] = 0;
+      png.data[offset + 1] = 0;
+      png.data[offset + 2] = 0;
+      png.data[offset + 3] = 0;
     }
   }
-  return data;
+  return png.data;
 }
 
 async function generateGif() {
-  console.log("Starting Vite server...");
   const server = await createServer({
-    server: { port: 5173 },
-    root: path.resolve(__dirname, '..'),
+    root: projectRoot,
+    logLevel: "warn",
+    server: { host: "127.0.0.1", port: 4178 },
   });
   await server.listen();
 
-  console.log("Launching Puppeteer...");
   const browser = await puppeteer.launch({
-    headless: "new",
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-angle=swiftshader"],
   });
 
-  const page = await browser.newPage();
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width, height, deviceScaleFactor: 1 });
+    await page.goto("http://127.0.0.1:4178/", { waitUntil: "networkidle0" });
+    await page.waitForFunction(() => Boolean(window.__BRAIN_ENGINE__));
+    await page.evaluate(() => window.__BRAIN_ENGINE__.setCaptureMode(true));
 
-  const width = 640;
-  const height = 400;
-  await page.setViewport({ width, height, deviceScaleFactor: 1 });
+    const encoder = new GIFEncoder(width, height, "neuquant", true, frameCount);
+    encoder.start();
+    encoder.setRepeat(0);
+    encoder.setDelay(frameDelay);
+    encoder.setQuality(8);
+    encoder.setTransparent(transparentKey);
 
-  console.log("Navigating to app...");
-  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' });
-
-  await page.evaluate(() => {
-    document.getElementById('ui-panel').style.display = 'none';
-    document.getElementById('bayesian-hud').style.display = 'none';
-    document.body.style.background = '#000000';
-
-    // Maximiza a intensidade bayesiana (densidade de pulsos + bloom)
-    for (let i = 0; i < 5; i++) {
-      const btn = document.getElementById('btn-intensity-up');
-      if (btn) btn.click();
+    for (let frame = 0; frame < frameCount; frame += 1) {
+      const ratio = frame / frameCount;
+      await page.evaluate(
+        ({ time, rotation }) => window.__BRAIN_ENGINE__.capture(time, rotation),
+        {
+          time: ratio * loopDuration,
+          rotation: -0.62 + ratio * Math.PI * 2,
+        },
+      );
+      const screenshot = await page.screenshot({ type: "png", omitBackground: false });
+      encoder.addFrame(keyOutBackground(PNG.sync.read(screenshot)));
+      if ((frame + 1) % 12 === 0) console.log(`captured ${frame + 1}/${frameCount} frames`);
     }
 
-    // Congela a rotação macro: só os relâmpagos sinápticos se movem
-    const rotSlider = document.getElementById('rotation-speed');
-    if (rotSlider) {
-      rotSlider.value = '0';
-      rotSlider.dispatchEvent(new Event('input'));
-    }
-
-    // Bloom mais contido: mantém o brilho concentrado perto da rede em vez de um halo
-    // largo (que atrapalharia o recorte por luminância abaixo)
-    const setSlider = (id, val) => {
-      const el = document.getElementById(id);
-      if (el) { el.value = String(val); el.dispatchEvent(new Event('input')); }
-    };
-    setSlider('bloom-radius', 0.35);
-    setSlider('bloom-strength', 1.8);
-
-    // Período de pulso redondo (1.6s) pra fechar o loop do GIF sem costura visível
-    const pulseSlider = document.getElementById('pulse-speed');
-    if (pulseSlider) {
-      pulseSlider.value = String(0.625 / 0.35); // pSpeed = value * 0.35 -> 0.625 rad/s -> período de 1.6s
-      pulseSlider.dispatchEvent(new Event('input'));
-    }
-  });
-
-  // Tempo pro Bloom assentar e as mudanças de UI se propagarem
-  await new Promise(r => setTimeout(r, 1500));
-
-  console.log("Recording frames...");
-  const frameCount = 40; // 1.6s @ 25fps == 1 período completo de pulso -> loop contínuo
-  const encoder = new GIFEncoder(width, height, 'neuquant', false, frameCount);
-  encoder.start();
-  encoder.setRepeat(0);   // loop infinito
-  encoder.setDelay(40);   // 25fps
-  encoder.setQuality(10);
-  encoder.setPaletteSize(6); // 128 cores bastam pro azul/âmbar/branco sobre preto
-  encoder.setTransparent(TRANSPARENT_KEY);
-
-  for (let i = 0; i < frameCount; i++) {
-    const screenshot = await page.screenshot({ type: 'png' });
-    const png = PNG.sync.read(screenshot);
-    const rgba = keyOutBlack(png);
-    encoder.addFrame(rgba);
-
-    if (i % 10 === 0) console.log(`Captured frame ${i}/${frameCount}`);
+    encoder.finish();
+    const gif = encoder.out.getData();
+    fs.writeFileSync(outputPath, gif);
+    console.log(`saved ${outputPath} (${(gif.length / 1024 / 1024).toFixed(2)} MiB)`);
+  } finally {
+    await browser.close();
+    await server.close();
   }
-
-  encoder.finish();
-  const buffer = encoder.out.getData();
-
-  const outPath = path.resolve(__dirname, '../assets/brain.gif');
-  fs.writeFileSync(outPath, buffer);
-
-  console.log(`Saved GIF to ${outPath} (${(buffer.length / 1024 / 1024).toFixed(2)} MB)`);
-
-  await browser.close();
-  await server.close();
-  process.exit(0);
 }
 
-generateGif().catch(console.error);
+generateGif().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

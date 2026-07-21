@@ -1,309 +1,250 @@
-import * as THREE from 'three';
+import * as THREE from "three";
+
+export type BrainRegion = "leftHemi" | "rightHemi" | "cerebellum" | "stem";
 
 export interface BrainData {
   nodes: THREE.Vector3[];
   edges: [number, number][];
-  paths: number[][]; // Loops fechados simulando clusters de informação temporal
-  boltPaths: number[][]; // Subconjunto de trajetos longos destacados como raios âmbar
-  groups: {
-    leftHemi: number[];
-    rightHemi: number[];
-    cerebellum: number[];
-    stem: number[];
+  paths: number[][];
+  signalPaths: number[][];
+  regionByNode: BrainRegion[];
+  groups: Record<BrainRegion, number[]>;
+}
+
+export interface BrainGenerationOptions {
+  seed?: number;
+  surfaceNodesPerHemisphere?: number;
+  innerNodesPerHemisphere?: number;
+}
+
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+function mulberry32(seed: number): () => number {
+  let value = seed >>> 0;
+  return () => {
+    value += 0x6d2b79f5;
+    let result = value;
+    result = Math.imul(result ^ (result >>> 15), result | 1);
+    result ^= result + Math.imul(result ^ (result >>> 7), result | 61);
+    return ((result ^ (result >>> 14)) >>> 0) / 4294967296;
   };
 }
 
-// Gerador procedural da arquitetura neuro-algorítmica
-// Modelando a biologia através de restrições matemáticas e trigonométricas puras
-export function generateBrainData(): BrainData {
+function corticalScale(x: number, y: number, z: number): number {
+  const folds =
+    Math.sin(y * 15 + z * 5) * 0.045 +
+    Math.sin(z * 18 - x * 7) * 0.035 +
+    Math.cos((x + y) * 21) * 0.025;
+  return 1 + folds;
+}
+
+function addNode(
+  nodes: THREE.Vector3[],
+  groups: BrainData["groups"],
+  regionByNode: BrainRegion[],
+  region: BrainRegion,
+  point: THREE.Vector3,
+): void {
+  const index = nodes.push(point) - 1;
+  groups[region].push(index);
+  regionByNode[index] = region;
+}
+
+export function generateBrainData(options: BrainGenerationOptions = {}): BrainData {
+  const {
+    seed = 0x51a7c0de,
+    surfaceNodesPerHemisphere = 620,
+    innerNodesPerHemisphere = 110,
+  } = options;
+  const random = mulberry32(seed);
   const nodes: THREE.Vector3[] = [];
-  const leftHemi: number[] = [];
-  const rightHemi: number[] = [];
-  const cerebellum: number[] = [];
-  const stem: number[] = [];
-
-  // 1. Hemisférios Cerebrais (A sede das variáveis instantâneas V_t)
-  const makeHemisphere = (side: number): THREE.Vector3[] => {
-    const pts: THREE.Vector3[] = [];
-    const numTheta = 16;
-    const numPhi = 24;
-    
-    for (let i = 0; i < numTheta; i++) {
-      const theta = 0.08 + (Math.PI - 0.16) * (i / (numTheta - 1));
-      let phiSteps = Math.floor(numPhi * Math.sin(theta));
-      if (phiSteps < 4) phiSteps = 4;
-      
-      for (let j = 0; j < phiSteps; j++) {
-        const phi = -Math.PI / 2 + Math.PI * (j / (phiSteps - 1));
-        
-        // Modelando os sulcos e giros. Sem isso, seria só uma esfera genérica sem graça.
-        const r = 1.0 + 0.11 * Math.sin(15 * theta) * Math.cos(15 * phi) + 0.04 * Math.cos(6 * theta);
-        
-        const x_scale = 0.55;
-        const y_scale = 0.85;
-        const z_scale = 0.6;
-        
-        let x = side * (0.16 + x_scale * r * Math.sin(theta) * Math.cos(phi));
-        const y = y_scale * r * Math.sin(theta) * Math.sin(phi);
-        const z = 0.1 + z_scale * r * Math.cos(theta);
-        
-        // Fissura longitudinal - separando o formalismo do empirismo
-        if (side === 1 && x < 0.05) x = 0.05;
-        if (side === -1 && x > -0.05) x = -0.05;
-        
-        pts.push(new THREE.Vector3(x, y, z));
-      }
-    }
-    
-    // Matéria branca interna - onde as decisões em micromilésimos trafegam
-    for (let k = 0; k < 80; k++) {
-      const theta = Math.random() * (Math.PI - 0.2) + 0.1;
-      const phi = Math.random() * Math.PI - Math.PI / 2;
-      const r = Math.random() * 0.8 * (1.0 + 0.08 * Math.sin(10 * theta) * Math.cos(10 * phi));
-      
-      const x_scale = 0.55;
-      const y_scale = 0.85;
-      const z_scale = 0.6;
-      
-      let x = side * (0.16 + x_scale * r * Math.sin(theta) * Math.cos(phi));
-      const y = y_scale * r * Math.sin(theta) * Math.sin(phi);
-      const z = 0.1 + z_scale * r * Math.cos(theta);
-      
-      if (side === 1 && x < 0.05) x = 0.05;
-      if (side === -1 && x > -0.05) x = -0.05;
-      
-      pts.push(new THREE.Vector3(x, y, z));
-    }
-    
-    return pts;
+  const regionByNode: BrainRegion[] = [];
+  const groups: BrainData["groups"] = {
+    leftHemi: [],
+    rightHemi: [],
+    cerebellum: [],
+    stem: [],
   };
 
-  // 2. Cerebelo (Processamento inferencial subcortical)
-  const makeCerebellum = (): THREE.Vector3[] => {
-    const pts: THREE.Vector3[] = [];
-    const numLayers = 10;
-    const numRing = 16;
-    
-    for (let i = 0; i < numLayers; i++) {
-      const zFrac = i / (numLayers - 1);
-      const z = -0.32 - 0.28 * zFrac;
-      let rLayer = 0.45 * Math.sin(Math.PI * zFrac);
-      if (rLayer < 0.05) rLayer = 0.05;
-      
-      for (let j = 0; j < numRing; j++) {
-        const angle = 2 * Math.PI * j / numRing;
-        // Folhas cerebelares densas e horizontais
-        const r = rLayer * (1.0 + 0.07 * Math.sin(30 * angle));
-        const x = r * Math.cos(angle);
-        const y = -0.65 + r * Math.sin(angle);
-        pts.push(new THREE.Vector3(x, y, z));
-      }
+  const makeHemisphere = (side: -1 | 1, region: BrainRegion): void => {
+    for (let i = 0; i < surfaceNodesPerHemisphere; i += 1) {
+      const vertical = 1 - (2 * (i + 0.5)) / surfaceNodesPerHemisphere;
+      const ring = Math.sqrt(Math.max(0, 1 - vertical * vertical));
+      const angle = i * GOLDEN_ANGLE + (random() - 0.5) * 0.06;
+      const lateral = Math.abs(Math.cos(angle) * ring);
+      const depth = Math.sin(angle) * ring;
+      const scale = corticalScale(lateral, vertical, depth);
+      const lowerTaper = 0.82 + 0.18 * Math.min(1, vertical + 1);
+
+      addNode(
+        nodes,
+        groups,
+        regionByNode,
+        region,
+        new THREE.Vector3(
+          side * (0.075 + 1.14 * lateral * scale * lowerTaper),
+          0.18 + 1.02 * vertical * scale,
+          0.02 + 1.08 * depth * scale * (0.9 + 0.1 * lateral),
+        ),
+      );
     }
-    
-    // Nós internos
-    for (let k = 0; k < 40; k++) {
-      const z = Math.random() * -0.28 - 0.32;
-      const r = Math.random() * 0.35;
-      const angle = Math.random() * 2 * Math.PI;
-      const x = r * Math.cos(angle);
-      const y = -0.65 + r * Math.sin(angle);
-      pts.push(new THREE.Vector3(x, y, z));
+
+    for (let i = 0; i < innerNodesPerHemisphere; i += 1) {
+      const radius = Math.cbrt(random()) * 0.88;
+      const vertical = random() * 2 - 1;
+      const ring = Math.sqrt(Math.max(0, 1 - vertical * vertical));
+      const angle = random() * Math.PI * 2;
+      const lateral = Math.abs(Math.cos(angle) * ring);
+      const depth = Math.sin(angle) * ring;
+
+      addNode(
+        nodes,
+        groups,
+        regionByNode,
+        region,
+        new THREE.Vector3(
+          side * (0.075 + 1.04 * lateral * radius),
+          0.18 + 0.94 * vertical * radius,
+          0.02 + 0.98 * depth * radius,
+        ),
+      );
     }
-    
-    return pts;
   };
 
-  // 3. Tronco Cerebral (O elo primordial C_t)
-  const makeStem = (): THREE.Vector3[] => {
-    const pts: THREE.Vector3[] = [];
-    const numSections = 8;
-    const numRadial = 8;
-    
-    for (let i = 0; i < numSections; i++) {
-      const z = -0.6 - 0.55 * (i / (numSections - 1));
-      const radius = 0.16 * (1.2 + z);
-      for (let j = 0; j < numRadial; j++) {
-        const angle = 2 * Math.PI * j / numRadial;
-        const x = radius * Math.cos(angle);
-        const y = -0.35 + radius * Math.sin(angle);
-        pts.push(new THREE.Vector3(x, y, z));
-      }
+  makeHemisphere(-1, "leftHemi");
+  makeHemisphere(1, "rightHemi");
+
+  const cerebellumCount = 280;
+  for (let i = 0; i < cerebellumCount; i += 1) {
+    const vertical = 1 - (2 * (i + 0.5)) / cerebellumCount;
+    const ring = Math.sqrt(Math.max(0, 1 - vertical * vertical));
+    const angle = i * GOLDEN_ANGLE;
+    const ripple = 1 + 0.06 * Math.sin(angle * 9) + 0.035 * Math.cos(vertical * 26);
+    addNode(
+      nodes,
+      groups,
+      regionByNode,
+      "cerebellum",
+      new THREE.Vector3(
+        0.72 * Math.cos(angle) * ring * ripple,
+        -0.72 + 0.4 * vertical,
+        -0.73 + 0.36 * Math.sin(angle) * ring * ripple,
+      ),
+    );
+  }
+
+  const stemRings = 15;
+  const stemRadial = 10;
+  for (let ringIndex = 0; ringIndex < stemRings; ringIndex += 1) {
+    const t = ringIndex / (stemRings - 1);
+    const radius = 0.2 - t * 0.075;
+    const y = -0.9 - t * 0.72;
+    const zCenter = -0.22 + t * 0.12;
+    for (let radial = 0; radial < stemRadial; radial += 1) {
+      const angle = (radial / stemRadial) * Math.PI * 2 + ringIndex * 0.11;
+      addNode(
+        nodes,
+        groups,
+        regionByNode,
+        "stem",
+        new THREE.Vector3(
+          Math.cos(angle) * radius,
+          y,
+          zCenter + Math.sin(angle) * radius * 0.72,
+        ),
+      );
     }
-    return pts;
-  };
+  }
 
-  // Instanciando e catalogando a morfologia
-  const leftPts = makeHemisphere(-1);
-  leftPts.forEach((p, idx) => {
-    nodes.push(p);
-    leftHemi.push(idx);
-  });
-
-  const rightPts = makeHemisphere(1);
-  const leftLen = nodes.length;
-  rightPts.forEach((p, idx) => {
-    nodes.push(p);
-    rightHemi.push(leftLen + idx);
-  });
-
-  const cerebPts = makeCerebellum();
-  const baseCereb = nodes.length;
-  cerebPts.forEach((p, idx) => {
-    nodes.push(p);
-    cerebellum.push(baseCereb + idx);
-  });
-
-  const stemPts = makeStem();
-  const baseStem = nodes.length;
-  stemPts.forEach((p, idx) => {
-    nodes.push(p);
-    stem.push(baseStem + idx);
-  });
-
-  // Mapeamento topológico das conexões sinápticas (Arestas do Grafo Bayesiano)
   const edges: [number, number][] = [];
-  const maxConnections = 3;
-  const maxDist = 0.28;
-  const edgeSet = new Set<string>();
+  const edgeKeys = new Set<string>();
+  const adjacency: number[][] = Array.from({ length: nodes.length }, () => []);
 
-  // A função de custo que decide quem se conecta com quem
-  const canConnect = (i: number, j: number): boolean => {
-    const p1 = nodes[i];
-    const p2 = nodes[j];
-    const d = p1.distanceTo(p2);
-    
-    if (d > maxDist || d < 0.02) return false;
-    
-    const isLeftI = leftHemi.includes(i);
-    const isRightI = rightHemi.includes(i);
-    const isLeftJ = leftHemi.includes(j);
-    const isRightJ = rightHemi.includes(j);
-    
-    if ((isLeftI && isRightJ) || (isRightI && isLeftJ)) {
-      // O corpo caloso é o único gateway de alta densidade entre os hemisférios
-      const inCallosumI = Math.abs(p1.x) < 0.15 && p1.y > -0.2 && p1.y < 0.2 && p1.z > 0.0 && p1.z < 0.35;
-      const inCallosumJ = Math.abs(p2.x) < 0.15 && p2.y > -0.2 && p2.y < 0.2 && p2.z > 0.0 && p2.z < 0.35;
-      return inCallosumI && inCallosumJ;
-    }
-    
-    return true;
+  const connect = (a: number, b: number): void => {
+    if (a === b) return;
+    const u = Math.min(a, b);
+    const v = Math.max(a, b);
+    const key = `${u}:${v}`;
+    if (edgeKeys.has(key)) return;
+    edgeKeys.add(key);
+    edges.push([u, v]);
+    adjacency[u].push(v);
+    adjacency[v].push(u);
   };
 
-  const adj: number[][] = Array.from({ length: nodes.length }, () => []);
-
-  for (let i = 0; i < nodes.length; i++) {
-    const candidates: { dist: number; idx: number }[] = [];
-    for (let j = 0; j < nodes.length; j++) {
-      if (i === j) continue;
-      if (canConnect(i, j)) {
-        candidates.push({ dist: nodes[i].distanceTo(nodes[j]), idx: j });
+  const connectRegion = (indices: number[], neighbours: number, maxDistance: number): void => {
+    for (const index of indices) {
+      const nearest: Array<{ index: number; distance: number }> = [];
+      for (const candidate of indices) {
+        if (candidate === index) continue;
+        const distance = nodes[index].distanceToSquared(nodes[candidate]);
+        if (distance <= maxDistance * maxDistance) nearest.push({ index: candidate, distance });
       }
+      nearest.sort((a, b) => a.distance - b.distance);
+      for (const candidate of nearest.slice(0, neighbours)) connect(index, candidate.index);
     }
-    // Ordena pela distância pra simular a eficiência energética das sinapses curtas
-    candidates.sort((a, b) => a.dist - b.dist);
-    
-    let count = 0;
-    for (const c of candidates) {
-      if (count >= maxConnections) break;
-      const u = Math.min(i, c.idx);
-      const v = Math.max(i, c.idx);
-      const key = `${u}-${v}`;
-      if (!edgeSet.has(key)) {
-        edgeSet.add(key);
-        edges.push([u, v]);
-        adj[u].push(v);
-        adj[v].push(u);
-      }
-      count++;
-    }
-  }
-
-  // Buscando ciclos fechados para representar o feedback loop bayesiano
-  const findLoopPath = (startNode: number, targetLength = 6): number[] | null => {
-    const path: number[] = [startNode];
-    let curr = startNode;
-    
-    for (let k = 0; k < targetLength - 3; k++) {
-      const neighbors = adj[curr];
-      if (neighbors.length === 0) return null;
-      
-      let choices = neighbors;
-      if (path.length > 1) {
-        choices = neighbors.filter(n => n !== path[path.length - 2]);
-        if (choices.length === 0) choices = neighbors;
-      }
-      
-      // Passeio aleatório pra modelar estocasticidade neural
-      curr = choices[Math.floor(Math.random() * choices.length)];
-      path.push(curr);
-    }
-    
-    // Busca em Largura (BFS) brutal pra forçar o retorno à raiz do circuito
-    const queue: number[][] = [[curr]];
-    const visited = new Set<number>([curr]);
-    let foundPath: number[] | null = null;
-    
-    while (queue.length > 0) {
-      const p = queue.shift()!;
-      const node = p[p.length - 1];
-      
-      if (node === startNode && p.length > 2) {
-        foundPath = p;
-        break;
-      }
-      
-      for (const n of adj[node]) {
-        if (p.length > 1 && n === p[p.length - 2]) continue;
-        if (!visited.has(n) || (n === startNode && p.length > 2)) {
-          visited.add(n);
-          queue.push([...p, n]);
-        }
-      }
-    }
-    
-    if (foundPath) {
-      return [...path, ...foundPath.slice(1, -1)];
-    }
-    return null;
   };
 
-  const paths: number[][] = [];
-  const maxPaths = 300; 
-  
-  // Enchendo a rede de correntes prontas pra disparar
-  for (let k = 0; k < maxPaths; k++) {
-    for (let attempt = 0; attempt < 100; attempt++) {
-      const start = Math.floor(Math.random() * nodes.length);
-      if (adj[start].length === 0) continue;
-      const path = findLoopPath(start, Math.floor(Math.random() * 5) + 5);
-      if (path && path.length >= 3) {
-        paths.push(path);
-        break;
-      }
+  connectRegion(groups.leftHemi, 4, 0.31);
+  connectRegion(groups.rightHemi, 4, 0.31);
+  connectRegion(groups.cerebellum, 5, 0.26);
+  connectRegion(groups.stem, 4, 0.24);
+
+  const medialLeft = groups.leftHemi
+    .filter((index) => Math.abs(nodes[index].x) < 0.2 && nodes[index].y > -0.55)
+    .sort((a, b) => nodes[a].y - nodes[b].y);
+  const medialRight = groups.rightHemi.filter(
+    (index) => Math.abs(nodes[index].x) < 0.2 && nodes[index].y > -0.55,
+  );
+  for (const left of medialLeft.filter((_, i) => i % 4 === 0)) {
+    const right = medialRight.reduce((best, candidate) =>
+      nodes[left].distanceToSquared(nodes[candidate]) < nodes[left].distanceToSquared(nodes[best])
+        ? candidate
+        : best,
+    );
+    connect(left, right);
+  }
+
+  const connectClosest = (from: number[], to: number[], step: number): void => {
+    for (let i = 0; i < from.length; i += step) {
+      const source = from[i];
+      const target = to.reduce((best, candidate) =>
+        nodes[source].distanceToSquared(nodes[candidate]) <
+        nodes[source].distanceToSquared(nodes[best])
+          ? candidate
+          : best,
+      );
+      connect(source, target);
     }
-  }
-
-  // Curando os "raios" hero: os trajetos mais longos, espalhados pela superfície
-  // pra não empilharem no mesmo canto. Esses ganham o destaque âmbar/laranja.
-  const boltPaths: number[][] = [];
-  const boltStartPositions: THREE.Vector3[] = [];
-  const minBoltSeparation = 0.55;
-  const sortedByLength = [...paths].sort((a, b) => b.length - a.length);
-
-  for (const path of sortedByLength) {
-    if (boltPaths.length >= 7) break;
-    const startPos = nodes[path[0]];
-    const tooClose = boltStartPositions.some(p => p.distanceTo(startPos) < minBoltSeparation);
-    if (tooClose) continue;
-    boltPaths.push(path);
-    boltStartPositions.push(startPos);
-  }
-
-  return {
-    nodes,
-    edges,
-    paths,
-    boltPaths,
-    groups: { leftHemi, rightHemi, cerebellum, stem }
   };
+  connectClosest(groups.cerebellum, [...groups.leftHemi, ...groups.rightHemi], 14);
+  connectClosest(groups.stem.slice(0, stemRadial * 3), groups.cerebellum, 5);
+
+  const buildPath = (minimumLength: number, maximumLength: number): number[] => {
+    const start = Math.floor(random() * nodes.length);
+    const path = [start];
+    const targetLength = minimumLength + Math.floor(random() * (maximumLength - minimumLength + 1));
+    let current = start;
+    for (let i = 1; i < targetLength; i += 1) {
+      const previous = path[path.length - 2];
+      const candidates = adjacency[current].filter((node) => node !== previous);
+      if (candidates.length === 0) break;
+      current = candidates[Math.floor(random() * candidates.length)];
+      path.push(current);
+    }
+    return path;
+  };
+
+  const paths = Array.from({ length: 300 }, () => buildPath(10, 22)).filter(
+    (path) => path.length >= 6,
+  );
+  const signalPaths = [...paths]
+    .sort((a, b) => {
+      const spanA = nodes[a[0]].distanceTo(nodes[a[a.length - 1]]);
+      const spanB = nodes[b[0]].distanceTo(nodes[b[b.length - 1]]);
+      return spanB - spanA;
+    })
+    .slice(0, 18);
+
+  return { nodes, edges, paths, signalPaths, regionByNode, groups };
 }

@@ -1,43 +1,42 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { generateBrainData, BrainData } from './brain';
+import * as THREE from "three";
+import { invoke } from "@tauri-apps/api/core";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { BrainData, BrainRegion, generateBrainData } from "./brain";
+import { BrainSettings, getInitialBrainSettings } from "./schema";
 
-// Controle mestre das variáveis de estado. A matemática bayesiana não perdoa latência.
-const state = {
-  rotationSpeed: 0.8,
-  pulseSpeed: 1.0,
-  pulseCount: 120,
-  bloomStrength: 1.5,
-  bloomRadius: 0.6,
-  showLeftHemi: true,
-  showRightHemi: true,
-  showCerebellum: true,
-  showStem: true
+declare global {
+  interface Window {
+    __TAURI_INTERNALS__?: unknown;
+    __BRAIN_ENGINE__?: {
+      capture: (time: number, rotation: number) => void;
+      setCaptureMode: (enabled: boolean) => void;
+    };
+  }
+}
+
+interface RuntimeInfo {
+  engine: string;
+  renderer: string;
+  schema: string;
+}
+
+interface ActivePath {
+  path: number[];
+  offset: number;
+  featured: boolean;
+}
+
+const state: BrainSettings = getInitialBrainSettings();
+const palette = {
+  network: new THREE.Color(0x147df5),
+  featured: new THREE.Color(0x2ed9ff),
+  pulseCore: new THREE.Color(0xf4fbff),
+  pulseTrail: new THREE.Color(0x36bfff),
 };
 
-// Amarrando o DOM com o motor. Nada de frescuras, direto ao ponto.
-let container: HTMLDivElement;
-let rotSpeedSlider: HTMLInputElement;
-let pulseSpeedSlider: HTMLInputElement;
-let pulseCountSlider: HTMLInputElement;
-let bloomStrengthSlider: HTMLInputElement;
-let bloomRadiusSlider: HTMLInputElement;
-let leftHemiCheckbox: HTMLInputElement;
-let rightHemiCheckbox: HTMLInputElement;
-let cerebellumCheckbox: HTMLInputElement;
-let stemCheckbox: HTMLInputElement;
-
-// Displays para o feedback visual em tempo real
-let rotSpeedVal: HTMLSpanElement;
-let pulseSpeedVal: HTMLSpanElement;
-let pulseCountVal: HTMLSpanElement;
-let bloomStrengthVal: HTMLSpanElement;
-let bloomRadiusVal: HTMLSpanElement;
-
-// A trindade do WebGL
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
@@ -45,500 +44,417 @@ let controls: OrbitControls;
 let composer: EffectComposer;
 let bloomPass: UnrealBloomPass;
 let brainGroup: THREE.Group;
-
-// Isolando as regiões anatômicas pra gente ter controle granular do modelo formalista
-let leftHemiLines: THREE.LineSegments;
-let rightHemiLines: THREE.LineSegments;
-let cerebellumLines: THREE.LineSegments;
-let stemLines: THREE.LineSegments;
-let bridgeLines: THREE.LineSegments;
-
-let leftHemiPoints: THREE.Points;
-let rightHemiPoints: THREE.Points;
-let cerebellumPoints: THREE.Points;
-let stemPoints: THREE.Points;
-
-// Mesh instanciada pros pulsos elétricos - otimização pura pra não chorar frame rate
 let pulseMesh: THREE.InstancedMesh;
-let boltLines: THREE.LineSegments;
 let brainData: BrainData;
-let activePaths: { path: number[]; tOffset: number; isBolt: boolean }[] = [];
+let activePaths: ActivePath[] = [];
+let captureMode = false;
 
-// Paleta dos "raios" hero: núcleo branco-quente esmaecendo pro âmbar, contra o azul-frio do resto da rede
-const BOLT_COLOR = new THREE.Color(0xffb64d);
-const NETWORK_COLOR = new THREE.Color(0xdff2ff);
+const regionObjects = new Map<BrainRegion, THREE.Object3D[]>();
+const bridgeObjects: THREE.Object3D[] = [];
+const clock = new THREE.Clock();
+const tempMatrix = new THREE.Matrix4();
+const tempPosition = new THREE.Vector3();
+const tempScale = new THREE.Vector3();
 
-// Textura procedural pros nós neurais. Um gradiente sutil pra dar aquele ar de 'rede acesa'
-function createPointTexture(): THREE.Texture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 16;
-  canvas.height = 16;
-  const ctx = canvas.getContext('2d')!;
-  const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
-  grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-  grad.addColorStop(0.2, 'rgba(0, 180, 255, 0.8)');
-  grad.addColorStop(0.6, 'rgba(0, 100, 255, 0.2)');
-  grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 16, 16);
-  return new THREE.CanvasTexture(canvas);
+function element<T extends HTMLElement>(selector: string): T {
+  const match = document.querySelector<T>(selector);
+  if (!match) throw new Error(`Elemento obrigatório ausente: ${selector}`);
+  return match;
 }
 
-// Onde a arquitetura ganha vida.
-function init() {
-  container = document.querySelector('#canvas-container')!;
-  
-  // Pegando os elementos na força bruta
-  rotSpeedSlider = document.querySelector('#rotation-speed')!;
-  pulseSpeedSlider = document.querySelector('#pulse-speed')!;
-  pulseCountSlider = document.querySelector('#pulse-count')!;
-  bloomStrengthSlider = document.querySelector('#bloom-strength')!;
-  bloomRadiusSlider = document.querySelector('#bloom-radius')!;
-  
-  leftHemiCheckbox = document.querySelector('#toggle-left-hemi')!;
-  rightHemiCheckbox = document.querySelector('#toggle-right-hemi')!;
-  cerebellumCheckbox = document.querySelector('#toggle-cerebellum')!;
-  stemCheckbox = document.querySelector('#toggle-stem')!;
-
-  rotSpeedVal = document.querySelector('#rot-speed-val')!;
-  pulseSpeedVal = document.querySelector('#pulse-speed-val')!;
-  pulseCountVal = document.querySelector('#pulse-count-val')!;
-  bloomStrengthVal = document.querySelector('#bloom-strength-val')!;
-  bloomRadiusVal = document.querySelector('#bloom-radius-val')!;
-
-  const updateBayesianState = setupUIListeners();
-
-// O vazio inicial
-  scene = new THREE.Scene();
-  // Fundo transparente para combinar com a estética da página
-  scene.background = null;
-
-  // Câmera posicionada cirurgicamente
-  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.set(0, 0.5, 3.5);
-
-  // Aqui a gente dita as regras do render. ACESFilmic pra segurar o estouro de luz do bloom. Fundo Alpha.
-  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x000000, 0); // Totalmente transparente
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limitando pra monitores de frescura
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  container.appendChild(renderer.domElement);
-
-  // Deixando o usuário brincar com a perspectiva
-  controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.maxDistance = 10;
-  controls.minDistance = 1.5;
-
-  // O pulo do gato: UnrealBloomPass pra dar aquela estética de sinapse queimando energia
-  const renderScene = new RenderPass(scene, camera);
-  bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    state.bloomStrength,
-    state.bloomRadius,
-    0.15 
-  );
-
-  composer = new EffectComposer(renderer);
-  composer.addPass(renderScene);
-  composer.addPass(bloomPass);
-
-  // Invocando os clusters geométricos do nosso cérebro artificial
-  brainData = generateBrainData();
-  buildBrainVisuals();
-
-  // Fechando os circuitos elétricos
-  setupPaths();
-
-  // Só agora bloomPass e a rede existem de fato: seguro disparar o estado bayesiano inicial
-  updateBayesianState();
-
-  window.addEventListener('resize', onWindowResize);
+function createPointTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = 32;
+  canvas.height = 32;
+  const context = canvas.getContext("2d")!;
+  const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gradient.addColorStop(0, "rgba(255,255,255,1)");
+  gradient.addColorStop(0.18, "rgba(112,220,255,.95)");
+  gradient.addColorStop(0.52, "rgba(13,112,255,.32)");
+  gradient.addColorStop(1, "rgba(0,0,0,0)");
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 32, 32);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
 }
 
-let bayesianIntensity = 5;
-const maxIntensity = 10;
-
-// Ouvintes de evento sem firula. Retorna updateBayesianState pra ser disparada
-// só depois que o resto do init() (bloomPass, brainData, pulseMesh) existir de verdade.
-function setupUIListeners(): () => void {
-  rotSpeedSlider.addEventListener('input', (e) => {
-    state.rotationSpeed = parseFloat((e.target as HTMLInputElement).value);
-    rotSpeedVal.textContent = `${state.rotationSpeed.toFixed(1)}x`;
-  });
-
-  pulseSpeedSlider.addEventListener('input', (e) => {
-    state.pulseSpeed = parseFloat((e.target as HTMLInputElement).value);
-    pulseSpeedVal.textContent = `${state.pulseSpeed.toFixed(1)}x`;
-  });
-
-  pulseCountSlider.addEventListener('input', (e) => {
-    state.pulseCount = parseInt((e.target as HTMLInputElement).value);
-    pulseCountVal.textContent = `${state.pulseCount}`;
-    setupPaths();
-  });
-
-  bloomStrengthSlider.addEventListener('input', (e) => {
-    state.bloomStrength = parseFloat((e.target as HTMLInputElement).value);
-    bloomPass.strength = state.bloomStrength;
-    bloomStrengthVal.textContent = state.bloomStrength.toFixed(1);
-  });
-
-  bloomRadiusSlider.addEventListener('input', (e) => {
-    state.bloomRadius = parseFloat((e.target as HTMLInputElement).value);
-    bloomPass.radius = state.bloomRadius;
-    bloomRadiusVal.textContent = state.bloomRadius.toFixed(2);
-  });
-
-  leftHemiCheckbox.addEventListener('change', (e) => {
-    state.showLeftHemi = (e.target as HTMLInputElement).checked;
-    updateVisibility();
-  });
-
-  rightHemiCheckbox.addEventListener('change', (e) => {
-    state.showRightHemi = (e.target as HTMLInputElement).checked;
-    updateVisibility();
-  });
-
-  cerebellumCheckbox.addEventListener('change', (e) => {
-    state.showCerebellum = (e.target as HTMLInputElement).checked;
-    updateVisibility();
-  });
-
-  stemCheckbox.addEventListener('change', (e) => {
-    state.showStem = (e.target as HTMLInputElement).checked;
-    updateVisibility();
-  });
-
-  // Bayesian HUD Controls
-  const btnUp = document.getElementById('btn-intensity-up');
-  const btnDown = document.getElementById('btn-intensity-down');
-  const priorVal = document.getElementById('prior-val');
-  const likelihoodVal = document.getElementById('likelihood-val');
-  const posteriorVal = document.getElementById('posterior-val');
-  const excitationVal = document.getElementById('excitation-val');
-
-  const updateBayesianState = () => {
-    const prior = bayesianIntensity / maxIntensity;
-    const likelihood = 0.5 + (Math.random() * 0.5); // Simulação estocástica
-    const evidence = 0.8;
-    const posterior = (likelihood * prior) / evidence;
-    
-    priorVal!.textContent = prior.toFixed(2);
-    likelihoodVal!.textContent = likelihood.toFixed(2);
-    posteriorVal!.textContent = Math.min(posterior, 0.99).toFixed(2);
-    
-    let levelStr = "Estável";
-    if (bayesianIntensity > 7) levelStr = "Tempestade";
-    else if (bayesianIntensity > 4) levelStr = "Ativo";
-    else levelStr = "Repouso";
-    excitationVal!.textContent = levelStr;
-
-    // Atualiza os visuais baseados na inferência bayesiana
-    state.pulseCount = 30 * bayesianIntensity;
-    state.bloomStrength = 0.8 + (bayesianIntensity * 0.2);
-    state.pulseSpeed = 0.5 + (bayesianIntensity * 0.15);
-    
-    bloomPass.strength = state.bloomStrength;
-    pulseCountSlider.value = state.pulseCount.toString();
-    pulseCountVal.textContent = state.pulseCount.toString();
-    bloomStrengthSlider.value = state.bloomStrength.toString();
-    bloomStrengthVal.textContent = state.bloomStrength.toFixed(1);
-    pulseSpeedSlider.value = state.pulseSpeed.toString();
-    pulseSpeedVal.textContent = state.pulseSpeed.toFixed(1);
-    
-    setupPaths();
-  };
-
-  btnUp?.addEventListener('click', () => {
-    if (bayesianIntensity < maxIntensity) bayesianIntensity++;
-    updateBayesianState();
-  });
-
-  btnDown?.addEventListener('click', () => {
-    if (bayesianIntensity > 1) bayesianIntensity--;
-    updateBayesianState();
-  });
-
-  return updateBayesianState;
+function addRegionObject(region: BrainRegion, object: THREE.Object3D): void {
+  const objects = regionObjects.get(region) ?? [];
+  objects.push(object);
+  regionObjects.set(region, objects);
+  brainGroup.add(object);
 }
 
-// Função casca-grossa que junta as geometrias do modelo algorítmico
-function buildBrainVisuals() {
+function buildBrainVisuals(): void {
   brainGroup = new THREE.Group();
+  brainGroup.rotation.set(0.04, 0.34, -0.025);
   scene.add(brainGroup);
 
-  const leftHemiNodes: THREE.Vector3[] = [];
-  const rightHemiNodes: THREE.Vector3[] = [];
-  const cerebellumNodes: THREE.Vector3[] = [];
-  const stemNodes: THREE.Vector3[] = [];
+  const pointTexture = createPointTexture();
+  const edgeBuckets = new Map<BrainRegion | "bridge", THREE.Vector3[]>();
+  const nodeBuckets = new Map<BrainRegion, THREE.Vector3[]>();
 
-  // Mapeando as instâncias pros seus devidos clusters anatômicos
-  brainData.nodes.forEach((n, idx) => {
-    if (brainData.groups.leftHemi.includes(idx)) leftHemiNodes.push(n);
-    else if (brainData.groups.rightHemi.includes(idx)) rightHemiNodes.push(n);
-    else if (brainData.groups.cerebellum.includes(idx)) cerebellumNodes.push(n);
-    else if (brainData.groups.stem.includes(idx)) stemNodes.push(n);
-  });
+  for (const region of Object.keys(brainData.groups) as BrainRegion[]) {
+    nodeBuckets.set(
+      region,
+      brainData.groups[region].map((index) => brainData.nodes[index]),
+    );
+  }
 
-  const leftHemiEdges: THREE.Vector3[] = [];
-  const rightHemiEdges: THREE.Vector3[] = [];
-  const cerebellumEdges: THREE.Vector3[] = [];
-  const stemEdges: THREE.Vector3[] = [];
-  const bridgeEdges: THREE.Vector3[] = [];
-  const boltEdges: THREE.Vector3[] = [];
+  for (const [from, to] of brainData.edges) {
+    const fromRegion = brainData.regionByNode[from];
+    const toRegion = brainData.regionByNode[to];
+    const bucket = fromRegion === toRegion ? fromRegion : "bridge";
+    const points = edgeBuckets.get(bucket) ?? [];
+    points.push(brainData.nodes[from], brainData.nodes[to]);
+    edgeBuckets.set(bucket, points);
+  }
 
-  // Traçando os raios hero como segmentos contínuos ao longo do trajeto curado
-  brainData.boltPaths.forEach(path => {
-    for (let i = 0; i < path.length - 1; i++) {
-      boltEdges.push(brainData.nodes[path[i]], brainData.nodes[path[i + 1]]);
-    }
-  });
-
-  // Conectando a rede. Isso aqui foi um parto pra acertar o threshold.
-  brainData.edges.forEach(([u, v]) => {
-    const p1 = brainData.nodes[u];
-    const p2 = brainData.nodes[v];
-    
-    const uInLeft = brainData.groups.leftHemi.includes(u);
-    const vInLeft = brainData.groups.leftHemi.includes(v);
-    const uInRight = brainData.groups.rightHemi.includes(u);
-    const vInRight = brainData.groups.rightHemi.includes(v);
-    const uInCereb = brainData.groups.cerebellum.includes(u);
-    const vInCereb = brainData.groups.cerebellum.includes(v);
-    const uInStem = brainData.groups.stem.includes(u);
-    const vInStem = brainData.groups.stem.includes(v);
-
-    if (uInLeft && vInLeft) {
-      leftHemiEdges.push(p1, p2);
-    } else if (uInRight && vInRight) {
-      rightHemiEdges.push(p1, p2);
-    } else if (uInCereb && vInCereb) {
-      cerebellumEdges.push(p1, p2);
-    } else if (uInStem && vInStem) {
-      stemEdges.push(p1, p2);
-    } else {
-      bridgeEdges.push(p1, p2);
-    }
-  });
-
-  // Materiais. O segredo do visual tá no AdditiveBlending e opacity baixa.
-  const pMat = new THREE.PointsMaterial({
-    color: 0x00a0ff,
-    size: 0.015,
-    transparent: true,
-    opacity: 0.4,
-    map: createPointTexture(),
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-
-  const lineMat = new THREE.LineBasicMaterial({
-    color: 0x0066cc,
-    transparent: true,
-    opacity: 0.28,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-
-  const bridgeLineMat = new THREE.LineBasicMaterial({
-    color: 0x007acc,
-    transparent: true,
-    opacity: 0.35,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-
-  // Material dos raios hero: âmbar vívido, opacidade alta pra ler como relâmpago mesmo estático,
-  // o bloom cuida de engordar a linha fina numa faixa de luz.
-  const boltLineMat = new THREE.LineBasicMaterial({
-    color: 0xffa64d,
-    transparent: true,
-    opacity: 0.85,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-
-  const buildPoints = (pts: THREE.Vector3[]): THREE.Points => {
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    return new THREE.Points(geo, pMat);
+  const regionOpacity: Record<BrainRegion, number> = {
+    leftHemi: 0.34,
+    rightHemi: 0.34,
+    cerebellum: 0.42,
+    stem: 0.46,
   };
 
-  leftHemiPoints = buildPoints(leftHemiNodes);
-  rightHemiPoints = buildPoints(rightHemiNodes);
-  cerebellumPoints = buildPoints(cerebellumNodes);
-  stemPoints = buildPoints(stemNodes);
+  for (const region of Object.keys(brainData.groups) as BrainRegion[]) {
+    const pointsGeometry = new THREE.BufferGeometry().setFromPoints(nodeBuckets.get(region) ?? []);
+    const points = new THREE.Points(
+      pointsGeometry,
+      new THREE.PointsMaterial({
+        color: region === "cerebellum" ? 0x36bfff : 0x2596ff,
+        size: region === "stem" ? 0.026 : 0.021,
+        map: pointTexture,
+        transparent: true,
+        opacity: 0.72,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    addRegionObject(region, points);
 
-  brainGroup.add(leftHemiPoints, rightHemiPoints, cerebellumPoints, stemPoints);
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints(edgeBuckets.get(region) ?? []);
+    const lines = new THREE.LineSegments(
+      lineGeometry,
+      new THREE.LineBasicMaterial({
+        color: region === "cerebellum" ? 0x168ee8 : 0x0c62d7,
+        transparent: true,
+        opacity: regionOpacity[region],
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    addRegionObject(region, lines);
+  }
 
-  const buildLines = (pts: THREE.Vector3[], mat: THREE.LineBasicMaterial): THREE.LineSegments => {
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    return new THREE.LineSegments(geo, mat);
-  };
+  const bridgeGeometry = new THREE.BufferGeometry().setFromPoints(edgeBuckets.get("bridge") ?? []);
+  const bridges = new THREE.LineSegments(
+    bridgeGeometry,
+    new THREE.LineBasicMaterial({
+      color: 0x20a9ff,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+  );
+  bridgeObjects.push(bridges);
+  brainGroup.add(bridges);
 
-  leftHemiLines = buildLines(leftHemiEdges, lineMat);
-  rightHemiLines = buildLines(rightHemiEdges, lineMat);
-  cerebellumLines = buildLines(cerebellumEdges, lineMat);
-  stemLines = buildLines(stemEdges, lineMat);
-  bridgeLines = buildLines(bridgeEdges, bridgeLineMat);
-  boltLines = buildLines(boltEdges, boltLineMat);
+  const featuredSegments: THREE.Vector3[] = [];
+  for (const path of brainData.signalPaths) {
+    for (let index = 0; index < path.length - 1; index += 1) {
+      featuredSegments.push(brainData.nodes[path[index]], brainData.nodes[path[index + 1]]);
+    }
+  }
+  const featuredLines = new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints(featuredSegments),
+    new THREE.LineBasicMaterial({
+      color: 0x1fb8ff,
+      transparent: true,
+      opacity: 0.78,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+  );
+  bridgeObjects.push(featuredLines);
+  brainGroup.add(featuredLines);
 
-  brainGroup.add(leftHemiLines, rightHemiLines, cerebellumLines, stemLines, bridgeLines, boltLines);
-
-  // A cereja do bolo: malha instanciada pras correntes neurais (sem fritar o WebGL)
-  const pulseGeo = new THREE.SphereGeometry(0.007, 6, 6);
-  const pulseMat = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    transparent: true,
-    opacity: 1.0,
-    blending: THREE.AdditiveBlending,
-    vertexColors: true // permite tingir cada instância (âmbar nos raios, azul-branco no resto)
-  });
-
-  pulseMesh = new THREE.InstancedMesh(pulseGeo, pulseMat, 300);
+  const trailLength = 4;
+  const pulseCapacity = 300 * trailLength;
+  pulseMesh = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(0.018, 1),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      vertexColors: true,
+      transparent: true,
+      opacity: 1,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+    pulseCapacity,
+  );
+  pulseMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   brainGroup.add(pulseMesh);
 }
 
-// Calculando os caminhos dos elétrons como se fossem inferências bayesianas correndo na rede
-function setupPaths() {
-  const limit = Math.min(state.pulseCount, brainData.paths.length);
-  const boltSet = new Set(brainData.boltPaths);
-
-  // Os raios hero sempre disparam, ganhando prioridade sobre a amostra do resto da rede
-  const boltEntries = brainData.boltPaths.map(path => ({
+function setupPaths(): void {
+  const featured = brainData.signalPaths.map((path, index) => ({
     path,
-    tOffset: Math.random() * 200,
-    isBolt: true
+    offset: index / Math.max(1, brainData.signalPaths.length),
+    featured: true,
   }));
+  const featuredSet = new Set(brainData.signalPaths);
+  const regular = brainData.paths
+    .filter((path) => !featuredSet.has(path))
+    .slice(0, Math.max(0, state.pulseCount - featured.length))
+    .map((path, index) => ({
+      path,
+      offset: (index * 0.61803398875) % 1,
+      featured: false,
+    }));
 
-  const remaining: typeof boltEntries = [];
-  for (let i = 0; i < brainData.paths.length && remaining.length < limit; i++) {
-    const path = brainData.paths[i];
-    if (boltSet.has(path)) continue;
-    remaining.push({ path, tOffset: Math.random() * 200, isBolt: false });
-  }
-
-  activePaths = [...boltEntries, ...remaining].slice(0, 300); // Nunca estoura a capacidade da InstancedMesh
-  pulseMesh.count = activePaths.length;
-
-  // Tingindo cada instância: âmbar quente nos raios hero, azul-branco no restante da corrente
-  for (let i = 0; i < activePaths.length; i++) {
-    pulseMesh.setColorAt(i, activePaths[i].isBolt ? BOLT_COLOR : NETWORK_COLOR);
+  activePaths = [...featured, ...regular].slice(0, 300);
+  pulseMesh.count = activePaths.length * 4;
+  for (let pathIndex = 0; pathIndex < activePaths.length; pathIndex += 1) {
+    for (let trail = 0; trail < 4; trail += 1) {
+      const instance = pathIndex * 4 + trail;
+      pulseMesh.setColorAt(
+        instance,
+        trail === 0
+          ? palette.pulseCore
+          : activePaths[pathIndex].featured
+            ? palette.featured
+            : palette.pulseTrail,
+      );
+    }
   }
   if (pulseMesh.instanceColor) pulseMesh.instanceColor.needsUpdate = true;
 }
 
-// Se o usuário desligar um hemisfério, a gente apaga a ponte. Óbvio.
-function updateVisibility() {
-  leftHemiPoints.visible = state.showLeftHemi;
-  leftHemiLines.visible = state.showLeftHemi;
-
-  rightHemiPoints.visible = state.showRightHemi;
-  rightHemiLines.visible = state.showRightHemi;
-
-  cerebellumPoints.visible = state.showCerebellum;
-  cerebellumLines.visible = state.showCerebellum;
-
-  stemPoints.visible = state.showStem;
-  stemLines.visible = state.showStem;
-
-  bridgeLines.visible = 
-    (state.showLeftHemi && state.showRightHemi) || 
-    (state.showCerebellum && (state.showLeftHemi || state.showRightHemi)) ||
-    (state.showStem && state.showCerebellum);
+function isRegionVisible(region: BrainRegion): boolean {
+  return {
+    leftHemi: state.showLeftHemi,
+    rightHemi: state.showRightHemi,
+    cerebellum: state.showCerebellum,
+    stem: state.showStem,
+  }[region];
 }
 
-// Responsividade mínima.
-function onWindowResize() {
+function updateVisibility(): void {
+  for (const [region, objects] of regionObjects) {
+    for (const object of objects) object.visible = isRegionVisible(region);
+  }
+  const anyBrain = state.showLeftHemi || state.showRightHemi;
+  for (const bridge of bridgeObjects) {
+    bridge.visible = anyBrain || state.showCerebellum || state.showStem;
+  }
+}
+
+function updatePulses(time: number): void {
+  for (let pathIndex = 0; pathIndex < activePaths.length; pathIndex += 1) {
+    const active = activePaths[pathIndex];
+    const path = active.path;
+    const visible = path.some((nodeIndex) => isRegionVisible(brainData.regionByNode[nodeIndex]));
+
+    for (let trail = 0; trail < 4; trail += 1) {
+      const instance = pathIndex * 4 + trail;
+      if (!visible) {
+        tempMatrix.makeScale(0, 0, 0);
+        pulseMesh.setMatrixAt(instance, tempMatrix);
+        continue;
+      }
+
+      const trailOffset = trail * 0.013;
+      const progress = (time * state.pulseSpeed * 0.19 + active.offset - trailOffset + 10) % 1;
+      const pathPosition = progress * (path.length - 1);
+      const segment = Math.min(path.length - 2, Math.floor(pathPosition));
+      const fraction = pathPosition - segment;
+      tempPosition.lerpVectors(
+        brainData.nodes[path[segment]],
+        brainData.nodes[path[segment + 1]],
+        fraction,
+      );
+
+      const featuredScale = active.featured ? 1.28 : 1;
+      const trailScale = featuredScale * (1 - trail * 0.19);
+      const voltage = 0.92 + 0.14 * Math.sin(time * 7 + pathIndex * 0.73);
+      tempScale.setScalar(trailScale * voltage);
+      tempMatrix.compose(tempPosition, new THREE.Quaternion(), tempScale);
+      pulseMesh.setMatrixAt(instance, tempMatrix);
+    }
+  }
+  pulseMesh.instanceMatrix.needsUpdate = true;
+}
+
+function renderFrame(time: number, forcedRotation?: number): void {
+  brainGroup.rotation.y =
+    forcedRotation ?? 0.34 + time * state.rotationSpeed * 0.115;
+  brainGroup.rotation.x = 0.035 + Math.sin(time * 0.17) * 0.035;
+  brainGroup.rotation.z = -0.025 + Math.cos(time * 0.13) * 0.018;
+  updatePulses(time);
+  controls.update();
+  composer.render();
+}
+
+function animate(): void {
+  requestAnimationFrame(animate);
+  if (!captureMode) renderFrame(clock.getElapsedTime());
+}
+
+function bindRange(
+  id: string,
+  displayId: string,
+  key: "rotationSpeed" | "pulseSpeed" | "pulseCount" | "bloomStrength" | "bloomRadius",
+  format: (value: number) => string,
+  onUpdate?: () => void,
+): void {
+  const input = element<HTMLInputElement>(`#${id}`);
+  const display = element<HTMLSpanElement>(`#${displayId}`);
+  input.value = String(state[key]);
+  display.textContent = format(state[key]);
+  input.addEventListener("input", () => {
+    state[key] = Number(input.value);
+    display.textContent = format(state[key]);
+    onUpdate?.();
+  });
+}
+
+function setupInterface(): void {
+  bindRange("rotation-speed", "rot-speed-val", "rotationSpeed", (value) => `${value.toFixed(1)}×`);
+  bindRange("pulse-speed", "pulse-speed-val", "pulseSpeed", (value) => `${value.toFixed(1)}×`);
+  bindRange("pulse-count", "pulse-count-val", "pulseCount", String, setupPaths);
+  bindRange("bloom-strength", "bloom-strength-val", "bloomStrength", (value) => value.toFixed(1), () => {
+    bloomPass.strength = state.bloomStrength;
+  });
+  bindRange("bloom-radius", "bloom-radius-val", "bloomRadius", (value) => value.toFixed(2), () => {
+    bloomPass.radius = state.bloomRadius;
+  });
+
+  type VisibilityKey = "showLeftHemi" | "showRightHemi" | "showCerebellum" | "showStem";
+  const toggles: Array<[string, BrainRegion, VisibilityKey]> = [
+    ["toggle-left-hemi", "leftHemi", "showLeftHemi"],
+    ["toggle-right-hemi", "rightHemi", "showRightHemi"],
+    ["toggle-cerebellum", "cerebellum", "showCerebellum"],
+    ["toggle-stem", "stem", "showStem"],
+  ];
+  for (const [id, , key] of toggles) {
+    const input = element<HTMLInputElement>(`#${id}`);
+    input.checked = Boolean(state[key]);
+    input.addEventListener("change", () => {
+      state[key] = input.checked;
+      updateVisibility();
+    });
+  }
+
+  let intensity = 5;
+  const updateInference = (): void => {
+    const prior = 0.2 + intensity * 0.065;
+    const likelihood = 0.52 + intensity * 0.042;
+    const evidence = prior * likelihood + (1 - prior) * (1 - likelihood);
+    const posterior = (likelihood * prior) / evidence;
+    element("#prior-val").textContent = prior.toFixed(2);
+    element("#likelihood-val").textContent = likelihood.toFixed(2);
+    element("#posterior-val").textContent = posterior.toFixed(2);
+    element("#excitation-val").textContent =
+      intensity > 7 ? "TEMPESTADE" : intensity > 4 ? "ATIVO" : "REPOUSO";
+
+    state.pulseCount = Math.min(300, 55 + intensity * 21);
+    state.pulseSpeed = 0.45 + intensity * 0.13;
+    element<HTMLInputElement>("#pulse-count").value = String(state.pulseCount);
+    element("#pulse-count-val").textContent = String(state.pulseCount);
+    element<HTMLInputElement>("#pulse-speed").value = String(state.pulseSpeed);
+    element("#pulse-speed-val").textContent = `${state.pulseSpeed.toFixed(1)}×`;
+    setupPaths();
+  };
+  element("#btn-intensity-up").addEventListener("click", () => {
+    intensity = Math.min(10, intensity + 1);
+    updateInference();
+  });
+  element("#btn-intensity-down").addEventListener("click", () => {
+    intensity = Math.max(1, intensity - 1);
+    updateInference();
+  });
+  updateInference();
+}
+
+async function resolveRuntime(): Promise<void> {
+  const status = element("#runtime-status");
+  if (!window.__TAURI_INTERNALS__) {
+    status.textContent = "WEBGL · TYPESCRIPT · ZOD";
+    return;
+  }
+  try {
+    const info = await invoke<RuntimeInfo>("neural_runtime_info");
+    status.textContent = `${info.engine} · ${info.renderer} · ${info.schema}`.toUpperCase();
+  } catch {
+    status.textContent = "TAURI · RUST · THREE.JS";
+  }
+}
+
+function onResize(): void {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// O loop sagrado
-const clock = new THREE.Clock();
-const tempMatrix = new THREE.Matrix4();
-const tempPosition = new THREE.Vector3();
+function init(): void {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0.18, 0.08, 4.65);
 
-function animate() {
-  requestAnimationFrame(animate);
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    powerPreference: "high-performance",
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.12;
+  element("#canvas-container").appendChild(renderer.domElement);
 
-  const delta = clock.getDelta();
-  const time = clock.getElapsedTime();
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.045;
+  controls.enablePan = false;
+  controls.minDistance = 2.8;
+  controls.maxDistance = 7;
+  controls.target.set(0, -0.05, 0);
 
-  // Rotação sutil e elegante. Ninguém quer labirintite vendo isso.
-  if (state.rotationSpeed > 0) {
-    const speed = state.rotationSpeed * 0.15;
-    brainGroup.rotation.y += speed * delta;
-    
-    // Wobble bem de leve pra quebrar a simetria artificial
-    brainGroup.rotation.x = Math.sin(time * 0.3) * 0.08 + 0.1;
-    brainGroup.rotation.z = Math.cos(time * 0.2) * 0.04;
-  }
+  bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    state.bloomStrength,
+    state.bloomRadius,
+    0.12,
+  );
+  composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(bloomPass);
 
-  // Despachando a lógica de update das sinapses baseadas no delta
-  const nodes = brainData.nodes;
-  const groups = brainData.groups;
+  brainData = generateBrainData();
+  buildBrainVisuals();
+  setupPaths();
+  setupInterface();
+  updateVisibility();
+  resolveRuntime();
 
-  for (let i = 0; i < activePaths.length; i++) {
-    const { path, tOffset } = activePaths[i];
-    const L = path.length;
-    
-    // Matemática pura guiando o interpolador dos elétrons
-    const pSpeed = state.pulseSpeed * 0.35;
-    const progress = (time * pSpeed + tOffset) % 1.0;
-    
-    const segmentF = progress * L;
-    const idx = Math.floor(segmentF) % L;
-    const frac = segmentF - Math.floor(segmentF);
-    
-    const uNode = path[idx];
-    const vNode = path[(idx + 1) % L];
-    
-    let isNodeVisible = true;
-    
-    const checkVisible = (nodeIdx: number): boolean => {
-      if (groups.leftHemi.includes(nodeIdx)) return state.showLeftHemi;
-      if (groups.rightHemi.includes(nodeIdx)) return state.showRightHemi;
-      if (groups.cerebellum.includes(nodeIdx)) return state.showCerebellum;
-      if (groups.stem.includes(nodeIdx)) return state.showStem;
-      return true;
-    };
-    
-    // Se escondeu a região anatômica, a sinapse some junto
-    if (!checkVisible(uNode) && !checkVisible(vNode)) {
-      isNodeVisible = false;
-    }
+  window.__BRAIN_ENGINE__ = {
+    setCaptureMode(enabled) {
+      captureMode = enabled;
+      document.body.dataset.capture = String(enabled);
+    },
+    capture(time, rotation) {
+      renderFrame(time, rotation);
+    },
+  };
 
-    if (isNodeVisible) {
-      const p1 = nodes[uNode];
-      const p2 = nodes[vNode];
-      
-      // LERPing a posição em 3D.
-      tempPosition.lerpVectors(p1, p2, frac);
-      tempMatrix.makeTranslation(tempPosition.x, tempPosition.y, tempPosition.z);
-      
-      // Um pequeno pulso senoidal pra simular flutuação de voltagem 
-      const pulseScale = 1.0 + 0.3 * Math.sin(time * 8 + i);
-      tempMatrix.scale(new THREE.Vector3(pulseScale, pulseScale, pulseScale));
-      
-      pulseMesh.setMatrixAt(i, tempMatrix);
-    } else {
-      // Gambiarra necessária pra esconder as instâncias indesejadas: manda pro espaço sideral
-      tempMatrix.makeTranslation(9999, 9999, 9999);
-      pulseMesh.setMatrixAt(i, tempMatrix);
-    }
-  }
-  
-  pulseMesh.instanceMatrix.needsUpdate = true;
-  controls.update();
-  composer.render();
+  window.addEventListener("resize", onResize);
+  animate();
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  init();
-  animate();
-});
+window.addEventListener("DOMContentLoaded", init);

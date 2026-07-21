@@ -1,67 +1,73 @@
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=20&pause=2000&color=58a6ff&center=true&vCenter=true&width=800&lines=TO+THE+TRAINED+EYE%2C+THERE+ARE+NO+COINCIDENCES...;fn+analyze(data:+%26Mind)+-%3E+Result%3CKnowledge%2C+Entropy%3E;type+Perception+=+Omit%3CReality%2C+%27Illusion%27%3E;fn+perceive(%26self:+Mind)+-%3E+Percept">
-    <source media="(prefers-color-scheme: light)" srcset="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=20&pause=2000&color=0366d6&center=true&vCenter=true&width=800&lines=TO+THE+TRAINED+EYE%2C+THERE+ARE+NO+COINCIDENCES...;fn+analyze(data:+%26Mind)+-%3E+Result%3CKnowledge%2C+Entropy%3E;type+Perception+=+Omit%3CReality%2C+%27Illusion%27%3E;fn+perceive(%26self:+Mind)+-%3E+Percept">
-    <img alt="Discreet Message" src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=20&pause=2000&color=58a6ff&center=true&vCenter=true&width=800&lines=TO+THE+TRAINED+EYE%2C+THERE+ARE+NO+COINCIDENCES...;fn+analyze(data:+%26Mind)+-%3E+Result%3CKnowledge%2C+Entropy%3E;type+Perception+=+Omit%3CReality%2C+%27Illusion%27%3E;fn+perceive(%26self:+Mind)+-%3E+Percept">
-  </picture>
 
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=400&size=14&pause=1600&color=58a6ff&center=true&vCenter=true&width=800&lines=const+perceive+=+(sensoryInput:+Signal):+Reality+=%3E+predict().correctWith(sensoryInput);fn+minimize_surprise(cortex:+%26mut+Cortex%2C+error:+Divergence);let+perception+=+reality.filter(|data|+!prior.predicts(data)).collect::%3CSurprise%3E();const+freeWill+=+(state:+Beliefs):+Action+=%3E+argmax(simulateFutures(state).map(utility));let+decision+=+choices.into_iter().max_by_key(|a|+a.expected_utility()).unwrap();type+Rationality+=+(emotions:+Noise%2C+facts:+Evidence)+=%3E+BayesianInference;const+act+=+(options:+Action[]%2C+beliefs:+State)+=%3E+options.reduce(maximizeUtility(beliefs))">
-    <source media="(prefers-color-scheme: light)" srcset="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=400&size=14&pause=1600&color=0366d6&center=true&vCenter=true&width=800&lines=const+perceive+=+(sensoryInput:+Signal):+Reality+=%3E+predict().correctWith(sensoryInput);fn+minimize_surprise(cortex:+%26mut+Cortex%2C+error:+Divergence);let+perception+=+reality.filter(|data|+!prior.predicts(data)).collect::%3CSurprise%3E();const+freeWill+=+(state:+Beliefs):+Action+=%3E+argmax(simulateFutures(state).map(utility));let+decision+=+choices.into_iter().max_by_key(|a|+a.expected_utility()).unwrap();type+Rationality+=+(emotions:+Noise%2C+facts:+Evidence)+=%3E+BayesianInference;const+act+=+(options:+Action[]%2C+beliefs:+State)+=%3E+options.reduce(maximizeUtility(beliefs))">
-    <img alt="Predictive Coding Ticker" src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=400&size=14&pause=1600&color=58a6ff&center=true&vCenter=true&width=800&lines=const+perceive+=+(sensoryInput:+Signal):+Reality+=%3E+predict().correctWith(sensoryInput);fn+minimize_surprise(cortex:+%26mut+Cortex%2C+error:+Divergence);let+perception+=+reality.filter(|data|+!prior.predicts(data)).collect::%3CSurprise%3E();const+freeWill+=+(state:+Beliefs):+Action+=%3E+argmax(simulateFutures(state).map(utility));let+decision+=+choices.into_iter().max_by_key(|a|+a.expected_utility()).unwrap();type+Rationality+=+(emotions:+Noise%2C+facts:+Evidence)+=%3E+BayesianInference;const+act+=+(options:+Action[]%2C+beliefs:+State)+=%3E+options.reduce(maximizeUtility(beliefs))">
-  </picture>
-</div>
+<samp>TO THE TRAINED EYE, THERE ARE NO COINCIDENCES.</samp>
 
-<br>
+# Gabriel Pinheiro · blightghp
 
-<div align="center">
+**Sistemas nativos, interfaces precisas e modelos que transformam dados em percepção.**
 
-[![Sinapse Formalista — Simulador Neural Interativo 3D](assets/brain.gif?v=2)](https://blightghp.github.io/blightghp/)
+[![Validar ecossistema](https://github.com/blightghp/blightghp/actions/workflows/ci.yml/badge.svg)](https://github.com/blightghp/blightghp/actions/workflows/ci.yml)
+[![GitHub Pages](https://github.com/blightghp/blightghp/actions/workflows/deploy.yml/badge.svg)](https://github.com/blightghp/blightghp/actions/workflows/deploy.yml)
 
-<sub>▲ clique para abrir o simulador interativo</sub>
+<a href="https://blightghp.github.io/blightghp/">
+  <img src="assets/brain.gif?v=3" width="760" alt="Cérebro neural 3D girando lentamente enquanto impulsos sinápticos percorrem conexões azuis" />
+</a>
 
-<br>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=16&pause=2200&color=58a6ff&center=true&vCenter=true&width=800&lines=TO+THE+TRAINED+EYE%2C+THERE+ARE+NO+COINCIDENCES...;fn+infer(%26self%2C+evidence:+%26Data)+-%3E+Result%3CBelief%2C+Bias%3E;type+Signal%3CT%3E+=+T+extends+Noise+%3F+never+:+T;type+Item%3C%27a%3E+=+Inference+for+Pattern%3C%27a%3E">
-  <source media="(prefers-color-scheme: light)" srcset="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=16&pause=2200&color=0366d6&center=true&vCenter=true&width=800&lines=TO+THE+TRAINED+EYE%2C+THERE+ARE+NO+COINCIDENCES...;fn+infer(%26self%2C+evidence:+%26Data)+-%3E+Result%3CBelief%2C+Bias%3E;type+Signal%3CT%3E+=+T+extends+Noise+%3F+never+:+T;type+Item%3C%27a%3E+=+Inference+for+Pattern%3C%27a%3E">
-  <img alt="Discreet Message" src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=16&pause=2200&color=58a6ff&center=true&vCenter=true&width=800&lines=TO+THE+TRAINED+EYE%2C+THERE+ARE+NO+COINCIDENCES...;fn+infer(%26self%2C+evidence:+%26Data)+-%3E+Result%3CBelief%2C+Bias%3E;type+Signal%3CT%3E+=+T+extends+Noise+%3F+never+:+T;type+Item%3C%27a%3E+=+Inference+for+Pattern%3C%27a%3E">
-</picture>
+<sub>▲ Clique no cérebro para explorar o motor neural 3D — órbita, camadas anatômicas, bloom e inferência Bayesiana em tempo real.</sub>
 
 </div>
 
-<br>
+---
+
+### Um ecossistema, duas camadas, uma topologia
+
+O experimento acima não é um vídeo decorativo. O mesmo grafo procedural alimenta a experiência web, o GIF reproduzível do perfil e o aplicativo desktop. A interface TypeScript conversa com um runtime Rust via Tauri; entradas são validadas por schema e invariantes visuais são protegidos por Vitest.
+
+| Camada | Tecnologia | Papel no sistema |
+| :-- | :-- | :-- |
+| **Core nativo** | `Rust` · `Serde` | Runtime tipado e comandos seguros do desktop |
+| **Desktop bridge** | `Tauri 2` | IPC mínimo entre o motor nativo e a interface |
+| **Motor visual** | `TypeScript` · `Three.js` | Topologia 3D, órbita, bloom e impulsos instanciados |
+| **Contrato** | `Zod Schema` | Configuração validada antes de alcançar o renderer |
+| **Qualidade** | `Vitest` · `Cargo test` | Determinismo do grafo e contrato cross-stack |
+| **Automação** | `JavaScript` · `GitHub Actions` | Captura do GIF, gráfico de atividade e deploy contínuo |
 
 <div align="center">
-  <a href="https://github.com/blightghp/blightghp">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://skillicons.dev/icons?i=rust%2Cts%2Cjs%2Cnodejs%2Cpython%2Cr%2Creact%2Ctauri%2Clinux%2Cvim%2Cwasm%2Cdocker%2Cgit%2Ckubernetes&theme=dark">
-      <source media="(prefers-color-scheme: light)" srcset="https://skillicons.dev/icons?i=rust%2Cts%2Cjs%2Cnodejs%2Cpython%2Cr%2Creact%2Ctauri%2Clinux%2Cvim%2Cwasm%2Cdocker%2Cgit%2Ckubernetes&theme=light">
-      <img alt="Skills" src="https://skillicons.dev/icons?i=rust%2Cts%2Cjs%2Cnodejs%2Cpython%2Cr%2Creact%2Ctauri%2Clinux%2Cvim%2Cwasm%2Cdocker%2Cgit%2Ckubernetes&theme=dark">
-    </picture>
-  </a>
+
+[![Rust](https://img.shields.io/badge/Rust-101828?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Tauri](https://img.shields.io/badge/Tauri_2-101828?style=for-the-badge&logo=tauri&logoColor=24C8DB)](https://tauri.app/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-101828?style=for-the-badge&logo=typescript&logoColor=4A9EFF)](https://www.typescriptlang.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-101828?style=for-the-badge&logo=javascript&logoColor=F7DF1E)](https://developer.mozilla.org/docs/Web/JavaScript)
+[![Vitest](https://img.shields.io/badge/Vitest-101828?style=for-the-badge&logo=vitest&logoColor=6E9F18)](https://vitest.dev/)
+[![Zod](https://img.shields.io/badge/Zod_Schema-101828?style=for-the-badge&logo=zod&logoColor=3E67B1)](https://zod.dev/)
+
 </div>
 
-<br>
+```text
+evidence → Zod schema → TypeScript state → Three.js graph
+                                      ↕
+                              Tauri IPC · Rust
+                                      ↓
+                       Vitest + Cargo + GitHub Pages
+```
+
+### O que está vivo aqui
+
+- **Cérebro procedural determinístico:** hemisférios, cerebelo, tronco e corpo caloso emergem de funções matemáticas com seed estável.
+- **Sinais que seguem a rede:** cada luz percorre arestas reais e carrega uma trilha sináptica, sem partículas soltas fingindo conectividade.
+- **Mesmo motor, múltiplas superfícies:** navegador no GitHub Pages, WebView do Tauri e captura automatizada do hero do perfil.
+- **Fundo adaptativo:** o hero usa transparência indexada e preserva contraste nos temas claro e escuro do GitHub.
 
 <div align="center">
-  <img alt="Longitudinal Activity Graph" width="850" src="assets/activity_flow.svg?v=2">
+  <img src="assets/activity_flow.svg?v=3" width="850" alt="Fluxo longitudinal de contribuições no GitHub" />
 </div>
 
-<br>
-
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-streak-stats.herokuapp.com/?user=blightghp&background=0d1117&text=c9d1d9&dates=58a6ff&ring=58a6ff&currStreakLabel=58a6ff&hide_border=true">
-    <source media="(prefers-color-scheme: light)" srcset="https://github-readme-streak-stats.herokuapp.com/?user=blightghp&background=ffffff&text=24292e&dates=0366d6&ring=0366d6&currStreakLabel=0366d6&hide_border=true">
-    <img alt="GitHub Streak" width="850" src="https://github-readme-streak-stats.herokuapp.com/?user=blightghp&background=0d1117&text=c9d1d9&dates=58a6ff&ring=58a6ff&currStreakLabel=58a6ff&hide_border=true">
-  </picture>
-</div>
 
-<br>
+[![Email](https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:ghpgois@gmail.com)
+[![Léxikognos](https://img.shields.io/badge/Léxikognos-246BCE?style=flat-square&logo=google-scholar&logoColor=white)](http://lexikognos.com.br)
+[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://instagram.com/ppgabrielpinheiro)
 
-<div align="center">
-  <a href="mailto:ghpgois@gmail.com"><img src="https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white" alt="Email" /></a>
-  <a href="http://lexikognos.com.br"><img src="https://img.shields.io/badge/Léxikognos-4285F4?style=flat-square&logo=google-scholar&logoColor=white" alt="Léxikognos" /></a>
-  <a href="https://instagram.com/ppgabrielpinheiro"><img src="https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white" alt="Instagram" /></a>
+<sub><code>fn perceive(signal: &Evidence) -&gt; Result&lt;Knowledge, Entropy&gt;</code></sub>
+
 </div>
