@@ -6,46 +6,78 @@
 [![GitHub Pages](https://github.com/blightghp/blightghp/actions/workflows/deploy.yml/badge.svg)](https://github.com/blightghp/blightghp/actions/workflows/deploy.yml)
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=3" width="760" alt="Cérebro neural 3D girando lentamente enquanto impulsos sinápticos percorrem conexões azuis" />
+  <img src="assets/brain.gif?v=4" width="760" alt="Rede neural tridimensional com atividade excitatória e inibitória" />
 </a>
 
-<sub>▲ Clique no cérebro para explorar o motor neural 3D para ajustar a órbita, as camadas anatômicas, o bloom e fazer a inferência Bayesiana em tempo real para modulação sináptica...</sub>
+<sub>▲ Abra o experimento para orbitar o modelo, isolar regiões e alterar estímulo, plasticidade e escala temporal.</sub>
 
 </div>
 
 ---
 
-### Um ecossistema, duas camadas, uma topologia
+## Sinapse Formalista
 
-A "brincadeira" acima é a prova do potencial de uso do ecossistema Rust aliado à comunicação com sistemas web... O mesmo grafo procedural alimenta a experiência web, o GIF reproduzível do perfil e o aplicativo desktop. O que eu fiz? A interface TypeScript conversa com um runtime Rust via Tauri e as entradas são validadas por schema, enquanto invariantes visuais são protegidos por Vitest.
+Este experimento combina uma topologia cerebral procedural com uma simulação neural determinística. Os sinais visíveis não percorrem trajetórias decorativas: cada pulso nasce de um disparo, atravessa uma sinapse do grafo e chega ao neurônio de destino depois do atraso calculado para aquela conexão.
 
-| Camada | Tecnologia | Papel no sistema |
-| :-- | :-- | :-- |
-| **Core nativo** | `Rust` · `Serde` | Runtime tipado e comandos seguros do desktop |
-| **Desktop bridge** | `Tauri 2` | IPC mínimo entre o motor nativo e a interface |
-| **Motor visual** | `TypeScript` · `Three.js` | Topologia 3D, órbita, bloom e impulsos instanciados |
-| **Contrato** | `Zod Schema` | Configuração validada antes de alcançar o renderer |
-| **Qualidade** | `Vitest` · `Cargo test` | Determinismo do grafo e contrato cross-stack |
-| **Automação** | `JavaScript` · `GitHub Actions` | Captura do GIF, gráfico de atividade e deploy contínuo |
+O modelo foi desenhado para ser compreensível e visualmente expressivo. Ele não pretende reproduzir toda a fisiologia do cérebro humano; trabalha com uma aproximação *leaky integrate-and-fire*, plasticidade temporal e uma atualização Bayesiana de duas hipóteses.
 
-<div align="center">
+### O que está sendo simulado
 
-[![Rust](https://img.shields.io/badge/Rust-101828?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![Tauri](https://img.shields.io/badge/Tauri_2-101828?style=for-the-badge&logo=tauri&logoColor=24C8DB)](https://tauri.app/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-101828?style=for-the-badge&logo=typescript&logoColor=4A9EFF)](https://www.typescriptlang.org/)
-[![JavaScript](https://img.shields.io/badge/JavaScript-101828?style=for-the-badge&logo=javascript&logoColor=F7DF1E)](https://developer.mozilla.org/docs/Web/JavaScript)
-[![Vitest](https://img.shields.io/badge/Vitest-101828?style=for-the-badge&logo=vitest&logoColor=6E9F18)](https://vitest.dev/)
-[![Zod](https://img.shields.io/badge/Zod_Schema-101828?style=for-the-badge&logo=zod&logoColor=3E67B1)](https://zod.dev/)
-
-</div>
+- **1.890 neurônios procedurais:** hemisférios, cerebelo e tronco usam uma semente estável.
+- **Sinapses direcionadas:** cada conexão possui peso, atraso, origem e destino.
+- **Excitação e inibição:** a natureza do neurônio define o sinal das suas conexões de saída.
+- **Dinâmica de membrana:** potenciais decaem com o tempo, respeitam limiar e período refratário.
+- **Plasticidade STDP:** disparos próximos no tempo fortalecem ou enfraquecem sinapses excitatórias.
+- **Evidência Bayesiana:** cada mudança de estímulo atualiza a crença antes de modular a entrada da rede.
+- **Renderização orientada pelo estado:** brilho dos nós, cor das conexões, pulsos e gráfico de atividade refletem a simulação atual.
 
 ```text
-evidence → Zod schema → TypeScript state → Three.js graph
-                                      ↕
-                              Tauri IPC · Rust
-                                      ↓
-                       Vitest + Cargo + GitHub Pages
+observação → atualização Bayesiana → corrente de entrada
+                                         ↓
+topologia → potenciais → disparos → sinapses com atraso
+                ↑                         ↓
+                └──────── STDP ───────────┘
+                                         ↓
+                         Three.js · WebGL · HUD
 ```
+
+### Arquitetura
+
+| Camada | Tecnologia | Responsabilidade atual |
+| :-- | :-- | :-- |
+| Núcleo neural | TypeScript | Integração temporal, disparos, atrasos e plasticidade |
+| Topologia | Three.js · TypeScript | Anatomia procedural, conectividade e seed determinística |
+| Inferência | TypeScript | Atualização Bayesiana normalizada entre duas hipóteses |
+| Visualização | Three.js · WebGL | Instâncias, bloom, envoltórios anatômicos e atividade por vértice |
+| Contrato | Zod | Validação dos parâmetros recebidos pela interface e pela URL |
+| Desktop | Tauri 2 · Rust | Empacotamento nativo e ponte segura com a interface |
+| Qualidade | Vitest · Cargo | Invariantes do grafo, inferência, simulação e runtime nativo |
+
+O núcleo permanece em TypeScript nesta versão para manter paridade imediata entre GitHub Pages e desktop. A migração para um crate compartilhado entre Rust nativo e WebAssembly está planejada para quando os perfis de desempenho justificarem a troca.
+
+### Executar localmente
+
+```bash
+npm install
+npm run dev
+```
+
+Para validar o projeto inteiro:
+
+```bash
+npm run check
+cargo test --manifest-path src-tauri/Cargo.toml
+```
+
+O GIF do perfil é reproduzível e usa o mesmo renderer da aplicação:
+
+```bash
+npm run generate:brain-gif
+```
+
+## Evolução do experimento
+
+Cada versão combina uma melhoria do modelo com um novo patamar gráfico. O plano completo, os critérios de conclusão e os limites científicos estão em [ROADMAP.md](ROADMAP.md).
 
 ## Sobre mim
 

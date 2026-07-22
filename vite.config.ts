@@ -1,8 +1,7 @@
 import { defineConfig } from "vite";
 
-// https://vite.dev/config/
 export default defineConfig({
-  // GitHub Pages precisa do subdiretório; o bundle do Tauri precisa de URLs relativas.
+  // No Pages, a aplicação vive sob o nome do repositório; no Tauri, os caminhos são relativos.
   base: process.env.GITHUB_ACTIONS ? "/blightghp/" : "./",
   clearScreen: false,
   build: {

@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#020711" />
-    <meta name="description" content="Sinapse Formalista — cérebro neural 3D com inferência Bayesiana, Rust, Tauri e TypeScript." />
+    <meta name="description" content="Sinapse Formalista — simulação neural 3D com plasticidade, inferência Bayesiana e atividade em tempo real." />
     <meta property="og:title" content="Sinapse Formalista" />
-    <meta property="og:description" content="Motor neural 3D interativo construído com Rust, Tauri e TypeScript." />
+    <meta property="og:description" content="Rede neural procedural com disparos, atrasos e pesos adaptativos." />
     <meta property="og:image" content="https://raw.githubusercontent.com/blightghp/blightghp/main/assets/brain-concept.png" />
     <title>Sinapse Formalista · Neural Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -32,37 +32,41 @@
     </header>
 
     <aside class="glass-panel control-panel" id="ui-panel">
-      <div class="eyebrow">NEURAL ENGINE / 01</div>
+      <div class="eyebrow">NEURAL ENGINE / 02</div>
       <h1>Córtex em<br /><span>tempo real.</span></h1>
-      <p class="lede">Uma topologia procedural transforma evidência em sinais que percorrem o grafo cortical.</p>
+      <p class="lede">Uma rede excitável transforma observações em disparos, atraso sináptico e adaptação dos pesos.</p>
 
       <div class="metric-strip">
-        <div><strong>1.8K</strong><span>NÓS</span></div>
-        <div><strong>5.2K</strong><span>ARESTAS</span></div>
-        <div><strong>60</strong><span>FPS</span></div>
+        <div><strong id="node-count">—</strong><span>NÓS</span></div>
+        <div><strong id="synapse-count">—</strong><span>SINAPSES</span></div>
+        <div><strong id="activity-rate">0.0</strong><span>HZ / NÓ</span></div>
       </div>
 
       <section>
-        <div class="section-heading"><span>DINÂMICA</span><span>WEBGL</span></div>
+        <div class="section-heading"><span>DINÂMICA</span><span>SIMULAÇÃO</span></div>
         <div class="control-group">
           <label for="rotation-speed"><span>Rotação orbital</span><output id="rot-speed-val">0.6×</output></label>
           <input type="range" id="rotation-speed" min="0" max="3" step="0.1" value="0.55" />
         </div>
         <div class="control-group">
-          <label for="pulse-speed"><span>Velocidade sináptica</span><output id="pulse-speed-val">1.0×</output></label>
+          <label for="pulse-speed"><span>Escala temporal</span><output id="pulse-speed-val">1.0×</output></label>
           <input type="range" id="pulse-speed" min="0.1" max="3" step="0.1" value="1" />
         </div>
         <div class="control-group">
-          <label for="pulse-count"><span>Densidade de sinais</span><output id="pulse-count-val">140</output></label>
+          <label for="pulse-count"><span>Sinais visíveis</span><output id="pulse-count-val">140</output></label>
           <input type="range" id="pulse-count" min="10" max="300" step="10" value="140" />
+        </div>
+        <div class="control-group">
+          <label for="learning-rate"><span>Plasticidade STDP</span><output id="learning-rate-val">0.004</output></label>
+          <input type="range" id="learning-rate" min="0" max="0.02" step="0.001" value="0.004" />
         </div>
       </section>
 
       <section>
         <div class="section-heading"><span>FOTÔNICA</span><span>GPU</span></div>
         <div class="control-group compact">
-          <label for="bloom-strength"><span>Bloom</span><output id="bloom-strength-val">1.4</output></label>
-          <input type="range" id="bloom-strength" min="0" max="4" step="0.1" value="1.35" />
+          <label for="bloom-strength"><span>Bloom</span><output id="bloom-strength-val">1.2</output></label>
+          <input type="range" id="bloom-strength" min="0" max="4" step="0.1" value="1.15" />
         </div>
         <div class="control-group compact">
           <label for="bloom-radius"><span>Dispersão</span><output id="bloom-radius-val">0.45</output></label>
@@ -71,30 +75,36 @@
       </section>
 
       <section>
-        <div class="section-heading"><span>ANATOMIA</span><span>LAYERS</span></div>
+        <div class="section-heading"><span>ANATOMIA</span><span>CAMADAS</span></div>
         <div class="toggle-grid">
           <label><input type="checkbox" id="toggle-left-hemi" checked /><span></span>Esquerdo</label>
           <label><input type="checkbox" id="toggle-right-hemi" checked /><span></span>Direito</label>
           <label><input type="checkbox" id="toggle-cerebellum" checked /><span></span>Cerebelo</label>
           <label><input type="checkbox" id="toggle-stem" checked /><span></span>Tronco</label>
         </div>
+        <div class="signal-legend" aria-label="Legenda dos sinais">
+          <span><i class="excitation"></i>Excitatório</span>
+          <span><i class="inhibition"></i>Inibitório</span>
+        </div>
       </section>
     </aside>
 
     <section class="glass-panel inference-panel" id="bayesian-hud">
       <div class="inference-copy">
-        <div class="eyebrow">BAYESIAN UPDATE / LIVE</div>
-        <div class="formula">$P(\Theta \mid D) \propto P(D \mid \Theta)P(\Theta)$</div>
-        <p>O posterior recalibra densidade e velocidade dos impulsos sem reiniciar o grafo.</p>
+        <div class="eyebrow">BAYESIAN OBSERVATION / LIVE</div>
+        <div class="formula">$P(\Theta \mid D) = \frac{P(D \mid \Theta)P(\Theta)}{P(D)}$</div>
+        <p>Cada estímulo atualiza a crença e modula a corrente que entra no circuito.</p>
+        <canvas id="activity-trace" aria-label="Histórico recente da taxa de disparos"></canvas>
       </div>
       <div class="bayesian-stats">
-        <div><span>PRIOR</span><strong id="prior-val">0.53</strong></div>
-        <div><span>LIKELIHOOD</span><strong id="likelihood-val">0.73</strong></div>
-        <div class="posterior"><span>POSTERIOR</span><strong id="posterior-val">0.62</strong></div>
+        <div><span>PRIOR</span><strong id="prior-val">0.35</strong></div>
+        <div><span>LIKELIHOOD</span><strong id="likelihood-val">0.74</strong></div>
+        <div class="posterior"><span>POSTERIOR</span><strong id="posterior-val">0.35</strong></div>
+        <div><span>PESO MÉDIO</span><strong id="mean-weight">0.000</strong></div>
       </div>
       <div class="intensity-controls">
         <button id="btn-intensity-down" type="button" aria-label="Reduzir estímulo">−</button>
-        <div><span>ESTADO</span><strong id="excitation-val">ATIVO</strong></div>
+        <div><span>ESTÍMULO</span><strong id="stimulus-val">50%</strong><small id="network-state">LATENTE</small></div>
         <button id="btn-intensity-up" type="button" aria-label="Aumentar estímulo">+</button>
       </div>
     </section>

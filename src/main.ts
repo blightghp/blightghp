@@ -1,11 +1,14 @@
 import * as THREE from "three";
 import { invoke } from "@tauri-apps/api/core";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { ConvexGeometry } from "three/examples/jsm/geometries/ConvexGeometry.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { BrainData, BrainRegion, generateBrainData } from "./brain";
+import { BayesianBelief, BayesianUpdate } from "./inference";
 import { BrainSettings, getInitialBrainSettings } from "./schema";
+import { NeuralSimulation } from "./simulation";
 
 declare global {
   interface Window {
@@ -23,18 +26,49 @@ interface RuntimeInfo {
   schema: string;
 }
 
-interface ActivePath {
-  path: number[];
-  offset: number;
-  featured: boolean;
+interface PointVisual {
+  nodeIndices: number[];
+  geometry: THREE.BufferGeometry;
+  baseColor: THREE.Color;
 }
 
+interface ConnectionRecord {
+  from: number;
+  to: number;
+  edgeIndex: number;
+}
+
+interface ConnectionVisual {
+  records: ConnectionRecord[];
+  regions: BrainRegion[];
+  lines: THREE.LineSegments;
+  geometry: THREE.BufferGeometry;
+  baseColor: THREE.Color;
+}
+
+interface ShellVisual {
+  region: BrainRegion;
+  material: THREE.ShaderMaterial;
+}
+
+const FIXED_STEP = 1 / 60;
+const TRAIL_LENGTH = 3;
+const MAX_VISIBLE_SIGNALS = 300;
 const state: BrainSettings = getInitialBrainSettings();
+const belief = new BayesianBelief(0.35);
 const palette = {
   network: new THREE.Color(0x147df5),
   featured: new THREE.Color(0x2ed9ff),
   pulseCore: new THREE.Color(0xf4fbff),
   pulseTrail: new THREE.Color(0x36bfff),
+  inhibitory: new THREE.Color(0xc779ff),
+  hot: new THREE.Color(0xeafcff),
+};
+const regionColors: Record<BrainRegion, THREE.Color> = {
+  leftHemi: new THREE.Color(0x1788f4),
+  rightHemi: new THREE.Color(0x24a5ff),
+  cerebellum: new THREE.Color(0x21bfea),
+  stem: new THREE.Color(0x6f9cff),
 };
 
 let scene: THREE.Scene;
@@ -46,15 +80,24 @@ let bloomPass: UnrealBloomPass;
 let brainGroup: THREE.Group;
 let pulseMesh: THREE.InstancedMesh;
 let brainData: BrainData;
-let activePaths: ActivePath[] = [];
+let simulation: NeuralSimulation;
+let currentInference: BayesianUpdate;
 let captureMode = false;
+let captureTime = 0;
+let simulationAccumulator = 0;
+let metricAccumulator = 0;
 
 const regionObjects = new Map<BrainRegion, THREE.Object3D[]>();
-const bridgeObjects: THREE.Object3D[] = [];
-const clock = new THREE.Clock();
+const pointVisuals: PointVisual[] = [];
+const connectionVisuals: ConnectionVisual[] = [];
+const shellVisuals: ShellVisual[] = [];
+const activitySamples = Array.from({ length: 96 }, () => 0);
+const timer = new THREE.Timer();
 const tempMatrix = new THREE.Matrix4();
 const tempPosition = new THREE.Vector3();
 const tempScale = new THREE.Vector3();
+const tempQuaternion = new THREE.Quaternion();
+const tempColor = new THREE.Color();
 
 function element<T extends HTMLElement>(selector: string): T {
   const match = document.querySelector<T>(selector);
@@ -86,103 +129,127 @@ function addRegionObject(region: BrainRegion, object: THREE.Object3D): void {
   brainGroup.add(object);
 }
 
+function createShell(region: BrainRegion, points: THREE.Vector3[]): void {
+  const stride = Math.max(1, Math.floor(points.length / 180));
+  const hullPoints = points.filter((_, index) => index % stride === 0);
+  const geometry = new ConvexGeometry(hullPoints);
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      shellColor: { value: regionColors[region].clone() },
+      activity: { value: 0 },
+      opacity: { value: region === "cerebellum" ? 0.12 : 0.085 },
+    },
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewDirection;
+      void main() {
+        vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
+        vNormal = normalize(normalMatrix * normal);
+        vViewDirection = normalize(-viewPosition.xyz);
+        gl_Position = projectionMatrix * viewPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 shellColor;
+      uniform float activity;
+      uniform float opacity;
+      varying vec3 vNormal;
+      varying vec3 vViewDirection;
+      void main() {
+        float rim = pow(1.0 - abs(dot(vNormal, vViewDirection)), 2.4);
+        float pulse = 0.7 + activity * 1.8;
+        vec3 color = shellColor * (0.22 + rim * 1.55 + activity * 0.8);
+        gl_FragColor = vec4(color, opacity * rim * pulse);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+  });
+  const shell = new THREE.Mesh(geometry, material);
+  shell.renderOrder = -1;
+  shellVisuals.push({ region, material });
+  addRegionObject(region, shell);
+}
+
 function buildBrainVisuals(): void {
   brainGroup = new THREE.Group();
   brainGroup.rotation.set(0.04, 0.34, -0.025);
   scene.add(brainGroup);
 
   const pointTexture = createPointTexture();
-  const edgeBuckets = new Map<BrainRegion | "bridge", THREE.Vector3[]>();
-  const nodeBuckets = new Map<BrainRegion, THREE.Vector3[]>();
-
   for (const region of Object.keys(brainData.groups) as BrainRegion[]) {
-    nodeBuckets.set(
-      region,
-      brainData.groups[region].map((index) => brainData.nodes[index]),
-    );
-  }
+    const nodeIndices = brainData.groups[region];
+    const pointsForRegion = nodeIndices.map((index) => brainData.nodes[index]);
+    const colors = new Float32Array(nodeIndices.length * 3);
+    for (let index = 0; index < nodeIndices.length; index += 1) {
+      regionColors[region].toArray(colors, index * 3);
+    }
 
-  for (const [from, to] of brainData.edges) {
-    const fromRegion = brainData.regionByNode[from];
-    const toRegion = brainData.regionByNode[to];
-    const bucket = fromRegion === toRegion ? fromRegion : "bridge";
-    const points = edgeBuckets.get(bucket) ?? [];
-    points.push(brainData.nodes[from], brainData.nodes[to]);
-    edgeBuckets.set(bucket, points);
-  }
-
-  const regionOpacity: Record<BrainRegion, number> = {
-    leftHemi: 0.34,
-    rightHemi: 0.34,
-    cerebellum: 0.42,
-    stem: 0.46,
-  };
-
-  for (const region of Object.keys(brainData.groups) as BrainRegion[]) {
-    const pointsGeometry = new THREE.BufferGeometry().setFromPoints(nodeBuckets.get(region) ?? []);
+    const geometry = new THREE.BufferGeometry().setFromPoints(pointsForRegion);
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     const points = new THREE.Points(
-      pointsGeometry,
+      geometry,
       new THREE.PointsMaterial({
-        color: region === "cerebellum" ? 0x36bfff : 0x2596ff,
-        size: region === "stem" ? 0.026 : 0.021,
+        color: 0xffffff,
+        vertexColors: true,
+        size: region === "stem" ? 0.027 : 0.022,
         map: pointTexture,
         transparent: true,
-        opacity: 0.72,
+        opacity: 0.7,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
     );
+    pointVisuals.push({ nodeIndices, geometry, baseColor: regionColors[region].clone() });
     addRegionObject(region, points);
+    createShell(region, pointsForRegion);
+  }
 
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints(edgeBuckets.get(region) ?? []);
+  const edgeBuckets = new Map<
+    string,
+    { regions: BrainRegion[]; records: ConnectionRecord[] }
+  >();
+  brainData.edges.forEach(([from, to], edgeIndex) => {
+    const fromRegion = brainData.regionByNode[from];
+    const toRegion = brainData.regionByNode[to];
+    const regions = fromRegion === toRegion
+      ? [fromRegion]
+      : ([fromRegion, toRegion].sort() as BrainRegion[]);
+    const key = regions.join(":");
+    const bucket = edgeBuckets.get(key) ?? { regions, records: [] };
+    bucket.records.push({ from, to, edgeIndex });
+    edgeBuckets.set(key, bucket);
+  });
+
+  for (const { regions, records } of edgeBuckets.values()) {
+    const positions: THREE.Vector3[] = [];
+    for (const record of records) {
+      positions.push(brainData.nodes[record.from], brainData.nodes[record.to]);
+    }
+    const colors = new Float32Array(records.length * 6);
+    const baseColor = regions.length > 1 ? palette.featured.clone() : regionColors[regions[0]].clone();
+    for (let index = 0; index < records.length * 2; index += 1) {
+      baseColor.toArray(colors, index * 3);
+    }
+    const geometry = new THREE.BufferGeometry().setFromPoints(positions);
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     const lines = new THREE.LineSegments(
-      lineGeometry,
+      geometry,
       new THREE.LineBasicMaterial({
-        color: region === "cerebellum" ? 0x168ee8 : 0x0c62d7,
+        color: 0xffffff,
+        vertexColors: true,
         transparent: true,
-        opacity: regionOpacity[region],
+        opacity: regions.length > 1 ? 0.3 : 0.18,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
     );
-    addRegionObject(region, lines);
+    connectionVisuals.push({ records, regions, lines, geometry, baseColor });
+    brainGroup.add(lines);
   }
 
-  const bridgeGeometry = new THREE.BufferGeometry().setFromPoints(edgeBuckets.get("bridge") ?? []);
-  const bridges = new THREE.LineSegments(
-    bridgeGeometry,
-    new THREE.LineBasicMaterial({
-      color: 0x20a9ff,
-      transparent: true,
-      opacity: 0.5,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    }),
-  );
-  bridgeObjects.push(bridges);
-  brainGroup.add(bridges);
-
-  const featuredSegments: THREE.Vector3[] = [];
-  for (const path of brainData.signalPaths) {
-    for (let index = 0; index < path.length - 1; index += 1) {
-      featuredSegments.push(brainData.nodes[path[index]], brainData.nodes[path[index + 1]]);
-    }
-  }
-  const featuredLines = new THREE.LineSegments(
-    new THREE.BufferGeometry().setFromPoints(featuredSegments),
-    new THREE.LineBasicMaterial({
-      color: 0x1fb8ff,
-      transparent: true,
-      opacity: 0.78,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    }),
-  );
-  bridgeObjects.push(featuredLines);
-  brainGroup.add(featuredLines);
-
-  const trailLength = 4;
-  const pulseCapacity = 300 * trailLength;
   pulseMesh = new THREE.InstancedMesh(
     new THREE.IcosahedronGeometry(0.018, 1),
     new THREE.MeshBasicMaterial({
@@ -193,44 +260,10 @@ function buildBrainVisuals(): void {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     }),
-    pulseCapacity,
+    MAX_VISIBLE_SIGNALS * TRAIL_LENGTH,
   );
   pulseMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   brainGroup.add(pulseMesh);
-}
-
-function setupPaths(): void {
-  const featured = brainData.signalPaths.map((path, index) => ({
-    path,
-    offset: index / Math.max(1, brainData.signalPaths.length),
-    featured: true,
-  }));
-  const featuredSet = new Set(brainData.signalPaths);
-  const regular = brainData.paths
-    .filter((path) => !featuredSet.has(path))
-    .slice(0, Math.max(0, state.pulseCount - featured.length))
-    .map((path, index) => ({
-      path,
-      offset: (index * 0.61803398875) % 1,
-      featured: false,
-    }));
-
-  activePaths = [...featured, ...regular].slice(0, 300);
-  pulseMesh.count = activePaths.length * 4;
-  for (let pathIndex = 0; pathIndex < activePaths.length; pathIndex += 1) {
-    for (let trail = 0; trail < 4; trail += 1) {
-      const instance = pathIndex * 4 + trail;
-      pulseMesh.setColorAt(
-        instance,
-        trail === 0
-          ? palette.pulseCore
-          : activePaths[pathIndex].featured
-            ? palette.featured
-            : palette.pulseTrail,
-      );
-    }
-  }
-  if (pulseMesh.instanceColor) pulseMesh.instanceColor.needsUpdate = true;
 }
 
 function isRegionVisible(region: BrainRegion): boolean {
@@ -246,67 +279,190 @@ function updateVisibility(): void {
   for (const [region, objects] of regionObjects) {
     for (const object of objects) object.visible = isRegionVisible(region);
   }
-  const anyBrain = state.showLeftHemi || state.showRightHemi;
-  for (const bridge of bridgeObjects) {
-    bridge.visible = anyBrain || state.showCerebellum || state.showStem;
+  for (const connection of connectionVisuals) {
+    connection.lines.visible = connection.regions.every(isRegionVisible);
   }
 }
 
-function updatePulses(time: number): void {
-  for (let pathIndex = 0; pathIndex < activePaths.length; pathIndex += 1) {
-    const active = activePaths[pathIndex];
-    const path = active.path;
-    const visible = path.some((nodeIndex) => isRegionVisible(brainData.regionByNode[nodeIndex]));
+function updateNeuralVisuals(): void {
+  for (const visual of pointVisuals) {
+    const colorAttribute = visual.geometry.getAttribute("color") as THREE.BufferAttribute;
+    for (let localIndex = 0; localIndex < visual.nodeIndices.length; localIndex += 1) {
+      const node = visual.nodeIndices[localIndex];
+      const activity = Math.min(1, simulation.activations[node]);
+      const visibleActivity = Math.pow(activity, 1.7);
+      const hotColor = brainData.neuronKindByNode[node] === "inhibitory"
+        ? palette.inhibitory
+        : palette.hot;
+      tempColor
+        .copy(visual.baseColor)
+        .multiplyScalar(0.5 + visibleActivity * 0.24)
+        .lerp(hotColor, visibleActivity * 0.76);
+      colorAttribute.setXYZ(localIndex, tempColor.r, tempColor.g, tempColor.b);
+    }
+    colorAttribute.needsUpdate = true;
+  }
 
-    for (let trail = 0; trail < 4; trail += 1) {
-      const instance = pathIndex * 4 + trail;
-      if (!visible) {
-        tempMatrix.makeScale(0, 0, 0);
-        pulseMesh.setMatrixAt(instance, tempMatrix);
-        continue;
-      }
-
-      const trailOffset = trail * 0.013;
-      const progress = (time * state.pulseSpeed * 0.19 + active.offset - trailOffset + 10) % 1;
-      const pathPosition = progress * (path.length - 1);
-      const segment = Math.min(path.length - 2, Math.floor(pathPosition));
-      const fraction = pathPosition - segment;
-      tempPosition.lerpVectors(
-        brainData.nodes[path[segment]],
-        brainData.nodes[path[segment + 1]],
-        fraction,
+  for (const visual of connectionVisuals) {
+    const colorAttribute = visual.geometry.getAttribute("color") as THREE.BufferAttribute;
+    visual.records.forEach((record, index) => {
+      const activity = Math.max(
+        simulation.activations[record.from],
+        simulation.activations[record.to],
       );
+      const visibleActivity = Math.pow(activity, 1.8);
+      const weight = (
+        Math.abs(simulation.getWeight(record.edgeIndex * 2)) +
+        Math.abs(simulation.getWeight(record.edgeIndex * 2 + 1))
+      ) / 2;
+      tempColor
+        .copy(visual.baseColor)
+        .lerp(palette.hot, Math.min(0.72, visibleActivity * 0.68))
+        .multiplyScalar(0.32 + weight * 0.3 + visibleActivity * 0.3);
+      colorAttribute.setXYZ(index * 2, tempColor.r, tempColor.g, tempColor.b);
+      colorAttribute.setXYZ(index * 2 + 1, tempColor.r, tempColor.g, tempColor.b);
+    });
+    colorAttribute.needsUpdate = true;
+  }
 
-      const featuredScale = active.featured ? 1.28 : 1;
-      const trailScale = featuredScale * (1 - trail * 0.19);
-      const voltage = 0.92 + 0.14 * Math.sin(time * 7 + pathIndex * 0.73);
-      tempScale.setScalar(trailScale * voltage);
-      tempMatrix.compose(tempPosition, new THREE.Quaternion(), tempScale);
+  for (const visual of shellVisuals) {
+    const nodes = brainData.groups[visual.region];
+    let totalActivity = 0;
+    for (const node of nodes) totalActivity += simulation.activations[node];
+    visual.material.uniforms.activity.value = totalActivity / Math.max(1, nodes.length);
+  }
+}
+
+function updateSignals(): void {
+  const signals = simulation.signals.slice(-Math.min(state.pulseCount, MAX_VISIBLE_SIGNALS));
+  let instance = 0;
+
+  for (const signal of signals) {
+    const synapse = brainData.synapses[signal.synapseIndex];
+    const fromRegion = brainData.regionByNode[synapse.from];
+    const toRegion = brainData.regionByNode[synapse.to];
+    if (!isRegionVisible(fromRegion) || !isRegionVisible(toRegion)) continue;
+
+    for (let trail = 0; trail < TRAIL_LENGTH; trail += 1) {
+      const progress = signal.progress - trail * 0.065;
+      if (progress < 0) continue;
+      tempPosition.lerpVectors(
+        brainData.nodes[synapse.from],
+        brainData.nodes[synapse.to],
+        Math.min(1, progress),
+      );
+      const trailFade = 1 - trail * 0.24;
+      const scale = (0.72 + signal.strength * 0.8) * trailFade;
+      tempScale.setScalar(scale);
+      tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
       pulseMesh.setMatrixAt(instance, tempMatrix);
+      pulseMesh.setColorAt(
+        instance,
+        trail === 0
+          ? palette.pulseCore
+          : signal.inhibitory
+            ? palette.inhibitory
+            : palette.pulseTrail,
+      );
+      instance += 1;
     }
   }
+
+  pulseMesh.count = instance;
   pulseMesh.instanceMatrix.needsUpdate = true;
+  if (pulseMesh.instanceColor) pulseMesh.instanceColor.needsUpdate = true;
 }
 
-function renderFrame(time: number, forcedRotation?: number): void {
-  brainGroup.rotation.y =
-    forcedRotation ?? 0.34 + time * state.rotationSpeed * 0.115;
+function drawActivityTrace(): void {
+  const canvas = element<HTMLCanvasElement>("#activity-trace");
+  const width = Math.max(1, canvas.clientWidth);
+  const height = Math.max(1, canvas.clientHeight);
+  const ratio = Math.min(window.devicePixelRatio, 2);
+  const pixelWidth = Math.round(width * ratio);
+  const pixelHeight = Math.round(height * ratio);
+  if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+    canvas.width = pixelWidth;
+    canvas.height = pixelHeight;
+  }
+  const context = canvas.getContext("2d")!;
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  const peak = Math.max(1, ...activitySamples);
+  const gradient = context.createLinearGradient(0, 0, width, 0);
+  gradient.addColorStop(0, "rgba(29,126,235,.25)");
+  gradient.addColorStop(1, "rgba(100,220,255,.95)");
+  context.strokeStyle = gradient;
+  context.lineWidth = 1.25;
+  context.beginPath();
+  activitySamples.forEach((sample, index) => {
+    const x = (index / (activitySamples.length - 1)) * width;
+    const y = height - 2 - (sample / peak) * (height - 5);
+    if (index === 0) context.moveTo(x, y);
+    else context.lineTo(x, y);
+  });
+  context.stroke();
+}
+
+function updateMetrics(delta: number): void {
+  metricAccumulator += delta;
+  if (metricAccumulator < 0.12) return;
+  metricAccumulator = 0;
+  activitySamples.shift();
+  activitySamples.push(simulation.firingRate);
+  element("#activity-rate").textContent = simulation.firingRate.toFixed(1);
+  const stateLabel = simulation.firingRate > 8
+    ? "INTENSO"
+    : simulation.firingRate > 1
+      ? "PROPAGANDO"
+      : "LATENTE";
+  element("#network-state").textContent = stateLabel;
+  element("#mean-weight").textContent = simulation.meanWeight().toFixed(3);
+  drawActivityTrace();
+}
+
+function advanceSimulation(delta: number): void {
+  simulationAccumulator += Math.min(delta, 0.1) * state.pulseSpeed;
+  while (simulationAccumulator >= FIXED_STEP) {
+    simulation.step(FIXED_STEP, {
+      intensity: state.stimulusIntensity,
+      confidence: currentInference.posterior,
+    });
+    simulationAccumulator -= FIXED_STEP;
+  }
+}
+
+function renderFrame(time: number, forcedRotation?: number, frameDelta = 0): void {
+  brainGroup.rotation.y = forcedRotation ?? 0.34 + time * state.rotationSpeed * 0.115;
   brainGroup.rotation.x = 0.035 + Math.sin(time * 0.17) * 0.035;
   brainGroup.rotation.z = -0.025 + Math.cos(time * 0.13) * 0.018;
-  updatePulses(time);
+  updateNeuralVisuals();
+  updateSignals();
+  if (frameDelta > 0) updateMetrics(frameDelta);
   controls.update();
   composer.render();
 }
 
-function animate(): void {
+function animate(timestamp: number): void {
   requestAnimationFrame(animate);
-  if (!captureMode) renderFrame(clock.getElapsedTime());
+  if (captureMode) return;
+  timer.update(timestamp);
+  const delta = Math.min(timer.getDelta(), 0.1);
+  advanceSimulation(delta);
+  renderFrame(timer.getElapsed(), undefined, delta);
 }
+
+type NumericSetting =
+  | "rotationSpeed"
+  | "pulseSpeed"
+  | "pulseCount"
+  | "learningRate"
+  | "bloomStrength"
+  | "bloomRadius";
 
 function bindRange(
   id: string,
   displayId: string,
-  key: "rotationSpeed" | "pulseSpeed" | "pulseCount" | "bloomStrength" | "bloomRadius",
+  key: NumericSetting,
   format: (value: number) => string,
   onUpdate?: () => void,
 ): void {
@@ -321,10 +477,28 @@ function bindRange(
   });
 }
 
+function formatCount(value: number): string {
+  if (value < 1000) return String(value);
+  return `${(value / 1000).toFixed(1)}K`;
+}
+
+function showInference(update: BayesianUpdate): void {
+  element("#prior-val").textContent = update.prior.toFixed(2);
+  element("#likelihood-val").textContent = update.likelihood.toFixed(2);
+  element("#posterior-val").textContent = update.posterior.toFixed(2);
+  element("#stimulus-val").textContent = `${Math.round(update.observation * 100)}%`;
+}
+
 function setupInterface(): void {
+  element("#node-count").textContent = formatCount(brainData.nodes.length);
+  element("#synapse-count").textContent = formatCount(brainData.synapses.length);
+
   bindRange("rotation-speed", "rot-speed-val", "rotationSpeed", (value) => `${value.toFixed(1)}×`);
   bindRange("pulse-speed", "pulse-speed-val", "pulseSpeed", (value) => `${value.toFixed(1)}×`);
-  bindRange("pulse-count", "pulse-count-val", "pulseCount", String, setupPaths);
+  bindRange("pulse-count", "pulse-count-val", "pulseCount", String);
+  bindRange("learning-rate", "learning-rate-val", "learningRate", (value) => value.toFixed(3), () => {
+    simulation.setPlasticity(state.learningRate);
+  });
   bindRange("bloom-strength", "bloom-strength-val", "bloomStrength", (value) => value.toFixed(1), () => {
     bloomPass.strength = state.bloomStrength;
   });
@@ -333,13 +507,13 @@ function setupInterface(): void {
   });
 
   type VisibilityKey = "showLeftHemi" | "showRightHemi" | "showCerebellum" | "showStem";
-  const toggles: Array<[string, BrainRegion, VisibilityKey]> = [
-    ["toggle-left-hemi", "leftHemi", "showLeftHemi"],
-    ["toggle-right-hemi", "rightHemi", "showRightHemi"],
-    ["toggle-cerebellum", "cerebellum", "showCerebellum"],
-    ["toggle-stem", "stem", "showStem"],
+  const toggles: Array<[string, VisibilityKey]> = [
+    ["toggle-left-hemi", "showLeftHemi"],
+    ["toggle-right-hemi", "showRightHemi"],
+    ["toggle-cerebellum", "showCerebellum"],
+    ["toggle-stem", "showStem"],
   ];
-  for (const [id, , key] of toggles) {
+  for (const [id, key] of toggles) {
     const input = element<HTMLInputElement>(`#${id}`);
     input.checked = Boolean(state[key]);
     input.addEventListener("change", () => {
@@ -348,41 +522,27 @@ function setupInterface(): void {
     });
   }
 
-  let intensity = 5;
-  const updateInference = (): void => {
-    const prior = 0.2 + intensity * 0.065;
-    const likelihood = 0.52 + intensity * 0.042;
-    const evidence = prior * likelihood + (1 - prior) * (1 - likelihood);
-    const posterior = (likelihood * prior) / evidence;
-    element("#prior-val").textContent = prior.toFixed(2);
-    element("#likelihood-val").textContent = likelihood.toFixed(2);
-    element("#posterior-val").textContent = posterior.toFixed(2);
-    element("#excitation-val").textContent =
-      intensity > 7 ? "TEMPESTADE" : intensity > 4 ? "ATIVO" : "REPOUSO";
-
-    state.pulseCount = Math.min(300, 55 + intensity * 21);
-    state.pulseSpeed = 0.45 + intensity * 0.13;
-    element<HTMLInputElement>("#pulse-count").value = String(state.pulseCount);
-    element("#pulse-count-val").textContent = String(state.pulseCount);
-    element<HTMLInputElement>("#pulse-speed").value = String(state.pulseSpeed);
-    element("#pulse-speed-val").textContent = `${state.pulseSpeed.toFixed(1)}×`;
-    setupPaths();
+  let intensityLevel = Math.round(state.stimulusIntensity * 10);
+  const registerObservation = (): void => {
+    state.stimulusIntensity = intensityLevel / 10;
+    currentInference = belief.observe(state.stimulusIntensity);
+    showInference(currentInference);
   };
   element("#btn-intensity-up").addEventListener("click", () => {
-    intensity = Math.min(10, intensity + 1);
-    updateInference();
+    intensityLevel = Math.min(10, intensityLevel + 1);
+    registerObservation();
   });
   element("#btn-intensity-down").addEventListener("click", () => {
-    intensity = Math.max(1, intensity - 1);
-    updateInference();
+    intensityLevel = Math.max(0, intensityLevel - 1);
+    registerObservation();
   });
-  updateInference();
+  registerObservation();
 }
 
 async function resolveRuntime(): Promise<void> {
   const status = element("#runtime-status");
   if (!window.__TAURI_INTERNALS__) {
-    status.textContent = "WEBGL · TYPESCRIPT · ZOD";
+    status.textContent = "SIMULAÇÃO TS · WEBGL · ZOD";
     return;
   }
   try {
@@ -398,12 +558,13 @@ function onResize(): void {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
+  drawActivityTrace();
 }
 
 function init(): void {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.set(0.18, 0.08, 4.65);
+  camera.position.set(0.18, 0.08, 4.82);
 
   renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -437,8 +598,9 @@ function init(): void {
   composer.addPass(bloomPass);
 
   brainData = generateBrainData();
+  simulation = new NeuralSimulation(brainData, FIXED_STEP);
+  simulation.setPlasticity(state.learningRate);
   buildBrainVisuals();
-  setupPaths();
   setupInterface();
   updateVisibility();
   resolveRuntime();
@@ -447,14 +609,32 @@ function init(): void {
     setCaptureMode(enabled) {
       captureMode = enabled;
       document.body.dataset.capture = String(enabled);
+      if (enabled) {
+        simulation.reset();
+        simulation.setPlasticity(state.learningRate);
+        simulationAccumulator = 0;
+        captureTime = 0;
+        for (let step = 0; step < 120; step += 1) {
+          simulation.step(FIXED_STEP, {
+            intensity: state.stimulusIntensity,
+            confidence: currentInference.posterior,
+          });
+        }
+      } else {
+        timer.reset();
+      }
     },
     capture(time, rotation) {
+      const delta = Math.max(0, time - captureTime);
+      advanceSimulation(delta);
+      captureTime = time;
       renderFrame(time, rotation);
     },
   };
 
   window.addEventListener("resize", onResize);
-  animate();
+  timer.connect(document);
+  animate(performance.now());
 }
 
 window.addEventListener("DOMContentLoaded", init);

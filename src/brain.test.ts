@@ -10,7 +10,9 @@ describe("generateBrainData", () => {
       second.nodes.map((node) => node.toArray()),
     );
     expect(first.edges).toEqual(second.edges);
+    expect(first.synapses).toEqual(second.synapses);
     expect(first.paths).toEqual(second.paths);
+    expect(first.neuronKindByNode).toEqual(second.neuronKindByNode);
   });
 
   it("builds every anatomical region and valid synaptic paths", () => {
@@ -22,5 +24,9 @@ describe("generateBrainData", () => {
     expect(brain.groups.stem.length).toBeGreaterThan(100);
     expect(brain.paths.length).toBeGreaterThan(200);
     expect(brain.edges.every(([a, b]) => a >= 0 && b < brain.nodes.length)).toBe(true);
+    expect(brain.synapses).toHaveLength(brain.edges.length * 2);
+    expect(brain.paths.every((path) => new Set(path).size === path.length)).toBe(true);
+    expect(brain.synapses.some((synapse) => synapse.weight < 0)).toBe(true);
+    expect(brain.synapses.some((synapse) => synapse.weight > 0)).toBe(true);
   });
 });

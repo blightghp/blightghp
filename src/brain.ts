@@ -1,13 +1,24 @@
 import * as THREE from "three";
 
 export type BrainRegion = "leftHemi" | "rightHemi" | "cerebellum" | "stem";
+export type NeuronKind = "excitatory" | "inhibitory";
+
+export interface Synapse {
+  from: number;
+  to: number;
+  weight: number;
+  delay: number;
+  plastic: boolean;
+}
 
 export interface BrainData {
   nodes: THREE.Vector3[];
   edges: [number, number][];
+  synapses: Synapse[];
   paths: number[][];
   signalPaths: number[][];
   regionByNode: BrainRegion[];
+  neuronKindByNode: NeuronKind[];
   groups: Record<BrainRegion, number[]>;
 }
 
@@ -220,17 +231,41 @@ export function generateBrainData(options: BrainGenerationOptions = {}): BrainDa
   connectClosest(groups.cerebellum, [...groups.leftHemi, ...groups.rightHemi], 14);
   connectClosest(groups.stem.slice(0, stemRadial * 3), groups.cerebellum, 5);
 
+  const neuronKindByNode: NeuronKind[] = nodes.map(() =>
+    random() < 0.82 ? "excitatory" : "inhibitory",
+  );
+
+  const synapses: Synapse[] = [];
+  const addSynapse = (from: number, to: number): void => {
+    const excitatory = neuronKindByNode[from] === "excitatory";
+    const magnitude = excitatory ? 0.36 + random() * 0.28 : 0.3 + random() * 0.22;
+    const distance = nodes[from].distanceTo(nodes[to]);
+    synapses.push({
+      from,
+      to,
+      weight: excitatory ? magnitude : -magnitude,
+      delay: 0.024 + distance * 0.052 + random() * 0.012,
+      plastic: excitatory && regionByNode[from] !== "stem",
+    });
+  };
+
+  for (const [from, to] of edges) {
+    addSynapse(from, to);
+    addSynapse(to, from);
+  }
+
   const buildPath = (minimumLength: number, maximumLength: number): number[] => {
     const start = Math.floor(random() * nodes.length);
     const path = [start];
+    const visited = new Set(path);
     const targetLength = minimumLength + Math.floor(random() * (maximumLength - minimumLength + 1));
     let current = start;
     for (let i = 1; i < targetLength; i += 1) {
-      const previous = path[path.length - 2];
-      const candidates = adjacency[current].filter((node) => node !== previous);
+      const candidates = adjacency[current].filter((node) => !visited.has(node));
       if (candidates.length === 0) break;
       current = candidates[Math.floor(random() * candidates.length)];
       path.push(current);
+      visited.add(current);
     }
     return path;
   };
@@ -246,5 +281,14 @@ export function generateBrainData(options: BrainGenerationOptions = {}): BrainDa
     })
     .slice(0, 18);
 
-  return { nodes, edges, paths, signalPaths, regionByNode, groups };
+  return {
+    nodes,
+    edges,
+    synapses,
+    paths,
+    signalPaths,
+    regionByNode,
+    neuronKindByNode,
+    groups,
+  };
 }

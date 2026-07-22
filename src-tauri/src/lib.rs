@@ -10,7 +10,7 @@ struct RuntimeInfo {
 
 fn runtime_info() -> RuntimeInfo {
     RuntimeInfo {
-        engine: "Rust + Tauri",
+        engine: "Rust/Tauri host",
         renderer: "Three.js",
         schema: "Zod",
     }
@@ -39,7 +39,7 @@ mod tests {
         assert_eq!(
             runtime_info(),
             RuntimeInfo {
-                engine: "Rust + Tauri",
+                engine: "Rust/Tauri host",
                 renderer: "Three.js",
                 schema: "Zod",
             }
