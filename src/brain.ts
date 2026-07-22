@@ -12,6 +12,7 @@ export interface Synapse {
 }
 
 export interface BrainData {
+  seed: number;
   nodes: THREE.Vector3[];
   edges: [number, number][];
   synapses: Synapse[];
@@ -282,6 +283,7 @@ export function generateBrainData(options: BrainGenerationOptions = {}): BrainDa
     .slice(0, 18);
 
   return {
+    seed,
     nodes,
     edges,
     synapses,

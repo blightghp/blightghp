@@ -1,26 +1,21 @@
 import { BrainData } from "./brain";
+import {
+  SIMULATION_PROTOCOL_VERSION,
+  SIMULATION_STEP_SECONDS,
+} from "./protocol";
+import type {
+  NeuralSignal,
+  NeuralSnapshot,
+  NeuralStimulus,
+  SimulationTick,
+} from "./protocol";
+import {
+  RANDOM_STREAM_CELL_REFRACTORY,
+  RANDOM_STREAM_CELL_THRESHOLD,
+  randomUnit,
+} from "./random";
 
-export interface NeuralStimulus {
-  intensity: number;
-  confidence: number;
-}
-
-export interface NeuralSignal {
-  synapseIndex: number;
-  progress: number;
-  strength: number;
-  inhibitory: boolean;
-}
-
-export interface NeuralSnapshot {
-  time: number;
-  firingRate: number;
-  spikes: number;
-  meanWeight: number;
-  potentials: number[];
-  activations: number[];
-  weights: number[];
-}
+export type { NeuralSignal, NeuralSnapshot, NeuralStimulus } from "./protocol";
 
 interface SignalInFlight extends NeuralSignal {
   elapsed: number;
@@ -35,17 +30,13 @@ function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
-function stableNoise(index: number): number {
-  const value = Math.sin((index + 1) * 12.9898) * 43758.5453;
-  return value - Math.floor(value);
-}
-
 export class NeuralSimulation {
   readonly potentials: Float32Array;
   readonly activations: Float32Array;
 
   private readonly data: BrainData;
   private readonly fixedStep: number;
+  private readonly seed: number;
   private readonly initialWeights: Float32Array;
   private readonly weights: Float32Array;
   private readonly delaySteps: Uint16Array;
@@ -61,21 +52,28 @@ export class NeuralSimulation {
   private readonly inputPhases: number[];
   private signalsInFlight: SignalInFlight[] = [];
   private queueCursor = 0;
-  private elapsed = 0;
+  private currentTick = 0;
   private rate = 0;
   private latestSpikeCount = 0;
   private learningRate = 0.004;
 
-  constructor(data: BrainData, fixedStep = 1 / 60) {
+  constructor(data: BrainData, fixedStep = SIMULATION_STEP_SECONDS, seed = data.seed) {
+    if (!Number.isFinite(fixedStep) || fixedStep <= 0) {
+      throw new RangeError("O passo da simulação deve ser um número positivo e finito.");
+    }
     this.data = data;
     this.fixedStep = fixedStep;
+    this.seed = seed;
     this.potentials = new Float32Array(data.nodes.length);
     this.activations = new Float32Array(data.nodes.length);
     this.refractory = new Float32Array(data.nodes.length);
     this.preTrace = new Float32Array(data.nodes.length);
     this.postTrace = new Float32Array(data.nodes.length);
     this.spiked = new Uint8Array(data.nodes.length);
-    this.thresholds = Float32Array.from(data.nodes, (_, index) => 0.9 + stableNoise(index) * 0.22);
+    this.thresholds = Float32Array.from(
+      data.nodes,
+      (_, index) => 0.9 + randomUnit(seed, RANDOM_STREAM_CELL_THRESHOLD, index, 0, 0) * 0.22,
+    );
     this.initialWeights = Float32Array.from(data.synapses, (synapse) => synapse.weight);
     this.weights = this.initialWeights.slice();
     this.delaySteps = Uint16Array.from(data.synapses, (synapse) =>
@@ -107,13 +105,12 @@ export class NeuralSimulation {
     this.learningRate = clamp(rate, 0, 0.02);
   }
 
-  step(delta: number, stimulus: NeuralStimulus): void {
-    if (!Number.isFinite(delta) || delta <= 0) return;
-
-    const dt = Math.min(delta, this.fixedStep * 2);
+  step(stimulus: NeuralStimulus): void {
+    const dt = this.fixedStep;
     const intensity = clamp(stimulus.intensity, 0, 1);
     const confidence = clamp(stimulus.confidence, 0, 1);
-    const nextTime = this.elapsed + dt;
+    const currentTime = this.currentTick * dt;
+    const nextTime = (this.currentTick + 1) * dt;
     this.ageSignals(dt);
 
     const membraneDecay = Math.exp(-dt / 0.32);
@@ -135,7 +132,7 @@ export class NeuralSimulation {
       this.refractory[node] = Math.max(0, this.refractory[node] - dt);
     }
 
-    this.injectStimulus(this.elapsed, nextTime, intensity, confidence);
+    this.injectStimulus(currentTime, nextTime, intensity, confidence);
 
     let spikes = 0;
     for (let node = 0; node < this.data.nodes.length; node += 1) {
@@ -143,7 +140,9 @@ export class NeuralSimulation {
       this.spiked[node] = 1;
       this.potentials[node] = 0;
       this.activations[node] = 1;
-      this.refractory[node] = 0.055 + stableNoise(node + 7000) * 0.035;
+      this.refractory[node] =
+        0.055 +
+        randomUnit(this.seed, RANDOM_STREAM_CELL_REFRACTORY, node, this.currentTick, 0) * 0.035;
       spikes += 1;
     }
 
@@ -160,7 +159,7 @@ export class NeuralSimulation {
     const instantaneousRate = spikes / dt / this.data.nodes.length;
     this.rate += (instantaneousRate - this.rate) * 0.08;
     this.latestSpikeCount = spikes;
-    this.elapsed = nextTime;
+    this.currentTick += 1;
     this.queueCursor = (this.queueCursor + 1) % this.pending.length;
   }
 
@@ -175,7 +174,7 @@ export class NeuralSimulation {
     this.weights.set(this.initialWeights);
     this.signalsInFlight = [];
     this.queueCursor = 0;
-    this.elapsed = 0;
+    this.currentTick = 0;
     this.rate = 0;
     this.latestSpikeCount = 0;
   }
@@ -193,7 +192,11 @@ export class NeuralSimulation {
   }
 
   get time(): number {
-    return this.elapsed;
+    return this.currentTick * this.fixedStep;
+  }
+
+  get tick(): SimulationTick {
+    return this.currentTick;
   }
 
   getWeight(index: number): number {
@@ -209,13 +212,15 @@ export class NeuralSimulation {
 
   snapshot(): NeuralSnapshot {
     return {
-      time: this.elapsed,
+      schemaVersion: SIMULATION_PROTOCOL_VERSION,
+      tick: this.currentTick,
+      timeSeconds: this.time,
       firingRate: this.rate,
       spikes: this.latestSpikeCount,
       meanWeight: this.meanWeight(),
-      potentials: Array.from(this.potentials),
-      activations: Array.from(this.activations),
-      weights: Array.from(this.weights),
+      potentials: this.potentials.slice(),
+      activations: this.activations.slice(),
+      weights: this.weights.slice(),
     };
   }
 

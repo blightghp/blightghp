@@ -6,7 +6,10 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { BrainData, BrainRegion, generateBrainData } from "./brain";
+import { FixedStepClock } from "./clock";
 import { BayesianBelief, BayesianUpdate } from "./inference";
+import { SIMULATION_STEP_SECONDS } from "./protocol";
+import type { SimulationTick } from "./protocol";
 import { BrainSettings, getInitialBrainSettings } from "./schema";
 import { NeuralSimulation } from "./simulation";
 
@@ -51,11 +54,14 @@ interface ShellVisual {
   material: THREE.ShaderMaterial;
 }
 
-const FIXED_STEP = 1 / 60;
 const TRAIL_LENGTH = 3;
 const MAX_VISIBLE_SIGNALS = 300;
 const state: BrainSettings = getInitialBrainSettings();
 const belief = new BayesianBelief(0.35);
+const simulationClock = new FixedStepClock({
+  stepSeconds: SIMULATION_STEP_SECONDS,
+  maxInteractiveDeltaSeconds: 0.1,
+});
 const palette = {
   network: new THREE.Color(0x147df5),
   featured: new THREE.Color(0x2ed9ff),
@@ -84,7 +90,6 @@ let simulation: NeuralSimulation;
 let currentInference: BayesianUpdate;
 let captureMode = false;
 let captureTime = 0;
-let simulationAccumulator = 0;
 let metricAccumulator = 0;
 
 const regionObjects = new Map<BrainRegion, THREE.Object3D[]>();
@@ -92,7 +97,6 @@ const pointVisuals: PointVisual[] = [];
 const connectionVisuals: ConnectionVisual[] = [];
 const shellVisuals: ShellVisual[] = [];
 const activitySamples = Array.from({ length: 96 }, () => 0);
-const timer = new THREE.Timer();
 const tempMatrix = new THREE.Matrix4();
 const tempPosition = new THREE.Vector3();
 const tempScale = new THREE.Vector3();
@@ -420,14 +424,16 @@ function updateMetrics(delta: number): void {
   drawActivityTrace();
 }
 
-function advanceSimulation(delta: number): void {
-  simulationAccumulator += Math.min(delta, 0.1) * state.pulseSpeed;
-  while (simulationAccumulator >= FIXED_STEP) {
-    simulation.step(FIXED_STEP, {
+function advanceSimulationTo(targetTick: SimulationTick): void {
+  if (targetTick < simulation.tick) {
+    throw new RangeError("O relógio não pode recuar o estado da simulação.");
+  }
+
+  while (simulation.tick < targetTick) {
+    simulation.step({
       intensity: state.stimulusIntensity,
       confidence: currentInference.posterior,
     });
-    simulationAccumulator -= FIXED_STEP;
   }
 }
 
@@ -445,10 +451,9 @@ function renderFrame(time: number, forcedRotation?: number, frameDelta = 0): voi
 function animate(timestamp: number): void {
   requestAnimationFrame(animate);
   if (captureMode) return;
-  timer.update(timestamp);
-  const delta = Math.min(timer.getDelta(), 0.1);
-  advanceSimulation(delta);
-  renderFrame(timer.getElapsed(), undefined, delta);
+  const frame = simulationClock.observe(timestamp, state.pulseSpeed);
+  advanceSimulationTo(frame.targetTick);
+  renderFrame(frame.renderTimeSeconds, undefined, frame.frameDeltaSeconds);
 }
 
 type NumericSetting =
@@ -598,7 +603,7 @@ function init(): void {
   composer.addPass(bloomPass);
 
   brainData = generateBrainData();
-  simulation = new NeuralSimulation(brainData, FIXED_STEP);
+  simulation = new NeuralSimulation(brainData, SIMULATION_STEP_SECONDS);
   simulation.setPlasticity(state.learningRate);
   buildBrainVisuals();
   setupInterface();
@@ -612,29 +617,30 @@ function init(): void {
       if (enabled) {
         simulation.reset();
         simulation.setPlasticity(state.learningRate);
-        simulationAccumulator = 0;
+        simulationClock.synchronize(0);
         captureTime = 0;
-        for (let step = 0; step < 120; step += 1) {
-          simulation.step(FIXED_STEP, {
-            intensity: state.stimulusIntensity,
-            confidence: currentInference.posterior,
-          });
-        }
+        const warmup = simulationClock.advanceTicks(120);
+        advanceSimulationTo(warmup.targetTick);
       } else {
-        timer.reset();
+        simulationClock.rebase(performance.now());
       }
     },
     capture(time, rotation) {
       const delta = Math.max(0, time - captureTime);
-      advanceSimulation(delta);
+      const frame = simulationClock.advanceExact(delta, state.pulseSpeed);
+      advanceSimulationTo(frame.targetTick);
       captureTime = time;
       renderFrame(time, rotation);
     },
   };
 
   window.addEventListener("resize", onResize);
-  timer.connect(document);
-  animate(performance.now());
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && !captureMode) simulationClock.rebase(performance.now());
+  });
+  const startTimestamp = performance.now();
+  simulationClock.reset(simulation.tick, startTimestamp);
+  animate(startTimestamp);
 }
 
 window.addEventListener("DOMContentLoaded", init);

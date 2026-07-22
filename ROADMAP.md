@@ -32,6 +32,12 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
 
 ## Próxima versão: 0.3 · Fundação
 
+### Estado da implementação
+
+- [x] **0.3-a · Relógio e contrato:** ticks inteiros, separação passo/frame, captura exata, protocolo versionado e snapshots com arrays tipados.
+- [ ] **0.3-b · Memória e isolamento:** RNG endereçado, CSR, observáveis online e Worker serial.
+- [ ] **0.3-c · Renderização:** snapshots interpolados e primeiras camadas extraídas do `main.ts`.
+
 ### Motor
 
 - Extrair do `main.ts` o relógio de passo fixo e representar o tempo do motor por um tick inteiro.
