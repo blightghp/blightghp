@@ -77,7 +77,13 @@ npm run generate:brain-gif
 
 ## Evolução do experimento
 
-Cada versão combina uma melhoria do modelo com um novo patamar gráfico. O plano completo, os critérios de conclusão e os limites científicos estão em [ROADMAP.md](ROADMAP.md).
+Cada versão combina uma melhoria do modelo com um novo patamar gráfico. O projeto separa o que pretende construir, o significado científico dos estados e a forma de validar cada avanço:
+
+- [ROADMAP.md](ROADMAP.md) organiza versões, dependências e ganhos gráficos;
+- [MODEL_SPEC.md](MODEL_SPEC.md) registra equações, unidades, hipóteses e limites;
+- [ARCHITECTURE.md](ARCHITECTURE.md) traduz o modelo em módulos, tipos, laços e camadas de render;
+- [VALIDATION.md](VALIDATION.md) define evidências exatas, numéricas, estatísticas e visuais;
+- [REFERENCES.md](REFERENCES.md) reúne a base científica usada nas decisões.
 
 ## Sobre mim
 
