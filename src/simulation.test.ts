@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import { generateBrainData } from "./brain";
 import { NeuralSimulation } from "./simulation";
+
 
 function advance(simulation: NeuralSimulation, steps: number): void {
   for (let step = 0; step < steps; step += 1) {
@@ -79,4 +80,32 @@ describe("NeuralSimulation", () => {
     expect(simulation.tick).toBe(0);
     expect(simulation.time).toBe(0);
   });
+});
+//teste de integração
+// Teste de Integração e Estado
+test("integração: avanço de tempo da simulação atualiza o estado e a atividade neural", () => {
+  // 1. ARRANGE (Preparar a integração)
+  const brain = generateBrainData({ seed: 42 });
+  const simulation = new NeuralSimulation(brain);
+
+  const initialTick = simulation.tick;
+
+  // 2. ACT (Agir - Executar 10 ciclos de simulação)
+  for (let i = 0; i < 10; i++) {
+    simulation.step({ intensity: 0.85, confidence: 0.75 });
+  }
+
+  // 3. ASSERT (Validar a integração do estado)
+  // A) O tick deve ter avançado exatamente 10 passos
+  expect(simulation.tick).toBe(initialTick + 10);
+
+  // B) O tempo decorrido deve ter avançado e ser um número válido
+  expect(simulation.time).toBeGreaterThan(0);
+  expect(Number.isNaN(simulation.time)).toBe(false);
+
+  // C) Valida se o snapshot consolida as ativações e potenciais sem valores inválidos
+  const snapshot = simulation.snapshot();
+  expect(snapshot.potentials).toBeInstanceOf(Float32Array);
+  expect(snapshot.activations).toBeInstanceOf(Float32Array);
+  expect(Number.isNaN(snapshot.firingRate)).toBe(false);
 });
