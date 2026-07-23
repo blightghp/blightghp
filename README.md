@@ -2,9 +2,6 @@
 
 <samp>TO THE TRAINED EYE, THERE ARE NO COINCIDENCES...</samp>
 
-[![Validar ecossistema](https://github.com/blightghp/blightghp/actions/workflows/ci.yml/badge.svg)](https://github.com/blightghp/blightghp/actions/workflows/ci.yml)
-[![GitHub Pages](https://github.com/blightghp/blightghp/actions/workflows/deploy.yml/badge.svg)](https://github.com/blightghp/blightghp/actions/workflows/deploy.yml)
-
 <a href="https://blightghp.github.io/blightghp/">
   <img src="assets/brain.gif?v=4" width="760" alt="Rede neural tridimensional com atividade excitatória e inibitória" />
 </a>
@@ -19,7 +16,7 @@
 
 Este experimento combina uma topologia cerebral procedural com uma simulação neural determinística. Os sinais visíveis não percorrem trajetórias decorativas: cada pulso nasce de um disparo, atravessa uma sinapse do grafo e chega ao neurônio de destino depois do atraso calculado para aquela conexão.
 
-O modelo foi desenhado para ser compreensível e visualmente expressivo. Ele não pretende reproduzir toda a fisiologia do cérebro humano; trabalha com uma aproximação *leaky integrate-and-fire*, plasticidade temporal e uma atualização Bayesiana de duas hipóteses.
+O modelo foi desenhado para ser compreensível e visualmente expressivo. Ainda é cedo para dizer se é possível fazer aparecer toda a fisiologia do cérebro humano. Busquei trabalhar com uma aproximação tipo *leaky integrate-and-fire*, plasticidade temporal e uma atualização Bayesiana de duas hipóteses, por enquanto.
 
 ### O que está sendo simulado
 
@@ -89,7 +86,8 @@ Cada versão combina uma melhoria do modelo com um novo patamar gráfico. O proj
 
 > *"Interesso-me pelas regiões de fronteira em que a lógica encontra a linguagem, a computação encontra a biologia e o rigor formal precisa aprender a conviver com a ambiguidade, a historicidade e a complexidade dos fenômenos humanos."*
 
-Atuo entre pesquisa e desenvolvimento, articulando linguística, cognição, aprendizagem, ciência de dados e engenharia de software. Busco transformar perguntas complexas em modelos, sistemas e experimentos sem reduzir os fenômenos àquilo que pode ser facilmente mensurado, preservando, sempre que possível, o equilíbrio entre precisão formal, sensibilidade interpretativa e abertura interdisciplinar.
+Atuo entre pesquisa e desenvolvimento, articulando estudos em linguística, cognição, aprendizagem, ciência de dados e projetos em engenharia de software. Busco transformar perguntas complexas em modelos, sistemas e experimentos sem reduzir os fenômenos àquilo que pode ser facilmente mensurado, preservando, sempre que possível, o equilíbrio entre precisão formal, sensibilidade interpretativa e abertura interdisciplinar. Meu Github é um portal de experimentos dos mais diversos. 
+Resumindo, a minha zona de interesse envolve explorar e especular sobre as equivalências conceituais entre biologia e máquina, isto é, conceitos neurobiológicos e computacionais/formais.
 
 ---
 
@@ -111,7 +109,7 @@ Atuo entre pesquisa e desenvolvimento, articulando linguística, cognição, apr
 <div align="center">
 
 [![Email](https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:ghpgois@gmail.com)
-[![Léxikognos](https://img.shields.io/badge/Léxikognos-246BCE?style=flat-square&logo=google-scholar&logoColor=white)](http://lexikognos.com.br)
+[![Léxikognos](https://img.shields.io/badge/Léxikognos-246BCE?style=flat-square&logo=google-scholar&logoColor=white)](http://lexikognos.com.br) *domínio offline*
 [![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://instagram.com/ppgabrielpinheiro)
 
 <sub><code>fn perceive(signal: &Evidence) -&gt; Result&lt;Knowledge, Entropy&gt;</code></sub>
