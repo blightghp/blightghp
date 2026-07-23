@@ -1,4 +1,5 @@
 import { BrainData } from "./brain";
+import { buildSynapseCsr, incomingRow, outgoingRow, SynapseCsr } from "./network";
 import {
   SIMULATION_PROTOCOL_VERSION,
   SIMULATION_STEP_SECONDS,
@@ -45,8 +46,7 @@ export class NeuralSimulation {
   private readonly preTrace: Float32Array;
   private readonly postTrace: Float32Array;
   private readonly spiked: Uint8Array;
-  private readonly outgoing: number[][];
-  private readonly incoming: number[][];
+  private readonly csr: SynapseCsr;
   private readonly pending: Float32Array[];
   private readonly inputNodes: number[];
   private readonly inputPhases: number[];
@@ -80,12 +80,7 @@ export class NeuralSimulation {
       Math.max(1, Math.round(synapse.delay / fixedStep)),
     );
 
-    this.outgoing = Array.from({ length: data.nodes.length }, () => []);
-    this.incoming = Array.from({ length: data.nodes.length }, () => []);
-    data.synapses.forEach((synapse, index) => {
-      this.outgoing[synapse.from].push(index);
-      this.incoming[synapse.to].push(index);
-    });
+    this.csr = buildSynapseCsr(data.nodes.length, data.synapses);
 
     const longestDelay = Math.max(...this.delaySteps);
     this.pending = Array.from(
@@ -246,7 +241,7 @@ export class NeuralSimulation {
     for (let node = 0; node < this.spiked.length; node += 1) {
       if (!this.spiked[node]) continue;
 
-      for (const synapseIndex of this.incoming[node]) {
+      for (const synapseIndex of incomingRow(this.csr, node)) {
         const synapse = this.data.synapses[synapseIndex];
         if (!synapse.plastic || this.weights[synapseIndex] <= 0) continue;
         const potentiation = this.learningRate * this.preTrace[synapse.from];
@@ -257,7 +252,7 @@ export class NeuralSimulation {
         );
       }
 
-      for (const synapseIndex of this.outgoing[node]) {
+      for (const synapseIndex of outgoingRow(this.csr, node)) {
         const synapse = this.data.synapses[synapseIndex];
         if (!synapse.plastic || this.weights[synapseIndex] <= 0) continue;
         const depression = this.learningRate * 0.82 * this.postTrace[synapse.to];
@@ -274,7 +269,7 @@ export class NeuralSimulation {
     for (let node = 0; node < this.spiked.length; node += 1) {
       if (!this.spiked[node]) continue;
 
-      for (const synapseIndex of this.outgoing[node]) {
+      for (const synapseIndex of outgoingRow(this.csr, node)) {
         const synapse = this.data.synapses[synapseIndex];
         const targetSlot = (this.queueCursor + this.delaySteps[synapseIndex]) % this.pending.length;
         const weight = this.weights[synapseIndex];
