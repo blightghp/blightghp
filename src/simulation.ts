@@ -1,5 +1,6 @@
 import { BrainData } from "./brain";
 import { buildSynapseCsr, incomingRow, outgoingRow, SynapseCsr } from "./network";
+import { meanAbsoluteWeight, PopulationFiringRate } from "./observables";
 import {
   SIMULATION_PROTOCOL_VERSION,
   SIMULATION_STEP_SECONDS,
@@ -8,6 +9,7 @@ import type {
   NeuralSignal,
   NeuralSnapshot,
   NeuralStimulus,
+  SignalBatch,
   SimulationTick,
 } from "./protocol";
 import {
@@ -26,6 +28,7 @@ interface SignalInFlight extends NeuralSignal {
 const MIN_EXCITATORY_WEIGHT = 0.12;
 const MAX_EXCITATORY_WEIGHT = 0.92;
 const MAX_SIGNALS_IN_FLIGHT = 900;
+const FIRING_RATE_WINDOW_SECONDS = 0.2;
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
@@ -50,6 +53,7 @@ export class NeuralSimulation {
   private readonly pending: Float32Array[];
   private readonly inputNodes: number[];
   private readonly inputPhases: number[];
+  private readonly firingRateObservable: PopulationFiringRate;
   private signalsInFlight: SignalInFlight[] = [];
   private queueCursor = 0;
   private currentTick = 0;
@@ -64,6 +68,11 @@ export class NeuralSimulation {
     this.data = data;
     this.fixedStep = fixedStep;
     this.seed = seed;
+    this.firingRateObservable = new PopulationFiringRate(
+      data.nodes.length,
+      fixedStep,
+      FIRING_RATE_WINDOW_SECONDS,
+    );
     this.potentials = new Float32Array(data.nodes.length);
     this.activations = new Float32Array(data.nodes.length);
     this.refractory = new Float32Array(data.nodes.length);
@@ -151,8 +160,7 @@ export class NeuralSimulation {
       }
     }
 
-    const instantaneousRate = spikes / dt / this.data.nodes.length;
-    this.rate += (instantaneousRate - this.rate) * 0.08;
+    this.rate = this.firingRateObservable.sample(spikes);
     this.latestSpikeCount = spikes;
     this.currentTick += 1;
     this.queueCursor = (this.queueCursor + 1) % this.pending.length;
@@ -170,12 +178,9 @@ export class NeuralSimulation {
     this.signalsInFlight = [];
     this.queueCursor = 0;
     this.currentTick = 0;
+    this.firingRateObservable.reset();
     this.rate = 0;
     this.latestSpikeCount = 0;
-  }
-
-  get signals(): readonly NeuralSignal[] {
-    return this.signalsInFlight;
   }
 
   get firingRate(): number {
@@ -194,15 +199,8 @@ export class NeuralSimulation {
     return this.currentTick;
   }
 
-  getWeight(index: number): number {
-    return this.weights[index] ?? 0;
-  }
-
   meanWeight(): number {
-    if (this.weights.length === 0) return 0;
-    let total = 0;
-    for (const weight of this.weights) total += Math.abs(weight);
-    return total / this.weights.length;
+    return meanAbsoluteWeight(this.weights);
   }
 
   snapshot(): NeuralSnapshot {
@@ -216,7 +214,24 @@ export class NeuralSimulation {
       potentials: this.potentials.slice(),
       activations: this.activations.slice(),
       weights: this.weights.slice(),
+      signals: this.signalBatch(),
     };
+  }
+
+  private signalBatch(): SignalBatch {
+    const count = this.signalsInFlight.length;
+    const synapseIds = new Uint32Array(count);
+    const progress = new Float32Array(count);
+    const strength = new Float32Array(count);
+    const inhibitory = new Uint8Array(count);
+    for (let index = 0; index < count; index += 1) {
+      const signal = this.signalsInFlight[index];
+      synapseIds[index] = signal.synapseIndex;
+      progress[index] = signal.progress;
+      strength[index] = signal.strength;
+      inhibitory[index] = signal.inhibitory ? 1 : 0;
+    }
+    return { synapseIds, progress, strength, inhibitory };
   }
 
   private injectStimulus(

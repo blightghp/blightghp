@@ -20,7 +20,7 @@ describe("NeuralSimulation", () => {
     expect(snapshot.schemaVersion).toBe(1);
     expect(snapshot.tick).toBe(240);
     expect(snapshot.timeSeconds).toBe(4);
-    expect(snapshot.firingRate).toBeCloseTo(0.46319634645611196, 12);
+    expect(snapshot.firingRate).toBeCloseTo(0.4723127035830619, 12);
     expect(snapshot.spikes).toBe(4);
     expect(snapshot.meanWeight).toBeCloseTo(0.48537014700331776, 12);
     expect(snapshot.potentials).toBeInstanceOf(Float32Array);
@@ -78,5 +78,37 @@ describe("NeuralSimulation", () => {
     expect(simulation.snapshot().weights).toEqual(initialWeights);
     expect(simulation.tick).toBe(0);
     expect(simulation.time).toBe(0);
+  });
+
+  it("compacts in-flight signals into parallel arrays of one length", () => {
+    const brain = generateBrainData({ seed: 4, surfaceNodesPerHemisphere: 70, innerNodesPerHemisphere: 10 });
+    const simulation = new NeuralSimulation(brain);
+    simulation.setPlasticity(0);
+
+    advance(simulation, 30);
+    const { signals } = simulation.snapshot();
+
+    expect(signals.synapseIds.length).toBeGreaterThan(0);
+    expect(signals.progress).toHaveLength(signals.synapseIds.length);
+    expect(signals.strength).toHaveLength(signals.synapseIds.length);
+    expect(signals.inhibitory).toHaveLength(signals.synapseIds.length);
+    for (let index = 0; index < signals.synapseIds.length; index += 1) {
+      expect(signals.synapseIds[index]).toBeLessThan(brain.synapses.length);
+      expect(signals.progress[index]).toBeGreaterThanOrEqual(0);
+      expect(signals.progress[index]).toBeLessThan(1);
+      expect(signals.strength[index]).toBeGreaterThanOrEqual(0);
+      expect([0, 1]).toContain(signals.inhibitory[index]);
+    }
+  });
+
+  it("reports an empty signal batch before anything spikes", () => {
+    const brain = generateBrainData({ seed: 4, surfaceNodesPerHemisphere: 40, innerNodesPerHemisphere: 6 });
+    const simulation = new NeuralSimulation(brain);
+    const { signals } = simulation.snapshot();
+
+    expect(signals.synapseIds.length).toBe(0);
+    expect(signals.progress.length).toBe(0);
+    expect(signals.strength.length).toBe(0);
+    expect(signals.inhibitory.length).toBe(0);
   });
 });
