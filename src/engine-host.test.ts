@@ -126,7 +126,7 @@ describe("EngineHost", () => {
       reseeded.handle({ type: "advance", targetTick: 200, stimulus: STIMULUS })[0] as EngineSnapshotEvent
     ).snapshot;
 
-    expect(reseededSnapshot.firingRate).not.toBe(baseline.firingRate);
+    expect(reseededSnapshot.potentials).not.toEqual(baseline.potentials);
   });
 
   it("rejects reset before initialize", () => {

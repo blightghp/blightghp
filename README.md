@@ -21,43 +21,43 @@ O modelo foi desenhado para ser compreensível e visualmente expressivo. Ainda �
 ### O que está sendo simulado
 
 - **1.890 neurônios procedurais:** hemisférios, cerebelo e tronco usam uma semente estável via PRNG determinístico (`random.ts`).
-- **Estrutura de sinapses CSR (Compressed Sparse Row):** grafo sináptico otimizado (`network.ts`) para travessia e atualização eficiente de conexões.
+- **Estrutura de sinapses CSR (Compressed Sparse Row):** grafo sináptico comprimido (`network.ts`) para travessia e atualização eficiente de conexões.
+- **Cinética receptor-dependente AMPA e GABA-A:** condutâncias sinápticas com cinéticas de decaimento rápido (5ms para glutamato/AMPA, 10ms para GABA-A) e integração temporal contínua.
 - **Sinapses direcionadas:** cada conexão possui peso, atraso, origem e destino.
-- **Excitação e inibição:** a natureza do neurônio define o sinal das suas conexões de saída.
-- **Dinâmica de membrana:** potenciais decaem com o tempo, respeitam limiar e período refratário.
 - **Plasticidade STDP:** disparos próximos no tempo fortalecem ou enfraquecem sinapses excitatórias.
 - **Evidência Bayesiana:** cada mudança de estímulo atualiza a crença antes de modular a entrada da rede.
 - **Execução desacoplada em Worker:** a simulação roda em uma thread dedicada (`simulation.worker.ts` e `engine-host.ts`), garantindo 60+ FPS no renderer sem travar a interface.
-- **Relógio de simulação determinístico:** tempo temporal desacoplado do laço de renderização (`clock.ts`), com suporte a pausa, variação de velocidade e execução passo a passo.
-- **Protocolo de observáveis & eventos:** comunicação por mensagens e snapshots imutáveis (`protocol.ts` e `observables.ts`) para atualização do HUD e instrumentos.
+- **Interpolação de Snapshots:** a camada de renderização (`render-layers.ts`) interpola suavemente potenciais, ativações e posições de pulso entre snapshots consecutivos.
+- **Foco de Circuito & LOD:** seletor interativo para isolar o córtex esquerdo, córtex direito, cerebelo ou tronco encefálico com atenuação dinâmica das regiões periféricas.
+- **Relógio determinístico & HUD com unidades:** instrumentos com grandezas físicas nomeadas (`Hz`, `spikes`, `mV`, `W_avg`, `FPS`) e tempo temporal desacoplado do laço de renderização (`clock.ts`).
 
 ```text
 observação → atualização Bayesiana → corrente de entrada
                                          ↓
-topologia CSR → potenciais → disparos → sinapses com atraso
-                 ↑                         ↓
-                 └──────── STDP ───────────┘
+topologia CSR → condutâncias AMPA/GABA-A → potenciais → disparos → STDP
                                          ↓
-                  Web Worker (Host) ↔ Protocolo & Observáveis
+                  Web Worker (EngineHost) ↔ Protocolo & Observáveis
                                          ↓
-                         Three.js · WebGL · HUD
+            Interpolação de Snapshots (render-layers.ts) · Foco LOD
+                                         ↓
+                         Three.js · WebGL · HUD Instrumentado
 ```
 
 ### Arquitetura
 
 | Camada | Tecnologia | Responsabilidade atual |
 | :-- | :-- | :-- |
-| Núcleo neural | TypeScript | Integração temporal LIF, plasticidade STDP, representação CSR (`network.ts`) e PRNG determinístico (`random.ts`) |
+| Núcleo neural | TypeScript | Integração temporal LIF, condutâncias AMPA/GABA-A, plasticidade STDP, matriz CSR (`network.ts`) e PRNG determinístico (`random.ts`) |
 | Motor & Worker | TypeScript · Web Worker | Execução em worker thread (`simulation.worker.ts`), desacoplada da UI via `engine-host.ts` |
 | Tempo & Protocolo | TypeScript | Relógio determinístico (`clock.ts`), protocolo de mensagens (`protocol.ts`) e observáveis (`observables.ts`) |
-| Topologia | Three.js · TypeScript | Anatomia procedural, conectividade regional e semente determinística |
+| Topologia & Render | Three.js · TypeScript | Anatomia procedural, camadas de renderização (`render-layers.ts`), interpolação de snapshots e foco de circuito LOD |
 | Inferência | TypeScript | Atualização Bayesiana normalizada entre duas hipóteses |
 | Visualização | Three.js · WebGL | Instâncias, bloom, envoltórios anatômicos e atividade por vértice em 60+ FPS |
 | Contrato | Zod | Validação dos parâmetros recebidos pela interface e pela URL |
 | Desktop | Tauri 2 · Rust | Empacotamento nativo e ponte segura com a interface |
 | Qualidade | Vitest · Cargo | Grafo CSR, relógio, observáveis, worker host, inferência, simulação e runtime nativo |
 
-O núcleo permanece em TypeScript nesta versão para manter paridade imediata entre GitHub Pages e desktop, sendo executado em um Web Worker dedicado (`EngineHost`) para manter o laço de renderização do Three.js e a UI totalmente fluidos. A migração para um crate compartilhado entre Rust nativo e WebAssembly está planejada para quando os perfis de desempenho justificarem a troca.
+O núcleo permanece em TypeScript nesta versão para manter paridade imediata entre GitHub Pages e desktop, sendo executado em um Web Worker dedicado (`EngineHost`) com interpolação de snapshots no renderer (`render-layers.ts`) para manter o laço de renderização do Three.js e a UI totalmente fluidos. A migração para um crate compartilhado entre Rust nativo e WebAssembly está planejada para quando os perfis de desempenho justificarem a troca.
 
 ### Executar localmente
 

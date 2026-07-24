@@ -75,7 +75,17 @@
       </section>
 
       <section>
-        <div class="section-heading"><span>ANATOMIA</span><span>CAMADAS</span></div>
+        <div class="section-heading"><span>ANATOMIA</span><span>FOCO & CAMADAS</span></div>
+        <div class="control-group compact">
+          <label for="circuit-focus"><span>Foco de Circuito</span></label>
+          <select id="circuit-focus" class="glass-select">
+            <option value="all">Cérebro Inteiro (LOD 0)</option>
+            <option value="leftHemi">Córtex Esquerdo</option>
+            <option value="rightHemi">Córtex Direito</option>
+            <option value="cerebellum">Cerebelo</option>
+            <option value="stem">Tronco Encefálico</option>
+          </select>
+        </div>
         <div class="toggle-grid">
           <label><input type="checkbox" id="toggle-left-hemi" checked /><span></span>Esquerdo</label>
           <label><input type="checkbox" id="toggle-right-hemi" checked /><span></span>Direito</label>
@@ -83,8 +93,8 @@
           <label><input type="checkbox" id="toggle-stem" checked /><span></span>Tronco</label>
         </div>
         <div class="signal-legend" aria-label="Legenda dos sinais">
-          <span><i class="excitation"></i>Excitatório</span>
-          <span><i class="inhibition"></i>Inibitório</span>
+          <span><i class="excitation"></i>Excitatório (AMPA)</span>
+          <span><i class="inhibition"></i>Inibitório (GABA-A)</span>
         </div>
       </section>
     </aside>
@@ -98,9 +108,11 @@
       </div>
       <div class="bayesian-stats">
         <div><span>PRIOR</span><strong id="prior-val">0.35</strong></div>
-        <div><span>LIKELIHOOD</span><strong id="likelihood-val">0.74</strong></div>
-        <div class="posterior"><span>POSTERIOR</span><strong id="posterior-val">0.35</strong></div>
-        <div><span>PESO MÉDIO</span><strong id="mean-weight">0.000</strong></div>
+        <div><span>POSTERIOR</span><strong id="posterior-val">0.35</strong></div>
+        <div><span>DISPAROS</span><strong id="spike-count">0 spk</strong></div>
+        <div><span>POTENCIAL</span><strong id="mean-potential">-65.0 mV</strong></div>
+        <div><span>PESO STDP</span><strong id="mean-weight">0.485</strong></div>
+        <div><span>RENDER</span><strong id="fps-val">60 FPS</strong></div>
       </div>
       <div class="intensity-controls">
         <button id="btn-intensity-down" type="button" aria-label="Reduzir estímulo">−</button>

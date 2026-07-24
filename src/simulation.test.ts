@@ -20,18 +20,18 @@ describe("NeuralSimulation", () => {
     expect(snapshot.schemaVersion).toBe(1);
     expect(snapshot.tick).toBe(240);
     expect(snapshot.timeSeconds).toBe(4);
-    expect(snapshot.firingRate).toBeCloseTo(0.4723127035830619, 12);
+    expect(snapshot.firingRate).toBeCloseTo(0.3990228013029316, 12);
     expect(snapshot.spikes).toBe(4);
     expect(snapshot.meanWeight).toBeCloseTo(0.48537014700331776, 12);
     expect(snapshot.potentials).toBeInstanceOf(Float32Array);
     expect(snapshot.activations).toBeInstanceOf(Float32Array);
     expect(snapshot.weights).toBeInstanceOf(Float32Array);
     expect(snapshot.potentials.reduce((sum, value) => sum + value, 0)).toBeCloseTo(
-      12.53614605218172,
+      1.0433304453444006,
       10,
     );
     expect(snapshot.activations.reduce((sum, value) => sum + value, 0)).toBeCloseTo(
-      25.917198099195957,
+      20.763159155845642,
       10,
     );
     expect(Array.from(snapshot.weights.slice(0, 4))).toEqual([

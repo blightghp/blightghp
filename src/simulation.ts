@@ -37,6 +37,8 @@ function clamp(value: number, minimum: number, maximum: number): number {
 export class NeuralSimulation {
   readonly potentials: Float32Array;
   readonly activations: Float32Array;
+  readonly gAmpa: Float32Array;
+  readonly gGaba: Float32Array;
 
   private readonly data: BrainData;
   private readonly fixedStep: number;
@@ -75,6 +77,8 @@ export class NeuralSimulation {
     );
     this.potentials = new Float32Array(data.nodes.length);
     this.activations = new Float32Array(data.nodes.length);
+    this.gAmpa = new Float32Array(data.nodes.length);
+    this.gGaba = new Float32Array(data.nodes.length);
     this.refractory = new Float32Array(data.nodes.length);
     this.preTrace = new Float32Array(data.nodes.length);
     this.postTrace = new Float32Array(data.nodes.length);
@@ -118,18 +122,31 @@ export class NeuralSimulation {
     this.ageSignals(dt);
 
     const membraneDecay = Math.exp(-dt / 0.32);
+    const ampaDecay = Math.exp(-dt / 0.005);
+    const gabaDecay = Math.exp(-dt / 0.010);
     const activityDecay = Math.exp(-dt / 0.16);
     const traceDecay = Math.exp(-dt / 0.2);
     const arriving = this.pending[this.queueCursor];
     this.spiked.fill(0);
 
     for (let node = 0; node < this.data.nodes.length; node += 1) {
+      const arrivedPulse = arriving[node];
+      if (arrivedPulse > 0) {
+        this.gAmpa[node] += arrivedPulse;
+      } else if (arrivedPulse < 0) {
+        this.gGaba[node] += Math.abs(arrivedPulse);
+      }
+      arriving[node] = 0;
+
+      this.gAmpa[node] *= ampaDecay;
+      this.gGaba[node] *= gabaDecay;
+      const synapticCurrent = this.gAmpa[node] - this.gGaba[node];
+
       this.potentials[node] = clamp(
-        this.potentials[node] * membraneDecay + arriving[node],
+        this.potentials[node] * membraneDecay + synapticCurrent,
         -1.4,
         1.8,
       );
-      arriving[node] = 0;
       this.activations[node] *= activityDecay;
       this.preTrace[node] *= traceDecay;
       this.postTrace[node] *= traceDecay;
@@ -166,9 +183,18 @@ export class NeuralSimulation {
     this.queueCursor = (this.queueCursor + 1) % this.pending.length;
   }
 
-  reset(): void {
+  reset(seed?: number): void {
+    if (seed !== undefined) {
+      (this as unknown as { seed: number }).seed = seed;
+      for (let index = 0; index < this.data.nodes.length; index += 1) {
+        this.thresholds[index] =
+          0.9 + randomUnit(seed, RANDOM_STREAM_CELL_THRESHOLD, index, 0, 0) * 0.22;
+      }
+    }
     this.potentials.fill(0);
     this.activations.fill(0);
+    this.gAmpa.fill(0);
+    this.gGaba.fill(0);
     this.refractory.fill(0);
     this.preTrace.fill(0);
     this.postTrace.fill(0);

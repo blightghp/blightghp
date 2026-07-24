@@ -30,13 +30,13 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
 | **0.9 · Núcleo compartilhado** | Migração do laço quente para Rust/WASM somente se o perfil justificar, com protocolo de snapshot versionado | Buffers compactos e interpolação idêntica no navegador e no Tauri | Paridade numérica declarada, benchmarks públicos e replay cruzado dentro da tolerância escolhida |
 | **1.0 · Atlas vivo** | Presets, gravação, reprodução, importação de estímulos e API estável | Tecidos calibrados, transparência multicamada, pós-processamento adaptativo e descida guiada completa | Documentação de referência, acessibilidade, testes end-to-end e pacotes reproduzíveis |
 
-## Próxima versão: 0.3 · Fundação
+## Versão Atual: 0.3 · Fundação Concluída (Próxima: 0.4 · Superfície)
 
-### Estado da implementação
+### Estado da implementação (0.3 · Fundação)
 
 - [x] **0.3-a · Relógio e contrato:** ticks inteiros, separação passo/frame, captura exata, protocolo versionado e snapshots com arrays tipados.
-- [ ] **0.3-b · Memória e isolamento:** RNG endereçado, CSR, observáveis online e Worker serial.
-- [ ] **0.3-c · Renderização:** snapshots interpolados e primeiras camadas extraídas do `main.ts`.
+- [x] **0.3-b · Memória e isolamento:** RNG endereçado, CSR, observáveis online, Worker serial e cinética AMPA/GABA-A.
+- [x] **0.3-c · Renderização:** snapshots interpolados, camadas de render extraídas em `render-layers.ts`, foco de circuito / LOD e HUD com instrumentos e unidades nomeadas.
 
 ### Motor
 
