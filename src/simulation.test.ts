@@ -27,7 +27,7 @@ describe("NeuralSimulation", () => {
     expect(snapshot.activations).toBeInstanceOf(Float32Array);
     expect(snapshot.weights).toBeInstanceOf(Float32Array);
     expect(snapshot.potentials.reduce((sum, value) => sum + value, 0)).toBeCloseTo(
-      1.0433304453444006,
+      1.0522959988664953,
       10,
     );
     expect(snapshot.activations.reduce((sum, value) => sum + value, 0)).toBeCloseTo(

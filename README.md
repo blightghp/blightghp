@@ -22,23 +22,23 @@ O modelo foi desenhado para ser compreensível e visualmente expressivo. Ainda �
 
 - **1.890 neurônios procedurais:** hemisférios, cerebelo e tronco usam uma semente estável via PRNG determinístico (`random.ts`).
 - **Estrutura de sinapses CSR (Compressed Sparse Row):** grafo sináptico comprimido (`network.ts`) para travessia e atualização eficiente de conexões.
-- **Cinética receptor-dependente AMPA e GABA-A:** condutâncias sinápticas com cinéticas de decaimento rápido (5ms para glutamato/AMPA, 10ms para GABA-A) e integração temporal contínua.
-- **Sinapses direcionadas:** cada conexão possui peso, atraso, origem e destino.
+- **Campo populacional macroscópico E/I (`field.ts`):** modelo contínuo de campo excitatório ($E$) e inibitório ($I$) na superfície cortical com difusão laplaciana e atrasos de condução espacial.
+- **Acoplamento bidirecional Campo-Spikes:** disparos alimentam localmente o campo e a diferença de potenciais populacionais modula os potenciais sub-limiar da rede.
+- **Cinética receptor-dependente AMPA e GABA-A:** condutâncias sinápticas rápidas (5ms para AMPA, 10ms para GABA-A) com integração temporal.
 - **Plasticidade STDP:** disparos próximos no tempo fortalecem ou enfraquecem sinapses excitatórias.
 - **Evidência Bayesiana:** cada mudança de estímulo atualiza a crença antes de modular a entrada da rede.
-- **Execução desacoplada em Worker:** a simulação roda em uma thread dedicada (`simulation.worker.ts` e `engine-host.ts`), garantindo 60+ FPS no renderer sem travar a interface.
-- **Interpolação de Snapshots:** a camada de renderização (`render-layers.ts`) interpola suavemente potenciais, ativações e posições de pulso entre snapshots consecutivos.
-- **Foco de Circuito & LOD:** seletor interativo para isolar o córtex esquerdo, córtex direito, cerebelo ou tronco encefálico com atenuação dinâmica das regiões periféricas.
-- **Relógio determinístico & HUD com unidades:** instrumentos com grandezas físicas nomeadas (`Hz`, `spikes`, `mV`, `W_avg`, `FPS`) e tempo temporal desacoplado do laço de renderização (`clock.ts`).
+- **Execução desacoplada em Worker:** simulação em thread dedicada (`simulation.worker.ts` e `engine-host.ts`), garantindo 60+ FPS no renderer.
+- **Ondas Superficiais & Interpolação de Snapshots:** a camada de renderização (`render-layers.ts`) projeta ondas de campo propagando-se por sulcos e giros e interpola suavemente snapshots consecutivos.
+- **Foco de Circuito, Zoom & HUD Instrumentado:** isolamento dinâmico por circuito (LOD) e instrumentos com grandezas físicas (`Hz`, `spikes`, `mV`, `W_avg`, `FPS`).
 
 ```text
 observação → atualização Bayesiana → corrente de entrada
                                          ↓
-topologia CSR → condutâncias AMPA/GABA-A → potenciais → disparos → STDP
+topologia CSR → campo populacional E/I ↔ acoplamento spikes → STDP
                                          ↓
                   Web Worker (EngineHost) ↔ Protocolo & Observáveis
                                          ↓
-            Interpolação de Snapshots (render-layers.ts) · Foco LOD
+            Ondas Superficiais & Interpolação (render-layers.ts) · Zoom LOD
                                          ↓
                          Three.js · WebGL · HUD Instrumentado
 ```
@@ -48,16 +48,17 @@ topologia CSR → condutâncias AMPA/GABA-A → potenciais → disparos → STDP
 | Camada | Tecnologia | Responsabilidade atual |
 | :-- | :-- | :-- |
 | Núcleo neural | TypeScript | Integração temporal LIF, condutâncias AMPA/GABA-A, plasticidade STDP, matriz CSR (`network.ts`) e PRNG determinístico (`random.ts`) |
+| Campo populacional | TypeScript | Campo E/I contínuo na superfície cortical (`field.ts`), difusão laplaciana e acoplamento bidirecional com spikes |
 | Motor & Worker | TypeScript · Web Worker | Execução em worker thread (`simulation.worker.ts`), desacoplada da UI via `engine-host.ts` |
 | Tempo & Protocolo | TypeScript | Relógio determinístico (`clock.ts`), protocolo de mensagens (`protocol.ts`) e observáveis (`observables.ts`) |
-| Topologia & Render | Three.js · TypeScript | Anatomia procedural, camadas de renderização (`render-layers.ts`), interpolação de snapshots e foco de circuito LOD |
+| Topologia & Render | Three.js · TypeScript | Anatomia procedural, ondas superficiais (`render-layers.ts`), interpolação de snapshots e foco de circuito LOD |
 | Inferência | TypeScript | Atualização Bayesiana normalizada entre duas hipóteses |
 | Visualização | Three.js · WebGL | Instâncias, bloom, envoltórios anatômicos e atividade por vértice em 60+ FPS |
 | Contrato | Zod | Validação dos parâmetros recebidos pela interface e pela URL |
 | Desktop | Tauri 2 · Rust | Empacotamento nativo e ponte segura com a interface |
-| Qualidade | Vitest · Cargo | Grafo CSR, relógio, observáveis, worker host, inferência, simulação e runtime nativo |
+| Qualidade | Vitest · Cargo | Campo populacional E/I, grafo CSR, relógio, observáveis, worker host, inferência e runtime nativo |
 
-O núcleo permanece em TypeScript nesta versão para manter paridade imediata entre GitHub Pages e desktop, sendo executado em um Web Worker dedicado (`EngineHost`) com interpolação de snapshots no renderer (`render-layers.ts`) para manter o laço de renderização do Three.js e a UI totalmente fluidos. A migração para um crate compartilhado entre Rust nativo e WebAssembly está planejada para quando os perfis de desempenho justificarem a troca.
+O núcleo permanece em TypeScript nesta versão para manter paridade imediata entre GitHub Pages e desktop, sendo executado em um Web Worker dedicado (`EngineHost`) com acoplamento de campo populacional (`field.ts`) e interpolação de snapshots no renderer (`render-layers.ts`) para manter o laço de renderização do Three.js e a UI totalmente fluidos. A migração para um crate compartilhado entre Rust nativo e WebAssembly está planejada para quando os perfis de desempenho justificarem a troca.
 
 ### Executar localmente
 

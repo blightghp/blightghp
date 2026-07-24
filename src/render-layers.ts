@@ -264,12 +264,18 @@ export class BrainRenderLayers {
       interpolatedActivations[index] = prev + (curr - prev) * alpha;
     }
 
+    const fieldWave = currSnapshot.field ? currSnapshot.field.waveActivity : undefined;
+    const prevFieldWave = prevSnapshot?.field ? prevSnapshot.field.waveActivity : undefined;
+
     for (const visual of this.pointVisuals) {
       const colorAttribute = visual.geometry.getAttribute("color") as THREE.BufferAttribute;
       for (let localIndex = 0; localIndex < visual.nodeIndices.length; localIndex += 1) {
         const node = visual.nodeIndices[localIndex];
         const activity = Math.min(1, interpolatedActivations[node]);
-        const visibleActivity = Math.pow(activity, 1.7);
+        const wave = fieldWave
+          ? (prevFieldWave ? prevFieldWave[node] : fieldWave[node]) * (1 - alpha) + fieldWave[node] * alpha
+          : 0;
+        const visibleActivity = Math.pow(Math.max(activity, wave * 0.7), 1.7);
         this.tempColor.copy(visual.baseColor).lerp(PALETTE.hot, visibleActivity * 0.95);
         colorAttribute.setXYZ(localIndex, this.tempColor.r, this.tempColor.g, this.tempColor.b);
       }
@@ -284,7 +290,11 @@ export class BrainRenderLayers {
     };
     for (const region of Object.keys(this.data.groups) as BrainRegion[]) {
       const nodes = this.data.groups[region];
-      const sum = nodes.reduce((total, index) => total + interpolatedActivations[index], 0);
+      const sum = nodes.reduce((total, index) => {
+        const act = interpolatedActivations[index];
+        const wv = fieldWave ? fieldWave[index] : 0;
+        return total + Math.max(act, wv * 0.5);
+      }, 0);
       regionActivities[region] = sum / nodes.length;
     }
 

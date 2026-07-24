@@ -1,4 +1,5 @@
 import { BrainData } from "./brain";
+import { PopulationField } from "./field";
 import { buildSynapseCsr, incomingRow, outgoingRow, SynapseCsr } from "./network";
 import { meanAbsoluteWeight, PopulationFiringRate } from "./observables";
 import {
@@ -39,6 +40,7 @@ export class NeuralSimulation {
   readonly activations: Float32Array;
   readonly gAmpa: Float32Array;
   readonly gGaba: Float32Array;
+  readonly populationField: PopulationField;
 
   private readonly data: BrainData;
   private readonly fixedStep: number;
@@ -79,6 +81,7 @@ export class NeuralSimulation {
     this.activations = new Float32Array(data.nodes.length);
     this.gAmpa = new Float32Array(data.nodes.length);
     this.gGaba = new Float32Array(data.nodes.length);
+    this.populationField = new PopulationField(data);
     this.refractory = new Float32Array(data.nodes.length);
     this.preTrace = new Float32Array(data.nodes.length);
     this.postTrace = new Float32Array(data.nodes.length);
@@ -177,6 +180,12 @@ export class NeuralSimulation {
       }
     }
 
+    this.populationField.step(this.spiked, this.data.neuronKindByNode, dt);
+    for (let node = 0; node < this.data.nodes.length; node += 1) {
+      const fieldModulation = this.populationField.getCouplingCurrent(node);
+      this.potentials[node] = clamp(this.potentials[node] + fieldModulation * dt, -1.4, 1.8);
+    }
+
     this.rate = this.firingRateObservable.sample(spikes);
     this.latestSpikeCount = spikes;
     this.currentTick += 1;
@@ -195,6 +204,7 @@ export class NeuralSimulation {
     this.activations.fill(0);
     this.gAmpa.fill(0);
     this.gGaba.fill(0);
+    this.populationField.reset();
     this.refractory.fill(0);
     this.preTrace.fill(0);
     this.postTrace.fill(0);
@@ -241,6 +251,7 @@ export class NeuralSimulation {
       activations: this.activations.slice(),
       weights: this.weights.slice(),
       signals: this.signalBatch(),
+      field: this.populationField.snapshot(),
     };
   }
 

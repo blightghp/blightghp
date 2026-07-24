@@ -1,4 +1,5 @@
 import type { BrainData } from "./brain";
+import type { FieldSnapshot } from "./field";
 
 export const SIMULATION_PROTOCOL_VERSION = 1 as const;
 export const SIMULATION_STEP_SECONDS = 1 / 60;
@@ -38,6 +39,7 @@ export interface NeuralSnapshot {
   activations: Float32Array;
   weights: Float32Array;
   signals: SignalBatch;
+  field?: FieldSnapshot;
 }
 
 // O motor ainda não tem uma fila de entradas agendadas por tick; "advance" carrega
