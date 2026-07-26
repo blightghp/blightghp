@@ -1,7 +1,7 @@
 import type { BrainData } from "./brain";
 import type { FieldSnapshot } from "./field";
 
-export const SIMULATION_PROTOCOL_VERSION = 1 as const;
+export const SIMULATION_PROTOCOL_VERSION = 2 as const;
 export const SIMULATION_STEP_SECONDS = 1 / 60;
 
 export type SimulationTick = number;

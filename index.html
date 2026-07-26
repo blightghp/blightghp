@@ -9,15 +9,8 @@
     <meta property="og:description" content="Rede neural procedural com disparos, atrasos e pesos adaptativos." />
     <meta property="og:image" content="https://raw.githubusercontent.com/blightghp/blightghp/main/assets/brain-concept.png" />
     <title>Sinapse Formalista · Neural Engine</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/styles.css" />
     <script type="module" src="/src/main.ts"></script>
-    <script>
-      window.MathJax = { tex: { inlineMath: [["$", "$"], ["\\(", "\\)"]] }, svg: { fontCache: "global" } };
-    </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
   </head>
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
@@ -32,7 +25,7 @@
     </header>
 
     <aside class="glass-panel control-panel" id="ui-panel">
-      <div class="eyebrow">NEURAL ENGINE / 02</div>
+      <div class="eyebrow">NEURAL ENGINE / 04</div>
       <h1>Córtex em<br /><span>tempo real.</span></h1>
       <p class="lede">Uma rede excitável transforma observações em disparos, atraso sináptico e adaptação dos pesos.</p>
 
@@ -79,7 +72,7 @@
         <div class="control-group compact">
           <label for="circuit-focus"><span>Foco de Circuito</span></label>
           <select id="circuit-focus" class="glass-select">
-            <option value="all">Cérebro Inteiro (LOD 0)</option>
+            <option value="all">Cérebro Inteiro</option>
             <option value="leftHemi">Córtex Esquerdo</option>
             <option value="rightHemi">Córtex Direito</option>
             <option value="cerebellum">Cerebelo</option>
@@ -102,7 +95,13 @@
     <section class="glass-panel inference-panel" id="bayesian-hud">
       <div class="inference-copy">
         <div class="eyebrow">BAYESIAN OBSERVATION / LIVE</div>
-        <div class="formula">$P(\Theta \mid D) = \frac{P(D \mid \Theta)P(\Theta)}{P(D)}$</div>
+        <div class="formula" aria-label="P de teta dado D é igual a P de D dado teta vezes P de teta, dividido por P de D">
+          <span>P(Θ | D) =</span>
+          <span class="fraction" aria-hidden="true">
+            <span>P(D | Θ)P(Θ)</span>
+            <span>P(D)</span>
+          </span>
+        </div>
         <p>Cada estímulo atualiza a crença e modula a corrente que entra no circuito.</p>
         <canvas id="activity-trace" aria-label="Histórico recente da taxa de disparos"></canvas>
       </div>
@@ -110,7 +109,7 @@
         <div><span>PRIOR</span><strong id="prior-val">0.35</strong></div>
         <div><span>POSTERIOR</span><strong id="posterior-val">0.35</strong></div>
         <div><span>DISPAROS</span><strong id="spike-count">0 spk</strong></div>
-        <div><span>POTENCIAL</span><strong id="mean-potential">-65.0 mV</strong></div>
+        <div><span>ESTADO LIF</span><strong id="mean-potential">0.000 u.a.</strong></div>
         <div><span>PESO STDP</span><strong id="mean-weight">0.485</strong></div>
         <div><span>RENDER</span><strong id="fps-val">60 FPS</strong></div>
       </div>

@@ -22,7 +22,15 @@ body {
     linear-gradient(145deg, #030915, #01040a 68%);
 }
 
-button, input { font: inherit; }
+button, input, select { font: inherit; }
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid #8edfff;
+  outline-offset: 3px;
+}
 
 .ambient-grid {
   position: fixed;
@@ -262,7 +270,17 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .inference-copy { padding: 22px 24px; }
-.formula { margin: 11px 0 8px; color: #ddecff; font-size: 15px; }
+.formula {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 11px 0 8px;
+  color: #ddecff;
+  font: italic 15px Georgia, "Times New Roman", serif;
+}
+.fraction { display: inline-grid; grid-template-rows: auto auto; text-align: center; line-height: 1.15; }
+.fraction span:first-child { padding: 0 3px 2px; border-bottom: 1px solid currentColor; }
+.fraction span:last-child { padding-top: 2px; }
 .inference-copy p { max-width: 390px; margin: 0; color: #617f9c; font-size: 9px; line-height: 1.55; }
 
 #activity-trace {
@@ -351,4 +369,9 @@ body[data-capture="true"] .interaction-hint { display: none !important; }
   .inference-panel { width: calc(100vw - 28px); }
   .inference-copy { padding: 15px 18px; }
   .interaction-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+  .runtime-dot, .brand-mark { box-shadow: none; }
 }

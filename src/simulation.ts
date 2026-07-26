@@ -44,7 +44,7 @@ export class NeuralSimulation {
 
   private readonly data: BrainData;
   private readonly fixedStep: number;
-  private readonly seed: number;
+  private seed: number;
   private readonly initialWeights: Float32Array;
   private readonly weights: Float32Array;
   private readonly delaySteps: Uint16Array;
@@ -81,7 +81,7 @@ export class NeuralSimulation {
     this.activations = new Float32Array(data.nodes.length);
     this.gAmpa = new Float32Array(data.nodes.length);
     this.gGaba = new Float32Array(data.nodes.length);
-    this.populationField = new PopulationField(data);
+    this.populationField = new PopulationField(data, { dtSeconds: fixedStep });
     this.refractory = new Float32Array(data.nodes.length);
     this.preTrace = new Float32Array(data.nodes.length);
     this.postTrace = new Float32Array(data.nodes.length);
@@ -194,7 +194,7 @@ export class NeuralSimulation {
 
   reset(seed?: number): void {
     if (seed !== undefined) {
-      (this as unknown as { seed: number }).seed = seed;
+      this.seed = seed;
       for (let index = 0; index < this.data.nodes.length; index += 1) {
         this.thresholds[index] =
           0.9 + randomUnit(seed, RANDOM_STREAM_CELL_THRESHOLD, index, 0, 0) * 0.22;

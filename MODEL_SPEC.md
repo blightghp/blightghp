@@ -101,28 +101,43 @@ No evento pré-sináptico, calcula-se a fração liberada segundo a convenção 
 
 ## Campo populacional
 
-A 0.4 escolherá uma das duas famílias abaixo e registrará essa escolha no preset.
+### Modelo adotado na 0.4
 
-### Campo integral
-
-$$
-\tau\frac{\partial u(x,t)}{\partial t} = -u(x,t)
-+ \int_{\mathcal M} w\!\left(d_g(x,x')\right)
-f\!\left(u\left(x',t-d_g(x,x')/c\right)\right)dx'
-+ h(x,t).
-$$
-
-Nessa formulação, o kernel usa distância geodésica e o atraso depende do comprimento do caminho.
-
-### Campo por operador de superfície
+A 0.4 usa um **campo E/I por kernel de grafo com atraso**. Para cada população
+`p ∈ {E, I}` e vértice `i`, a atualização é:
 
 $$
-\tau\frac{\partial u}{\partial t} = -u + D\Delta_{\mathcal M}u + f(Wu+h).
+u_{p,i}^{n+1} = \operatorname{clip}_{[0,u_{\max}]}\left[
+e^{-\Delta t/\tau_p}u_{p,i}^{n}
++ \rho_p\Delta t\left(
+\sum_{j\in N(i)}\bar w_{ij}u_{p,j}^{n-d_{ij}}-u_{p,i}^{n}
+\right)+h_{p,i}^{n}\right].
 $$
 
-Aqui `Δ_M` é o Laplace–Beltrami discretizado pela malha, ou uma aproximação de Laplaciano de grafo cuja diferença esteja documentada. Um kernel geodésico não será chamado de Laplace–Beltrami, e atraso de condução não será apresentado como causa suficiente de ondas. Ondas são regimes que precisam emergir e ser medidos no sistema completo.
+Os pesos são `w_ij = exp(-ℓ_ij / σ)` e normalizados em cada linha. O atraso é
+`d_ij = max(1, round(ℓ_ij / (c Δt)))`. `ℓ_ij` é o comprimento euclidiano da
+aresta no espaço procedural e **não** uma distância geodésica anatômica. O
+domínio é um grafo k-NN simétrico dos pontos corticais externos; não é uma
+triangulação e o operador não é chamado de Laplace–Beltrami.
 
-O primeiro campo terá populações excitatória e inibitória separadas. Um único escalar de atividade não é suficiente para estudar balanço E/I ou produzir observáveis sinápticos interpretáveis.
+`h` recebe impulsos dos spikes. Cada nó cortical é projetado para exatamente um
+vértice; cerebelo e tronco não pertencem a esse campo. No sentido inverso, a
+diferença `E-I` do vértice associado produz uma modulação sub-limiar com ganho
+declarado. Os estados `E`, `I` e `waveActivity` usam unidade arbitrária (`u.a.`);
+`waveActivity = clip(0,7E + 0,3I, 0, 1)` é um observável de apresentação, não
+um terceiro estado dinâmico.
+
+O passo padrão é `1/60 s`. Os decaimentos locais usam a solução exponencial
+exata; o termo de propagação é explícito e possui teste de convergência contra
+passos menores. A discretização do atraso ainda é quantizada pelo tick, e essa
+limitação deve ser considerada em qualquer interpretação de velocidade de onda.
+
+### Famílias futuras
+
+Uma malha triangular poderá substituir o grafo quando houver geometria cortical
+adequada para distâncias geodésicas ou Laplace–Beltrami. Essa troca exigirá novo
+estudo de convergência; atraso de condução, por si só, não será apresentado como
+causa suficiente de ondas fisiológicas.
 
 ## Inferência e tarefas
 

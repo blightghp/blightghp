@@ -22,7 +22,7 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
 | :-- | :-- | :-- | :-- |
 | **0.2 · Excitabilidade** | LIF fenomenológico, atrasos, sinapses direcionadas, excitação, inibição, STDP e inferência Bayesiana escalar | Atividade por unidade, pulsos ligados a eventos, envoltórios anatômicos e traçado de disparos | Determinismo serial, pesos limitados, inferência normalizada e invariantes do grafo |
 | **0.3 · Fundação** | Relógio desacoplado do frame, ticks inteiros, RNG indexado, CSR, redução ordenada, Worker serial e transição validada para AMPA/GABA-A | Feixes direcionais, instrumentos com unidade, foco progressivo, LOD e interpolação entre snapshots | Vetores exatos do RNG, replay de entradas, convergência temporal, paridade antes/depois do Worker e orçamento medido |
-| **0.4 · Superfície** | Malha cortical adequada, campo populacional E/I, atrasos de condução e primeiro acoplamento campo/spikes | Sulcos e giros coerentes com a malha, ondas superficiais e zoom contínuo até um circuito selecionado | Convergência da discretização, conservação no acoplamento, regressão visual e ausência de atividade gráfica inventada |
+| **0.4 · Superfície** | Domínio cortical procedural, campo populacional E/I, atrasos de condução e primeiro acoplamento campo/spikes | Atividade sobre o envelope cortical, zoom orbital e foco regional | Convergência da discretização, conservação na projeção, regressão estrutural e ausência de atividade gráfica inventada |
 | **0.5 · Lâmina** | Populações laminares, circuitos feedforward/feedback, tálamo e núcleo reticular quando exigidos pela tarefa | Coluna cortical explodida, seis lâminas legíveis e projeções tálamo-corticais | Testes de conectividade por camada, ritmos reproduzíveis apenas nos circuitos que os sustentam e metas de GPU por LOD |
 | **0.6 · Microscopia** | Patches AdEx, AMPA/NMDA/GABA-A/GABA-B, plasticidade de curto prazo e modulação dependente de receptor | Tipos celulares selecionados, dendritos, terminais, vesículas e inspeção sináptica local | Convergência de disparos e correntes, recursos sinápticos limitados, balanço E/I e ensembles de sementes |
 | **0.7 · Cognição** | Memória de trabalho, tarefas preditivas hierárquicas, hipocampo apenas em tarefas episódicas/espaciais e entrada simbólica pessoal sobre o núcleo genérico | Comparação espacial entre previsão, erro e atividade; trajetória guiada ligada à tarefa | Desempenho sob evidência ambígua, retenção/recuperação reproduzíveis e controles contra interpretações antecipadas |
@@ -30,42 +30,51 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
 | **0.9 · Núcleo compartilhado** | Migração do laço quente para Rust/WASM somente se o perfil justificar, com protocolo de snapshot versionado | Buffers compactos e interpolação idêntica no navegador e no Tauri | Paridade numérica declarada, benchmarks públicos e replay cruzado dentro da tolerância escolhida |
 | **1.0 · Atlas vivo** | Presets, gravação, reprodução, importação de estímulos e API estável | Tecidos calibrados, transparência multicamada, pós-processamento adaptativo e descida guiada completa | Documentação de referência, acessibilidade, testes end-to-end e pacotes reproduzíveis |
 
-## Versão Atual: 0.4 · Superfície Concluída (Próxima: 0.5 · Lâmina)
+## Versão atual: 0.4 · Superfície promovida (0.5 pronta para abertura)
 
-### Estado da implementação (0.4 · Superfície)
+### Gate auditado da 0.4 · Superfície
 
-- [x] **0.4-a · Malha Cortical e Atrasos de Condução:** discretização de vizinhança na malha, sulcos e giros e matriz de atrasos espaciais em `field.ts`.
-- [x] **0.4-b · Campo Populacional E/I & Acoplamento:** modelo contínuo de campo excitatório/inibitório em `field.ts` com difusão laplaciana e acoplamento bidirecional campo-spikes.
-- [x] **0.4-c · Ondas Superficiais e Visualização:** propagação de ondas de campo na superfície cortical e suporte a zoom contínuo/LOD em `render-layers.ts`.
+- [x] **0.4-a · Domínio cortical:** grafo k-NN simétrico, separado dos nós internos,
+  com CSR, comprimentos de aresta e projeção estável nó→vértice.
+- [x] **0.4-b · Campo E/I atrasado:** histórico circular, atraso derivado de
+  comprimento/velocidade, populações separadas e limites finitos.
+- [x] **0.4-c · Acoplamento:** cada spike cortical é agregado uma vez; a
+  realimentação E−I usa a mesma projeção e não alcança cerebelo/tronco.
+- [x] **0.4-d · Apresentação fiel:** snapshots independentes no protocolo v2,
+  interpolação limitada aos estados publicados e composição sem dupla contagem.
+- [x] **0.4-e · Evidência:** testes de topologia, atraso efetivo, conservação da
+  projeção, invariantes, convergência temporal, reset/reseed e regressão
+  estrutural do renderer.
 
-### Motor
+O relatório de promoção e as limitações aceitas estão em
+[AUDIT_0.4.md](AUDIT_0.4.md). A etapa 0.5 pode começar pelo contrato laminar;
+ela não deve reinterpretar o grafo k-NN atual como anatomia parcelada.
 
-- Extrair do `main.ts` o relógio de passo fixo e representar o tempo do motor por um tick inteiro.
-- Agendar toda entrada para um tick e desempatar eventos por um número de sequência monotônico.
-- Substituir o ruído derivado de ordem de chamada por um RNG indexado por semente, fluxo, entidade, tick e ordinal do evento.
-- Ordenar arestas por origem e destino, armazená-las em CSR e definir a ordem de toda acumulação sináptica.
-- Executar inicialmente um único laço determinístico no Worker. Paralelismo interno só entra com partições e fusão ordenadas.
-- Publicar snapshots compactos em frequência menor que a integração, sem expor buffers mutáveis do núcleo ao renderer.
-- Introduzir AMPA e GABA-A depois que os testes de convergência definirem o maior passo temporal aceitável. NMDA, GABA-B e AdEx permanecem na escala microscópica da 0.6.
-- Manter a inferência atual como experimento legado até existir o contrato genérico de tarefas; ela não será transformada artificialmente em uma força física do motor.
+### Fundação entregue
+
+- [x] relógio de passo fixo e tempo do motor representado por tick inteiro;
+- [x] RNG endereçado por semente, fluxo, entidade, tick e ordinal;
+- [x] sinapses direcionadas em CSR e redução serial ordenada;
+- [x] laço determinístico isolado em Worker e snapshots com cópias próprias;
+- [x] cinéticas AMPA/GABA-A separadas e inferência legada fora das equações do motor.
 
 ### Gráficos
 
-- Substituir segmentos longos por curvas axonais e indicar direção e natureza da conexão por forma, movimento e cor.
-- Interpolar os dois snapshots mais recentes sem avançar a simulação durante o frame.
-- Separar tecido, campo, conectividade, unidades, eventos e instrumentos em camadas de render com ciclos de vida próprios.
-- Adicionar foco de circuito com redução gradual de contexto e níveis de detalhe para pontos, linhas, envoltórios e pulsos.
-- Substituir no HUD grandezas ambíguas por sinais nomeados, com unidade, janela temporal e método de cálculo.
-- Entregar a primeira estação da descida guiada: do cérebro inteiro a um circuito, ainda sem prometer detalhe celular inexistente.
+- [x] interpolação entre snapshots sem avanço da simulação no frame;
+- [x] tecido, conectividade, unidades e eventos com buffers de render próprios;
+- [x] foco regional e zoom orbital sem alterar o motor;
+- [x] HUD com taxa em Hz/nó e estados adimensionais identificados como `u.a.`.
 
-### Qualidade
+### Backlog transversal não bloqueador
 
-- Fixar vetores de referência para o RNG, o relógio, a ordenação de eventos e pequenos circuitos sem ruído.
-- Testar invariantes físicos e numéricos separadamente dos fenômenos emergentes.
-- Escolher o passo de integração por estudo de convergência, não por um valor decidido de antemão.
-- Comparar replay, snapshots e métricas antes e depois da passagem para o Worker.
-- Medir CPU, GPU, memória, latência de publicação e tamanho do bundle em configurações de hardware identificadas.
-- Capturar vistas de referência e testar teclado, contraste e preferência por movimento reduzido.
+Estes itens não mudam o contrato superficial promovido e podem entrar na trilha
+de qualidade da 0.5, antes de qualquer demonstração científica nova:
+
+- [ ] fila genérica de entradas por `(tick, sequence)` e artefato de replay;
+- [ ] cadência configurável de snapshots e perfil de CPU/GPU/memória/latência;
+- [ ] estudo de convergência específico das correntes AMPA/GABA-A;
+- [ ] curvas axonais e ciclos de vida independentes para todas as camadas;
+- [ ] capturas visuais automatizadas e auditoria contínua de teclado/contraste.
 
 ## Trilhas que atravessam as versões
 

@@ -18,6 +18,7 @@ export type BrainSettings = z.infer<typeof brainSettingsSchema>;
 
 export function getInitialBrainSettings(): BrainSettings {
   const params = new URLSearchParams(window.location.search);
+  const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
   const numericParam = (name: string): number | undefined => {
     const value = params.get(name);
     if (value === null || value.trim() === "") return undefined;
@@ -26,7 +27,7 @@ export function getInitialBrainSettings(): BrainSettings {
   };
 
   return brainSettingsSchema.parse({
-    rotationSpeed: numericParam("rotation"),
+    rotationSpeed: numericParam("rotation") ?? (prefersReducedMotion ? 0 : undefined),
     pulseSpeed: numericParam("pulseSpeed"),
     pulseCount: numericParam("pulses"),
     stimulusIntensity: numericParam("stimulus"),

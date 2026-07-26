@@ -48,6 +48,21 @@ export const REGION_COLORS: Record<BrainRegion, THREE.Color> = {
   stem: new THREE.Color(0x6f9cff),
 };
 
+export function interpolatePublishedValue(
+  current: number,
+  previous: number | undefined,
+  alpha: number,
+): number {
+  const boundedAlpha = Math.max(0, Math.min(1, alpha));
+  return (previous ?? current) + (current - (previous ?? current)) * boundedAlpha;
+}
+
+export function composeNodeActivity(activation: number, fieldWave: number): number {
+  // Field and spikes are two resolutions of one signal. Taking the envelope
+  // avoids inventing extra activity by summing both representations.
+  return Math.max(activation, fieldWave * 0.7);
+}
+
 function createPointTexture(): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = 32;
@@ -256,6 +271,7 @@ export class BrainRenderLayers {
     currSnapshot: NeuralSnapshot,
     prevSnapshot: NeuralSnapshot | undefined,
     alpha: number,
+    visibleSignalLimit = MAX_VISIBLE_SIGNALS,
   ): void {
     const interpolatedActivations = new Float32Array(currSnapshot.activations.length);
     for (let index = 0; index < currSnapshot.activations.length; index += 1) {
@@ -272,10 +288,15 @@ export class BrainRenderLayers {
       for (let localIndex = 0; localIndex < visual.nodeIndices.length; localIndex += 1) {
         const node = visual.nodeIndices[localIndex];
         const activity = Math.min(1, interpolatedActivations[node]);
-        const wave = fieldWave
-          ? (prevFieldWave ? prevFieldWave[node] : fieldWave[node]) * (1 - alpha) + fieldWave[node] * alpha
+        const fieldVertex = this.data.corticalField.vertexByNode[node];
+        const wave = fieldWave && fieldVertex >= 0
+          ? interpolatePublishedValue(
+              fieldWave[fieldVertex],
+              prevFieldWave?.[fieldVertex],
+              alpha,
+            )
           : 0;
-        const visibleActivity = Math.pow(Math.max(activity, wave * 0.7), 1.7);
+        const visibleActivity = Math.pow(composeNodeActivity(activity, wave), 1.7);
         this.tempColor.copy(visual.baseColor).lerp(PALETTE.hot, visibleActivity * 0.95);
         colorAttribute.setXYZ(localIndex, this.tempColor.r, this.tempColor.g, this.tempColor.b);
       }
@@ -292,8 +313,9 @@ export class BrainRenderLayers {
       const nodes = this.data.groups[region];
       const sum = nodes.reduce((total, index) => {
         const act = interpolatedActivations[index];
-        const wv = fieldWave ? fieldWave[index] : 0;
-        return total + Math.max(act, wv * 0.5);
+        const fieldVertex = this.data.corticalField.vertexByNode[index];
+        const wv = fieldWave && fieldVertex >= 0 ? fieldWave[fieldVertex] : 0;
+        return total + composeNodeActivity(act, wv * (0.5 / 0.7));
       }, 0);
       regionActivities[region] = sum / nodes.length;
     }
@@ -328,10 +350,10 @@ export class BrainRenderLayers {
       colorAttribute.needsUpdate = true;
     }
 
-    this.renderSignals(currSnapshot);
+    this.renderSignals(currSnapshot, visibleSignalLimit);
   }
 
-  private renderSignals(snapshot: NeuralSnapshot): void {
+  private renderSignals(snapshot: NeuralSnapshot, visibleSignalLimit: number): void {
     const totalInstances = MAX_VISIBLE_SIGNALS * TRAIL_LENGTH;
     for (let index = 0; index < totalInstances; index += 1) {
       this.tempScale.setScalar(0.0001);
@@ -340,7 +362,11 @@ export class BrainRenderLayers {
     }
 
     const { synapseIds, progress, strength, inhibitory } = snapshot.signals;
-    const signalCount = Math.min(synapseIds.length, MAX_VISIBLE_SIGNALS);
+    const signalCount = Math.min(
+      synapseIds.length,
+      MAX_VISIBLE_SIGNALS,
+      Math.max(0, Math.floor(visibleSignalLimit)),
+    );
     let instanceIndex = 0;
 
     for (let signalIndex = 0; signalIndex < signalCount; signalIndex += 1) {

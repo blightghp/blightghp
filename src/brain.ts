@@ -11,8 +11,24 @@ export interface Synapse {
   plastic: boolean;
 }
 
+export interface CorticalFieldTopology {
+  /**
+   * Maps each field vertex to the procedural node that carries its position.
+   * Only the outer left/right cortical samples belong to this domain.
+   */
+  nodeIndices: Uint32Array;
+  /** Maps every procedural node to a field vertex, or -1 outside the cortex. */
+  vertexByNode: Int32Array;
+  /** CSR adjacency for the undirected cortical graph. */
+  rowOffsets: Uint32Array;
+  neighbors: Uint32Array;
+  /** Euclidean edge lengths in the procedural spatial unit. */
+  edgeLengths: Float32Array;
+}
+
 export interface BrainData {
   seed: number;
+  generation: Required<BrainGenerationOptions>;
   nodes: THREE.Vector3[];
   edges: [number, number][];
   synapses: Synapse[];
@@ -21,6 +37,7 @@ export interface BrainData {
   regionByNode: BrainRegion[];
   neuronKindByNode: NeuronKind[];
   groups: Record<BrainRegion, number[]>;
+  corticalField: CorticalFieldTopology;
 }
 
 export interface BrainGenerationOptions {
@@ -30,6 +47,7 @@ export interface BrainGenerationOptions {
 }
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+const FIELD_NEIGHBORS_PER_VERTEX = 6;
 
 function mulberry32(seed: number): () => number {
   let value = seed >>> 0;
@@ -62,6 +80,89 @@ function addNode(
   regionByNode[index] = region;
 }
 
+function buildCorticalFieldTopology(
+  nodes: THREE.Vector3[],
+  groups: BrainData["groups"],
+  corticalSurfaceNodes: Record<"leftHemi" | "rightHemi", number[]>,
+): CorticalFieldTopology {
+  const nodeIndices = Uint32Array.from([
+    ...corticalSurfaceNodes.leftHemi,
+    ...corticalSurfaceNodes.rightHemi,
+  ]);
+  const vertexByNode = new Int32Array(nodes.length);
+  vertexByNode.fill(-1);
+  nodeIndices.forEach((node, vertex) => {
+    vertexByNode[node] = vertex;
+  });
+
+  const adjacency = Array.from({ length: nodeIndices.length }, () => new Set<number>());
+  const connectNearest = (surfaceNodes: number[]): void => {
+    for (const node of surfaceNodes) {
+      const vertex = vertexByNode[node];
+      const nearest = surfaceNodes
+        .filter((candidate) => candidate !== node)
+        .map((candidate) => ({
+          vertex: vertexByNode[candidate],
+          distanceSquared: nodes[node].distanceToSquared(nodes[candidate]),
+        }))
+        .sort((a, b) =>
+          a.distanceSquared - b.distanceSquared || a.vertex - b.vertex
+        )
+        .slice(0, FIELD_NEIGHBORS_PER_VERTEX);
+
+      for (const candidate of nearest) {
+        adjacency[vertex].add(candidate.vertex);
+        adjacency[candidate.vertex].add(vertex);
+      }
+    }
+  };
+  connectNearest(corticalSurfaceNodes.leftHemi);
+  connectNearest(corticalSurfaceNodes.rightHemi);
+
+  // Inner cortical samples project to their closest surface vertex. Cerebellum
+  // and stem intentionally remain outside the macroscopic cortical field.
+  for (const region of ["leftHemi", "rightHemi"] as const) {
+    const surfaceNodes = corticalSurfaceNodes[region];
+    const surfaceSet = new Set(surfaceNodes);
+    for (const node of groups[region]) {
+      if (surfaceSet.has(node)) continue;
+      let closest = surfaceNodes[0];
+      let closestDistance = nodes[node].distanceToSquared(nodes[closest]);
+      for (let index = 1; index < surfaceNodes.length; index += 1) {
+        const candidate = surfaceNodes[index];
+        const distance = nodes[node].distanceToSquared(nodes[candidate]);
+        if (distance < closestDistance) {
+          closest = candidate;
+          closestDistance = distance;
+        }
+      }
+      vertexByNode[node] = vertexByNode[closest];
+    }
+  }
+
+  const rowOffsets = new Uint32Array(nodeIndices.length + 1);
+  const neighborList: number[] = [];
+  const edgeLengthList: number[] = [];
+  for (let vertex = 0; vertex < nodeIndices.length; vertex += 1) {
+    const orderedNeighbors = [...adjacency[vertex]].sort((a, b) => a - b);
+    for (const neighbor of orderedNeighbors) {
+      neighborList.push(neighbor);
+      edgeLengthList.push(
+        nodes[nodeIndices[vertex]].distanceTo(nodes[nodeIndices[neighbor]]),
+      );
+    }
+    rowOffsets[vertex + 1] = neighborList.length;
+  }
+
+  return {
+    nodeIndices,
+    vertexByNode,
+    rowOffsets,
+    neighbors: Uint32Array.from(neighborList),
+    edgeLengths: Float32Array.from(edgeLengthList),
+  };
+}
+
 export function generateBrainData(options: BrainGenerationOptions = {}): BrainData {
   const {
     seed = 0x51a7c0de,
@@ -71,6 +172,10 @@ export function generateBrainData(options: BrainGenerationOptions = {}): BrainDa
   const random = mulberry32(seed);
   const nodes: THREE.Vector3[] = [];
   const regionByNode: BrainRegion[] = [];
+  const corticalSurfaceNodes: Record<"leftHemi" | "rightHemi", number[]> = {
+    leftHemi: [],
+    rightHemi: [],
+  };
   const groups: BrainData["groups"] = {
     leftHemi: [],
     rightHemi: [],
@@ -88,6 +193,7 @@ export function generateBrainData(options: BrainGenerationOptions = {}): BrainDa
       const scale = corticalScale(lateral, vertical, depth);
       const lowerTaper = 0.82 + 0.18 * Math.min(1, vertical + 1);
 
+      const nodeIndex = nodes.length;
       addNode(
         nodes,
         groups,
@@ -99,6 +205,7 @@ export function generateBrainData(options: BrainGenerationOptions = {}): BrainDa
           0.02 + 1.08 * depth * scale * (0.9 + 0.1 * lateral),
         ),
       );
+      corticalSurfaceNodes[region as "leftHemi" | "rightHemi"].push(nodeIndex);
     }
 
     for (let i = 0; i < innerNodesPerHemisphere; i += 1) {
@@ -281,9 +388,19 @@ export function generateBrainData(options: BrainGenerationOptions = {}): BrainDa
       return spanB - spanA;
     })
     .slice(0, 18);
+  const corticalField = buildCorticalFieldTopology(
+    nodes,
+    groups,
+    corticalSurfaceNodes,
+  );
 
   return {
     seed,
+    generation: {
+      seed,
+      surfaceNodesPerHemisphere,
+      innerNodesPerHemisphere,
+    },
     nodes,
     edges,
     synapses,
@@ -292,5 +409,6 @@ export function generateBrainData(options: BrainGenerationOptions = {}): BrainDa
     regionByNode,
     neuronKindByNode,
     groups,
+    corticalField,
   };
 }

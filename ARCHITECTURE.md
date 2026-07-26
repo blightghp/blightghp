@@ -203,7 +203,20 @@ O estado atual de spikes é agregado por região ou por vértice apenas para ins
 
 ### 0.4 — campo macroscópico
 
-O campo E/I torna-se o estado canônico fora de patches. A topologia ganha uma malha, vizinhança e pesos de projeção. O renderer recebe a atividade composta, não buffers independentes para somar livremente.
+O campo E/I é o estado macroscópico cortical fora de patches. `BrainData`
+publica `corticalField`, um grafo CSR simétrico sobre os pontos corticais
+externos, com comprimentos de aresta e uma projeção `vertexByNode`. Pontos
+corticais internos são associados ao vértice externo mais próximo; cerebelo e
+tronco ficam fora do domínio.
+
+`PopulationField` possui os buffers E/I, o histórico circular consumido pelos
+atrasos de condução e a composição `waveActivity`. O snapshot do protocolo v2
+leva arrays por vértice e `nodeIndices`; o renderer usa a projeção da topologia
+e combina campo e spikes pelo envelope máximo. Ele não soma as duas resoluções
+como fontes independentes.
+
+O domínio atual é uma aproximação k-NN procedural. Não é uma malha triangular
+anatômica, e seus comprimentos euclidianos não são descritos como geodésicas.
 
 ### 0.6 — patch resolvido
 

@@ -29,4 +29,41 @@ describe("generateBrainData", () => {
     expect(brain.synapses.some((synapse) => synapse.weight < 0)).toBe(true);
     expect(brain.synapses.some((synapse) => synapse.weight > 0)).toBe(true);
   });
+
+  it("builds a deterministic symmetric cortical field graph and projection", () => {
+    const surfaceNodesPerHemisphere = 48;
+    const brain = generateBrainData({
+      seed: 22,
+      surfaceNodesPerHemisphere,
+      innerNodesPerHemisphere: 9,
+    });
+    const field = brain.corticalField;
+
+    expect(field.nodeIndices).toHaveLength(surfaceNodesPerHemisphere * 2);
+    expect(field.rowOffsets).toHaveLength(field.nodeIndices.length + 1);
+    expect(field.rowOffsets[field.rowOffsets.length - 1]).toBe(field.neighbors.length);
+    expect(field.edgeLengths).toHaveLength(field.neighbors.length);
+    expect(Math.min(...field.edgeLengths)).toBeGreaterThan(0);
+
+    for (let vertex = 0; vertex < field.nodeIndices.length; vertex += 1) {
+      expect(field.vertexByNode[field.nodeIndices[vertex]]).toBe(vertex);
+      const neighbors = field.neighbors.slice(
+        field.rowOffsets[vertex],
+        field.rowOffsets[vertex + 1],
+      );
+      expect(neighbors.length).toBeGreaterThanOrEqual(6);
+      for (const neighbor of neighbors) {
+        const reverse = field.neighbors.slice(
+          field.rowOffsets[neighbor],
+          field.rowOffsets[neighbor + 1],
+        );
+        expect(Array.from(reverse)).toContain(vertex);
+      }
+    }
+
+    expect(brain.groups.leftHemi.every((node) => field.vertexByNode[node] >= 0)).toBe(true);
+    expect(brain.groups.rightHemi.every((node) => field.vertexByNode[node] >= 0)).toBe(true);
+    expect(brain.groups.cerebellum.every((node) => field.vertexByNode[node] === -1)).toBe(true);
+    expect(brain.groups.stem.every((node) => field.vertexByNode[node] === -1)).toBe(true);
+  });
 });

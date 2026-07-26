@@ -1,150 +1,283 @@
-import type { BrainData } from "./brain";
+import type {
+  BrainData,
+  CorticalFieldTopology,
+  NeuronKind,
+} from "./brain";
 
 export interface FieldSnapshot {
+  nodeIndices: Uint32Array;
   eField: Float32Array;
   iField: Float32Array;
   waveActivity: Float32Array;
 }
 
 export interface FieldConfig {
-  tauE: number;
-  tauI: number;
-  diffusionE: number;
-  diffusionI: number;
+  dtSeconds: number;
+  tauESeconds: number;
+  tauISeconds: number;
+  propagationEPerSecond: number;
+  propagationIPerSecond: number;
   couplingGain: number;
-  conductionSpeed: number; // spatial units / second
+  conductionSpeedUnitsPerSecond: number;
+  spatialKernelScale: number;
+  excitatorySpikeImpulse: number;
+  inhibitorySpikeImpulse: number;
+  maxActivity: number;
 }
 
-const DEFAULT_CONFIG: FieldConfig = {
-  tauE: 0.016, // 16ms
-  tauI: 0.024, // 24ms
-  diffusionE: 0.18,
-  diffusionI: 0.12,
+export const DEFAULT_FIELD_CONFIG: Readonly<FieldConfig> = {
+  dtSeconds: 1 / 60,
+  tauESeconds: 0.016,
+  tauISeconds: 0.024,
+  propagationEPerSecond: 1.8,
+  propagationIPerSecond: 1.2,
   couplingGain: 0.08,
-  conductionSpeed: 1.6,
+  conductionSpeedUnitsPerSecond: 1.6,
+  spatialKernelScale: 0.22,
+  excitatorySpikeImpulse: 0.45,
+  inhibitorySpikeImpulse: 0.55,
+  maxActivity: 2.5,
 };
 
+export interface ProjectedSpikeDrive {
+  excitatory: Float32Array;
+  inhibitory: Float32Array;
+}
+
+function assertPositiveFinite(name: string, value: number): void {
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new RangeError(`${name} deve ser positivo e finito.`);
+  }
+}
+
+function validateConfig(config: FieldConfig): void {
+  assertPositiveFinite("dtSeconds", config.dtSeconds);
+  assertPositiveFinite("tauESeconds", config.tauESeconds);
+  assertPositiveFinite("tauISeconds", config.tauISeconds);
+  assertPositiveFinite("conductionSpeedUnitsPerSecond", config.conductionSpeedUnitsPerSecond);
+  assertPositiveFinite("spatialKernelScale", config.spatialKernelScale);
+  assertPositiveFinite("excitatorySpikeImpulse", config.excitatorySpikeImpulse);
+  assertPositiveFinite("inhibitorySpikeImpulse", config.inhibitorySpikeImpulse);
+  assertPositiveFinite("maxActivity", config.maxActivity);
+  if (
+    !Number.isFinite(config.propagationEPerSecond) ||
+    config.propagationEPerSecond < 0 ||
+    !Number.isFinite(config.propagationIPerSecond) ||
+    config.propagationIPerSecond < 0 ||
+    !Number.isFinite(config.couplingGain) ||
+    config.couplingGain < 0
+  ) {
+    throw new RangeError("Propagação e ganho de acoplamento devem ser finitos e não negativos.");
+  }
+}
+
+/**
+ * Aggregates every cortical spike exactly once into its assigned field vertex.
+ * The sums therefore preserve the configured impulse across the projection.
+ */
+export function projectSpikesToField(
+  topology: CorticalFieldTopology,
+  spiked: Uint8Array,
+  neuronKinds: readonly NeuronKind[],
+  excitatoryImpulse = DEFAULT_FIELD_CONFIG.excitatorySpikeImpulse,
+  inhibitoryImpulse = DEFAULT_FIELD_CONFIG.inhibitorySpikeImpulse,
+): ProjectedSpikeDrive {
+  if (spiked.length !== topology.vertexByNode.length || neuronKinds.length !== spiked.length) {
+    throw new RangeError("Spikes, tipos neuronais e projeção devem ter o mesmo número de nós.");
+  }
+  assertPositiveFinite("excitatoryImpulse", excitatoryImpulse);
+  assertPositiveFinite("inhibitoryImpulse", inhibitoryImpulse);
+
+  const excitatory = new Float32Array(topology.nodeIndices.length);
+  const inhibitory = new Float32Array(topology.nodeIndices.length);
+  for (let node = 0; node < spiked.length; node += 1) {
+    if (!spiked[node]) continue;
+    const vertex = topology.vertexByNode[node];
+    if (vertex < 0) continue;
+    if (neuronKinds[node] === "excitatory") {
+      excitatory[vertex] += excitatoryImpulse;
+    } else {
+      inhibitory[vertex] += inhibitoryImpulse;
+    }
+  }
+  return { excitatory, inhibitory };
+}
+
+/**
+ * Delayed graph-kernel E/I field on the procedural cortical surface.
+ *
+ * The topology is an explicit k-nearest-neighbour graph, not a triangular
+ * anatomical mesh and not a Laplace–Beltrami operator. Edge history is sampled
+ * at distance / conduction speed, making propagation delay part of the actual
+ * update rather than metadata used only by the renderer.
+ */
 export class PopulationField {
-  readonly nodeCount: number;
+  readonly vertexCount: number;
   readonly eField: Float32Array;
   readonly iField: Float32Array;
   readonly waveActivity: Float32Array;
 
-  private readonly neighbors: Int32Array[];
-  private readonly neighborWeights: Float32Array[];
-  private readonly conductionDelays: Uint16Array[];
-  private readonly delayBuffersE: Float32Array[];
-  private readonly delayBuffersI: Float32Array[];
-  private readonly bufferCursors: Uint16Array;
+  private readonly topology: CorticalFieldTopology;
+  private readonly neighborWeights: Float32Array;
+  private readonly conductionDelaySteps: Uint16Array;
+  private readonly historyE: Float32Array;
+  private readonly historyI: Float32Array;
+  private readonly historyLength: number;
+  private readonly nextE: Float32Array;
+  private readonly nextI: Float32Array;
   private readonly config: FieldConfig;
+  private historyCursor = 0;
 
   constructor(data: BrainData, config: Partial<FieldConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.nodeCount = data.nodes.length;
-    this.eField = new Float32Array(this.nodeCount);
-    this.iField = new Float32Array(this.nodeCount);
-    this.waveActivity = new Float32Array(this.nodeCount);
+    this.config = { ...DEFAULT_FIELD_CONFIG, ...config };
+    validateConfig(this.config);
+    this.topology = data.corticalField;
+    this.vertexCount = this.topology.nodeIndices.length;
+    this.eField = new Float32Array(this.vertexCount);
+    this.iField = new Float32Array(this.vertexCount);
+    this.waveActivity = new Float32Array(this.vertexCount);
+    this.nextE = new Float32Array(this.vertexCount);
+    this.nextI = new Float32Array(this.vertexCount);
 
-    const neighborsList: number[][] = Array.from({ length: this.nodeCount }, () => []);
-    const weightsList: number[][] = Array.from({ length: this.nodeCount }, () => []);
-    const delaysList: number[][] = Array.from({ length: this.nodeCount }, () => []);
-    const maxDelays: number[] = Array.from({ length: this.nodeCount }, () => 1);
-
-    const radius = 0.42;
-    for (let i = 0; i < this.nodeCount; i += 1) {
-      const posI = data.nodes[i];
-      for (let j = 0; j < this.nodeCount; j += 1) {
-        if (i === j) continue;
-        const posJ = data.nodes[j];
-        const dist = posI.distanceTo(posJ);
-        if (dist <= radius) {
-          neighborsList[i].push(j);
-          const weight = Math.exp(-dist * 4.5);
-          weightsList[i].push(weight);
-          const delaySteps = Math.max(1, Math.round(dist / (this.config.conductionSpeed * 0.016)));
-          delaysList[i].push(delaySteps);
-          if (delaySteps > maxDelays[i]) maxDelays[i] = delaySteps;
+    this.neighborWeights = new Float32Array(this.topology.neighbors.length);
+    this.conductionDelaySteps = new Uint16Array(this.topology.neighbors.length);
+    let maximumDelay = 1;
+    for (let vertex = 0; vertex < this.vertexCount; vertex += 1) {
+      const start = this.topology.rowOffsets[vertex];
+      const end = this.topology.rowOffsets[vertex + 1];
+      let weightSum = 0;
+      for (let edge = start; edge < end; edge += 1) {
+        const length = this.topology.edgeLengths[edge];
+        const weight = Math.exp(-length / this.config.spatialKernelScale);
+        this.neighborWeights[edge] = weight;
+        weightSum += weight;
+        const delay = Math.max(
+          1,
+          Math.round(
+            length /
+              (this.config.conductionSpeedUnitsPerSecond * this.config.dtSeconds),
+          ),
+        );
+        if (delay > 0xffff) {
+          throw new RangeError("O atraso do campo excede a capacidade de Uint16.");
+        }
+        this.conductionDelaySteps[edge] = delay;
+        maximumDelay = Math.max(maximumDelay, delay);
+      }
+      if (weightSum > 0) {
+        for (let edge = start; edge < end; edge += 1) {
+          this.neighborWeights[edge] /= weightSum;
         }
       }
     }
 
-    this.neighbors = neighborsList.map((arr) => Int32Array.from(arr));
-    this.neighborWeights = weightsList.map((arr) => {
-      const sum = arr.reduce((a, b) => a + b, 0);
-      const norm = sum > 0 ? sum : 1;
-      return Float32Array.from(arr.map((w) => w / norm));
-    });
-    this.conductionDelays = delaysList.map((arr) => Uint16Array.from(arr));
-
-    this.delayBuffersE = maxDelays.map((maxD) => new Float32Array(maxD + 2));
-    this.delayBuffersI = maxDelays.map((maxD) => new Float32Array(maxD + 2));
-    this.bufferCursors = new Uint16Array(this.nodeCount);
+    this.historyLength = maximumDelay + 1;
+    this.historyE = new Float32Array(this.historyLength * this.vertexCount);
+    this.historyI = new Float32Array(this.historyLength * this.vertexCount);
   }
 
-  step(spiked: Uint8Array, neuronKinds: ("excitatory" | "inhibitory")[], dt: number): void {
-    const decayE = Math.exp(-dt / this.config.tauE);
-    const decayI = Math.exp(-dt / this.config.tauI);
-
-    for (let i = 0; i < this.nodeCount; i += 1) {
-      if (spiked[i]) {
-        if (neuronKinds[i] === "excitatory") {
-          this.eField[i] += 0.45;
-        } else {
-          this.iField[i] += 0.55;
-        }
-      }
+  step(spiked: Uint8Array, neuronKinds: readonly NeuronKind[], dt: number): void {
+    if (Math.abs(dt - this.config.dtSeconds) > Number.EPSILON * 8) {
+      throw new RangeError("O campo deve avançar com o passo fixo declarado em dtSeconds.");
+    }
+    const drive = projectSpikesToField(
+      this.topology,
+      spiked,
+      neuronKinds,
+      this.config.excitatorySpikeImpulse,
+      this.config.inhibitorySpikeImpulse,
+    );
+    for (let vertex = 0; vertex < this.vertexCount; vertex += 1) {
+      this.eField[vertex] += drive.excitatory[vertex];
+      this.iField[vertex] += drive.inhibitory[vertex];
     }
 
-    const nextE = new Float32Array(this.nodeCount);
-    const nextI = new Float32Array(this.nodeCount);
+    const historyBase = this.historyCursor * this.vertexCount;
+    this.historyE.set(this.eField, historyBase);
+    this.historyI.set(this.iField, historyBase);
 
-    for (let i = 0; i < this.nodeCount; i += 1) {
-      const eVal = this.eField[i] * decayE;
-      const iVal = this.iField[i] * decayI;
-
-      const nbrs = this.neighbors[i];
-      const wts = this.neighborWeights[i];
-      let lapE = 0;
-      let lapI = 0;
-
-      for (let k = 0; k < nbrs.length; k += 1) {
-        const nbrIndex = nbrs[k];
-        const w = wts[k];
-        lapE += (this.eField[nbrIndex] - eVal) * w;
-        lapI += (this.iField[nbrIndex] - iVal) * w;
+    const decayE = Math.exp(-dt / this.config.tauESeconds);
+    const decayI = Math.exp(-dt / this.config.tauISeconds);
+    for (let vertex = 0; vertex < this.vertexCount; vertex += 1) {
+      const currentE = this.eField[vertex];
+      const currentI = this.iField[vertex];
+      let delayedMeanE = 0;
+      let delayedMeanI = 0;
+      const start = this.topology.rowOffsets[vertex];
+      const end = this.topology.rowOffsets[vertex + 1];
+      for (let edge = start; edge < end; edge += 1) {
+        const neighbor = this.topology.neighbors[edge];
+        const delayedCursor =
+          (this.historyCursor - this.conductionDelaySteps[edge] + this.historyLength) %
+          this.historyLength;
+        const delayedIndex = delayedCursor * this.vertexCount + neighbor;
+        const weight = this.neighborWeights[edge];
+        delayedMeanE += this.historyE[delayedIndex] * weight;
+        delayedMeanI += this.historyI[delayedIndex] * weight;
       }
 
-      nextE[i] = Math.max(0, Math.min(2.5, eVal + this.config.diffusionE * lapE * dt * 10));
-      nextI[i] = Math.max(0, Math.min(2.5, iVal + this.config.diffusionI * lapI * dt * 10));
-
-      this.waveActivity[i] = Math.min(1, nextE[i] * 0.7 + nextI[i] * 0.3);
+      const propagatedE =
+        currentE * decayE +
+        this.config.propagationEPerSecond * (delayedMeanE - currentE) * dt;
+      const propagatedI =
+        currentI * decayI +
+        this.config.propagationIPerSecond * (delayedMeanI - currentI) * dt;
+      this.nextE[vertex] = Math.max(0, Math.min(this.config.maxActivity, propagatedE));
+      this.nextI[vertex] = Math.max(0, Math.min(this.config.maxActivity, propagatedI));
+      this.waveActivity[vertex] = Math.min(
+        1,
+        this.nextE[vertex] * 0.7 + this.nextI[vertex] * 0.3,
+      );
     }
 
-    this.eField.set(nextE);
-    this.iField.set(nextI);
+    this.eField.set(this.nextE);
+    this.iField.set(this.nextI);
+    this.historyCursor = (this.historyCursor + 1) % this.historyLength;
+  }
+
+  getFieldVertexForNode(nodeIndex: number): number {
+    return this.topology.vertexByNode[nodeIndex] ?? -1;
   }
 
   getCouplingCurrent(nodeIndex: number): number {
-    const e = this.eField[nodeIndex];
-    const i = this.iField[nodeIndex];
-    return (e - i) * this.config.couplingGain;
+    const vertex = this.getFieldVertexForNode(nodeIndex);
+    if (vertex < 0) return 0;
+    return (this.eField[vertex] - this.iField[vertex]) * this.config.couplingGain;
   }
 
-  getConductionDelay(nodeIndex: number, neighborIndex: number): number {
-    return this.conductionDelays[nodeIndex]?.[neighborIndex] ?? 1;
+  getConductionDelaySteps(sourceVertex: number, targetVertex: number): number | undefined {
+    if (
+      sourceVertex < 0 ||
+      sourceVertex >= this.vertexCount ||
+      targetVertex < 0 ||
+      targetVertex >= this.vertexCount
+    ) {
+      return undefined;
+    }
+    const start = this.topology.rowOffsets[targetVertex];
+    const end = this.topology.rowOffsets[targetVertex + 1];
+    for (let edge = start; edge < end; edge += 1) {
+      if (this.topology.neighbors[edge] === sourceVertex) {
+        return this.conductionDelaySteps[edge];
+      }
+    }
+    return undefined;
   }
 
   reset(): void {
     this.eField.fill(0);
     this.iField.fill(0);
     this.waveActivity.fill(0);
-    this.delayBuffersE.forEach((buf) => buf.fill(0));
-    this.delayBuffersI.forEach((buf) => buf.fill(0));
-    this.bufferCursors.fill(0);
+    this.nextE.fill(0);
+    this.nextI.fill(0);
+    this.historyE.fill(0);
+    this.historyI.fill(0);
+    this.historyCursor = 0;
   }
 
   snapshot(): FieldSnapshot {
     return {
+      nodeIndices: this.topology.nodeIndices.slice(),
       eField: this.eField.slice(),
       iField: this.iField.slice(),
       waveActivity: this.waveActivity.slice(),

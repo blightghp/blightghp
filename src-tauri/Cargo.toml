@@ -1,6 +1,6 @@
 [package]
 name = "sinapse-formalista"
-version = "0.2.0"
+version = "0.4.0"
 description = "A procedural 3D neural experiment packaged with Rust and Tauri"
 authors = ["Gabriel Pinheiro"]
 edition = "2021"

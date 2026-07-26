@@ -75,7 +75,10 @@ export class EngineHost {
     if (command.seed === undefined) {
       this.simulation.reset();
     } else {
-      this.topology = generateBrainData({ ...this.topology, seed: command.seed });
+      this.topology = generateBrainData({
+        ...this.topology.generation,
+        seed: command.seed,
+      });
       this.simulation = new NeuralSimulation(this.topology, this.fixedStep, command.seed);
     }
     return [{ type: "ready", tick: this.simulation.tick }];

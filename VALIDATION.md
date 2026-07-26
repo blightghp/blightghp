@@ -146,3 +146,11 @@ Uma função passa de experimental para padrão quando:
 6. mantém replay e captura reproduzíveis.
 
 Se uma hipótese ainda não possui evidência suficiente, ela permanece disponível em modo Laboratório e não é usada como demonstração fisiológica no modo Apresentação.
+
+### Promoção da 0.4
+
+A evidência executável da superfície está concentrada em `brain.test.ts`,
+`field.test.ts`, `simulation.test.ts`, `engine-host.test.ts` e
+`render-layers.test.ts`. O resultado da auditoria, incluindo os limites que não
+foram promovidos a afirmações fisiológicas, está em
+[AUDIT_0.4.md](AUDIT_0.4.md).

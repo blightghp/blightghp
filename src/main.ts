@@ -114,7 +114,7 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
   const potentialElement = document.querySelector("#mean-potential");
   if (potentialElement && snapshot.potentials.length > 0) {
     const avgPot = snapshot.potentials.reduce((sum, val) => sum + val, 0) / snapshot.potentials.length;
-    potentialElement.textContent = `${(avgPot * 10 - 65).toFixed(1)} mV`;
+    potentialElement.textContent = `${avgPot.toFixed(3)} u.a.`;
   }
 
   const fpsElement = document.querySelector("#fps-val");
@@ -168,7 +168,7 @@ function renderFrame(
     Math.max(0, (nowTimestamp - lastSnapshotReceivedTimestamp) / (SIMULATION_STEP_SECONDS * 1000)),
   );
   layers.updateVisibility(state, currentFocusRegion);
-  layers.updateInterpolated(snapshot, previousSnapshot, alpha);
+  layers.updateInterpolated(snapshot, previousSnapshot, alpha, state.pulseCount);
 
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta);
   controls.update();

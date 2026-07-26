@@ -126,6 +126,8 @@ describe("EngineHost", () => {
       reseeded.handle({ type: "advance", targetTick: 200, stimulus: STIMULUS })[0] as EngineSnapshotEvent
     ).snapshot;
 
+    expect(reseededSnapshot.potentials).toHaveLength(baseline.potentials.length);
+    expect(reseededSnapshot.field?.eField).toHaveLength(baseline.field?.eField.length ?? 0);
     expect(reseededSnapshot.potentials).not.toEqual(baseline.potentials);
   });
 
