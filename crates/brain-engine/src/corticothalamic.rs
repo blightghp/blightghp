@@ -34,11 +34,11 @@ impl Default for CorticothalamicConfig {
             relay_to_trn_delay: Seconds::trusted(0.018),
             trn_to_relay_delay: Seconds::trusted(0.024),
             sensory_to_relay_gain: 1.10,
-            relay_to_trn_gain: 1.35,
-            trn_to_relay_gain: 1.60,
+            relay_to_trn_gain: 3.40,
+            trn_to_relay_gain: 3.80,
             l6_to_relay_gain: 0.45,
             l6_to_trn_gain: 0.35,
-            rebound_to_relay_gain: 0.85,
+            rebound_to_relay_gain: 2.40,
             relay_to_l4_gain: 1.05,
         }
     }
@@ -333,5 +333,50 @@ mod tests {
                 ..
             })
         ));
+    }
+
+    #[test]
+    fn constant_drive_produces_a_circuit_dependent_rhythm() {
+        fn relay_span_and_turns(config: &CorticothalamicConfig) -> (f64, usize) {
+            let mut engine = CorticothalamicEngine::new(*config).unwrap();
+            let drive = CorticothalamicDrive {
+                sensory: 0.34,
+                contextual: 0.08,
+            };
+            for _ in 0..1_000 {
+                engine.step(drive).unwrap();
+            }
+            let mut minimum = 1.0_f64;
+            let mut maximum = 0.0_f64;
+            let mut turning_points = 0;
+            let mut previous_delta = 0.0_f64;
+            let mut previous = engine.snapshot().relay;
+            for _ in 0..1_000 {
+                let relay = engine.step(drive).unwrap().relay;
+                minimum = minimum.min(relay);
+                maximum = maximum.max(relay);
+                let delta = relay - previous;
+                if previous_delta * delta < 0.0 {
+                    turning_points += 1;
+                }
+                previous_delta = delta;
+                previous = relay;
+            }
+            (maximum - minimum, turning_points)
+        }
+
+        let (closed_loop_span, closed_loop_turns) =
+            relay_span_and_turns(&CorticothalamicConfig::default());
+        let open_loop = CorticothalamicConfig {
+            trn_to_relay_gain: 0.0,
+            rebound_to_relay_gain: 0.0,
+            ..CorticothalamicConfig::default()
+        };
+        let (open_loop_span, open_loop_turns) = relay_span_and_turns(&open_loop);
+
+        assert!(closed_loop_span > 0.25);
+        assert!(closed_loop_turns >= 10);
+        assert!(open_loop_span < closed_loop_span * 0.01);
+        assert!(open_loop_turns < closed_loop_turns);
     }
 }

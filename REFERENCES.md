@@ -16,6 +16,13 @@ Esta lista sustenta escolhas e limites do roadmap. Ela não funciona como argume
 - Bastos, A. M. et al. (2012). [Canonical microcircuits for predictive coding](https://pmc.ncbi.nlm.nih.gov/articles/PMC3777738/). Base para experimentos de código preditivo, sem implicar uma lei biofísica universal.
 - Mazzoni, A. et al. (2015). [Computing the Local Field Potential (LFP) from Integrate-and-Fire Network Models](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1004584). Fundamenta o uso cuidadoso do termo pseudo-LFP em modelos pontuais e o papel de correntes E/I, morfologia e posição.
 
+## Camadas corticais, tálamo e TRN
+
+- Douglas, R. J.; Martin, K. A. C. (2004). [Neuronal circuits of the neocortex](https://doi.org/10.1146/annurev.neuro.27.070203.144152). Referência conceitual para circuitos corticais recorrentes; não fornece, por si só, os ganhos deste preset.
+- Haeusler, S.; Maass, W. (2007). [A statistical analysis of information-processing properties of lamina-specific cortical microcircuit models](https://doi.org/10.1093/cercor/bhl152). Apoia o estudo explícito de conectividade por lâmina e a necessidade de declarar a arquitetura usada.
+- Iavarone, E. et al. (2023). [A computational model of thalamocortical dysrhythmia](https://pmc.ncbi.nlm.nih.gov/articles/PMC10066598/). Exemplo de modelagem computacional que separa populações talâmicas e corticais.
+- Vien, C. et al. (2022). [A thalamocortical neural mass model of the EEG during NREM sleep and propofol general anaesthesia](https://pmc.ncbi.nlm.nih.gov/articles/PMC9120371/). Referência para distinguir relé e TRN em modelos de massa neural e para não confundir um ritmo abstrato com um mecanismo celular completo.
+
 ## Topologia e dinâmica coletiva
 
 - Dabaghian, Y.; Mémoli, F.; Frank, L.; Carlsson, G. (2012). [A topological paradigm for hippocampal spatial map formation using persistent homology](https://pmc.ncbi.nlm.nih.gov/articles/PMC3415417/). Referência para homologia persistente aplicada a padrões de coatividade, não para cálculo indiscriminado em todo frame.

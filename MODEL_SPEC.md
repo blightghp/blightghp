@@ -70,6 +70,35 @@ entrada não nula precisa pertencer a uma destas classes didáticas:
 Essas setas ajudam a estudar a convenção alvo×origem; elas não afirmam que a
 conectividade cortical real se reduz a sete vias.
 
+### Laço córtico-talâmico didático da 0.6
+
+O segundo kernel liga quatro estados agregados: relé talâmico excitatório,
+população inibitória do núcleo reticular do tálamo (TRN), variável lenta de
+rebote e a coluna L1–L6. O relé leva o drive sensorial a L4; L6 devolve contexto
+ao relé e ao TRN; o TRN inibe o relé depois de um atraso discreto. Em forma
+resumida:
+
+$$
+\tau_R\dot R=-R+F(g_sS+g_{6R}E_6+g_bB-g_{TR}T(t-d_T)),
+$$
+
+$$
+\tau_T\dot T=-T+F(g_{RT}R(t-d_R)+g_{6T}E_6),
+\qquad
+\tau_B\dot B=-B+T(1-R).
+$$
+
+As três relaxações usam a mesma atualização exponencial do contrato laminar.
+Os atrasos são linhas circulares limitadas a 4.096 passos; estados ficam em
+`[0,1]`, ganhos em `[0,4]` e drives em `[0,4]`. O teste de ritmo usa entrada
+constante, mede amplitude e pontos de retorno depois do transiente e abre o
+laço TRN→relé como controle. A oscilação desaparece nesse controle.
+
+Este é um oscilador fenomenológico para estudar atraso, realimentação e
+integração em Rust. Ele não contém correntes de cálcio tipo T, canais iônicos,
+morfologia, núcleos talâmicos individualizados nem calibração experimental;
+portanto, não representa um spindle biológico.
+
 ### Solvers previstos por domínio
 
 | Domínio | Formulação inicial | Método candidato | Gate |
