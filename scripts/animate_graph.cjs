@@ -10,7 +10,7 @@ url.search = new URLSearchParams({
   point: "b8e3ff",
   area: "true",
   hide_border: "true",
-  custom_title: "Signals over time",
+  custom_title: "BRAIN PRO · SIGNALS — APRENDIZAGEM EM MOVIMENTO",
 }).toString();
 
 const outputPath = path.resolve(__dirname, "../assets/activity_flow.svg");
@@ -43,9 +43,15 @@ async function updateGraph() {
       .ct-point { animation: nodePulse 2.2s ease-in-out infinite !important }
       .ct-point:nth-of-type(3n) { animation-delay:.55s !important }
       @media (prefers-color-scheme: light) { text { fill:#355b7e !important } }
+      @media (prefers-reduced-motion: reduce) {
+        .ct-line, .ct-point { animation: none !important; }
+      }
     </style>`;
 
-  svg = svg.replace(/<svg([^>]*)>/i, `<svg$1>${definitions}`);
+  const accessibleText = `
+    <title>BRAIN PRO · SIGNALS</title>
+    <desc>Contribuições públicas no GitHub como traços de um percurso de aprendizagem iniciado em 2025.</desc>`;
+  svg = svg.replace(/<svg([^>]*)>/i, `<svg$1>${accessibleText}${definitions}`);
   svg = svg.replace(/<\/svg>\s*$/i, `${animation}</svg>`);
   fs.writeFileSync(outputPath, svg, "utf8");
   console.log(`updated ${outputPath}`);

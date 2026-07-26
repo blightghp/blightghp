@@ -30,7 +30,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![neural_runtime_info])
         .run(tauri::generate_context!())
-        .expect("failed to start the Sinapse Formalista runtime");
+        .expect("failed to start the BRAIN PRO runtime");
 }
 
 #[cfg(test)]

@@ -288,15 +288,27 @@ dependencies = [
 
 [[package]]
 name = "brain-engine"
-version = "0.5.0-alpha.0"
+version = "0.6.0"
 dependencies = [
  "serde",
  "serde_json",
 ]
 
 [[package]]
+name = "brain-pro"
+version = "0.6.0"
+dependencies = [
+ "brain-engine",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+]
+
+[[package]]
 name = "brain-wasm"
-version = "0.5.0-alpha.0"
+version = "0.6.0"
 dependencies = [
  "brain-engine",
  "wasm-bindgen",
@@ -3038,18 +3050,6 @@ name = "simd-adler32"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
-
-[[package]]
-name = "sinapse-formalista"
-version = "0.5.0-alpha.0"
-dependencies = [
- "brain-engine",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
-]
 
 [[package]]
 name = "siphasher"

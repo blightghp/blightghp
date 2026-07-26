@@ -1,5 +1,9 @@
 # Plano 0.5 · Corredor Rust/Wasm
 
+Este é o registro didático da etapa em que aprendi a retirar as equações do
+shell TypeScript e a torná-las responsabilidade do motor Rust. Ele permanece
+como história verificável da migração, não como descrição da versão atual.
+
 ## Decisão
 
 O simulador migra de “motor TypeScript com host Rust” para “motor Rust

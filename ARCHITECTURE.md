@@ -1,8 +1,9 @@
-# Arquitetura estrutural
+# Arquitetura de aprendizagem · BRAIN PRO [v. 0.6.0]
 
-Esta arquitetura registra a evolução desde o motor TypeScript da 0.2 até o
-núcleo Rust/Wasm promovido na 0.5. Um módulo só é separado quando passa a ter
-estado, ciclo de vida, fronteira de plataforma ou testes próprios.
+Uso este documento para aprender a decompor um sistema Rust sem esconder as
+decisões que ainda estou amadurecendo. Ele registra a evolução desde o motor
+TypeScript da 0.2 até o núcleo Rust/Wasm e a leitura laminar da 0.6. Um módulo só
+é separado quando consigo explicar seu estado, ciclo de vida, fronteira ou teste.
 
 ## Baseline histórico e estado promovido
 

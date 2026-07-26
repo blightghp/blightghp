@@ -1,5 +1,5 @@
 [package]
-name = "sinapse-formalista"
+name = "brain-pro"
 version.workspace = true
 description = "A procedural 3D neural experiment packaged with Rust and Tauri"
 authors = ["Gabriel Pinheiro"]
@@ -11,7 +11,7 @@ edition.workspace = true
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "sinapse_formalista_lib"
+name = "brain_pro_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

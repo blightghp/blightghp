@@ -1,6 +1,15 @@
-# Referências de modelagem
+# Referências de estudo e modelagem
 
-Esta lista sustenta escolhas e limites do roadmap. Ela não funciona como argumento de autoridade para calibrar parâmetros: cada preset deve registrar a fonte específica dos valores que utilizar.
+Esta lista acompanha meu estudo de Rust, do Kandel e dos modelos matemáticos.
+Nenhuma referência funciona como argumento automático de autoridade: cada
+preset precisa registrar a fonte específica dos valores que utilizar.
+
+## Percurso de aprendizagem desde 2025
+
+- Kandel, E. R.; Koester, J. D.; Mack, S. H.; Siegelbaum, S. A. (2021). [*Principles of Neural Science*, 6ª ed.](https://books.google.com/books/about/Principles_of_Neural_Science_Sixth_Editi.html?id=8yGq0QEACAAJ). O “Kandel” é meu projeto de leitura; enquanto o estudo, uso o BRAIN PRO para consolidar conceitos sem tratar o livro como calibração automática.
+- [The Rust Programming Language](https://doc.rust-lang.org/book/). Referência principal para ownership, tipos, erros, traits, testes e concorrência.
+- [MDN · WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly). Apoio para entender o runtime do navegador e a fronteira JavaScript/Wasm.
+- [Allen Institute · Education Resources](https://alleninstitute.org/education/resources). Material de apoio para anatomia, dados e leitura neurocientífica.
 
 ## Unidades e sinapses
 

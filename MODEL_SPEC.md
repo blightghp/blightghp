@@ -1,6 +1,8 @@
-# Especificação do modelo
+# Caderno matemático · BRAIN PRO [v. 0.6.0]
 
-Este documento define o significado dos estados e das equações planejadas. Ele não descreve como se toda a fisiologia já existisse no código: cada seção indica a escala em que passa a valer e as simplificações que permanecem.
+Aqui anoto o que cada estado e equação significa enquanto aprendo a implementá-los
+em Rust. Não escrevo como se toda a fisiologia já existisse: cada seção declara
+quando passa a valer, o que consigo testar e quais simplificações permanecem.
 
 ## Convenções
 

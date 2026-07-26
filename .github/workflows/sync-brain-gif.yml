@@ -1,4 +1,4 @@
-name: Sincronizar GIF do cérebro
+name: Sincronizar GIF do BRAIN PRO
 
 on:
   push:
@@ -58,5 +58,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/brain.gif README.md
           git diff --cached --quiet && exit 0
-          git commit -m "chore(profile): sincronizar GIF com ${GITHUB_SHA::12}"
+          git commit -m "chore(profile): sincronizar BRAIN PRO com ${GITHUB_SHA::12}"
           git push origin HEAD:main

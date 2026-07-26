@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    sinapse_formalista_lib::run()
+    brain_pro_lib::run()
 }

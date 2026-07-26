@@ -60,16 +60,23 @@ async function generateGif() {
 
     for (let frame = 0; frame < frameCount; frame += 1) {
       const ratio = frame / frameCount;
+      const view = frame < 36 ? "overview" : "laminar";
       await page.evaluate(
-        ({ time, rotation }) => window.__BRAIN_ENGINE__.capture(time, rotation),
+        async ({ time, rotation, view }) => {
+          window.__BRAIN_ENGINE__.setView(view);
+          await window.__BRAIN_ENGINE__.capture(time, rotation);
+        },
         {
           time: ratio * loopDuration,
           rotation: -0.62 + ratio * Math.PI * 2,
+          view,
         },
       );
       const screenshot = await page.screenshot({ type: "png", omitBackground: false });
       encoder.addFrame(keyOutBackground(PNG.sync.read(screenshot)));
-      if ((frame + 1) % 12 === 0) console.log(`captured ${frame + 1}/${frameCount} frames`);
+      if ((frame + 1) % 12 === 0) {
+        console.log(`captured ${frame + 1}/${frameCount} frames · ${view}`);
+      }
     }
 
     encoder.finish();

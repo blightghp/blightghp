@@ -1,153 +1,186 @@
 <div align="center">
 
-<samp>TO THE TRAINED EYE, THERE ARE NO COINCIDENCES...</samp>
+<samp>APRENDER RUST CONSTRUINDO UM CÉREBRO QUE POSSO MEDIR, TESTAR E QUESTIONAR.</samp>
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=a2e760e32bf5" width="760" alt="Rede neural tridimensional com atividade excitatória e inibitória" />
+  <img src="assets/brain.gif?v=582fd8f8ead8" width="760" alt="BRAIN PRO alternando entre a rede cerebral e a coluna cortical L1–L6" />
 </a>
 
-<sub>▲ Abra o experimento para orbitar o modelo, isolar regiões e alterar estímulo, plasticidade e escala temporal.</sub>
+<sub>▲ A captura vem do simulador publicado. O SHA na URL identifica o código-fonte usado pelo workflow.</sub>
 
 </div>
 
 ---
 
-## Sinapse Formalista
+## BRAIN PRO [v. 0.6.0]
 
-Este experimento combina uma topologia cerebral procedural com uma simulação neural determinística. Os sinais visíveis não percorrem trajetórias decorativas: cada pulso nasce de um disparo, atravessa uma sinapse do grafo e chega ao neurônio de destino depois do atraso calculado para aquela conexão.
+Estou construindo o BRAIN PRO como um caderno de aprendizagem executável. Sou
+um programador aprendendo a usar a [Rust Programming Language](https://www.rust-lang.org/)
+para transformar dúvidas sobre cérebro, cálculo numérico e sistemas em pequenos
+modelos que eu consiga ler, testar e refazer.
 
-O modelo foi desenhado para ser compreensível, mensurável e visualmente
-expressivo. Desde a promoção 0.5, o simulador publicado executa as equações no
-engine Rust compilado para WebAssembly, dentro de um Web Worker; TypeScript
-coordena apenas apresentação e protocolo. “Realista” aqui significa declarar unidades,
-hipóteses, solver, erro e evidência — não afirmar que toda a fisiologia humana já
-foi reproduzida.
+Enquanto estudo o **Kandel** — meu percurso por *Principles of Neural Science* —
+desenvolvo este projeto para consolidar a aprendizagem no próprio processo. O
+livro orienta perguntas e vocabulário; o código não é uma cópia digital do
+Kandel nem recebe validade biológica por associação. Cada aproximação precisa
+de equação, unidade, limite e teste próprios.
 
-### O que está sendo simulado
+Minha pergunta prática nesta versão é: **como uma entrada talâmica pode atravessar
+seis camadas corticais, receber inibição do TRN e voltar por L6 sem bloquear a
+interface do navegador?** A resposta atual combina um motor determinístico em
+Rust, WebAssembly dentro de um Web Worker e uma apresentação Three.js que apenas
+lê snapshots.
 
-- **1.890 nós procedurais:** hemisférios, cerebelo e tronco usam uma semente estável; eles não representam 1.890 neurônios biológicos identificados.
-- **Estrutura de sinapses CSR (Compressed Sparse Row):** grafo sináptico comprimido no `brain-engine` para travessia e atualização eficiente de conexões.
-- **Campo populacional macroscópico E/I:** kernel de grafo cortical em Rust com populações excitatória ($E$) e inibitória ($I$), histórico temporal e atrasos de condução efetivos.
-- **Acoplamento bidirecional Campo-Spikes:** disparos alimentam localmente o campo e a diferença de atividade E/I modula o estado sub-limiar da rede.
-- **Cinética receptor-dependente AMPA e GABA-A:** condutâncias sinápticas rápidas (5ms para AMPA, 10ms para GABA-A) com integração temporal.
-- **Plasticidade STDP:** disparos próximos no tempo fortalecem ou enfraquecem sinapses excitatórias.
-- **Evidência Bayesiana:** cada mudança de estímulo atualiza a crença antes de modular a entrada da rede.
-- **Execução Wasm desacoplada em Worker:** simulação em thread dedicada (`simulation.worker.ts`), com snapshots compactos transferidos sem cópia para o thread de apresentação.
-- **Atividade superficial & interpolação de snapshots:** a camada de renderização (`render-layers.ts`) apresenta o campo publicado e interpola snapshots consecutivos sem criar eventos.
-- **Foco de circuito, zoom & HUD instrumentado:** isolamento visual por região, zoom orbital e instrumentos nomeados (`Hz/nó`, `spikes`, estado LIF em `u.a.`, peso médio e `FPS`).
+### O que consigo explorar hoje
+
+- uma rede procedural de 1.890 nós, com sinapses direcionadas, atrasos,
+  condutâncias AMPA/GABA-A, plasticidade STDP e um campo populacional E/I;
+- uma coluna didática com populações E/I em L1–L6, vias feedforward/feedback,
+  relé talâmico, TRN e retorno corticotalâmico;
+- duas vistas sincronizadas: **Visão Geral** e **Lâminas**;
+- execução Rust/Wasm em Worker, ABI v4 e treze buffers transferíveis;
+- hashes separados para o baseline 0.5 e para o circuito córtico-talâmico;
+- replay sombra com três marcos exatos e divergência máxima zero;
+- LOD visual com custo declarado de 17, 21 ou 23 draw calls;
+- navegação de abas por teclado, movimento reduzido e fallback diagnóstico
+  inerte quando o Wasm não carrega.
+
+O ritmo produzido pelo laço relé–TRN é **fenomenológico**. Sem canais de cálcio
+tipo T, morfologia, núcleos individualizados e calibração experimental, eu não o
+chamo de spindle biológico. Da mesma forma, as formas 3D ajudam a estudar relações
+entre estados; elas não são um atlas anatômico.
+
+### Como o projeto se organiza
 
 ```text
-presets/eventos → brain-engine (Rust: matemática e estado)
-                         ├── execução nativa / Tauri
-                         └── brain-wasm → Web Worker → snapshots
-                                                     ↓
-                                  shell TypeScript → Three.js / abas / HUD
+pergunta de estudo
+      ↓
+brain-engine (Rust: estado, equações, limites e hashes)
+      ├── testes nativos e replay
+      └── brain-wasm → Web Worker → snapshot ABI v4
+                                      ↓
+                       TypeScript → DOM, teclado e Three.js
 ```
 
-### Arquitetura
+| Parte | O que estou aprendendo e mantendo |
+| :-- | :-- |
+| `brain-engine` | tipos Rust, ownership, erros explícitos, integração numérica, determinismo e limites de recursos |
+| `brain-wasm` | uma fronteira pequena com `wasm-bindgen`, sem duplicar equações no shell |
+| Worker | manter o thread de apresentação livre e limitar trabalho por comando |
+| TypeScript | protocolo, acessibilidade, DOM e visualização dos dados publicados |
+| Three.js | transformar estado em leitura espacial sem inventar atividade |
+| Tauri | empacotar a mesma experiência com um host Rust nativo |
+| testes | Cargo, Clippy, Vitest, replay Wasm, navegador real e captura reproduzível |
 
-| Camada | Tecnologia | Responsabilidade atual |
-| :-- | :-- | :-- |
-| Núcleo 0.5 | Rust (`brain-engine`) | Relógio, RNG, CSR, campo E/I, observáveis, contrato laminar, unidades e tipos independentes de plataforma |
-| Ponte web | Rust/Wasm (`brain-wasm`) | ABI tipada `wasm-bindgen`, artefato versionado e validado para `wasm32-unknown-unknown` |
-| Evidência de migração | Fixture + Cargo + navegador | Replay sombra congelado, hashes exatos e teste da ABI dentro de um Worker real |
-| Campo populacional | Rust (`brain-engine`) | Campo E/I 0.4, projeção, atrasos, acoplamento e observáveis; não existe integrador TypeScript paralelo |
-| Motor & Worker | Rust/Wasm · Web Worker | Wasm é o padrão; snapshots tipados usam `postMessage` com lista de transferência |
-| Tempo & Protocolo | TypeScript | Relógio de apresentação (`clock.ts`) e protocolo v3 (`protocol.ts`); o estado científico nasce no Rust |
-| Topologia & Render | Three.js · TypeScript | Anatomia procedural, atividade superficial (`render-layers.ts`), interpolação de snapshots e foco regional |
-| Inferência | TypeScript | Atualização Bayesiana normalizada entre duas hipóteses |
-| Visualização | Three.js · WebGL | Instâncias, bloom, envoltórios anatômicos, atividade por vértice e instrumentação de FPS |
-| Contrato | Zod | Validação dos parâmetros recebidos pela interface e pela URL |
-| Desktop | Tauri 2 · Rust | Empacotamento nativo; passará a importar o mesmo `brain-engine` |
-| Qualidade | Cargo · Vitest · Puppeteer | Testes nativos, replay Wasm, Worker em navegador, shell e captura |
+C# continua fora do payload web. Só fará sentido como serviço nativo/offline se
+um benchmark reproduzível demonstrar uma necessidade que Rust/Wasm não atende.
 
-O browser usa um Worker: Wasm retira o cálculo do shell e não disputa o thread
-da interface. Se a ABI não carregar, um fallback diagnóstico publica apenas
-estado inerte e a causa da falha — ele não simula nem inventa atividade.
-TypeScript permanece como camada fina de
-DOM, acessibilidade e apresentação até que uma migração gráfica também demonstre
-benefício. C# não faz parte do payload web; pode surgir como serviço offline
-somente depois de benchmark e necessidade operacional.
+### Diário de aprendizagem
 
-O gate da 0.4 está em [AUDIT_0.4.md](AUDIT_0.4.md), o plano em
-[MIGRATION_0.5.md](MIGRATION_0.5.md) e a promoção em
-[AUDIT_0.5_PROMOTION.md](AUDIT_0.5_PROMOTION.md).
+A data de 2025 pertence ao meu percurso pessoal; o histórico verificável deste
+repositório começa em **2026-07-20**. Faço essa distinção para não transformar
+memória de estudo em falsa proveniência Git.
 
-### Executar localmente
+| Data | Passo |
+| :-- | :-- |
+| 2025 | começo a organizar o estudo de Rust, neurociência e modelagem matemática; o Kandel passa a funcionar como eixo de perguntas |
+| 2026-07-20 | nasce o histórico Git do experimento e a primeira topologia procedural |
+| 2026-07-24 | fecho relógio, Worker, CSR, campo E/I e a superfície 0.4 |
+| 2026-07-26 | promovo Rust/Wasm como motor padrão na 0.5 e preservo o replay sombra |
+| 2026-07-26 | fecho a 0.6 com L1–L6, relé/TRN, ABI v4, aba Lâminas e auditoria de recursos |
+
+O detalhamento está em [PLAN_0.6.md](PLAN_0.6.md), [ROADMAP.md](ROADMAP.md) e
+[AUDIT_0.6.md](AUDIT_0.6.md).
+
+### Executar e conferir
 
 ```bash
 npm install
 npm run dev
 ```
 
-Para validar o projeto inteiro:
+Para repetir os gates:
 
 ```bash
 npm run check
 cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
 cargo check -p brain-wasm --target wasm32-unknown-unknown
 ```
 
-Para regenerar a ABI comprometida, instale `wasm-bindgen-cli` 0.2.126 e execute
-`npm run build:wasm`. A CI recompila, compara a ABI textual e executa o binário
-regenerado contra o replay, além de abrir o simulador em Chromium para provar
-que o Worker carregou Rust/Wasm.
-
-O GIF do perfil é reproduzível e usa o mesmo renderer da aplicação:
+Para regenerar a ponte e a captura:
 
 ```bash
+npm run build:wasm
 npm run generate:brain-gif
 ```
 
-Quando GitHub Actions estiver habilitado, mudanças relevantes em `main`
-executarão a mesma captura e atualizarão o GIF e sua chave de cache no README.
-Essa sincronização é automática após o workflow, não instantânea: runners e o
-cache de imagens do GitHub introduzem latência.
+O `brain.gif` não muda instantaneamente no perfil: o workflow precisa capturar,
+validar, commitar e aguardar a invalidação de cache do GitHub. A sincronização é
+reproduzível e de consistência eventual.
 
-## Evolução do experimento
+### Leituras que me acompanham
 
-Cada versão combina uma melhoria do modelo com um novo patamar gráfico. O projeto separa o que pretende construir, o significado científico dos estados e a forma de validar cada avanço:
+- [The Rust Programming Language](https://doc.rust-lang.org/book/) — ownership,
+  erros, traits, concorrência e a linguagem que estou aprendendo;
+- [Rust `wasm32-unknown-unknown`](https://doc.rust-lang.org/stable/rustc/platform-support/wasm32-unknown-unknown.html)
+  e [wasm-bindgen em Web Worker](https://wasm-bindgen.github.io/wasm-bindgen/examples/wasm-in-web-worker.html)
+  — a passagem controlada do motor para o navegador;
+- [MDN · WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly) —
+  referência do ambiente web;
+- Kandel et al., [*Principles of Neural Science*](https://books.google.com/books/about/Principles_of_Neural_Science_Sixth_Editi.html?id=8yGq0QEACAAJ)
+  — projeto de estudo e fonte de questões neurocientíficas;
+- [Allen Institute · Education Resources](https://alleninstitute.org/education/resources)
+  — apoio para anatomia, dados e leitura crítica.
 
-- [ROADMAP.md](ROADMAP.md) organiza versões, dependências e ganhos gráficos;
-- [MODEL_SPEC.md](MODEL_SPEC.md) registra equações, unidades, hipóteses e limites;
-- [ARCHITECTURE.md](ARCHITECTURE.md) traduz o modelo em módulos, tipos, laços e camadas de render;
-- [VALIDATION.md](VALIDATION.md) define evidências exatas, numéricas, estatísticas e visuais;
-- [MIGRATION_0.5.md](MIGRATION_0.5.md) define a fronteira Rust/Wasm, o papel
-  opcional de C# e a sincronização do GIF;
-- [AUDIT_0.5_ENTRY.md](AUDIT_0.5_ENTRY.md) registra o gate de entrada, as
-  correções que permitiram iniciar a migração;
-- [AUDIT_0.5_PROMOTION.md](AUDIT_0.5_PROMOTION.md) registra replay sombra,
-  hashes, custos, Worker, fallback e critérios aprovados da promoção;
-- [REFERENCES.md](REFERENCES.md) reúne a base científica usada nas decisões.
+As referências científicas específicas de cada modelo estão em
+[REFERENCES.md](REFERENCES.md). Registro equações e limites em
+[MODEL_SPEC.md](MODEL_SPEC.md), a separação dos módulos em
+[ARCHITECTURE.md](ARCHITECTURE.md) e os critérios de evidência em
+[VALIDATION.md](VALIDATION.md).
 
 ## Sobre mim
 
-> *"Interesso-me pelas regiões de fronteira em que a lógica encontra a linguagem, a computação encontra a biologia e o rigor formal precisa aprender a conviver com a ambiguidade, a historicidade e a complexidade dos fenômenos humanos."*
+> *Interesso-me pelas regiões de fronteira em que a lógica encontra a linguagem,
+> a computação encontra a biologia e o rigor formal precisa aprender a conviver
+> com a ambiguidade, a historicidade e a complexidade dos fenômenos humanos.*
 
-Atuo entre pesquisa e desenvolvimento, articulando estudos em linguística, cognição, aprendizagem, ciência de dados e projetos em engenharia de software. Busco transformar perguntas complexas em modelos, sistemas e experimentos sem reduzir os fenômenos àquilo que pode ser facilmente mensurado, preservando, sempre que possível, o equilíbrio entre precisão formal, sensibilidade interpretativa e abertura interdisciplinar. Meu Github é um portal de experimentos dos mais diversos. 
-Resumindo, a minha zona de interesse envolve explorar e especular sobre as equivalências conceituais entre biologia e máquina, isto é, conceitos neurobiológicos e computacionais/formais.
+Atuo entre pesquisa e desenvolvimento, articulando linguística, cognição,
+aprendizagem, ciência de dados e engenharia de software. Meu GitHub é um portal
+de experimentos: uso código para pensar, mas procuro não reduzir um fenômeno
+àquilo que é mais fácil medir.
 
----
+O BRAIN PRO expressa uma particularidade desse percurso. Ao estudar Rust e o
+Kandel lado a lado, exploro aproximações e diferenças entre biologia e máquina:
+o que pode ser formalizado, o que permanece interpretação e o que ainda exige
+melhor evidência.
 
 > **Áreas de interesse**
 >
-> - Lógica formal e filosofia da lógica
-> - Linguística teórica e gramática gerativa
-> - Psicometria, neuropsicologia e aprendizagem
-> - Ciência de dados e modelagem estatística
-> - Engenharia de software e arquitetura de sistemas
-> - Inteligência Artificial e sistemas complexos
-> - Matemática aplicada e teoria da computação
-> - Neurociências cognitivas e biologia da cognição
+> - lógica formal e filosofia da lógica;
+> - linguística teórica e gramática gerativa;
+> - psicometria, neuropsicologia e aprendizagem;
+> - ciência de dados e modelagem estatística;
+> - engenharia de software e arquitetura de sistemas;
+> - inteligência artificial e sistemas complexos;
+> - matemática aplicada e teoria da computação;
+> - neurociências cognitivas e biologia da cognição.
+
+### SIGNALS
+
+O gráfico abaixo funciona como um traço longitudinal do trabalho público. Ele
+não inventa atividade anterior ao Git: a indicação “desde 2025” pertence à
+linha de aprendizagem descrita acima; os pontos vêm das contribuições
+registradas pelo GitHub.
 
 <div align="center">
-  <img src="assets/activity_flow.svg?v=3" width="850" alt="Fluxo longitudinal de contribuições no GitHub" />
+  <img src="assets/activity_flow.svg?v=4" width="850" alt="BRAIN PRO SIGNALS: contribuições públicas como traços do percurso de aprendizagem" />
 </div>
 
 <div align="center">
 
 [![Email](https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:ghpgois@gmail.com)
-[![Léxikognos](https://img.shields.io/badge/Léxikognos-246BCE?style=flat-square&logo=google-scholar&logoColor=white)](http://lexikognos.com.br) *domínio offline*
+[![Léxikognos](https://img.shields.io/badge/L%C3%A9xikognos-246BCE?style=flat-square&logo=google-scholar&logoColor=white)](http://lexikognos.com.br) *domínio offline*
 [![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://instagram.com/ppgabrielpinheiro)
 
 <sub><code>fn perceive(signal: &Evidence) -&gt; Result&lt;Knowledge, Entropy&gt;</code></sub>

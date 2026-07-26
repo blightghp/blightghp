@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Deterministic, platform-neutral mathematical engine for Sinapse Formalista"
+description = "Deterministic Rust learning engine for BRAIN PRO"
 
 [lints]
 workspace = true

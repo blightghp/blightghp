@@ -1,4 +1,4 @@
-# Plano 0.6 · Lâmina e tálamo
+# Plano 0.6 · BRAIN PRO [v. 0.6.0]
 
 Data de abertura: 2026-07-26.
 

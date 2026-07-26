@@ -1,4 +1,4 @@
-# Roadmap · BRAIN PRO
+# Roadmap · BRAIN PRO [v. 0.6.0]
 
 O experimento evolui em dois eixos inseparáveis: desce da atividade global até a sinapse e sobe da excitabilidade até a cognição e o comportamento. Cada entrega fecha uma escala antes de acrescentar outra e combina avanço do motor, ganho gráfico e evidência de validação.
 
@@ -38,7 +38,7 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
 | **0.9 · Sistemas e comportamento** | Memória de trabalho, tarefas preditivas, hipocampo, núcleos da base e leitura motora somente em tarefas explícitas | Abas Sistemas, Experimentos e Comportamento | Desempenho estatístico, controles nulos, retenção/decisão reproduzíveis e hipóteses documentadas |
 | **1.0 · Atlas experimental** | Presets, replay, importação, API estável e modelos multiescala validados | Visão Geral, Superfície, Lâminas, Célula, Sinapse, Bioquímica, Sistemas, Experimentos e Validação | Pacotes reproduzíveis, acessibilidade, testes end-to-end, proveniência e nenhuma alegação além da evidência |
 
-## Versão atual: 0.6-alpha · Lâmina e tálamo em desenvolvimento
+## Versão atual: 0.6.0 · Lâmina e tálamo
 
 ### Gate auditado da 0.4 · Superfície
 

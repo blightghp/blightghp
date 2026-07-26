@@ -1,6 +1,8 @@
-# Estratégia de validação
+# Estratégia de validação · BRAIN PRO [v. 0.6.0]
 
-O projeto separa quatro perguntas: o cálculo é reproduzível, respeita seus limites, converge numericamente e produz fenômenos compatíveis com o experimento? Uma única comparação de snapshot não responde às quatro.
+Enquanto aprendo Rust e cálculo numérico, separo quatro perguntas: meu cálculo é
+reproduzível, respeita limites, converge e produz o fenômeno definido pelo
+experimento? Uma única comparação de snapshot não responde às quatro.
 
 ## Camadas de evidência
 
