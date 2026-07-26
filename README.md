@@ -89,8 +89,9 @@ cargo check -p brain-wasm --target wasm32-unknown-unknown
 ```
 
 Para regenerar a ABI comprometida, instale `wasm-bindgen-cli` 0.2.126 e execute
-`npm run build:wasm`. A CI recompila e compara esses artefatos, além de abrir o
-simulador em Chromium para provar que o Worker carregou Rust/Wasm.
+`npm run build:wasm`. A CI recompila, compara a ABI textual e executa o binário
+regenerado contra o replay, além de abrir o simulador em Chromium para provar
+que o Worker carregou Rust/Wasm.
 
 O GIF do perfil é reproduzível e usa o mesmo renderer da aplicação:
 

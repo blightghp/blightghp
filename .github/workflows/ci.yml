@@ -60,6 +60,6 @@ jobs:
           diff -u src/wasm/brain_wasm.js /tmp/brain-wasm-bindings/brain_wasm.js
           diff -u src/wasm/brain_wasm.d.ts /tmp/brain-wasm-bindings/brain_wasm.d.ts
           diff -u src/wasm/brain_wasm_bg.wasm.d.ts /tmp/brain-wasm-bindings/brain_wasm_bg.wasm.d.ts
-          cmp src/wasm/brain_wasm_bg.wasm /tmp/brain-wasm-bindings/brain_wasm_bg.wasm
+          BRAIN_WASM_DIR=/tmp/brain-wasm-bindings node scripts/shadow_replay.js
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings

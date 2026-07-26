@@ -1,8 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { initSync, WasmNeuralEngine } from "../src/wasm/brain_wasm.js";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixturePath = path.join(projectRoot, "fixtures", "parity", "field-observables-v1.json");
@@ -27,7 +26,7 @@ function maxAbs(left, right) {
   return maximum;
 }
 
-function verify() {
+async function verify() {
   const fixtureBytes = fs.readFileSync(fixturePath);
   const fixture = JSON.parse(fixtureBytes);
   const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
@@ -42,9 +41,15 @@ function verify() {
   const { input, expected } = fixture;
   const topology = typedTopology(input.topology);
   const simulation = input.simulation;
+  const bindingsDirectory = process.env.BRAIN_WASM_DIR
+    ? path.resolve(process.env.BRAIN_WASM_DIR)
+    : path.join(projectRoot, "src", "wasm");
+  const { initSync, WasmNeuralEngine } = await import(
+    pathToFileURL(path.join(bindingsDirectory, "brain_wasm.js")).href
+  );
   initSync({
     module: fs.readFileSync(
-      path.join(projectRoot, "src", "wasm", "brain_wasm_bg.wasm"),
+      path.join(bindingsDirectory, "brain_wasm_bg.wasm"),
     ),
   });
   const wasm = new WasmNeuralEngine(
@@ -95,7 +100,7 @@ function verify() {
 }
 
 try {
-  verify();
+  await verify();
 } catch (error) {
   console.error(error);
   process.exitCode = 1;

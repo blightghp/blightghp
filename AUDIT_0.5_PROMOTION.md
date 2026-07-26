@@ -58,6 +58,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo build -p brain-wasm --release --target wasm32-unknown-unknown
 ```
 
-A CI também regenera a ABI com `wasm-bindgen-cli` 0.2.126 e compara texto e
-binário com `src/wasm`, impedindo que o artefato comprometido se desalinhe da
-crate.
+A CI também regenera a ABI com `wasm-bindgen-cli` 0.2.126, compara as interfaces
+textuais e executa o binário recém-gerado contra o replay sombra. O teste
+semântico evita depender de identidade binária entre toolchains de sistemas
+operacionais diferentes.
