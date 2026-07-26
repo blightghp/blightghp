@@ -35,3 +35,23 @@ Evidência:
 Limite aceito: o circuito é uma massa neural fenomenológica. Não há canais de
 cálcio tipo T, morfologia, subdivisão de núcleos ou ajuste contra EEG; “ritmo”
 não significa “spindle biológico”.
+
+## 0.6-c · Motor e Worker
+
+Estado: **aprovado em 2026-07-26**.
+
+Evidência:
+
+- ABI Rust/Wasm/TypeScript promovida para schema 4;
+- E/I de L1–L6 e cinco escalares talâmicos publicados em buffers compactos;
+- treze `ArrayBuffer` distintos são transferidos pelo Worker;
+- hash novo separado do hash legado;
+- replay sombra mantém três marcos exatos e divergência máxima zero;
+- cotas duplicadas defensivamente no host e no adaptador Wasm;
+- navegador real inicializa Rust/Wasm dentro do Worker;
+- fallback diagnóstico permanece inerte;
+- Cargo, Clippy, Vitest, TypeScript, Vite e teste de navegador aprovados.
+
+Limite aceito: o circuito córtico-talâmico observa estímulo/contexto e alimenta
+sua própria coluna. Nesta versão ele não modifica retroativamente a rede 0.5;
+essa separação evita dupla contagem e preserva o oráculo de migração.

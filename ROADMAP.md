@@ -117,7 +117,7 @@ de qualidade da 0.5, antes de qualquer demonstração científica nova:
   classificação explícita das projeções recorrentes, feedforward e feedback.
 - [x] **0.6-b · Tálamo e TRN:** relé excitatório, núcleo reticular inibitório,
   retorno corticotalâmico e ritmo fenomenológico sustentado pelo circuito.
-- [ ] **0.6-c · Motor e Worker:** estado corticotalâmico no snapshot Rust,
+- [x] **0.6-c · Motor e Worker:** estado corticotalâmico no snapshot Rust,
   ABI Wasm e protocolo transferível sem equações no shell.
 - [ ] **0.6-d · Leitura visual:** aba Lâminas, coluna explodida, vias destacadas
   e LOD com custo e acessibilidade verificados.
