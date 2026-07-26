@@ -24,7 +24,12 @@
       <div class="runtime"><span class="runtime-dot"></span><span id="runtime-status">INICIALIZANDO MOTOR</span></div>
     </header>
 
-    <aside class="glass-panel control-panel" id="ui-panel">
+    <nav class="view-tabs" role="tablist" aria-label="Vistas do simulador">
+      <button id="tab-overview" type="button" role="tab" aria-selected="true" aria-controls="overview-panel" data-view="overview">VISÃO GERAL</button>
+      <button id="tab-laminar" type="button" role="tab" aria-selected="false" aria-controls="laminar-panel" data-view="laminar">LÂMINAS</button>
+    </nav>
+
+    <aside class="glass-panel control-panel" id="overview-panel" role="tabpanel" aria-labelledby="tab-overview">
       <div class="eyebrow">NEURAL ENGINE / 04</div>
       <h1>Córtex em<br /><span>tempo real.</span></h1>
       <p class="lede">Uma rede excitável transforma observações em disparos, atraso sináptico e adaptação dos pesos.</p>
@@ -90,6 +95,47 @@
           <span><i class="inhibition"></i>Inibitório (GABA-A)</span>
         </div>
       </section>
+    </aside>
+
+    <aside class="glass-panel control-panel laminar-panel" id="laminar-panel" role="tabpanel" aria-labelledby="tab-laminar" hidden>
+      <div class="eyebrow">RUST/WASM · CIRCUITO 0.6</div>
+      <h1>Coluna<br /><span>L1–L6.</span></h1>
+      <p class="lede">Um estudo visual do relé talâmico, TRN e seis populações E/I. A geometria lê o snapshot; ela não calcula o circuito.</p>
+
+      <div class="metric-strip laminar-metrics">
+        <div><strong id="relay-activity">0.000</strong><span>RELÉ</span></div>
+        <div><strong id="trn-activity">0.000</strong><span>TRN</span></div>
+        <div><strong id="rebound-activity">0.000</strong><span>REBOTE</span></div>
+      </div>
+
+      <section>
+        <div class="section-heading"><span>APRESENTAÇÃO</span><span>LOD</span></div>
+        <div class="control-group compact">
+          <label for="laminar-lod"><span>Detalhe geométrico</span></label>
+          <select id="laminar-lod" class="glass-select">
+            <option value="low">Baixo · 3 vias</option>
+            <option value="medium" selected>Médio · 7 vias</option>
+            <option value="high">Alto · 9 vias</option>
+          </select>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading"><span>LEITURA</span><span>CAMADAS</span></div>
+        <ol class="layer-key">
+          <li><span>L1</span>feedback apical</li>
+          <li><span>L2/L3</span>vias supragranulares</li>
+          <li><span>L4</span>entrada do relé</li>
+          <li><span>L5</span>saída infragranular</li>
+          <li><span>L6</span>retorno corticotalâmico</li>
+        </ol>
+        <div class="signal-legend" aria-label="Legenda da coluna laminar">
+          <span><i class="excitation"></i>E / relé</span>
+          <span><i class="inhibition"></i>I / TRN</span>
+        </div>
+      </section>
+
+      <p class="model-caveat">Modelo fenomenológico de aprendizagem: sem canais de cálcio tipo T, morfologia ou calibração clínica.</p>
     </aside>
 
     <section class="glass-panel inference-panel" id="bayesian-hud">

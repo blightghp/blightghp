@@ -7,6 +7,8 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
 import { BayesianBelief, BayesianUpdate } from "./inference";
+import { LaminarRenderLayer } from "./laminar-layer";
+import type { LaminarLod } from "./laminar-layer";
 import { SIMULATION_STEP_SECONDS } from "./protocol";
 import type { EngineCommand, EngineEvent, NeuralSnapshot, SimulationTick } from "./protocol";
 import { BrainRenderLayers } from "./render-layers";
@@ -18,6 +20,7 @@ declare global {
     __BRAIN_ENGINE__?: {
       capture: (time: number, rotation: number) => Promise<void>;
       setCaptureMode: (enabled: boolean) => Promise<void>;
+      setView: (view: SimulationView) => void;
       diagnostics: () => {
         runtime: string;
         schemaVersion: number;
@@ -29,6 +32,8 @@ declare global {
     };
   }
 }
+
+type SimulationView = "overview" | "laminar";
 
 interface RuntimeInfo {
   engine: string;
@@ -51,6 +56,7 @@ let controls: OrbitControls;
 let composer: EffectComposer;
 let bloomPass: UnrealBloomPass;
 let layers: BrainRenderLayers;
+let laminarLayer: LaminarRenderLayer;
 let brainData: BrainData;
 let worker: Worker;
 let latestSnapshot: NeuralSnapshot | undefined;
@@ -62,6 +68,7 @@ let captureMode = false;
 let captureTime = 0;
 let metricAccumulator = 0;
 let currentFocusRegion: BrainRegion | "all" = "all";
+let activeView: SimulationView = "overview";
 let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
 
 const pendingResponses: Array<(event: EngineEvent) => void> = [];
@@ -117,6 +124,12 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
       : "LATENTE";
   element("#network-state").textContent = stateLabel;
   element("#mean-weight").textContent = snapshot.meanWeight.toFixed(3);
+  element("#relay-activity").textContent =
+    snapshot.corticothalamic.relay.toFixed(3);
+  element("#trn-activity").textContent =
+    snapshot.corticothalamic.trn.toFixed(3);
+  element("#rebound-activity").textContent =
+    snapshot.corticothalamic.rebound.toFixed(3);
 
   const spikeElement = document.querySelector("#spike-count");
   if (spikeElement) spikeElement.textContent = `${snapshot.spikes} spk`;
@@ -169,16 +182,23 @@ function renderFrame(
   frameDelta = 0,
   nowTimestamp = performance.now(),
 ): void {
-  layers.group.rotation.y = forcedRotation ?? 0.34 + time * state.rotationSpeed * 0.115;
+  const rotation = forcedRotation ?? 0.34 + time * state.rotationSpeed * 0.115;
+  layers.group.rotation.y = rotation;
   layers.group.rotation.x = 0.035 + Math.sin(time * 0.17) * 0.035;
   layers.group.rotation.z = -0.025 + Math.cos(time * 0.13) * 0.018;
+  laminarLayer.group.rotation.y = rotation;
+  laminarLayer.group.rotation.x = -0.06 + Math.sin(time * 0.12) * 0.025;
 
   const alpha = Math.min(
     1,
     Math.max(0, (nowTimestamp - lastSnapshotReceivedTimestamp) / (SIMULATION_STEP_SECONDS * 1000)),
   );
-  layers.updateVisibility(state, currentFocusRegion);
-  layers.updateInterpolated(snapshot, previousSnapshot, alpha, state.pulseCount);
+  if (activeView === "overview") {
+    layers.updateVisibility(state, currentFocusRegion);
+    layers.updateInterpolated(snapshot, previousSnapshot, alpha, state.pulseCount);
+  } else {
+    laminarLayer.update(snapshot, previousSnapshot, alpha);
+  }
 
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta);
   controls.update();
@@ -232,9 +252,33 @@ function showInference(update: BayesianUpdate): void {
   element("#stimulus-val").textContent = `${Math.round(update.observation * 100)}%`;
 }
 
+function setActiveView(view: SimulationView): void {
+  activeView = view;
+  layers.group.visible = view === "overview";
+  laminarLayer.group.visible = view === "laminar";
+  element("#overview-panel").hidden = view !== "overview";
+  element("#laminar-panel").hidden = view !== "laminar";
+  element("#bayesian-hud").hidden = view !== "overview";
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[role='tab']")) {
+    button.setAttribute("aria-selected", String(button.dataset.view === view));
+  }
+  if (latestSnapshot) {
+    renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+  }
+}
+
 function setupInterface(): void {
   element("#node-count").textContent = formatCount(brainData.nodes.length);
   element("#synapse-count").textContent = formatCount(brainData.synapses.length);
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[role='tab']")) {
+    button.addEventListener("click", () => {
+      setActiveView(button.dataset.view as SimulationView);
+    });
+  }
+  element<HTMLSelectElement>("#laminar-lod").addEventListener("change", (event) => {
+    laminarLayer.setLod((event.currentTarget as HTMLSelectElement).value as LaminarLod);
+  });
 
   bindRange("rotation-speed", "rot-speed-val", "rotationSpeed", (value) => `${value.toFixed(1)}×`);
   bindRange("pulse-speed", "pulse-speed-val", "pulseSpeed", (value) => `${value.toFixed(1)}×`);
@@ -358,6 +402,9 @@ async function init(): Promise<void> {
   brainData = generateBrainData();
   layers = new BrainRenderLayers(brainData);
   scene.add(layers.group);
+  laminarLayer = new LaminarRenderLayer();
+  laminarLayer.group.visible = false;
+  scene.add(laminarLayer.group);
 
   worker = new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = (event: MessageEvent<EngineEvent>) => {
@@ -383,6 +430,9 @@ async function init(): Promise<void> {
   resolveRuntime();
 
   window.__BRAIN_ENGINE__ = {
+    setView(view) {
+      setActiveView(view);
+    },
     async setCaptureMode(enabled) {
       captureMode = enabled;
       document.body.dataset.capture = String(enabled);
