@@ -94,3 +94,33 @@ Superfície revisada:
 Correção confirmada: as cotas são públicas e os testes cobrem o valor máximo, o
 primeiro valor acima dele e regressão de tick. O adaptador Rust repete as
 verificações mesmo quando o host TypeScript é contornado.
+
+## 0.6-d · Aba Lâminas
+
+Superfície revisada:
+
+- alternância entre Visão Geral e Lâminas;
+- seleção de LOD;
+- leitura dos doze estados E/I e cinco escalares;
+- orçamento de geometrias e vias;
+- foco por teclado e preferência de movimento reduzido.
+
+### Controles confirmados
+
+- a geometria não escreve no snapshot nem executa equações;
+- índices ausentes recebem apenas zero visual;
+- há seis meshes E, seis anéis I e nove vias estáticas;
+- LOD só reduz apresentação e não altera o motor;
+- painéis inativos usam `hidden`;
+- o enquadramento foi verificado nas duas vistas.
+
+### Achados
+
+| ID | Severidade | Estado | Descrição |
+| :-- | :-- | :-- | :-- |
+| L06-D-01 | média | aberto | o padrão ARIA de abas ainda não implementa foco roving nem setas, Home e End |
+| L06-D-02 | baixa | aberto | `data-view` e o valor de LOD são convertidos por cast, sem parser de runtime |
+| L06-D-03 | baixa | aberto | a coluna mantém balanço ornamental mesmo quando a preferência é reduzir movimento |
+
+Critério de correção: parsers fechados, navegação completa por teclado, foco
+coerente e ausência de oscilação ornamental quando `rotationSpeed = 0`.
