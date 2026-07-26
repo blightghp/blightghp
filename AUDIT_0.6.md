@@ -74,3 +74,31 @@ Evidência:
 
 Limite aceito: ocultar vias reduz draw calls, mas as geometrias continuam
 residentes. A vista não acrescenta anatomia além do modelo agregado.
+
+## 0.6-e · Identidade e promoção
+
+Estado: **aprovado em 2026-07-26**.
+
+Evidência:
+
+- título e pacotes convergem para `BRAIN PRO [v. 0.6.0]`;
+- README está em primeira pessoa e apresenta Rust como percurso de aprendizagem;
+- a cronologia pessoal começa em 2025 sem falsificar o início Git de 2026-07-20;
+- Kandel aparece como projeto de estudo e consolidação, não como validação;
+- referências incluem Rust, Wasm, MDN, Allen Institute e fontes de modelagem;
+- SIGNALS possui título, descrição, movimento reduzido e sanitização de SVG;
+- GIF alterna 36 frames gerais e 24 laminares, com 2,54 MiB;
+- versões de Actions estão fixadas por SHA;
+- dependências JS não possuem vulnerabilidades conhecidas na auditoria;
+- arquivos e metadados estão livres de resíduos de ferramentas de autoria.
+
+Limite aceito: o GIF do perfil possui consistência eventual; runners e cache do
+GitHub impedem sincronização literalmente instantânea.
+
+## Veredito da 0.6
+
+Estado final: **promovida para 0.6.0**.
+
+Os cinco cortes completaram os ciclos de implementação, revisão/AppSec,
+correção, consolidação e fechamento. O próximo planejamento pode abrir a 0.7,
+mas não deve apresentar a coluna atual como anatomia ou fisiologia completa.

@@ -27,6 +27,7 @@ Nenhum corte seguinte pode esconder um achado aberto do anterior.
 | 2026-07-26 | 0.6-b | laço relé–TRN–L6 fechado; atraso limitado, controle de laço aberto e ritmo fenomenológico testados |
 | 2026-07-26 | 0.6-c | ABI v4 fechada; estado laminar transferível, hashes separados, replay exato e cotas de Worker testadas |
 | 2026-07-26 | 0.6-d | aba Lâminas fechada; coluna E/I, relé/TRN, teclado, movimento reduzido e custos de LOD validados |
+| 2026-07-26 | 0.6-e | BRAIN PRO 0.6.0 promovido; identidade, Kandel, Rust, SIGNALS, GIF, proveniência e release fechados |
 
 ## Microetapas
 
@@ -36,7 +37,7 @@ Nenhum corte seguinte pode esconder um achado aberto do anterior.
 | 0.6-b | relé talâmico e TRN | ritmo finito, determinístico e dependente do circuito |
 | 0.6-c | snapshot Rust/Wasm no Worker | ABI v4, buffers transferíveis e teste em navegador |
 | 0.6-d | aba Lâminas e coluna explodida | teclado, LOD, projeções e regressão visual |
-| 0.6-e | identidade, diário, referências e promoção | texto coerente, GIF e SIGNALS sincronizados |
+| 0.6-e | identidade, diário, referências e promoção | concluído: texto coerente, GIF e SIGNALS sincronizados |
 
 ## Limite científico
 

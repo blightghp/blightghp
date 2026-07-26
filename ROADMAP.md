@@ -121,7 +121,7 @@ de qualidade da 0.5, antes de qualquer demonstração científica nova:
   ABI Wasm e protocolo transferível sem equações no shell.
 - [x] **0.6-d · Leitura visual:** aba Lâminas, coluna explodida, vias destacadas
   e LOD com custo e acessibilidade verificados.
-- [ ] **0.6-e · Identidade e promoção:** BRAIN PRO, diário de aprendizagem,
+- [x] **0.6-e · Identidade e promoção:** BRAIN PRO, diário de aprendizagem,
   cronologia desde 2025, Kandel, referências, SIGNALS e auditoria de fechamento.
 
 ## Trilhas que atravessam as versões
