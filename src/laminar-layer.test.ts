@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CORTICAL_LAYER_LABELS,
   LAMINAR_PROJECTIONS,
+  laminarLodCost,
   parseLaminarLod,
   parseSimulationView,
   projectionBudget,
@@ -10,6 +11,17 @@ import {
 describe("laminar presentation contract", () => {
   it("keeps six stable cortical labels", () => {
     expect(CORTICAL_LAYER_LABELS).toEqual(["L1", "L2", "L3", "L4", "L5", "L6"]);
+  });
+
+  it("reports the static presentation cost of each LOD", () => {
+    expect(laminarLodCost("low")).toEqual({
+      stateValuesRead: 17,
+      fixedDrawCalls: 14,
+      projectionDrawCalls: 3,
+      totalDrawCalls: 17,
+    });
+    expect(laminarLodCost("medium").totalDrawCalls).toBe(21);
+    expect(laminarLodCost("high").totalDrawCalls).toBe(23);
   });
 
   it("rejects view and LOD values outside their closed contracts", () => {

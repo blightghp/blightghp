@@ -48,9 +48,29 @@ try {
   if (faults.length > 0) {
     throw new Error(`erros no navegador: ${faults.join(" | ")}`);
   }
+  await page.click("#tab-laminar");
+  await page.waitForFunction(
+    () =>
+      document.querySelector("#tab-laminar")?.getAttribute("aria-selected") ===
+        "true" &&
+      !document.querySelector("#laminar-panel")?.hidden,
+  );
+  const laminar = await page.evaluate(() => ({
+    relay: Number(document.querySelector("#relay-activity")?.textContent),
+    trn: Number(document.querySelector("#trn-activity")?.textContent),
+    rebound: Number(document.querySelector("#rebound-activity")?.textContent),
+    overviewHidden: document.querySelector("#overview-panel")?.hidden,
+    activeTab: document.activeElement?.id,
+  }));
+  if (
+    !laminar.overviewHidden ||
+    ![laminar.relay, laminar.trn, laminar.rebound].every(Number.isFinite)
+  ) {
+    throw new Error(`aba laminar inválida: ${JSON.stringify(laminar)}`);
+  }
   console.log(
     `Worker Wasm verificado no navegador: schema ${diagnostics.schemaVersion}, ` +
-      `hash ${diagnostics.stateHash}`,
+      `hash ${diagnostics.stateHash}, aba Lâminas ativa`,
   );
 } finally {
   await browser?.close();

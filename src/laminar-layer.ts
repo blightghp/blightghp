@@ -40,6 +40,24 @@ export function projectionBudget(lod: LaminarLod): number {
   return LAMINAR_PROJECTIONS.length;
 }
 
+export interface LaminarLodCost {
+  stateValuesRead: number;
+  fixedDrawCalls: number;
+  projectionDrawCalls: number;
+  totalDrawCalls: number;
+}
+
+export function laminarLodCost(lod: LaminarLod): LaminarLodCost {
+  const projectionDrawCalls = projectionBudget(lod);
+  const fixedDrawCalls = 14;
+  return {
+    stateValuesRead: 17,
+    fixedDrawCalls,
+    projectionDrawCalls,
+    totalDrawCalls: fixedDrawCalls + projectionDrawCalls,
+  };
+}
+
 function layerY(index: number): number {
   return 2.25 - index * 0.82;
 }
