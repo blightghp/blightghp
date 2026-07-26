@@ -64,3 +64,32 @@ Superfície revisada:
 Correção confirmada: a conversão de atraso não faz cast de ponto flutuante nem
 aloca antes de concluir a contagem; os testes cobrem `dt` subnanosegundo, ganho
 imediatamente acima do teto e drive excessivo.
+
+## 0.6-c · ABI Wasm e Worker
+
+Superfície revisada:
+
+- quinze buffers de topologia recebidos pelo construtor Wasm;
+- alvo de tick recebido em cada comando;
+- treze buffers transferíveis do snapshot;
+- hashes legado e córtico-talâmico;
+- fallback diagnóstico e descarte da instância Wasm.
+
+### Controles confirmados
+
+- comprimentos paralelos de sinapses são comparados antes do `zip`;
+- tipos de neurônio fora do contrato são rejeitados;
+- o snapshot laminar tem tamanho fixo em Rust;
+- cada `ArrayBuffer` transferido aparece uma única vez;
+- o fallback publica zeros e informa degradação;
+- o hash 0.5 permanece separado do novo hash córtico-talâmico.
+
+### Achados
+
+| ID | Severidade | Estado | Descrição |
+| :-- | :-- | :-- | :-- |
+| L06-C-01 | alta | aberto | o construtor aceita quantidades arbitrárias de nós, sinapses e arestas antes de alocar o motor |
+| L06-C-02 | alta | aberto | uma mensagem `advance` pode solicitar um salto de tick muito grande e monopolizar o Worker |
+
+Critério de correção: cotas públicas para topologia e trabalho por comando,
+rejeição antes da alocação/loop e testes exatamente no limite e acima dele.
