@@ -20,4 +20,10 @@ describe("stampBrainGifReference", () => {
       ),
     ).toThrow(/not found/);
   });
+
+  it("is idempotent when the README already contains the source commit", () => {
+    const sha = "1234567890abcdef1234567890abcdef12345678";
+    const source = '<img src="assets/brain.gif?v=1234567890ab" />';
+    expect(stampBrainGifReference(source, sha)).toBe(source);
+  });
 });

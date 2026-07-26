@@ -10,15 +10,14 @@ export function stampBrainGifReference(source, sha) {
     throw new Error("GITHUB_SHA must contain the 40-character source commit.");
   }
 
-  const stamped = source.replace(
-    /assets\/brain\.gif\?v=[^"]+/,
+  const referencePattern = /assets\/brain\.gif\?v=[^"]+/;
+  if (!referencePattern.test(source)) {
+    throw new Error("README brain GIF reference was not found.");
+  }
+  return source.replace(
+    referencePattern,
     `assets/brain.gif?v=${sha.slice(0, 12)}`,
   );
-
-  if (stamped === source) {
-    throw new Error("README brain GIF reference was not found or already stamped.");
-  }
-  return stamped;
 }
 
 if (path.resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {

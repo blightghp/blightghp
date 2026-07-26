@@ -15,6 +15,25 @@ url.search = new URLSearchParams({
 
 const outputPath = path.resolve(__dirname, "../assets/activity_flow.svg");
 
+function sanitizeActivityGraph(svg) {
+  const withoutForeignObjects = svg.replace(
+    /<foreignObject\b[^>]*>[\s\S]*?<\/foreignObject>/gi,
+    "",
+  );
+  const forbiddenPatterns = [
+    /<script[\s>]/i,
+    /<!doctype/i,
+    /<!entity/i,
+    /\son[a-z][\w:-]*\s*=/i,
+    /\b(?:href|xlink:href)\s*=\s*["']\s*(?!#)/i,
+    /\burl\(\s*["']?\s*(?:https?:|data:|javascript:)/i,
+  ];
+  if (forbiddenPatterns.some((pattern) => pattern.test(withoutForeignObjects))) {
+    throw new Error("activity graph contains active or external SVG content");
+  }
+  return withoutForeignObjects.replace(/^[ \t]+$/gm, "");
+}
+
 async function updateGraph() {
   const response = await fetch(url, {
     headers: { "user-agent": "blightghp-profile-workflow" },
@@ -26,6 +45,7 @@ async function updateGraph() {
   if (!/<svg[\s>]/i.test(svg) || !/<\/svg>\s*$/i.test(svg)) {
     throw new Error("activity graph response is not a complete SVG");
   }
+  svg = sanitizeActivityGraph(svg);
 
   const definitions = `
     <defs>
@@ -50,14 +70,19 @@ async function updateGraph() {
 
   const accessibleText = `
     <title>BRAIN PRO · SIGNALS</title>
-    <desc>Contribuições públicas no GitHub como traços de um percurso de aprendizagem iniciado em 2025.</desc>`;
+    <desc>Contribuições públicas no GitHub como traços de um percurso de aprendizagem iniciado em 2025.</desc>
+    <text x="600" y="32" text-anchor="middle" fill="#58a6ff" font-size="18" font-family="Segoe UI, sans-serif">BRAIN PRO · SIGNALS — APRENDIZAGEM EM MOVIMENTO</text>`;
   svg = svg.replace(/<svg([^>]*)>/i, `<svg$1>${accessibleText}${definitions}`);
   svg = svg.replace(/<\/svg>\s*$/i, `${animation}</svg>`);
   fs.writeFileSync(outputPath, svg, "utf8");
   console.log(`updated ${outputPath}`);
 }
 
-updateGraph().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+module.exports = { sanitizeActivityGraph };
+
+if (require.main === module) {
+  updateGraph().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

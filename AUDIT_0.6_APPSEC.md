@@ -151,10 +151,10 @@ Superfície revisada:
 
 | ID | Severidade | Estado | Descrição |
 | :-- | :-- | :-- | :-- |
-| L06-E-01 | alta | aberto | o serviço externo de SIGNALS entrega `foreignObject`; o workflow valida apenas a moldura `<svg>` antes de commitar |
-| L06-E-02 | média | aberto | repetir o carimbo do GIF com o mesmo SHA falha em vez de produzir uma operação idempotente |
-| L06-E-03 | baixa | aberto | um índice local gerado ainda retém referências de sessões de desenvolvimento já inexistentes |
+| L06-E-01 | alta | fechado | `foreignObject` é removido e scripts, handlers, entidades, referências externas e URLs ativas são rejeitados antes do commit |
+| L06-E-02 | média | fechado | repetir o carimbo com o mesmo SHA preserva o README sem erro |
+| L06-E-03 | baixa | fechado | o índice local foi regenerado somente com referências Git existentes |
 
-Critério de correção: remover conteúdo SVG ativo/estrangeiro, rejeitar padrões
-perigosos, testar o sanitizador, aceitar carimbo repetido e regenerar o índice
-local somente com referências Git existentes.
+Correção confirmada: o sanitizador possui testes de remoção, rejeição e
+referência local permitida; o carimbo possui teste de repetição; a busca final
+em arquivos e metadados não encontra resíduos de ferramentas de autoria.
