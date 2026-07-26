@@ -15,6 +15,49 @@ import initWasm, { WasmNeuralEngine } from "./wasm/brain_wasm.js";
 
 let wasmInitialization: Promise<unknown> | undefined;
 
+export const WORKER_RESOURCE_LIMITS = {
+  nodes: 20_000,
+  synapses: 250_000,
+  fieldVertices: 50_000,
+  fieldEdges: 1_000_000,
+  ticksPerCommand: 600,
+} as const;
+
+export interface WorkerResourceCounts {
+  nodes: number;
+  synapses: number;
+  fieldVertices: number;
+  fieldEdges: number;
+}
+
+export function assertResourceCounts(counts: WorkerResourceCounts): void {
+  for (const [name, value] of Object.entries(counts)) {
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throw new Error(`contagem inválida para ${name}`);
+    }
+  }
+  if (
+    counts.nodes > WORKER_RESOURCE_LIMITS.nodes ||
+    counts.synapses > WORKER_RESOURCE_LIMITS.synapses ||
+    counts.fieldVertices > WORKER_RESOURCE_LIMITS.fieldVertices ||
+    counts.fieldEdges > WORKER_RESOURCE_LIMITS.fieldEdges
+  ) {
+    throw new Error("topologia excede o envelope de recursos do navegador");
+  }
+}
+
+export function assertAdvanceWithinEnvelope(
+  currentTick: number,
+  targetTick: number,
+): void {
+  if (!Number.isSafeInteger(targetTick) || targetTick < currentTick) {
+    throw new Error("tick alvo inválido ou regressivo");
+  }
+  if (targetTick - currentTick > WORKER_RESOURCE_LIMITS.ticksPerCommand) {
+    throw new Error("avanço excede o trabalho máximo por comando");
+  }
+}
+
 function initializeModule(): Promise<unknown> {
   wasmInitialization ??= initWasm({
     module_or_path: new URL("./wasm/brain_wasm_bg.wasm", import.meta.url),
@@ -82,6 +125,12 @@ export class WasmEngineHost {
     await initializeModule();
     this.dispose();
     this.fixedStep = command.fixedStep ?? SIMULATION_STEP_SECONDS;
+    assertResourceCounts({
+      nodes: command.topology.nodes.length,
+      synapses: command.topology.synapses.length,
+      fieldVertices: command.topology.corticalField.nodeIndices.length,
+      fieldEdges: command.topology.corticalField.neighbors.length,
+    });
     const flat = flattenTopology(command.topology);
     const field = command.topology.corticalField;
     this.engine = new WasmNeuralEngine(
@@ -119,6 +168,7 @@ export class WasmEngineHost {
 
   advance(command: EngineAdvanceCommand): EngineSnapshotEvent {
     const engine = this.requireEngine();
+    assertAdvanceWithinEnvelope(engine.tick(), command.targetTick);
     engine.advance_to(
       command.targetTick,
       command.stimulus.intensity,
@@ -210,7 +260,7 @@ export class DiagnosticFallbackHost {
 
   advance(command: EngineAdvanceCommand): EngineSnapshotEvent {
     if (!this.topology) throw new Error("fallback diagnóstico não inicializado");
-    if (command.targetTick < this.tick) throw new Error("tick alvo não pode recuar");
+    assertAdvanceWithinEnvelope(this.tick, command.targetTick);
     this.tick = command.targetTick;
     const fieldNodes = this.topology.corticalField.nodeIndices.slice();
     return {

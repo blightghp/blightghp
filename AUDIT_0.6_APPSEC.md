@@ -88,8 +88,9 @@ Superfície revisada:
 
 | ID | Severidade | Estado | Descrição |
 | :-- | :-- | :-- | :-- |
-| L06-C-01 | alta | aberto | o construtor aceita quantidades arbitrárias de nós, sinapses e arestas antes de alocar o motor |
-| L06-C-02 | alta | aberto | uma mensagem `advance` pode solicitar um salto de tick muito grande e monopolizar o Worker |
+| L06-C-01 | alta | fechado | host e construtor Wasm aplicam cotas iguais para nós, sinapses, vértices e arestas antes de construir o motor |
+| L06-C-02 | alta | fechado | host e adaptador Wasm rejeitam mais de 600 ticks em um único comando |
 
-Critério de correção: cotas públicas para topologia e trabalho por comando,
-rejeição antes da alocação/loop e testes exatamente no limite e acima dele.
+Correção confirmada: as cotas são públicas e os testes cobrem o valor máximo, o
+primeiro valor acima dele e regressão de tick. O adaptador Rust repete as
+verificações mesmo quando o host TypeScript é contornado.

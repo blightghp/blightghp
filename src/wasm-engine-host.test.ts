@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { generateBrainData } from "./brain";
 import {
+  assertAdvanceWithinEnvelope,
+  assertResourceCounts,
   DiagnosticFallbackHost,
   snapshotTransferList,
+  WORKER_RESOURCE_LIMITS,
 } from "./wasm-engine-host";
 
 describe("diagnostic Wasm fallback", () => {
@@ -29,6 +32,34 @@ describe("diagnostic Wasm fallback", () => {
     expect(event.snapshot.diagnostics.stateHash).toBe("unavailable");
     expect(event.snapshot.potentials.every((value) => value === 0)).toBe(true);
     expect(event.snapshot.field.eField.every((value) => value === 0)).toBe(true);
+  });
+
+  it("accepts resource limits and rejects the first value above them", () => {
+    assertResourceCounts({
+      nodes: WORKER_RESOURCE_LIMITS.nodes,
+      synapses: WORKER_RESOURCE_LIMITS.synapses,
+      fieldVertices: WORKER_RESOURCE_LIMITS.fieldVertices,
+      fieldEdges: WORKER_RESOURCE_LIMITS.fieldEdges,
+    });
+    expect(() =>
+      assertResourceCounts({
+        nodes: WORKER_RESOURCE_LIMITS.nodes + 1,
+        synapses: 0,
+        fieldVertices: 0,
+        fieldEdges: 0,
+      }),
+    ).toThrow(/envelope de recursos/);
+  });
+
+  it("bounds tick work per Worker command", () => {
+    assertAdvanceWithinEnvelope(10, 10 + WORKER_RESOURCE_LIMITS.ticksPerCommand);
+    expect(() =>
+      assertAdvanceWithinEnvelope(
+        10,
+        11 + WORKER_RESOURCE_LIMITS.ticksPerCommand,
+      ),
+    ).toThrow(/trabalho máximo/);
+    expect(() => assertAdvanceWithinEnvelope(10, 9)).toThrow(/regressivo/);
   });
 
   it("lists every compact snapshot buffer for zero-copy Worker transfer", () => {

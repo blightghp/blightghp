@@ -7,6 +7,12 @@ use brain_engine::{
 };
 use wasm_bindgen::prelude::*;
 
+pub const MAX_BROWSER_NODES: usize = 20_000;
+pub const MAX_BROWSER_SYNAPSES: usize = 250_000;
+pub const MAX_BROWSER_FIELD_VERTICES: usize = 50_000;
+pub const MAX_BROWSER_FIELD_EDGES: usize = 1_000_000;
+pub const MAX_ADVANCE_TICKS_PER_COMMAND: u64 = 600;
+
 #[wasm_bindgen]
 pub struct WasmLaminarEngine {
     inner: LaminarEngine,
@@ -49,6 +55,39 @@ impl WasmNeuralEngine {
         field_edge_lengths: Vec<f32>,
     ) -> Result<Self, JsValue> {
         let synapse_count = synapse_from.len();
+        if neuron_kinds.len() > MAX_BROWSER_NODES
+            || node_z.len() > MAX_BROWSER_NODES
+            || cortical_nodes.len() > MAX_BROWSER_NODES
+            || field_vertex_by_node.len() > MAX_BROWSER_NODES
+        {
+            return Err(JsValue::from_str(
+                "node buffers exceed browser resource limit",
+            ));
+        }
+        if synapse_count > MAX_BROWSER_SYNAPSES
+            || synapse_to.len() > MAX_BROWSER_SYNAPSES
+            || synapse_weights.len() > MAX_BROWSER_SYNAPSES
+            || synapse_delays_seconds.len() > MAX_BROWSER_SYNAPSES
+            || synapse_plastic.len() > MAX_BROWSER_SYNAPSES
+        {
+            return Err(JsValue::from_str(
+                "synapse buffers exceed browser resource limit",
+            ));
+        }
+        if field_node_indices.len() > MAX_BROWSER_FIELD_VERTICES
+            || field_row_offsets.len() > MAX_BROWSER_FIELD_VERTICES + 1
+        {
+            return Err(JsValue::from_str(
+                "field vertex buffers exceed browser resource limit",
+            ));
+        }
+        if field_neighbors.len() > MAX_BROWSER_FIELD_EDGES
+            || field_edge_lengths.len() > MAX_BROWSER_FIELD_EDGES
+        {
+            return Err(JsValue::from_str(
+                "field edge buffers exceed browser resource limit",
+            ));
+        }
         if synapse_to.len() != synapse_count
             || synapse_weights.len() != synapse_count
             || synapse_delays_seconds.len() != synapse_count
@@ -122,11 +161,20 @@ impl WasmNeuralEngine {
         confidence: f64,
         learning_rate: f64,
     ) -> Result<(), JsValue> {
+        let target_tick = u64::from(target_tick);
+        let pending_ticks = target_tick
+            .checked_sub(self.snapshot.tick)
+            .ok_or_else(|| JsValue::from_str("target tick cannot move backwards"))?;
+        if pending_ticks > MAX_ADVANCE_TICKS_PER_COMMAND {
+            return Err(JsValue::from_str(
+                "advance exceeds per-command tick resource limit",
+            ));
+        }
         self.inner.set_plasticity(learning_rate);
         self.snapshot = self
             .inner
             .advance_to(
-                u64::from(target_tick),
+                target_tick,
                 NeuralStimulus {
                     intensity,
                     confidence,
