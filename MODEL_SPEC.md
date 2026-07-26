@@ -30,7 +30,7 @@ demonstráveis, não apenas equações mais longas.
 7. Toda promoção inclui convergência temporal/espacial e sensibilidade aos
    parâmetros; ajuste visual não calibra um modelo.
 
-### Contrato laminar inicial da 0.5
+### Contrato laminar consolidado na 0.6
 
 Para cada lâmina `ℓ`, o primeiro kernel Rust usa um sistema populacional E/I:
 
@@ -58,6 +58,18 @@ termo linear de relaxação. A matriz é indexada como `[alvo][origem]`. O prese
 inicial existe para validar tipos, determinismo, ABI Wasm e propagação entre
 lâminas; seus pesos **não são uma calibração fisiológica**.
 
+Para evitar que uma matriz densa pareça mais abrangente do que o modelo, cada
+entrada não nula precisa pertencer a uma destas classes didáticas:
+
+- recorrência local em L1–L6;
+- feedforward intracolunar L4→L2/L3 e L2/L3→L5;
+- feedback intracolunar L5→L6 e L6→L1/L4.
+
+`canonical_projection_gain(origem, alvo)` é a única tabela do preset.
+`projection_kind` é independente do peso e rejeita pares fora desse escopo.
+Essas setas ajudam a estudar a convenção alvo×origem; elas não afirmam que a
+conectividade cortical real se reduz a sete vias.
+
 ### Solvers previstos por domínio
 
 | Domínio | Formulação inicial | Método candidato | Gate |
@@ -74,8 +86,8 @@ lâminas; seus pesos **não são uma calibração fisiológica**.
 
 | Escala | Estado principal | Interpretação |
 | :-- | :-- | :-- |
-| Rede legada 0.4 | potencial, ativação, refratariedade e traços por unidade | Oráculo TypeScript temporário da migração |
-| Lâmina 0.5+ | atividade E/I por L1–L6 e matriz alvo×origem | Kernel populacional Rust inicial |
+| Rede 0.4 promovida | potencial, ativação, refratariedade e traços por unidade | Kernel Rust preservado durante a expansão |
+| Lâmina 0.6 | atividade E/I por L1–L6 e matriz alvo×origem | Kernel populacional Rust didático |
 | Campo | atividade E/I por vértice da malha | Estado populacional macroscópico |
 | Patch microscópico | potencial, adaptação, condutâncias e eventos por célula | Amostra local resolvida em spikes |
 | Sinapse | eficácia, atraso, receptor e recursos de liberação | Canal causal entre unidades |

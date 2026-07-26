@@ -45,7 +45,7 @@ As dependências seguem oito regras:
 7. `brain-wasm` adapta erros e buffers, mas não contém equações alternativas.
 8. TypeScript não muta estado científico e será removido do laço quente depois da paridade.
 
-## Arquitetura 0.5 · Rust nativo e Wasm
+## Arquitetura 0.6 · Rust nativo, Wasm e estado laminar
 
 ```mermaid
 flowchart LR
@@ -61,6 +61,11 @@ flowchart LR
 O mesmo `brain-engine` compila para o host nativo e para
 `wasm32-unknown-unknown`. Essa paridade de código-fonte evita manter uma versão
 “web” simplificada e outra “científica” nativa.
+
+O contrato laminar usa IDs estáveis L1–L6 e uma matriz `[alvo][origem]`.
+Classificação e ganho canônico são funções separadas: a primeira decide se a
+via pertence ao modelo; a segunda fornece somente o preset didático atual.
+Assim, trocar um número não cria silenciosamente uma nova hipótese anatômica.
 
 ### Fronteiras
 

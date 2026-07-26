@@ -118,6 +118,28 @@ pub const fn projection_kind(
     }
 }
 
+/// Returns the learning preset gain for one declared intracolumnar path.
+///
+/// The values are centralized so validation, visualization and documentation
+/// do not carry competing copies of the connectivity matrix.
+#[must_use]
+pub const fn canonical_projection_gain(source: CorticalLayer, target: CorticalLayer) -> f64 {
+    use CorticalLayer::{L1, L2, L3, L4, L5, L6};
+    if source as u8 == target as u8 {
+        return 0.18;
+    }
+    match (source, target) {
+        (L4, L2) => 0.52,
+        (L4, L3) => 0.48,
+        (L2, L5) => 0.36,
+        (L3, L5) => 0.42,
+        (L5, L6) => 0.34,
+        (L6, L4) => 0.22,
+        (L6, L1) => 0.16,
+        _ => 0.0,
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LaminarConfig {
     pub dt: Seconds,
@@ -136,15 +158,12 @@ impl Default for LaminarConfig {
         // This is a learning preset, not a calibrated cortical microcircuit.
         // Non-zero entries encode only the paths classified above.
         let mut projection = [[0.0; LAYER_COUNT]; LAYER_COUNT];
-        for (layer, row) in projection.iter_mut().enumerate() {
-            row[layer] = 0.18;
+        for (target, row) in projection.iter_mut().enumerate() {
+            for (source, gain) in row.iter_mut().enumerate() {
+                *gain =
+                    canonical_projection_gain(layer_from_index(source), layer_from_index(target));
+            }
         }
-        projection[CorticalLayer::L2.index()][CorticalLayer::L4.index()] = 0.52;
-        projection[CorticalLayer::L3.index()][CorticalLayer::L4.index()] = 0.48;
-        projection[CorticalLayer::L5.index()][CorticalLayer::L2.index()] = 0.36;
-        projection[CorticalLayer::L5.index()][CorticalLayer::L3.index()] = 0.42;
-        projection[CorticalLayer::L6.index()][CorticalLayer::L5.index()] = 0.34;
-        projection[CorticalLayer::L4.index()][CorticalLayer::L6.index()] = 0.22;
 
         Self {
             dt: Seconds::trusted(1.0 / 1_000.0),
@@ -424,6 +443,12 @@ mod tests {
             Some(ProjectionKind::Feedback)
         );
         assert_eq!(projection_kind(CorticalLayer::L3, CorticalLayer::L4), None);
+        for target in CorticalLayer::ALL {
+            for source in CorticalLayer::ALL {
+                let gain = canonical_projection_gain(source, target);
+                assert_eq!(gain > 0.0, projection_kind(source, target).is_some());
+            }
+        }
     }
 
     #[test]
