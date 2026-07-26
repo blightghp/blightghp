@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "input": {
+    "topology": {
+      "nodeIndices": [
+        0,
+        1,
+        2
+      ],
+      "vertexByNode": [
+        0,
+        1,
+        2,
+        -1
+      ],
+      "rowOffsets": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "neighbors": [
+        1,
+        2,
+        0
+      ],
+      "edgeLengths": [
+        0.02,
+        0.02,
+        0.02
+      ]
+    },
+    "neuronKinds": [
+      "excitatory",
+      "inhibitory",
+      "excitatory",
+      "excitatory"
+    ],
+    "config": {
+      "dtSeconds": 0.01,
+      "tauESeconds": 0.02,
+      "tauISeconds": 0.03,
+      "propagationEPerSecond": 1,
+      "propagationIPerSecond": 0.5,
+      "couplingGain": 0.08,
+      "conductionSpeedUnitsPerSecond": 1,
+      "spatialKernelScale": 0.2,
+      "excitatorySpikeImpulse": 0.45,
+      "inhibitorySpikeImpulse": 0.55,
+      "maxActivity": 2.5
+    },
+    "projectionSpikes": [
+      1,
+      1,
+      0,
+      1
+    ],
+    "fieldSteps": [
+      [
+        0
+      ],
+      [],
+      [],
+      [
+        1
+      ],
+      [],
+      []
+    ],
+    "observable": {
+      "weights": [
+        0.5,
+        -0.5,
+        0.25,
+        -0.25
+      ],
+      "populationSize": 10,
+      "dtSeconds": 0.01,
+      "windowSeconds": 0.03,
+      "spikeSamples": [
+        1,
+        0,
+        2,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "projectedExcitatory": [
+      0.44999998807907104,
+      0,
+      0
+    ],
+    "projectedInhibitory": [
+      0,
+      0.550000011920929,
+      0
+    ],
+    "fieldSnapshots": [
+      {
+        "excitatory": [
+          0.26843878626823425,
+          0,
+          0
+        ],
+        "inhibitory": [
+          0,
+          0,
+          0
+        ],
+        "waveActivity": [
+          0.1879071444272995,
+          0,
+          0
+        ]
+      },
+      {
+        "excitatory": [
+          0.16013196110725403,
+          0,
+          0
+        ],
+        "inhibitory": [
+          0,
+          0,
+          0
+        ],
+        "waveActivity": [
+          0.11209237575531006,
+          0,
+          0
+        ]
+      },
+      {
+        "excitatory": [
+          0.09552362561225891,
+          0,
+          0.0044999998062849045
+        ],
+        "inhibitory": [
+          0,
+          0,
+          0
+        ],
+        "waveActivity": [
+          0.06686653941869736,
+          0,
+          0.0031499997712671757
+        ]
+      },
+      {
+        "excitatory": [
+          0.056982770562171936,
+          0,
+          0.005368775688111782
+        ],
+        "inhibitory": [
+          0,
+          0.3913422226905823,
+          0
+        ],
+        "waveActivity": [
+          0.039887938648462296,
+          0.11740266531705856,
+          0.0037581429351121187
+        ]
+      },
+      {
+        "excitatory": [
+          0.033991970121860504,
+          0,
+          0.004803958814591169
+        ],
+        "inhibitory": [
+          0,
+          0.2784522473812103,
+          0
+        ],
+        "waveActivity": [
+          0.023794379085302353,
+          0.08353567123413086,
+          0.00336277112364769
+        ]
+      },
+      {
+        "excitatory": [
+          0.020277252420783043,
+          0.00004499999704421498,
+          0.003820945043116808
+        ],
+        "inhibitory": [
+          0.002749999985098839,
+          0.19812749326229095,
+          0
+        ],
+        "waveActivity": [
+          0.015019076876342297,
+          0.05946974828839302,
+          0.0026746615767478943
+        ]
+      }
+    ],
+    "meanAbsoluteWeight": 0.375,
+    "firingRates": [
+      10,
+      5,
+      10,
+      6.666666666666667,
+      6.666666666666667,
+      0
+    ]
+  }
+}

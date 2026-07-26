@@ -48,10 +48,10 @@ presets/eventos → brain-engine (Rust: matemática e estado)
 
 | Camada | Tecnologia | Responsabilidade atual |
 | :-- | :-- | :-- |
-| Núcleo 0.5 | Rust (`brain-engine`) | Fonte de verdade em construção; relógio, RNG, CSR, contrato laminar E/I, unidades e tipos independentes de plataforma |
+| Núcleo 0.5 | Rust (`brain-engine`) | Relógio, RNG, CSR, campo E/I, observáveis, contrato laminar, unidades e tipos independentes de plataforma |
 | Ponte web | Rust/Wasm (`brain-wasm`) | ABI mínima `wasm-bindgen`, compilável para `wasm32-unknown-unknown` |
 | Oráculo 0.4 | TypeScript | LIF, AMPA/GABA-A, STDP, campo e versões legadas dos discretos mantidos temporariamente para testes de paridade |
-| Campo populacional | TypeScript | Campo E/I por kernel de grafo cortical (`field.ts`), atraso espacial consumido pelo integrador e acoplamento bidirecional com spikes |
+| Campo populacional | TypeScript + espelho Rust | Campo E/I 0.4 ainda alimenta a UI; o port Rust já passa paridade de projeção, atraso, snapshots e refinamento |
 | Motor & Worker | TypeScript · Web Worker | Execução em worker thread (`simulation.worker.ts`), desacoplada da UI via `engine-host.ts` |
 | Tempo & Protocolo | TypeScript | Relógio determinístico (`clock.ts`), protocolo de mensagens (`protocol.ts`) e observáveis (`observables.ts`) |
 | Topologia & Render | Three.js · TypeScript | Anatomia procedural, atividade superficial (`render-layers.ts`), interpolação de snapshots e foco regional |

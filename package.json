@@ -11,8 +11,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "generate:brain-gif": "node scripts/gen_brain_gif.js",
+    "generate:field-fixture": "node scripts/field_parity_fixture.js",
+    "check:parity-fixtures": "node scripts/field_parity_fixture.js --check",
     "stamp:brain-gif": "node scripts/stamp_brain_gif.js",
-    "check": "npm run typecheck && npm run test && npm run build"
+    "check": "npm run typecheck && npm run check:parity-fixtures && npm run test && npm run build"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

@@ -1,0 +1,257 @@
+use brain_engine::{
+    mean_absolute_weight, project_spikes_to_field, FieldConfig, FieldTopology, NeuronKind,
+    PopulationField, PopulationFiringRate, Seconds,
+};
+use serde::Deserialize;
+
+const FIXTURE: &str = include_str!("../../../fixtures/parity/field-observables-v1.json");
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Fixture {
+    schema_version: u32,
+    input: Input,
+    expected: Expected,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Input {
+    topology: TopologyFixture,
+    neuron_kinds: Vec<String>,
+    config: ConfigFixture,
+    projection_spikes: Vec<u8>,
+    field_steps: Vec<Vec<usize>>,
+    observable: ObservableFixture,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TopologyFixture {
+    node_indices: Vec<u32>,
+    vertex_by_node: Vec<i32>,
+    row_offsets: Vec<u32>,
+    neighbors: Vec<u32>,
+    edge_lengths: Vec<f32>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ConfigFixture {
+    dt_seconds: f64,
+    tau_e_seconds: f64,
+    tau_i_seconds: f64,
+    propagation_e_per_second: f64,
+    propagation_i_per_second: f64,
+    coupling_gain: f64,
+    conduction_speed_units_per_second: f64,
+    spatial_kernel_scale: f64,
+    excitatory_spike_impulse: f64,
+    inhibitory_spike_impulse: f64,
+    max_activity: f64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ObservableFixture {
+    weights: Vec<f64>,
+    population_size: u32,
+    dt_seconds: f64,
+    window_seconds: f64,
+    spike_samples: Vec<u32>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Expected {
+    projected_excitatory: Vec<f32>,
+    projected_inhibitory: Vec<f32>,
+    field_snapshots: Vec<SnapshotFixture>,
+    mean_absolute_weight: f64,
+    firing_rates: Vec<f64>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SnapshotFixture {
+    excitatory: Vec<f32>,
+    inhibitory: Vec<f32>,
+    wave_activity: Vec<f32>,
+}
+
+fn fixture() -> Fixture {
+    serde_json::from_str(FIXTURE).expect("field parity fixture must be valid")
+}
+
+fn topology(value: TopologyFixture) -> FieldTopology {
+    FieldTopology {
+        node_indices: value.node_indices,
+        vertex_by_node: value.vertex_by_node,
+        row_offsets: value.row_offsets,
+        neighbors: value.neighbors,
+        edge_lengths: value.edge_lengths,
+    }
+}
+
+fn config(value: &ConfigFixture) -> FieldConfig {
+    FieldConfig {
+        dt: Seconds::try_new(value.dt_seconds).unwrap(),
+        tau_excitatory: Seconds::try_new(value.tau_e_seconds).unwrap(),
+        tau_inhibitory: Seconds::try_new(value.tau_i_seconds).unwrap(),
+        propagation_excitatory_per_second: value.propagation_e_per_second,
+        propagation_inhibitory_per_second: value.propagation_i_per_second,
+        coupling_gain: value.coupling_gain,
+        conduction_speed_units_per_second: value.conduction_speed_units_per_second,
+        spatial_kernel_scale: value.spatial_kernel_scale,
+        excitatory_spike_impulse: value.excitatory_spike_impulse,
+        inhibitory_spike_impulse: value.inhibitory_spike_impulse,
+        max_activity: value.max_activity,
+    }
+}
+
+fn neuron_kinds(values: &[String]) -> Vec<NeuronKind> {
+    values
+        .iter()
+        .map(|value| match value.as_str() {
+            "excitatory" => NeuronKind::Excitatory,
+            "inhibitory" => NeuronKind::Inhibitory,
+            other => panic!("unknown neuron kind: {other}"),
+        })
+        .collect()
+}
+
+fn assert_f32_vectors_close(actual: &[f32], expected: &[f32]) {
+    assert_eq!(actual.len(), expected.len());
+    for (index, (&actual, &expected)) in actual.iter().zip(expected).enumerate() {
+        assert!(
+            (actual - expected).abs() <= 2.0e-7,
+            "index {index}: {actual} != {expected}"
+        );
+    }
+}
+
+#[test]
+fn rust_field_matches_the_typescript_oracle_fixture() {
+    let fixture = fixture();
+    assert_eq!(fixture.schema_version, 1);
+    let topology = topology(fixture.input.topology);
+    let kinds = neuron_kinds(&fixture.input.neuron_kinds);
+    let config = config(&fixture.input.config);
+
+    let projection = project_spikes_to_field(
+        &topology,
+        &fixture.input.projection_spikes,
+        &kinds,
+        config.excitatory_spike_impulse,
+        config.inhibitory_spike_impulse,
+    )
+    .unwrap();
+    assert_f32_vectors_close(
+        &projection.excitatory,
+        &fixture.expected.projected_excitatory,
+    );
+    assert_f32_vectors_close(
+        &projection.inhibitory,
+        &fixture.expected.projected_inhibitory,
+    );
+
+    let node_count = kinds.len();
+    let mut field = PopulationField::new(topology, config).unwrap();
+    for (step, spiking_nodes) in fixture.input.field_steps.iter().enumerate() {
+        let mut spikes = vec![0_u8; node_count];
+        for &node in spiking_nodes {
+            spikes[node] = 1;
+        }
+        field.step(&spikes, &kinds, config.dt).unwrap();
+        let expected = &fixture.expected.field_snapshots[step];
+        assert_f32_vectors_close(field.excitatory(), &expected.excitatory);
+        assert_f32_vectors_close(field.inhibitory(), &expected.inhibitory);
+        assert_f32_vectors_close(field.wave_activity(), &expected.wave_activity);
+    }
+}
+
+#[test]
+fn rust_observables_match_the_typescript_oracle_fixture() {
+    let fixture = fixture();
+    let observable = fixture.input.observable;
+    assert!(
+        (mean_absolute_weight(&observable.weights) - fixture.expected.mean_absolute_weight).abs()
+            <= f64::EPSILON
+    );
+
+    let mut rate = PopulationFiringRate::new(
+        observable.population_size,
+        Seconds::try_new(observable.dt_seconds).unwrap(),
+        Seconds::try_new(observable.window_seconds).unwrap(),
+    )
+    .unwrap();
+    for (spikes, expected) in observable
+        .spike_samples
+        .into_iter()
+        .zip(fixture.expected.firing_rates)
+    {
+        assert!((rate.sample(spikes) - expected).abs() <= 1.0e-12);
+    }
+}
+
+#[test]
+fn field_rejects_invalid_boundaries_and_reset_clears_history() {
+    let fixture = fixture();
+    let topology = topology(fixture.input.topology);
+    let kinds = neuron_kinds(&fixture.input.neuron_kinds);
+    let config = config(&fixture.input.config);
+    let mut field = PopulationField::new(topology, config).unwrap();
+
+    assert!(field.step(&[0, 0], &kinds, config.dt).is_err());
+    let mut spikes = vec![0; kinds.len()];
+    spikes[0] = 1;
+    field.step(&spikes, &kinds, config.dt).unwrap();
+    field.reset();
+    for _ in 0..8 {
+        field
+            .step(&vec![0; kinds.len()], &kinds, config.dt)
+            .unwrap();
+    }
+    assert!(field.excitatory().iter().all(|value| *value == 0.0));
+    assert!(field.inhibitory().iter().all(|value| *value == 0.0));
+}
+
+#[test]
+fn finer_field_step_reduces_error_against_reference() {
+    fn run(dt: f64, steps: usize) -> Vec<f32> {
+        let topology = FieldTopology {
+            node_indices: vec![0],
+            vertex_by_node: vec![0],
+            row_offsets: vec![0, 1],
+            neighbors: vec![0],
+            edge_lengths: vec![0.0],
+        };
+        let config = FieldConfig {
+            dt: Seconds::try_new(dt).unwrap(),
+            tau_excitatory: Seconds::try_new(0.08).unwrap(),
+            propagation_excitatory_per_second: 1.4,
+            ..FieldConfig::default()
+        };
+        let mut field = PopulationField::new(topology, config).unwrap();
+        field.set_activity(0, 1.0, 0.0).unwrap();
+        for _ in 0..steps {
+            field
+                .step(&[0], &[NeuronKind::Excitatory], config.dt)
+                .unwrap();
+        }
+        field.excitatory().to_vec()
+    }
+
+    fn error(candidate: &[f32], reference: &[f32]) -> f64 {
+        candidate
+            .iter()
+            .zip(reference)
+            .map(|(&candidate, &reference)| f64::from((candidate - reference).abs()))
+            .sum()
+    }
+
+    let coarse = run(1.0 / 60.0, 12);
+    let medium = run(1.0 / 120.0, 24);
+    let reference = run(1.0 / 480.0, 96);
+    assert!(error(&medium, &reference) < error(&coarse, &reference));
+}

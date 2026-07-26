@@ -69,7 +69,7 @@ migração; ela não deve reinterpretar o grafo k-NN atual como anatomia parcela
   fixando vetores TS↔Rust antes de trocar o engine padrão.
   - [x] **0.5-c1 · Discretos:** tipos de tick/segundo, relógio, RNG endereçado e
     CSR canônico em Rust, aprovados pelo mesmo fixture JSON consumido no Vitest.
-  - [ ] **0.5-c2 · Campo e observáveis:** portar o campo E/I 0.4, agregação de
+  - [x] **0.5-c2 · Campo e observáveis:** portar o campo E/I 0.4, agregação de
     spikes e instrumentos, com convergência e envelopes cruzados.
   - [ ] **0.5-c3 · Replay sombra:** executar cenários curtos nos dois motores e
     registrar divergência, custo e hashes antes da promoção.
@@ -89,6 +89,7 @@ limites operacionais estão em [AUDIT_0.5_ENTRY.md](AUDIT_0.5_ENTRY.md).
 - [x] relógio de passo fixo e tempo do motor representado por tick inteiro;
 - [x] RNG endereçado por semente, fluxo, entidade, tick e ordinal;
 - [x] sinapses direcionadas em CSR e redução serial ordenada;
+- [x] campo E/I atrasado e observáveis essenciais com fixture TS↔Rust;
 - [x] laço determinístico isolado em Worker e snapshots com cópias próprias;
 - [x] cinéticas AMPA/GABA-A separadas e inferência legada fora das equações do motor.
 

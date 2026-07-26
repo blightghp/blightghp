@@ -278,6 +278,19 @@ como fontes independentes.
 O domínio atual é uma aproximação k-NN procedural. Não é uma malha triangular
 anatômica, e seus comprimentos euclidianos não são descritos como geodésicas.
 
+### 0.5-c2 — espelho Rust validado
+
+`brain-engine::PopulationField` reproduz o contrato 0.4 sem importar tipos web:
+CSR de vértices, projeção nó→vértice, pesos de kernel normalizados, atraso
+`u16`, histórico circular, buffers E/I e `wave_activity`. Parâmetros e
+integração permanecem em `f64`; toda escrita de estado publicado é quantizada
+explicitamente em `f32`, como ocorre nos `Float32Array` do oráculo.
+
+`fixtures/parity/field-observables-v1.json` contém topologia mínima, sequência
+de spikes, snapshots e observáveis. O gerador executa o TypeScript 0.4; os
+testes Cargo consomem o mesmo artefato. A validação da topologia ocorre na
+construção, não no laço quente.
+
 ### 0.7 — patch resolvido
 
 Um `ResolutionMap` define:
@@ -337,6 +350,11 @@ interface ObservableDefinition {
 ```
 
 O HUD recebe valor e metadados juntos. Um rótulo não pode reutilizar “intensidade” ou “volume” para grandezas fisicamente diferentes.
+
+Na 0.5-c2, `mean_absolute_weight` e `PopulationFiringRate` já existem no
+`brain-engine` e reproduzem o fixture do oráculo. Eles ainda não alimentam o
+HUD: essa troca pertence ao replay sombra e ao Worker, para não promover uma
+implementação apenas porque os valores unitários coincidem.
 
 ## Camadas de render
 

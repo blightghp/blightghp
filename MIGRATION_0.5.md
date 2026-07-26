@@ -62,7 +62,8 @@ Referências de plataforma:
 2. [x] Portar RNG e relógio; comparar vetores exatos TypeScript↔Rust.
 3. [x] Portar o CSR canônico; comparar IDs e offsets. A topologia procedural e
    seu hash permanecem no próximo corte.
-4. Portar o campo 0.4; comparar replay e convergência por grandeza.
+4. [x] Portar o campo 0.4 e observáveis essenciais; comparar um replay mínimo,
+   buffers quantizados em `f32` e refinamento temporal TypeScript↔Rust.
 5. Publicar snapshots Rust no Worker mantendo o renderer atual.
 6. Executar os dois motores em modo sombra por cenários curtos.
 7. Promover Wasm quando os envelopes e orçamentos forem aprovados.
@@ -71,10 +72,12 @@ Referências de plataforma:
 Não haverá dois motores permanentes. Duplicação temporária existe somente para
 demonstrar paridade.
 
-O artefato comum `fixtures/parity/discrete-v1.json` é consumido pelos testes
-Vitest e Cargo. Assim, uma alteração no contrato discreto não pode atualizar
-somente um runtime e conservar dois conjuntos independentes de resultados
-esperados.
+Os artefatos comuns `fixtures/parity/discrete-v1.json` e
+`fixtures/parity/field-observables-v1.json` são consumidos pelos gates Node e
+Cargo. O segundo é regenerado pelo oráculo TypeScript e verificado no
+`npm run check`; Rust deve reproduzir seus snapshots dentro da tolerância
+declarada. Assim, uma alteração não pode atualizar silenciosamente apenas um
+runtime.
 
 ## Política para C#
 
@@ -112,9 +115,10 @@ workflows, o que evita recursão; a própria documentação do GitHub registra e
 regra e também informa que esse commit não inicia outro build de Pages:
 [GITHUB_TOKEN](https://docs.github.com/en/actions/concepts/security/github_token).
 
-O repositório está atualmente com GitHub Actions desabilitado. A automação só
-passará a operar depois que o proprietário habilitar Actions; não é necessário
-adicionar PAT ou segredo para o caso de um único repositório.
+GitHub Actions está habilitado com uma allowlist de ações pinadas por SHA. CI,
+Pages e captura foram executados com sucesso nessa política; nenhuma ação
+genérica do Marketplace foi liberada. Não é necessário adicionar PAT ou segredo
+para o caso de um único repositório.
 
 ## Produto final e abas
 

@@ -169,6 +169,16 @@ de artefato versionado:
 | `f64` interno × snapshot `f32` | erro de quantização abaixo do orçamento do observável |
 | serial × paralelo futuro | mesma ordem lógica e tolerância previamente registrada |
 
+Os contratos executáveis atuais são:
+
+- `discrete-v1.json`: relógio, RNG e ordenação CSR;
+- `field-observables-v1.json`: projeção de spikes, seis passos do campo E/I,
+  buffers `f32`, peso absoluto médio e taxa populacional em janela;
+- `scripts/field_parity_fixture.js --check`: regenera o segundo artefato com o
+  oráculo TypeScript e falha se o arquivo versionado divergir;
+- testes Cargo: reproduzem o artefato e comprovam que o erro do passo médio é
+  menor que o do passo grosso no cenário de refinamento.
+
 Testes da ABI executam no alvo `wasm32-unknown-unknown` e em navegador real.
 Compilar não basta: o módulo precisa ser carregado dentro do Worker, receber um
 replay, publicar buffers e sobreviver a reset/dispose.

@@ -31,7 +31,7 @@ Worker de navegador real.
 | Gate | Resultado |
 | :-- | :-- |
 | `cargo fmt --all -- --check` | aprovado |
-| `cargo test --workspace` | 11 testes aprovados |
+| `cargo test --workspace` | 15 testes aprovados |
 | `cargo clippy --workspace --all-targets -- -D warnings` | aprovado |
 | `cargo check -p brain-wasm --target wasm32-unknown-unknown` | aprovado |
 | Clippy de `brain-wasm` no alvo Wasm | aprovado |
@@ -49,16 +49,14 @@ existe para validar a fronteira e não para sustentar uma alegação fisiológic
 Em 26 de julho de 2026:
 
 - `main` não possui proteção que impeça o commit automatizado;
-- GitHub Actions está desabilitado no repositório;
-- `sync-brain-gif.yml` está pronto, mas não executará enquanto Actions estiver
-  desabilitado;
+- GitHub Actions está habilitado com allowlist restrita às ações pinadas por SHA;
+- CI, Pages e `sync-brain-gif.yml` foram executados com sucesso nessa política;
 - nenhum PAT é necessário para a sincronização dentro do mesmo repositório;
 - o commit feito pelo `GITHUB_TOKEN` não deve ser usado para encadear outro
   workflow ou outro build de Pages.
 
-Habilitar Actions é uma decisão administrativa externa, não um ajuste de código.
-O desenvolvimento local da 0.5 pode começar sem ela; a sincronização efetiva do
-perfil não.
+O CI possui concorrência por branch, timeout explícito e disparo manual. A
+captura valida assinatura, tamanho máximo e origem do GIF antes do commit.
 
 ## Gate de saída da 0.5
 
@@ -72,7 +70,6 @@ A 0.5 só termina quando:
 6. o modo sombra não revelar divergência fora dos envelopes registrados;
 7. Rust/Wasm se tornar padrão e as equações TypeScript duplicadas forem removidas.
 
-O próximo trabalho autorizado pelo roadmap é, portanto, **0.5-c: paridade de
-campo e observáveis**. O corte 0.5-c1 já portou relógio, RNG endereçado e CSR
-canônico, usando um único artefato de vetores em Rust e TypeScript, antes de
-acrescentar nova fisiologia.
+O próximo trabalho autorizado pelo roadmap é **0.5-c3: replay sombra**. Os
+cortes c1 e c2 já portaram discretos, campo E/I e observáveis usando artefatos
+comuns a Rust e TypeScript, sem ainda alterar o motor que alimenta a interface.
