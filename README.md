@@ -3,7 +3,7 @@
 <samp>TO THE TRAINED EYE, THERE ARE NO COINCIDENCES...</samp>
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=4" width="760" alt="Rede neural tridimensional com atividade excitatória e inibitória" />
+  <img src="assets/brain.gif?v=d6c83e7f98c6" width="760" alt="Rede neural tridimensional com atividade excitatória e inibitória" />
 </a>
 
 <sub>▲ Abra o experimento para orbitar o modelo, isolar regiões e alterar estímulo, plasticidade e escala temporal.</sub>
