@@ -115,7 +115,7 @@ de qualidade da 0.5, antes de qualquer demonstração científica nova:
 
 - [x] **0.6-a · Contrato laminar:** seis camadas estáveis, populações E/I e
   classificação explícita das projeções recorrentes, feedforward e feedback.
-- [ ] **0.6-b · Tálamo e TRN:** relé excitatório, núcleo reticular inibitório,
+- [x] **0.6-b · Tálamo e TRN:** relé excitatório, núcleo reticular inibitório,
   retorno corticotalâmico e ritmo fenomenológico sustentado pelo circuito.
 - [ ] **0.6-c · Motor e Worker:** estado corticotalâmico no snapshot Rust,
   ABI Wasm e protocolo transferível sem equações no shell.
