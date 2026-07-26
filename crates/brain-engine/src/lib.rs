@@ -24,6 +24,8 @@ pub use simulation::{
 
 pub const ENGINE_SCHEMA_VERSION: u32 = 1;
 pub const LAYER_COUNT: usize = 6;
+pub const MAX_LAMINAR_GAIN: f64 = 4.0;
+pub const MAX_EXTERNAL_DRIVE: f64 = 16.0;
 
 /// A finite, strictly positive duration represented in SI seconds.
 ///
@@ -166,7 +168,7 @@ impl LaminarConfig {
     pub fn validate(&self) -> Result<(), EngineError> {
         for (target, row) in self.excitatory_projection.into_iter().enumerate() {
             for (source, value) in row.into_iter().enumerate() {
-                validate_non_negative_finite("excitatory_projection", value)?;
+                validate_bounded_non_negative("excitatory_projection", value, MAX_LAMINAR_GAIN)?;
                 if value > 0.0 {
                     let source_layer = layer_from_index(source);
                     let target_layer = layer_from_index(target);
@@ -184,7 +186,7 @@ impl LaminarConfig {
             .into_iter()
             .chain(self.excitatory_to_inhibitory_gain)
         {
-            validate_non_negative_finite("laminar_gain", value)?;
+            validate_bounded_non_negative("laminar_gain", value, MAX_LAMINAR_GAIN)?;
         }
         Ok(())
     }
@@ -250,7 +252,7 @@ impl LaminarEngine {
         external_drive: [f64; LAYER_COUNT],
     ) -> Result<LaminarSnapshot, EngineError> {
         for value in external_drive {
-            validate_non_negative_finite("external_drive", value)?;
+            validate_bounded_non_negative("external_drive", value, MAX_EXTERNAL_DRIVE)?;
         }
 
         let mut next_excitatory = [0.0; LAYER_COUNT];
@@ -328,6 +330,23 @@ fn validate_non_negative_finite(name: &'static str, value: f64) -> Result<(), En
     }
 }
 
+fn validate_bounded_non_negative(
+    name: &'static str,
+    value: f64,
+    maximum: f64,
+) -> Result<(), EngineError> {
+    validate_non_negative_finite(name, value)?;
+    if value <= maximum {
+        Ok(())
+    } else {
+        Err(EngineError::ParameterOutOfRange {
+            name,
+            value,
+            maximum,
+        })
+    }
+}
+
 const fn layer_from_index(index: usize) -> CorticalLayer {
     CorticalLayer::ALL[index]
 }
@@ -338,6 +357,11 @@ pub enum EngineError {
     InvalidParameter {
         name: &'static str,
         value: f64,
+    },
+    ParameterOutOfRange {
+        name: &'static str,
+        value: f64,
+        maximum: f64,
     },
     ForbiddenProjection {
         source: CorticalLayer,
@@ -352,6 +376,13 @@ impl fmt::Display for EngineError {
             Self::InvalidLayer(layer) => write!(formatter, "invalid cortical layer: {layer}"),
             Self::InvalidParameter { name, value } => {
                 write!(formatter, "{name} must be finite and valid, got {value}")
+            }
+            Self::ParameterOutOfRange {
+                name,
+                value,
+                maximum,
+            } => {
+                write!(formatter, "{name} must be <= {maximum}, got {value}")
             }
             Self::ForbiddenProjection { source, target } => {
                 write!(

@@ -28,8 +28,11 @@ Superfície revisada:
 
 | ID | Severidade | Estado | Descrição |
 | :-- | :-- | :-- | :-- |
-| L06-A-01 | média | aberto | ganhos finitos não possuem teto; valores próximos de `f64::MAX` podem transbordar somas intermediárias e contaminar o estado com `NaN` |
-| L06-A-02 | média | aberto | o drive externo também aceita qualquer valor finito, sem um envelope compatível com a transferência saturante |
+| L06-A-01 | média | fechado | ganhos agora são limitados por `MAX_LAMINAR_GAIN`; o limite e o primeiro valor acima dele possuem testes |
+| L06-A-02 | média | fechado | drives externos agora são limitados por `MAX_EXTERNAL_DRIVE`, antes de qualquer multiplicação |
 
 Critério de fechamento: tetos nomeados, erro explícito e testes nos limites e
 imediatamente acima deles.
+
+Fechamento: `ParameterOutOfRange` distingue valores finitos excessivos de
+`NaN`/infinito/negativo. Nenhum valor fora do envelope chega ao solver.

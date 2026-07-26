@@ -1,6 +1,6 @@
 use brain_engine::{
     projection_kind, CorticalLayer, EngineError, LaminarConfig, LaminarEngine, ProjectionKind,
-    LAYER_COUNT,
+    LAYER_COUNT, MAX_EXTERNAL_DRIVE, MAX_LAMINAR_GAIN,
 };
 
 #[test]
@@ -41,5 +41,35 @@ fn malformed_numbers_and_forbidden_paths_are_rejected() {
     assert!(matches!(
         LaminarEngine::new(forbidden),
         Err(EngineError::ForbiddenProjection { .. })
+    ));
+}
+
+#[test]
+fn gains_and_drives_obey_named_resource_envelopes() {
+    let mut at_gain_limit = LaminarConfig::default();
+    at_gain_limit.excitatory_projection[CorticalLayer::L2.index()][CorticalLayer::L4.index()] =
+        MAX_LAMINAR_GAIN;
+    let mut engine = LaminarEngine::new(at_gain_limit).expect("the declared limit is valid");
+    engine
+        .step([MAX_EXTERNAL_DRIVE; LAYER_COUNT])
+        .expect("the declared drive limit is valid");
+
+    let mut excessive_gain = LaminarConfig::default();
+    excessive_gain.excitatory_projection[CorticalLayer::L2.index()][CorticalLayer::L4.index()] =
+        MAX_LAMINAR_GAIN + f64::EPSILON * 8.0;
+    assert!(matches!(
+        LaminarEngine::new(excessive_gain),
+        Err(EngineError::ParameterOutOfRange {
+            name: "excitatory_projection",
+            ..
+        })
+    ));
+
+    assert!(matches!(
+        engine.step([MAX_EXTERNAL_DRIVE * 2.0; LAYER_COUNT]),
+        Err(EngineError::ParameterOutOfRange {
+            name: "external_drive",
+            ..
+        })
     ));
 }
