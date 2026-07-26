@@ -1,7 +1,5 @@
 import type { BrainData } from "./brain";
-import type { FieldSnapshot } from "./field";
-
-export const SIMULATION_PROTOCOL_VERSION = 2 as const;
+export const SIMULATION_PROTOCOL_VERSION = 3 as const;
 export const SIMULATION_STEP_SECONDS = 1 / 60;
 
 export type SimulationTick = number;
@@ -28,6 +26,22 @@ export interface SignalBatch {
   inhibitory: Uint8Array;
 }
 
+export interface FieldSnapshot {
+  nodeIndices: Uint32Array;
+  eField: Float32Array;
+  iField: Float32Array;
+  waveActivity: Float32Array;
+}
+
+export type EngineRuntime = "rust-wasm" | "diagnostic-fallback";
+
+export interface EngineDiagnostics {
+  runtime: EngineRuntime;
+  stateHash: string;
+  degraded: boolean;
+  detail?: string;
+}
+
 export interface NeuralSnapshot {
   schemaVersion: typeof SIMULATION_PROTOCOL_VERSION;
   tick: SimulationTick;
@@ -39,7 +53,8 @@ export interface NeuralSnapshot {
   activations: Float32Array;
   weights: Float32Array;
   signals: SignalBatch;
-  field?: FieldSnapshot;
+  field: FieldSnapshot;
+  diagnostics: EngineDiagnostics;
 }
 
 // O motor ainda não tem uma fila de entradas agendadas por tick; "advance" carrega
@@ -77,6 +92,10 @@ export type EngineCommand =
 export interface EngineReadyEvent {
   type: "ready";
   tick: SimulationTick;
+  runtime: EngineRuntime;
+  schemaVersion: typeof SIMULATION_PROTOCOL_VERSION;
+  degraded: boolean;
+  detail?: string;
 }
 
 export interface EngineSnapshotEvent {

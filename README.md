@@ -17,22 +17,22 @@
 Este experimento combina uma topologia cerebral procedural com uma simulação neural determinística. Os sinais visíveis não percorrem trajetórias decorativas: cada pulso nasce de um disparo, atravessa uma sinapse do grafo e chega ao neurônio de destino depois do atraso calculado para aquela conexão.
 
 O modelo foi desenhado para ser compreensível, mensurável e visualmente
-expressivo. O simulador publicado ainda é o baseline TypeScript da 0.4; a 0.5
-iniciou a migração das equações para um engine Rust comum ao desktop e ao
-navegador via WebAssembly. “Realista” aqui significa declarar unidades,
+expressivo. Desde a promoção 0.5, o simulador publicado executa as equações no
+engine Rust compilado para WebAssembly, dentro de um Web Worker; TypeScript
+coordena apenas apresentação e protocolo. “Realista” aqui significa declarar unidades,
 hipóteses, solver, erro e evidência — não afirmar que toda a fisiologia humana já
 foi reproduzida.
 
 ### O que está sendo simulado
 
-- **1.890 nós procedurais:** hemisférios, cerebelo e tronco usam uma semente estável via PRNG determinístico (`random.ts`); eles não representam 1.890 neurônios biológicos identificados.
-- **Estrutura de sinapses CSR (Compressed Sparse Row):** grafo sináptico comprimido (`network.ts`) para travessia e atualização eficiente de conexões.
-- **Campo populacional macroscópico E/I (`field.ts`):** kernel de grafo cortical com populações excitatória ($E$) e inibitória ($I$), histórico temporal e atrasos de condução efetivos.
+- **1.890 nós procedurais:** hemisférios, cerebelo e tronco usam uma semente estável; eles não representam 1.890 neurônios biológicos identificados.
+- **Estrutura de sinapses CSR (Compressed Sparse Row):** grafo sináptico comprimido no `brain-engine` para travessia e atualização eficiente de conexões.
+- **Campo populacional macroscópico E/I:** kernel de grafo cortical em Rust com populações excitatória ($E$) e inibitória ($I$), histórico temporal e atrasos de condução efetivos.
 - **Acoplamento bidirecional Campo-Spikes:** disparos alimentam localmente o campo e a diferença de atividade E/I modula o estado sub-limiar da rede.
 - **Cinética receptor-dependente AMPA e GABA-A:** condutâncias sinápticas rápidas (5ms para AMPA, 10ms para GABA-A) com integração temporal.
 - **Plasticidade STDP:** disparos próximos no tempo fortalecem ou enfraquecem sinapses excitatórias.
 - **Evidência Bayesiana:** cada mudança de estímulo atualiza a crença antes de modular a entrada da rede.
-- **Execução desacoplada em Worker:** simulação em thread dedicada (`simulation.worker.ts` e `engine-host.ts`), sem avançar o núcleo no frame gráfico.
+- **Execução Wasm desacoplada em Worker:** simulação em thread dedicada (`simulation.worker.ts`), com snapshots compactos transferidos sem cópia para o thread de apresentação.
 - **Atividade superficial & interpolação de snapshots:** a camada de renderização (`render-layers.ts`) apresenta o campo publicado e interpola snapshots consecutivos sem criar eventos.
 - **Foco de circuito, zoom & HUD instrumentado:** isolamento visual por região, zoom orbital e instrumentos nomeados (`Hz/nó`, `spikes`, estado LIF em `u.a.`, peso médio e `FPS`).
 
@@ -49,26 +49,29 @@ presets/eventos → brain-engine (Rust: matemática e estado)
 | Camada | Tecnologia | Responsabilidade atual |
 | :-- | :-- | :-- |
 | Núcleo 0.5 | Rust (`brain-engine`) | Relógio, RNG, CSR, campo E/I, observáveis, contrato laminar, unidades e tipos independentes de plataforma |
-| Ponte web | Rust/Wasm (`brain-wasm`) | ABI mínima `wasm-bindgen`, compilável para `wasm32-unknown-unknown` |
-| Oráculo 0.4 | TypeScript | LIF, AMPA/GABA-A, STDP, campo e versões legadas dos discretos mantidos temporariamente para testes de paridade |
-| Campo populacional | TypeScript + espelho Rust | Campo E/I 0.4 ainda alimenta a UI; o port Rust já passa paridade de projeção, atraso, snapshots e refinamento |
-| Motor & Worker | TypeScript · Web Worker | Execução em worker thread (`simulation.worker.ts`), desacoplada da UI via `engine-host.ts` |
-| Tempo & Protocolo | TypeScript | Relógio determinístico (`clock.ts`), protocolo de mensagens (`protocol.ts`) e observáveis (`observables.ts`) |
+| Ponte web | Rust/Wasm (`brain-wasm`) | ABI tipada `wasm-bindgen`, artefato versionado e validado para `wasm32-unknown-unknown` |
+| Evidência de migração | Fixture + Cargo + navegador | Replay sombra congelado, hashes exatos e teste da ABI dentro de um Worker real |
+| Campo populacional | Rust (`brain-engine`) | Campo E/I 0.4, projeção, atrasos, acoplamento e observáveis; não existe integrador TypeScript paralelo |
+| Motor & Worker | Rust/Wasm · Web Worker | Wasm é o padrão; snapshots tipados usam `postMessage` com lista de transferência |
+| Tempo & Protocolo | TypeScript | Relógio de apresentação (`clock.ts`) e protocolo v3 (`protocol.ts`); o estado científico nasce no Rust |
 | Topologia & Render | Three.js · TypeScript | Anatomia procedural, atividade superficial (`render-layers.ts`), interpolação de snapshots e foco regional |
 | Inferência | TypeScript | Atualização Bayesiana normalizada entre duas hipóteses |
 | Visualização | Three.js · WebGL | Instâncias, bloom, envoltórios anatômicos, atividade por vértice e instrumentação de FPS |
 | Contrato | Zod | Validação dos parâmetros recebidos pela interface e pela URL |
 | Desktop | Tauri 2 · Rust | Empacotamento nativo; passará a importar o mesmo `brain-engine` |
-| Qualidade | Cargo · Vitest | Testes nativos/Wasm, paridade, convergência, shell e captura |
+| Qualidade | Cargo · Vitest · Puppeteer | Testes nativos, replay Wasm, Worker em navegador, shell e captura |
 
-O browser continuará usando um Worker: Wasm retira o cálculo do shell, mas não
-deve disputar o thread da interface. TypeScript permanece como camada fina de
+O browser usa um Worker: Wasm retira o cálculo do shell e não disputa o thread
+da interface. Se a ABI não carregar, um fallback diagnóstico publica apenas
+estado inerte e a causa da falha — ele não simula nem inventa atividade.
+TypeScript permanece como camada fina de
 DOM, acessibilidade e apresentação até que uma migração gráfica também demonstre
 benefício. C# não faz parte do payload web; pode surgir como serviço offline
 somente depois de benchmark e necessidade operacional.
 
-O gate da 0.4 está em [AUDIT_0.4.md](AUDIT_0.4.md), e a migração ativa está em
-[MIGRATION_0.5.md](MIGRATION_0.5.md).
+O gate da 0.4 está em [AUDIT_0.4.md](AUDIT_0.4.md), o plano em
+[MIGRATION_0.5.md](MIGRATION_0.5.md) e a promoção em
+[AUDIT_0.5_PROMOTION.md](AUDIT_0.5_PROMOTION.md).
 
 ### Executar localmente
 
@@ -84,6 +87,10 @@ npm run check
 cargo test --workspace
 cargo check -p brain-wasm --target wasm32-unknown-unknown
 ```
+
+Para regenerar a ABI comprometida, instale `wasm-bindgen-cli` 0.2.126 e execute
+`npm run build:wasm`. A CI recompila e compara esses artefatos, além de abrir o
+simulador em Chromium para provar que o Worker carregou Rust/Wasm.
 
 O GIF do perfil é reproduzível e usa o mesmo renderer da aplicação:
 
@@ -107,7 +114,9 @@ Cada versão combina uma melhoria do modelo com um novo patamar gráfico. O proj
 - [MIGRATION_0.5.md](MIGRATION_0.5.md) define a fronteira Rust/Wasm, o papel
   opcional de C# e a sincronização do GIF;
 - [AUDIT_0.5_ENTRY.md](AUDIT_0.5_ENTRY.md) registra o gate de entrada, as
-  correções executadas e o que ainda bloqueia a promoção do novo motor;
+  correções que permitiram iniciar a migração;
+- [AUDIT_0.5_PROMOTION.md](AUDIT_0.5_PROMOTION.md) registra replay sombra,
+  hashes, custos, Worker, fallback e critérios aprovados da promoção;
 - [REFERENCES.md](REFERENCES.md) reúne a base científica usada nas decisões.
 
 ## Sobre mim

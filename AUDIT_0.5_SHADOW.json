@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "fixtureSha256": "771c08967ac12d45e37b838db7c259dca12ca203828f27ca8d476e1f39799cce",
+  "scenario": "short-0.5-c3",
+  "ticks": [
+    30,
+    75,
+    120
+  ],
+  "promotionEnvelope": {
+    "maximumAbsoluteDivergence": 1e-7,
+    "exactStateHashesRequired": true
+  },
+  "samples": [
+    {
+      "tick": 30,
+      "typescriptHash": "1650c853c33b0f62",
+      "rustWasmHash": "1650c853c33b0f62",
+      "exactHash": true,
+      "maximumAbsoluteDivergence": 0
+    },
+    {
+      "tick": 75,
+      "typescriptHash": "14b74aa951d61769",
+      "rustWasmHash": "14b74aa951d61769",
+      "exactHash": true,
+      "maximumAbsoluteDivergence": 0
+    },
+    {
+      "tick": 120,
+      "typescriptHash": "abee641df0a43d0c",
+      "rustWasmHash": "abee641df0a43d0c",
+      "exactHash": true,
+      "maximumAbsoluteDivergence": 0
+    }
+  ],
+  "cost": {
+    "typescriptMilliseconds": 3.066400000001522,
+    "rustWasmMilliseconds": 0.6203999999997905,
+    "wasmToTypescriptRatio": 0.2023219410381824,
+    "note": "Medição curta de fronteira; serve como regressão, não como benchmark de capacidade."
+  },
+  "passed": true
+}

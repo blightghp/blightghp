@@ -18,6 +18,13 @@ declare global {
     __BRAIN_ENGINE__?: {
       capture: (time: number, rotation: number) => Promise<void>;
       setCaptureMode: (enabled: boolean) => Promise<void>;
+      diagnostics: () => {
+        runtime: string;
+        schemaVersion: number;
+        stateHash?: string;
+        degraded: boolean;
+        detail?: string;
+      };
     };
   }
 }
@@ -54,6 +61,7 @@ let captureMode = false;
 let captureTime = 0;
 let metricAccumulator = 0;
 let currentFocusRegion: BrainRegion | "all" = "all";
+let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
 
 const pendingResponses: Array<(event: EngineEvent) => void> = [];
 const activitySamples = Array.from({ length: 96 }, () => 0);
@@ -281,8 +289,16 @@ function setupInterface(): void {
 
 async function resolveRuntime(): Promise<void> {
   const status = element("#runtime-status");
+  if (engineReady?.runtime === "rust-wasm") {
+    status.textContent = `RUST/WASM · WORKER · ABI V${engineReady.schemaVersion}`;
+    return;
+  }
+  if (engineReady?.degraded) {
+    status.textContent = "FALLBACK DIAGNÓSTICO · WASM INDISPONÍVEL";
+    return;
+  }
   if (!window.__TAURI_INTERNALS__) {
-    status.textContent = "SIMULAÇÃO TS · WEBGL · ZOD";
+    status.textContent = "RUST/WASM · WORKER · WEBGL";
     return;
   }
   try {
@@ -346,12 +362,20 @@ async function init(): Promise<void> {
   worker.onmessage = (event: MessageEvent<EngineEvent>) => {
     pendingResponses.shift()?.(event.data);
   };
-  await sendCommand({
+  const readyEvent = await sendCommand({
     type: "initialize",
     topology: brainData,
     fixedStep: SIMULATION_STEP_SECONDS,
     seed: brainData.seed,
   });
+  if (readyEvent.type !== "ready") {
+    throw new Error(
+      readyEvent.type === "fault"
+        ? readyEvent.message
+        : "O Worker não confirmou a inicialização do motor.",
+    );
+  }
+  engineReady = readyEvent;
 
   setupInterface();
   layers.updateVisibility(state, currentFocusRegion);
@@ -392,6 +416,26 @@ async function init(): Promise<void> {
       if (event.type === "snapshot") latestSnapshot = event.snapshot;
       captureTime = time;
       if (latestSnapshot) renderFrame(latestSnapshot, time, rotation);
+    },
+    diagnostics() {
+      return {
+        runtime:
+          latestSnapshot?.diagnostics.runtime ??
+          engineReady?.runtime ??
+          "uninitialized",
+        schemaVersion:
+          latestSnapshot?.schemaVersion ??
+          engineReady?.schemaVersion ??
+          0,
+        stateHash: latestSnapshot?.diagnostics.stateHash,
+        degraded:
+          latestSnapshot?.diagnostics.degraded ??
+          engineReady?.degraded ??
+          true,
+        detail:
+          latestSnapshot?.diagnostics.detail ??
+          engineReady?.detail,
+      };
     },
   };
 

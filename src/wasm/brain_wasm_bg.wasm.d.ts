@@ -1,0 +1,38 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const __wbg_wasmlaminarengine_free: (a: number, b: number) => void;
+export const __wbg_wasmneuralengine_free: (a: number, b: number) => void;
+export const wasmlaminarengine_excitatory: (a: number) => [number, number];
+export const wasmlaminarengine_inhibitory: (a: number) => [number, number];
+export const wasmlaminarengine_new: (a: number) => [number, number, number];
+export const wasmlaminarengine_reset: (a: number) => void;
+export const wasmlaminarengine_schema_version: () => number;
+export const wasmlaminarengine_step_with_layer_four_drive: (a: number, b: number) => [number, number];
+export const wasmlaminarengine_tick: (a: number) => bigint;
+export const wasmneuralengine_activations: (a: number) => [number, number];
+export const wasmneuralengine_advance_to: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+export const wasmneuralengine_field_excitatory: (a: number) => [number, number];
+export const wasmneuralengine_field_inhibitory: (a: number) => [number, number];
+export const wasmneuralengine_field_node_indices: (a: number) => [number, number];
+export const wasmneuralengine_field_wave_activity: (a: number) => [number, number];
+export const wasmneuralengine_firing_rate: (a: number) => number;
+export const wasmneuralengine_mean_weight: (a: number) => number;
+export const wasmneuralengine_new: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number, y: number, z: number, a1: number, b1: number) => [number, number, number];
+export const wasmneuralengine_potentials: (a: number) => [number, number];
+export const wasmneuralengine_reset: (a: number, b: number) => void;
+export const wasmneuralengine_schema_version: () => number;
+export const wasmneuralengine_signal_inhibitory: (a: number) => [number, number];
+export const wasmneuralengine_signal_progress: (a: number) => [number, number];
+export const wasmneuralengine_signal_strength: (a: number) => [number, number];
+export const wasmneuralengine_signal_synapse_ids: (a: number) => [number, number];
+export const wasmneuralengine_spikes: (a: number) => number;
+export const wasmneuralengine_state_hash: (a: number) => [number, number];
+export const wasmneuralengine_tick: (a: number) => number;
+export const wasmneuralengine_time_seconds: (a: number) => number;
+export const wasmneuralengine_weights: (a: number) => [number, number];
+export const __wbindgen_externrefs: WebAssembly.Table;
+export const __wbindgen_free: (a: number, b: number, c: number) => void;
+export const __externref_table_dealloc: (a: number) => void;
+export const __wbindgen_malloc: (a: number, b: number) => number;
+export const __wbindgen_start: () => void;

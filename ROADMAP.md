@@ -65,17 +65,17 @@ migração; ela não deve reinterpretar o grafo k-NN atual como anatomia parcela
   `wasm32-unknown-unknown`.
 - [x] **0.5-b · Contrato laminar mínimo:** seis IDs estáveis, matrizes
   alvo×origem, passo fixo, relaxação exponencial e estados E/I limitados.
-- [ ] **0.5-c · Paridade:** portar relógio, RNG, CSR, campo 0.4 e observáveis,
+- [x] **0.5-c · Paridade:** portar relógio, RNG, CSR, campo 0.4 e observáveis,
   fixando vetores TS↔Rust antes de trocar o engine padrão.
   - [x] **0.5-c1 · Discretos:** tipos de tick/segundo, relógio, RNG endereçado e
     CSR canônico em Rust, aprovados pelo mesmo fixture JSON consumido no Vitest.
   - [x] **0.5-c2 · Campo e observáveis:** portar o campo E/I 0.4, agregação de
     spikes e instrumentos, com convergência e envelopes cruzados.
-  - [ ] **0.5-c3 · Replay sombra:** executar cenários curtos nos dois motores e
+  - [x] **0.5-c3 · Replay sombra:** executar cenários curtos nos dois motores e
     registrar divergência, custo e hashes antes da promoção.
-- [ ] **0.5-d · Worker Wasm:** carregar o módulo dentro do Worker, transferir
+- [x] **0.5-d · Worker Wasm:** carregar o módulo dentro do Worker, transferir
   snapshots compactos e manter o thread de apresentação livre.
-- [ ] **0.5-e · Promoção:** tornar Rust/Wasm o padrão, conservar fallback
+- [x] **0.5-e · Promoção:** tornar Rust/Wasm o padrão, conservar fallback
   diagnóstico temporário e remover as equações duplicadas em TypeScript.
 - [x] **0.5-f · Perfil vivo:** workflow reproduzível para capturar o simulador,
   atualizar `brain.gif` e carimbar a URL no README com o SHA de origem.

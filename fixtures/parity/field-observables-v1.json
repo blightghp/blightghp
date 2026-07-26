@@ -85,6 +85,78 @@
         0,
         0
       ]
+    },
+    "simulation": {
+      "seed": 12345,
+      "nodeZ": [
+        0.82,
+        0.71,
+        0.9,
+        -0.4
+      ],
+      "groups": {
+        "leftHemi": [
+          0,
+          1
+        ],
+        "rightHemi": [
+          2
+        ],
+        "cerebellum": [
+          3
+        ],
+        "stem": []
+      },
+      "synapses": [
+        {
+          "from": 0,
+          "to": 1,
+          "weight": 0.5,
+          "delay": 0.02,
+          "plastic": true
+        },
+        {
+          "from": 1,
+          "to": 2,
+          "weight": -0.4,
+          "delay": 0.03,
+          "plastic": false
+        },
+        {
+          "from": 2,
+          "to": 0,
+          "weight": 0.45,
+          "delay": 0.02,
+          "plastic": true
+        },
+        {
+          "from": 0,
+          "to": 2,
+          "weight": 0.3,
+          "delay": 0.04,
+          "plastic": true
+        }
+      ],
+      "advances": [
+        {
+          "targetTick": 30,
+          "intensity": 0.65,
+          "confidence": 0.7,
+          "learningRate": 0.004
+        },
+        {
+          "targetTick": 75,
+          "intensity": 0.3,
+          "confidence": 0.8,
+          "learningRate": 0.01
+        },
+        {
+          "targetTick": 120,
+          "intensity": 0.9,
+          "confidence": 0.55,
+          "learningRate": 0.002
+        }
+      ]
     }
   },
   "expected": {
@@ -210,6 +282,137 @@
       6.666666666666667,
       6.666666666666667,
       0
+    ],
+    "simulationSnapshots": [
+      {
+        "tick": 30,
+        "firingRate": 3.75,
+        "spikes": 0,
+        "meanWeight": 0.41286973655223846,
+        "potentials": [
+          0.00027694462914951146,
+          0.052429474890232086,
+          0.0009507272043265402,
+          0
+        ],
+        "activations": [
+          0.9394130706787109,
+          0,
+          0.5352613925933838,
+          0
+        ],
+        "weights": [
+          0.5,
+          -0.4000000059604645,
+          0.45254653692245483,
+          0.29893240332603455
+        ],
+        "signalSynapseIds": [
+          0,
+          3
+        ],
+        "signalProgress": [
+          0.5,
+          0.25
+        ],
+        "signalStrength": [
+          0.5,
+          0.29893240332603455
+        ],
+        "signalInhibitory": [
+          0,
+          0
+        ],
+        "fieldExcitatory": [
+          0.12046661227941513,
+          0.00021988010848872364,
+          0.00843670591711998
+        ],
+        "fieldInhibitory": [
+          0,
+          0,
+          0
+        ],
+        "hash": "1650c853c33b0f62"
+      },
+      {
+        "tick": 75,
+        "firingRate": 1.25,
+        "spikes": 0,
+        "meanWeight": 0.41369224339723587,
+        "potentials": [
+          0.046895429491996765,
+          0.07231061905622482,
+          0.00025055484729819,
+          0
+        ],
+        "activations": [
+          0.22313012182712555,
+          0,
+          0.39160558581352234,
+          0
+        ],
+        "weights": [
+          0.5,
+          -0.4000000059604645,
+          0.4457365870475769,
+          0.3090323805809021
+        ],
+        "signalSynapseIds": [],
+        "signalProgress": [],
+        "signalStrength": [],
+        "signalInhibitory": [],
+        "fieldExcitatory": [
+          0.000004921285380987683,
+          0.000012083012734365184,
+          0.000012902676644444
+        ],
+        "fieldInhibitory": [
+          0,
+          0,
+          0
+        ],
+        "hash": "14b74aa951d61769"
+      },
+      {
+        "tick": 120,
+        "firingRate": 3.75,
+        "spikes": 0,
+        "meanWeight": 0.41421573609113693,
+        "potentials": [
+          0.06212547793984413,
+          0.17511264979839325,
+          0.005975793581455946,
+          0
+        ],
+        "activations": [
+          0.5352613925933838,
+          0,
+          0.6872892379760742,
+          0
+        ],
+        "weights": [
+          0.5,
+          -0.4000000059604645,
+          0.44544869661331177,
+          0.3114142417907715
+        ],
+        "signalSynapseIds": [],
+        "signalProgress": [],
+        "signalStrength": [],
+        "signalInhibitory": [],
+        "fieldExcitatory": [
+          0.0005284181679598987,
+          0.001855533686466515,
+          0.004682761617004871
+        ],
+        "fieldInhibitory": [
+          0,
+          0,
+          0
+        ],
+        "hash": "abee641df0a43d0c"
+      }
     ]
   }
 }

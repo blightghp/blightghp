@@ -64,20 +64,20 @@ Referências de plataforma:
    seu hash permanecem no próximo corte.
 4. [x] Portar o campo 0.4 e observáveis essenciais; comparar um replay mínimo,
    buffers quantizados em `f32` e refinamento temporal TypeScript↔Rust.
-5. Publicar snapshots Rust no Worker mantendo o renderer atual.
-6. Executar os dois motores em modo sombra por cenários curtos.
-7. Promover Wasm quando os envelopes e orçamentos forem aprovados.
-8. Remover a integração TypeScript; manter apenas tipos/protocolo gerados.
+5. [x] Publicar snapshots Rust no Worker mantendo o renderer atual.
+6. [x] Executar os dois motores em modo sombra por cenários curtos.
+7. [x] Promover Wasm após aprovação dos envelopes e custos registrados.
+8. [x] Remover a integração TypeScript; manter somente shell e protocolo.
 
-Não haverá dois motores permanentes. Duplicação temporária existe somente para
-demonstrar paridade.
+Não há dois motores permanentes. O integrador TypeScript foi removido depois do
+replay sombra; o fallback diagnóstico é inerte e não contém equações.
 
 Os artefatos comuns `fixtures/parity/discrete-v1.json` e
 `fixtures/parity/field-observables-v1.json` são consumidos pelos gates Node e
-Cargo. O segundo é regenerado pelo oráculo TypeScript e verificado no
-`npm run check`; Rust deve reproduzir seus snapshots dentro da tolerância
-declarada. Assim, uma alteração não pode atualizar silenciosamente apenas um
-runtime.
+Cargo. O segundo preserva os snapshots finais do oráculo TypeScript usado antes
+da promoção. `npm run check:shadow-replay` recompõe o cenário no Wasm e exige
+os mesmos hashes, enquanto Cargo verifica o mesmo artefato nativamente. O
+relatório imutável de custo e divergência está em `AUDIT_0.5_SHADOW.json`.
 
 ## Política para C#
 

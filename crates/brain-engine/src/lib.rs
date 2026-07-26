@@ -7,6 +7,7 @@ mod field;
 mod network;
 mod observables;
 mod random;
+mod simulation;
 
 pub use clock::{ClockError, ClockFrame, FixedStepClock, SimulationTick, MAX_SAFE_TICK};
 pub use field::{
@@ -16,6 +17,10 @@ pub use field::{
 pub use network::{CsrError, SynapseCsr, SynapseEndpoint};
 pub use observables::{mean_absolute_weight, ObservableError, PopulationFiringRate};
 pub use random::{random_u32, random_unit};
+pub use simulation::{
+    NeuralSimulation, NeuralStimulus, SignalBatch, SimulationConfig, SimulationError,
+    SimulationSnapshot, SimulationSynapse, SIMULATION_SCHEMA_VERSION,
+};
 
 pub const ENGINE_SCHEMA_VERSION: u32 = 1;
 pub const LAYER_COUNT: usize = 6;

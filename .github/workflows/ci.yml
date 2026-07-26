@@ -50,6 +50,16 @@ jobs:
       - name: Testes do workspace Rust
         run: cargo test --workspace
       - name: Compilação WebAssembly
-        run: cargo check -p brain-wasm --target wasm32-unknown-unknown
+        run: cargo build -p brain-wasm --release --target wasm32-unknown-unknown
+      - name: Gerador da ABI Wasm
+        run: cargo install wasm-bindgen-cli --version 0.2.126 --locked
+      - name: Artefato Wasm sincronizado
+        run: |
+          rm -rf /tmp/brain-wasm-bindings
+          wasm-bindgen target/wasm32-unknown-unknown/release/brain_wasm.wasm --out-dir /tmp/brain-wasm-bindings --target web --typescript
+          diff -u src/wasm/brain_wasm.js /tmp/brain-wasm-bindings/brain_wasm.js
+          diff -u src/wasm/brain_wasm.d.ts /tmp/brain-wasm-bindings/brain_wasm.d.ts
+          diff -u src/wasm/brain_wasm_bg.wasm.d.ts /tmp/brain-wasm-bindings/brain_wasm_bg.wasm.d.ts
+          cmp src/wasm/brain_wasm_bg.wasm /tmp/brain-wasm-bindings/brain_wasm_bg.wasm
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings

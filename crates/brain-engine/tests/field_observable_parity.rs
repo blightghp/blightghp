@@ -1,6 +1,7 @@
 use brain_engine::{
-    mean_absolute_weight, project_spikes_to_field, FieldConfig, FieldTopology, NeuronKind,
-    PopulationField, PopulationFiringRate, Seconds,
+    mean_absolute_weight, project_spikes_to_field, FieldConfig, FieldTopology, NeuralSimulation,
+    NeuralStimulus, NeuronKind, PopulationField, PopulationFiringRate, Seconds, SimulationConfig,
+    SimulationSynapse,
 };
 use serde::Deserialize;
 
@@ -23,6 +24,7 @@ struct Input {
     projection_spikes: Vec<u8>,
     field_steps: Vec<Vec<usize>>,
     observable: ObservableFixture,
+    simulation: SimulationFixture,
 }
 
 #[derive(Debug, Deserialize)]
@@ -63,12 +65,48 @@ struct ObservableFixture {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct SimulationFixture {
+    seed: u32,
+    node_z: Vec<f64>,
+    groups: GroupsFixture,
+    synapses: Vec<SimulationSynapseFixture>,
+    advances: Vec<AdvanceFixture>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GroupsFixture {
+    left_hemi: Vec<u32>,
+    right_hemi: Vec<u32>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SimulationSynapseFixture {
+    from: u32,
+    to: u32,
+    weight: f32,
+    delay: f64,
+    plastic: bool,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AdvanceFixture {
+    target_tick: u64,
+    intensity: f64,
+    confidence: f64,
+    learning_rate: f64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Expected {
     projected_excitatory: Vec<f32>,
     projected_inhibitory: Vec<f32>,
     field_snapshots: Vec<SnapshotFixture>,
     mean_absolute_weight: f64,
     firing_rates: Vec<f64>,
+    simulation_snapshots: Vec<SimulationSnapshotFixture>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -77,6 +115,25 @@ struct SnapshotFixture {
     excitatory: Vec<f32>,
     inhibitory: Vec<f32>,
     wave_activity: Vec<f32>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SimulationSnapshotFixture {
+    tick: u64,
+    firing_rate: f64,
+    spikes: u32,
+    mean_weight: f64,
+    potentials: Vec<f32>,
+    activations: Vec<f32>,
+    weights: Vec<f32>,
+    signal_synapse_ids: Vec<u32>,
+    signal_progress: Vec<f32>,
+    signal_strength: Vec<f32>,
+    signal_inhibitory: Vec<u8>,
+    field_excitatory: Vec<f32>,
+    field_inhibitory: Vec<f32>,
+    hash: String,
 }
 
 fn fixture() -> Fixture {
@@ -191,6 +248,71 @@ fn rust_observables_match_the_typescript_oracle_fixture() {
         .zip(fixture.expected.firing_rates)
     {
         assert!((rate.sample(spikes) - expected).abs() <= 1.0e-12);
+    }
+}
+
+#[test]
+fn complete_rust_simulation_matches_the_typescript_replay() {
+    let fixture = fixture();
+    let kinds = neuron_kinds(&fixture.input.neuron_kinds);
+    let field_topology = topology(fixture.input.topology);
+    let simulation_fixture = fixture.input.simulation;
+    let mut cortical_nodes = simulation_fixture.groups.left_hemi;
+    cortical_nodes.extend(simulation_fixture.groups.right_hemi);
+    let synapses = simulation_fixture
+        .synapses
+        .into_iter()
+        .map(|synapse| SimulationSynapse {
+            from: synapse.from,
+            to: synapse.to,
+            weight: synapse.weight,
+            delay_seconds: synapse.delay,
+            plastic: synapse.plastic,
+        })
+        .collect();
+    let mut simulation = NeuralSimulation::new(SimulationConfig {
+        seed: simulation_fixture.seed,
+        fixed_step: Seconds::try_new(fixture.input.config.dt_seconds).unwrap(),
+        neuron_kinds: kinds,
+        synapses,
+        cortical_nodes,
+        node_z: simulation_fixture.node_z,
+        field_topology,
+    })
+    .unwrap();
+
+    for (advance, expected) in simulation_fixture
+        .advances
+        .into_iter()
+        .zip(fixture.expected.simulation_snapshots)
+    {
+        simulation.set_plasticity(advance.learning_rate);
+        let snapshot = simulation
+            .advance_to(
+                advance.target_tick,
+                NeuralStimulus {
+                    intensity: advance.intensity,
+                    confidence: advance.confidence,
+                },
+            )
+            .unwrap();
+        assert_eq!(snapshot.tick, expected.tick);
+        assert_eq!(snapshot.spikes, expected.spikes);
+        assert!((snapshot.firing_rate - expected.firing_rate).abs() <= 1.0e-12);
+        assert!((snapshot.mean_weight - expected.mean_weight).abs() <= 1.0e-12);
+        assert_f32_vectors_close(&snapshot.potentials, &expected.potentials);
+        assert_f32_vectors_close(&snapshot.activations, &expected.activations);
+        assert_f32_vectors_close(&snapshot.weights, &expected.weights);
+        assert_eq!(snapshot.signals.synapse_ids, expected.signal_synapse_ids);
+        assert_f32_vectors_close(&snapshot.signals.progress, &expected.signal_progress);
+        assert_f32_vectors_close(&snapshot.signals.strength, &expected.signal_strength);
+        assert_eq!(snapshot.signals.inhibitory, expected.signal_inhibitory);
+        assert_f32_vectors_close(&snapshot.field.excitatory, &expected.field_excitatory);
+        assert_f32_vectors_close(&snapshot.field.inhibitory, &expected.field_inhibitory);
+        assert_eq!(
+            snapshot.state_hash,
+            u64::from_str_radix(&expected.hash, 16).unwrap()
+        );
     }
 }
 

@@ -1,19 +1,84 @@
-import { EngineHost } from "./engine-host";
-import type { EngineCommand } from "./protocol";
+import { generateBrainData } from "./brain";
+import type { EngineCommand, EngineEvent, EngineSnapshotEvent } from "./protocol";
+import {
+  DiagnosticFallbackHost,
+  snapshotTransferList,
+  WasmEngineHost,
+} from "./wasm-engine-host";
 
-// Adaptador fino: toda a lógica mora em EngineHost, testável sem um Worker real.
-// O tsconfig do projeto usa a lib DOM (não WebWorker), então o escopo global do
-// Worker é acessado por um cast estreito em vez de depender dos tipos ambientes.
 interface WorkerGlobal {
   onmessage: ((event: MessageEvent<EngineCommand>) => void) | null;
-  postMessage: (message: unknown) => void;
+  postMessage: (message: unknown, transfer?: Transferable[]) => void;
 }
 
 const workerScope = self as unknown as WorkerGlobal;
-const host = new EngineHost();
+const wasm = new WasmEngineHost();
+const fallback = new DiagnosticFallbackHost();
+let active: WasmEngineHost | DiagnosticFallbackHost = wasm;
+let initialization: Extract<EngineCommand, { type: "initialize" }> | undefined;
+let commandQueue = Promise.resolve();
+
+function publish(event: EngineEvent): void {
+  if (event.type === "snapshot") {
+    workerScope.postMessage(event, snapshotTransferList(event.snapshot));
+  } else {
+    workerScope.postMessage(event);
+  }
+}
+
+function fault(error: unknown): void {
+  publish({
+    type: "fault",
+    code: "engine-command-failed",
+    message: error instanceof Error ? error.message : String(error),
+  });
+}
+
+async function handle(command: EngineCommand): Promise<void> {
+  switch (command.type) {
+    case "initialize":
+      initialization = command;
+      try {
+        publish(await wasm.initialize(command));
+        active = wasm;
+      } catch (error) {
+        active = fallback;
+        publish(fallback.initialize(command, error));
+      }
+      return;
+    case "advance":
+      publish(active.advance(command) as EngineSnapshotEvent);
+      return;
+    case "reset":
+      if (!initialization) throw new Error("reset recebido antes de initialize");
+      if (command.seed === undefined) {
+        publish(active.reset());
+        return;
+      }
+      initialization = {
+        ...initialization,
+        seed: command.seed,
+        topology: generateBrainData({
+          ...initialization.topology.generation,
+          seed: command.seed,
+        }),
+      };
+      try {
+        publish(await wasm.initialize(initialization));
+        active = wasm;
+      } catch (error) {
+        active = fallback;
+        publish(fallback.initialize(initialization, error));
+      }
+      return;
+    case "dispose":
+      wasm.dispose();
+      fallback.dispose();
+      initialization = undefined;
+      return;
+  }
+}
 
 workerScope.onmessage = (event) => {
-  for (const outgoing of host.handle(event.data)) {
-    workerScope.postMessage(outgoing);
-  }
+  commandQueue = commandQueue.then(() => handle(event.data)).catch(fault);
 };

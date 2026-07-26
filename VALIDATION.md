@@ -149,16 +149,17 @@ Se uma hipótese ainda não possui evidência suficiente, ela permanece disponí
 
 ### Promoção da 0.4
 
-A evidência executável da superfície está concentrada em `brain.test.ts`,
-`field.test.ts`, `simulation.test.ts`, `engine-host.test.ts` e
-`render-layers.test.ts`. O resultado da auditoria, incluindo os limites que não
-foram promovidos a afirmações fisiológicas, está em
+A evidência executável original da superfície foi congelada nos fixtures antes
+da remoção do integrador TypeScript. A topologia e o renderer continuam cobertos
+por `brain.test.ts` e `render-layers.test.ts`; dinâmica, campo e observáveis são
+reexecutados pelos testes Cargo. O resultado da auditoria, incluindo os limites
+que não foram promovidos a afirmações fisiológicas, está em
 [AUDIT_0.4.md](AUDIT_0.4.md).
 
 ## Matriz de validação Rust/Wasm da 0.5
 
-O motor Rust só substitui o oráculo TypeScript por subsistema. Cada linha precisa
-de artefato versionado:
+O motor Rust substituiu o oráculo TypeScript por subsistema; a promoção exigiu
+um artefato versionado em cada linha:
 
 | Comparação | Contrato |
 | :-- | :-- |
@@ -174,9 +175,10 @@ Os contratos executáveis atuais são:
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
 - `field-observables-v1.json`: projeção de spikes, seis passos do campo E/I,
   buffers `f32`, peso absoluto médio e taxa populacional em janela;
-- `scripts/field_parity_fixture.js --check`: regenera o segundo artefato com o
-  oráculo TypeScript e falha se o arquivo versionado divergir;
-- testes Cargo: reproduzem o artefato e comprovam que o erro do passo médio é
+- `scripts/shadow_replay.js`: recompõe o replay no Wasm e exige os hashes do
+  oráculo congelado e o SHA-256 auditado do fixture;
+- testes Cargo: reproduzem o artefato, inclusive o replay neural completo, e
+  comprovam que o erro do passo médio é
   menor que o do passo grosso no cenário de refinamento.
 
 Testes da ABI executam no alvo `wasm32-unknown-unknown` e em navegador real.

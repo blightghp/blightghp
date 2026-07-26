@@ -1,22 +1,22 @@
 # Arquitetura estrutural
 
 Esta arquitetura registra a evolução desde o motor TypeScript da 0.2 até o
-núcleo Rust/Wasm iniciado na 0.5. Um módulo só é separado quando passa a ter
+núcleo Rust/Wasm promovido na 0.5. Um módulo só é separado quando passa a ter
 estado, ciclo de vida, fronteira de plataforma ou testes próprios.
 
-## Ponto de partida
+## Baseline histórico e estado promovido
 
-O baseline promovido da 0.4 tem quatro peças centrais:
+O baseline promovido da 0.4 tinha quatro peças centrais:
 
 - `brain.ts` gera geometria, regiões, tipos de unidade e conexões;
-- `simulation.ts` guarda o estado mutável e executa integração, atrasos e STDP;
+- `simulation.ts` guardava o estado mutável e executava integração, atrasos e STDP;
 - `inference.ts` implementa o experimento Bayesiano escalar atual;
 - `main.ts` inicializa a aplicação e ainda concentra relógio, cena, renderização, HUD, captura e controles.
 
-Esse baseline permanece temporariamente como oráculo de paridade. A partir da
-0.5, `crates/brain-engine` recebe a matemática e `crates/brain-wasm` contém
-somente a ABI para o navegador. Nenhuma função nova de cérebro deve ser
-implementada primeiro em `simulation.ts`.
+Esse baseline foi usado como oráculo no replay sombra e removido depois da
+promoção. `crates/brain-engine` possui a matemática e `crates/brain-wasm`
+contém somente a ABI para o navegador. `src/` contém shell, topologia visual,
+protocolo e Worker, sem um integrador científico alternativo.
 
 ## Regras de dependência
 
@@ -270,7 +270,7 @@ corticais internos são associados ao vértice externo mais próximo; cerebelo e
 tronco ficam fora do domínio.
 
 `PopulationField` possui os buffers E/I, o histórico circular consumido pelos
-atrasos de condução e a composição `waveActivity`. O snapshot do protocolo v2
+atrasos de condução e a composição `waveActivity`. O snapshot do protocolo v3
 leva arrays por vértice e `nodeIndices`; o renderer usa a projeção da topologia
 e combina campo e spikes pelo envelope máximo. Ele não soma as duas resoluções
 como fontes independentes.
@@ -398,7 +398,8 @@ src/
 └── schema.ts
 ```
 
-`simulation.ts` continua sendo o núcleo. `clock.ts` recebe o acumulador que hoje está em `main.ts`; `protocol.ts` contém comandos, snapshots e entradas. Esse corte já permite testar passo/frame sem mover a cena.
+Historicamente, `simulation.ts` era o núcleo. `clock.ts` recebeu o acumulador e
+`protocol.ts` passou a conter comandos, snapshots e entradas.
 
 ### Corte 0.3-b — memória e isolamento
 
@@ -413,7 +414,8 @@ src/
 └── ...arquivos existentes
 ```
 
-`network.ts` serializa a topologia e cria CSR. `random.ts` implementa o RNG endereçado. `simulation.worker.ts` é apenas o adaptador do protocolo. `observables.ts` começa com as métricas online; não incorpora análises topológicas pesadas.
+Nesse corte histórico, `network.ts` serializava a topologia, `random.ts`
+implementava o RNG endereçado e `observables.ts` mantinha métricas online.
 
 ### Corte 0.3-c — renderização com donos claros
 
@@ -431,7 +433,9 @@ O `main.ts` permanece como composição: cria dependências, liga controles e in
 
 ### 0.4 em diante
 
-`field.ts` aparece com o primeiro estado populacional real. Um diretório `models/` só se justifica quando LIF, campo e AdEx coexistirem. Da mesma forma, `experiments/` nasce quando houver mais de uma tarefa. A organização segue a diversidade real do código.
+`field.ts` apareceu com o primeiro estado populacional real e foi removido após
+a promoção de sua implementação Rust. Um diretório `models/` só se justifica
+quando LIF, campo e AdEx coexistirem no motor.
 
 ### Workspace a partir da 0.5
 
@@ -441,25 +445,26 @@ O `main.ts` permanece como composição: cria dependências, liga controles e in
 ├── crates/
 │   ├── brain-engine/           # Rust puro, nativo + Wasm
 │   └── brain-wasm/             # ABI wasm-bindgen
-├── src/                        # shell e oráculo TS temporário
+├── src/                        # shell TS, Worker, protocolo e ABI gerada
 ├── src-tauri/                  # host desktop
 └── scripts/                    # captura e artefatos reproduzíveis
 ```
 
-`src-tauri` passa a consumir `brain-engine` quando o engine nativo substituir a
-ponte informativa atual. O `Cargo.lock` único fica na raiz do workspace.
+`src-tauri` já consome o schema de `brain-engine`; a execução científica nativa
+completa entra quando o desktop precisar operar sem o shell web. O `Cargo.lock`
+único fica na raiz do workspace.
 
-## Sequência de migração 0.5
+## Sequência concluída da migração 0.5
 
-1. Manter os vetores e replays da 0.4 congelados como oráculo.
-2. Fixar tipos Rust de camada, tick, unidade, configuração, erro e snapshot.
-3. Portar relógio e RNG com igualdade exata.
-4. Portar CSR/topologia e comparar IDs, offsets e hashes.
-5. Portar campo e sinapses por blocos com convergência por grandeza.
-6. Gerar bindings Wasm e carregar o engine no Worker existente.
-7. Rodar TS e Rust em modo sombra, sem renderizar duas atividades.
-8. Promover Rust/Wasm quando paridade, memória e latência passarem.
-9. Remover equações TypeScript e conservar somente o shell/protocolo.
+1. [x] Manter os vetores e replays da 0.4 congelados como oráculo.
+2. [x] Fixar tipos Rust de camada, tick, unidade, configuração, erro e snapshot.
+3. [x] Portar relógio e RNG com igualdade exata.
+4. [x] Portar CSR/topologia e comparar IDs, offsets e hashes.
+5. [x] Portar campo e sinapses por blocos com convergência por grandeza.
+6. [x] Gerar bindings Wasm e carregar o engine no Worker.
+7. [x] Rodar TS e Rust em replay sombra, sem renderizar duas atividades.
+8. [x] Promover Rust/Wasm após paridade, custo e teste em navegador.
+9. [x] Remover equações TypeScript e conservar somente o shell/protocolo.
 
 Cada corte deve ser reversível e publicar qual parte ainda depende do oráculo.
 Uma nova função fisiológica não entra enquanto o mesmo subsistema estiver
