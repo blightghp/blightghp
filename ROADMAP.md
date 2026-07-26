@@ -113,7 +113,7 @@ de qualidade da 0.5, antes de qualquer demonstração científica nova:
 
 ### Cortes da 0.6
 
-- [ ] **0.6-a · Contrato laminar:** seis camadas estáveis, populações E/I e
+- [x] **0.6-a · Contrato laminar:** seis camadas estáveis, populações E/I e
   classificação explícita das projeções recorrentes, feedforward e feedback.
 - [ ] **0.6-b · Tálamo e TRN:** relé excitatório, núcleo reticular inibitório,
   retorno corticotalâmico e ritmo fenomenológico sustentado pelo circuito.

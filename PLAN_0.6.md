@@ -19,6 +19,12 @@ Cada corte passa por cinco commits, nesta ordem:
 
 Nenhum corte seguinte pode esconder um achado aberto do anterior.
 
+## Diário de progressão
+
+| Data | Corte | Resultado |
+| :-- | :-- | :-- |
+| 2026-07-26 | 0.6-a | contrato L1–L6 fechado; vias tipadas, ganhos centralizados e envelopes numéricos testados |
+
 ## Microetapas
 
 | Corte | Entrega | Evidência mínima |
