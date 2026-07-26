@@ -1,4 +1,4 @@
-# Roadmap · Sinapse Formalista
+# Roadmap · BRAIN PRO
 
 O experimento evolui em dois eixos inseparáveis: desce da atividade global até a sinapse e sobe da excitabilidade até a cognição e o comportamento. Cada entrega fecha uma escala antes de acrescentar outra e combina avanço do motor, ganho gráfico e evidência de validação.
 
@@ -38,7 +38,7 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
 | **0.9 · Sistemas e comportamento** | Memória de trabalho, tarefas preditivas, hipocampo, núcleos da base e leitura motora somente em tarefas explícitas | Abas Sistemas, Experimentos e Comportamento | Desempenho estatístico, controles nulos, retenção/decisão reproduzíveis e hipóteses documentadas |
 | **1.0 · Atlas experimental** | Presets, replay, importação, API estável e modelos multiescala validados | Visão Geral, Superfície, Lâminas, Célula, Sinapse, Bioquímica, Sistemas, Experimentos e Validação | Pacotes reproduzíveis, acessibilidade, testes end-to-end, proveniência e nenhuma alegação além da evidência |
 
-## Versão atual: 0.5-alpha · Corredor Rust/Wasm em fundação
+## Versão atual: 0.6-alpha · Lâmina e tálamo em desenvolvimento
 
 ### Gate auditado da 0.4 · Superfície
 
@@ -110,6 +110,19 @@ de qualidade da 0.5, antes de qualquer demonstração científica nova:
 - [ ] estudo de convergência específico das correntes AMPA/GABA-A;
 - [ ] curvas axonais e ciclos de vida independentes para todas as camadas;
 - [ ] capturas visuais automatizadas e auditoria contínua de teclado/contraste.
+
+### Cortes da 0.6
+
+- [ ] **0.6-a · Contrato laminar:** seis camadas estáveis, populações E/I e
+  classificação explícita das projeções recorrentes, feedforward e feedback.
+- [ ] **0.6-b · Tálamo e TRN:** relé excitatório, núcleo reticular inibitório,
+  retorno corticotalâmico e ritmo fenomenológico sustentado pelo circuito.
+- [ ] **0.6-c · Motor e Worker:** estado corticotalâmico no snapshot Rust,
+  ABI Wasm e protocolo transferível sem equações no shell.
+- [ ] **0.6-d · Leitura visual:** aba Lâminas, coluna explodida, vias destacadas
+  e LOD com custo e acessibilidade verificados.
+- [ ] **0.6-e · Identidade e promoção:** BRAIN PRO, diário de aprendizagem,
+  cronologia desde 2025, Kandel, referências, SIGNALS e auditoria de fechamento.
 
 ## Trilhas que atravessam as versões
 

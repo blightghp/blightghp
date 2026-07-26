@@ -91,6 +91,31 @@ impl TryFrom<u8> for CorticalLayer {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ProjectionKind {
+    Recurrent,
+    Feedforward,
+    Feedback,
+}
+
+/// Classifies the deliberately small set of intracolumnar paths represented by
+/// the 0.6 model. Absence means that the pair is outside this model's scope.
+#[must_use]
+pub const fn projection_kind(
+    source: CorticalLayer,
+    target: CorticalLayer,
+) -> Option<ProjectionKind> {
+    use CorticalLayer::{L1, L2, L3, L4, L5, L6};
+    if source as u8 == target as u8 {
+        return Some(ProjectionKind::Recurrent);
+    }
+    match (source, target) {
+        (L4, L2 | L3) | (L2 | L3, L5) => Some(ProjectionKind::Feedforward),
+        (L5, L6) | (L6, L1 | L4) => Some(ProjectionKind::Feedback),
+        _ => None,
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LaminarConfig {
     pub dt: Seconds,
@@ -106,9 +131,8 @@ pub struct LaminarConfig {
 
 impl Default for LaminarConfig {
     fn default() -> Self {
-        // This is a procedural migration preset, not a calibrated cortical
-        // microcircuit. Non-zero entries only encode the first feedforward /
-        // feedback paths needed to test the Rust/Wasm contract.
+        // This is a learning preset, not a calibrated cortical microcircuit.
+        // Non-zero entries encode only the paths classified above.
         let mut projection = [[0.0; LAYER_COUNT]; LAYER_COUNT];
         for (layer, row) in projection.iter_mut().enumerate() {
             row[layer] = 0.18;
@@ -140,9 +164,19 @@ impl LaminarConfig {
     /// only non-negative values are allowed. Time quantities are already
     /// protected by [`Seconds`].
     pub fn validate(&self) -> Result<(), EngineError> {
-        for row in self.excitatory_projection {
-            for value in row {
+        for (target, row) in self.excitatory_projection.into_iter().enumerate() {
+            for (source, value) in row.into_iter().enumerate() {
                 validate_non_negative_finite("excitatory_projection", value)?;
+                if value > 0.0 {
+                    let source_layer = layer_from_index(source);
+                    let target_layer = layer_from_index(target);
+                    if projection_kind(source_layer, target_layer).is_none() {
+                        return Err(EngineError::ForbiddenProjection {
+                            source: source_layer,
+                            target: target_layer,
+                        });
+                    }
+                }
             }
         }
         for value in self
@@ -294,10 +328,21 @@ fn validate_non_negative_finite(name: &'static str, value: f64) -> Result<(), En
     }
 }
 
+const fn layer_from_index(index: usize) -> CorticalLayer {
+    CorticalLayer::ALL[index]
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum EngineError {
     InvalidLayer(u8),
-    InvalidParameter { name: &'static str, value: f64 },
+    InvalidParameter {
+        name: &'static str,
+        value: f64,
+    },
+    ForbiddenProjection {
+        source: CorticalLayer,
+        target: CorticalLayer,
+    },
     TickOverflow,
 }
 
@@ -307,6 +352,12 @@ impl fmt::Display for EngineError {
             Self::InvalidLayer(layer) => write!(formatter, "invalid cortical layer: {layer}"),
             Self::InvalidParameter { name, value } => {
                 write!(formatter, "{name} must be finite and valid, got {value}")
+            }
+            Self::ForbiddenProjection { source, target } => {
+                write!(
+                    formatter,
+                    "projection {source:?} -> {target:?} is outside the 0.6 laminar contract"
+                )
             }
             Self::TickOverflow => formatter.write_str("simulation tick overflow"),
         }
@@ -329,6 +380,32 @@ mod tests {
             );
         }
         assert!(CorticalLayer::try_from(6).is_err());
+    }
+
+    #[test]
+    fn canonical_projection_kinds_are_explicit() {
+        assert_eq!(
+            projection_kind(CorticalLayer::L4, CorticalLayer::L2),
+            Some(ProjectionKind::Feedforward)
+        );
+        assert_eq!(
+            projection_kind(CorticalLayer::L6, CorticalLayer::L1),
+            Some(ProjectionKind::Feedback)
+        );
+        assert_eq!(projection_kind(CorticalLayer::L3, CorticalLayer::L4), None);
+    }
+
+    #[test]
+    fn rejects_paths_outside_the_laminar_contract() {
+        let mut config = LaminarConfig::default();
+        config.excitatory_projection[CorticalLayer::L4.index()][CorticalLayer::L3.index()] = 0.2;
+        assert!(matches!(
+            LaminarEngine::new(config),
+            Err(EngineError::ForbiddenProjection {
+                source: CorticalLayer::L3,
+                target: CorticalLayer::L4,
+            })
+        ));
     }
 
     #[test]
