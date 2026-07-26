@@ -2,12 +2,21 @@ import { describe, expect, it } from "vitest";
 import {
   CORTICAL_LAYER_LABELS,
   LAMINAR_PROJECTIONS,
+  parseLaminarLod,
+  parseSimulationView,
   projectionBudget,
 } from "./laminar-layer";
 
 describe("laminar presentation contract", () => {
   it("keeps six stable cortical labels", () => {
     expect(CORTICAL_LAYER_LABELS).toEqual(["L1", "L2", "L3", "L4", "L5", "L6"]);
+  });
+
+  it("rejects view and LOD values outside their closed contracts", () => {
+    expect(parseLaminarLod("high")).toBe("high");
+    expect(parseLaminarLod("maximum")).toBeUndefined();
+    expect(parseSimulationView("laminar")).toBe("laminar");
+    expect(parseSimulationView("layers")).toBeUndefined();
   });
 
   it("uses bounded, monotonic LOD projection budgets", () => {

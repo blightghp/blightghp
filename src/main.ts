@@ -7,8 +7,12 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
 import { BayesianBelief, BayesianUpdate } from "./inference";
-import { LaminarRenderLayer } from "./laminar-layer";
-import type { LaminarLod } from "./laminar-layer";
+import {
+  LaminarRenderLayer,
+  parseLaminarLod,
+  parseSimulationView,
+} from "./laminar-layer";
+import type { SimulationView } from "./laminar-layer";
 import { SIMULATION_STEP_SECONDS } from "./protocol";
 import type { EngineCommand, EngineEvent, NeuralSnapshot, SimulationTick } from "./protocol";
 import { BrainRenderLayers } from "./render-layers";
@@ -32,8 +36,6 @@ declare global {
     };
   }
 }
-
-type SimulationView = "overview" | "laminar";
 
 interface RuntimeInfo {
   engine: string;
@@ -187,7 +189,9 @@ function renderFrame(
   layers.group.rotation.x = 0.035 + Math.sin(time * 0.17) * 0.035;
   layers.group.rotation.z = -0.025 + Math.cos(time * 0.13) * 0.018;
   laminarLayer.group.rotation.y = rotation;
-  laminarLayer.group.rotation.x = -0.06 + Math.sin(time * 0.12) * 0.025;
+  laminarLayer.group.rotation.x = state.rotationSpeed === 0
+    ? -0.06
+    : -0.06 + Math.sin(time * 0.12) * 0.025;
 
   const alpha = Math.min(
     1,
@@ -260,7 +264,9 @@ function setActiveView(view: SimulationView): void {
   element("#laminar-panel").hidden = view !== "laminar";
   element("#bayesian-hud").hidden = view !== "overview";
   for (const button of document.querySelectorAll<HTMLButtonElement>("[role='tab']")) {
-    button.setAttribute("aria-selected", String(button.dataset.view === view));
+    const selected = button.dataset.view === view;
+    button.setAttribute("aria-selected", String(selected));
+    button.tabIndex = selected ? 0 : -1;
   }
   if (latestSnapshot) {
     renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
@@ -271,13 +277,41 @@ function setupInterface(): void {
   element("#node-count").textContent = formatCount(brainData.nodes.length);
   element("#synapse-count").textContent = formatCount(brainData.synapses.length);
 
-  for (const button of document.querySelectorAll<HTMLButtonElement>("[role='tab']")) {
+  const tabButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[role='tab']"),
+  );
+  for (const button of tabButtons) {
     button.addEventListener("click", () => {
-      setActiveView(button.dataset.view as SimulationView);
+      const view = parseSimulationView(button.dataset.view);
+      if (view) setActiveView(view);
+    });
+    button.addEventListener("keydown", (event) => {
+      const currentIndex = tabButtons.indexOf(button);
+      let nextIndex: number | undefined;
+      if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % tabButtons.length;
+      if (event.key === "ArrowLeft") {
+        nextIndex = (currentIndex - 1 + tabButtons.length) % tabButtons.length;
+      }
+      if (event.key === "Home") nextIndex = 0;
+      if (event.key === "End") nextIndex = tabButtons.length - 1;
+      if (nextIndex === undefined) return;
+      event.preventDefault();
+      const nextButton = tabButtons[nextIndex];
+      const view = parseSimulationView(nextButton.dataset.view);
+      if (!view) return;
+      setActiveView(view);
+      nextButton.focus();
     });
   }
   element<HTMLSelectElement>("#laminar-lod").addEventListener("change", (event) => {
-    laminarLayer.setLod((event.currentTarget as HTMLSelectElement).value as LaminarLod);
+    const select = event.currentTarget as HTMLSelectElement;
+    const lod = parseLaminarLod(select.value);
+    if (!lod) {
+      select.value = "medium";
+      laminarLayer.setLod("medium");
+      return;
+    }
+    laminarLayer.setLod(lod);
   });
 
   bindRange("rotation-speed", "rot-speed-val", "rotationSpeed", (value) => `${value.toFixed(1)}×`);
@@ -431,7 +465,9 @@ async function init(): Promise<void> {
 
   window.__BRAIN_ENGINE__ = {
     setView(view) {
-      setActiveView(view);
+      const parsed = parseSimulationView(view);
+      if (!parsed) throw new Error("vista desconhecida");
+      setActiveView(parsed);
     },
     async setCaptureMode(enabled) {
       captureMode = enabled;

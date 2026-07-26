@@ -4,6 +4,17 @@ import { interpolatePublishedValue } from "./render-layers";
 
 export const CORTICAL_LAYER_LABELS = ["L1", "L2", "L3", "L4", "L5", "L6"] as const;
 export type LaminarLod = "low" | "medium" | "high";
+export type SimulationView = "overview" | "laminar";
+
+export function parseLaminarLod(value: unknown): LaminarLod | undefined {
+  return value === "low" || value === "medium" || value === "high"
+    ? value
+    : undefined;
+}
+
+export function parseSimulationView(value: unknown): SimulationView | undefined {
+  return value === "overview" || value === "laminar" ? value : undefined;
+}
 
 export interface LaminarProjection {
   source: number;

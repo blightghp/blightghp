@@ -118,9 +118,9 @@ Superfície revisada:
 
 | ID | Severidade | Estado | Descrição |
 | :-- | :-- | :-- | :-- |
-| L06-D-01 | média | aberto | o padrão ARIA de abas ainda não implementa foco roving nem setas, Home e End |
-| L06-D-02 | baixa | aberto | `data-view` e o valor de LOD são convertidos por cast, sem parser de runtime |
-| L06-D-03 | baixa | aberto | a coluna mantém balanço ornamental mesmo quando a preferência é reduzir movimento |
+| L06-D-01 | média | fechado | abas usam foco roving e respondem a setas, Home e End |
+| L06-D-02 | baixa | fechado | parsers fechados rejeitam vistas e níveis de LOD desconhecidos |
+| L06-D-03 | baixa | fechado | `rotationSpeed = 0` remove rotação e balanço ornamental da coluna |
 
-Critério de correção: parsers fechados, navegação completa por teclado, foco
-coerente e ausência de oscilação ornamental quando `rotationSpeed = 0`.
+Correção confirmada: testes cobrem entradas válidas e inválidas; a inspeção no
+navegador confirmou seleção, painel ativo, métricas e foco coerentes.
