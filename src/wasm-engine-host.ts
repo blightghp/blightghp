@@ -69,6 +69,8 @@ export function snapshotTransferList(snapshot: NeuralSnapshot): ArrayBuffer[] {
     snapshot.field.eField.buffer,
     snapshot.field.iField.buffer,
     snapshot.field.waveActivity.buffer,
+    snapshot.corticothalamic.excitatory.buffer,
+    snapshot.corticothalamic.inhibitory.buffer,
   ];
 }
 
@@ -153,6 +155,7 @@ export class WasmEngineHost {
     const diagnostics: EngineDiagnostics = {
       runtime: "rust-wasm",
       stateHash: engine.state_hash(),
+      corticothalamicHash: engine.corticothalamic_state_hash(),
       degraded: false,
     };
     return {
@@ -176,6 +179,15 @@ export class WasmEngineHost {
         eField: engine.field_excitatory(),
         iField: engine.field_inhibitory(),
         waveActivity: engine.field_wave_activity(),
+      },
+      corticothalamic: {
+        excitatory: engine.laminar_excitatory(),
+        inhibitory: engine.laminar_inhibitory(),
+        relay: engine.thalamic_relay(),
+        trn: engine.thalamic_trn(),
+        rebound: engine.thalamic_rebound(),
+        relayDriveToL4: engine.relay_drive_to_l4(),
+        layer6Feedback: engine.layer6_feedback(),
       },
       diagnostics,
     };
@@ -225,9 +237,19 @@ export class DiagnosticFallbackHost {
           iField: new Float32Array(fieldNodes.length),
           waveActivity: new Float32Array(fieldNodes.length),
         },
+        corticothalamic: {
+          excitatory: new Float32Array(6),
+          inhibitory: new Float32Array(6),
+          relay: 0,
+          trn: 0,
+          rebound: 0,
+          relayDriveToL4: 0,
+          layer6Feedback: 0,
+        },
         diagnostics: {
           runtime: "diagnostic-fallback",
           stateHash: "unavailable",
+          corticothalamicHash: "unavailable",
           degraded: true,
           detail: this.detail,
         },

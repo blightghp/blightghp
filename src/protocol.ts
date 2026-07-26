@@ -1,5 +1,5 @@
 import type { BrainData } from "./brain";
-export const SIMULATION_PROTOCOL_VERSION = 3 as const;
+export const SIMULATION_PROTOCOL_VERSION = 4 as const;
 export const SIMULATION_STEP_SECONDS = 1 / 60;
 
 export type SimulationTick = number;
@@ -33,11 +33,22 @@ export interface FieldSnapshot {
   waveActivity: Float32Array;
 }
 
+export interface CorticothalamicSnapshot {
+  excitatory: Float32Array;
+  inhibitory: Float32Array;
+  relay: number;
+  trn: number;
+  rebound: number;
+  relayDriveToL4: number;
+  layer6Feedback: number;
+}
+
 export type EngineRuntime = "rust-wasm" | "diagnostic-fallback";
 
 export interface EngineDiagnostics {
   runtime: EngineRuntime;
   stateHash: string;
+  corticothalamicHash: string;
   degraded: boolean;
   detail?: string;
 }
@@ -54,6 +65,7 @@ export interface NeuralSnapshot {
   weights: Float32Array;
   signals: SignalBatch;
   field: FieldSnapshot;
+  corticothalamic: CorticothalamicSnapshot;
   diagnostics: EngineDiagnostics;
 }
 

@@ -38,9 +38,10 @@ try {
   const diagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   if (
     diagnostics.runtime !== "rust-wasm" ||
-    diagnostics.schemaVersion !== 3 ||
+    diagnostics.schemaVersion !== 4 ||
     diagnostics.degraded ||
-    !/^[0-9a-f]{16}$/.test(diagnostics.stateHash)
+    !/^[0-9a-f]{16}$/.test(diagnostics.stateHash) ||
+    !/^[0-9a-f]{16}$/.test(diagnostics.corticothalamicHash)
   ) {
     throw new Error(`diagnóstico inesperado: ${JSON.stringify(diagnostics)}`);
   }

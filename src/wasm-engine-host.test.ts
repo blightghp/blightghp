@@ -46,9 +46,10 @@ describe("diagnostic Wasm fallback", () => {
     }).snapshot;
     const buffers = snapshotTransferList(snapshot);
 
-    expect(buffers).toHaveLength(11);
+    expect(buffers).toHaveLength(13);
     expect(new Set(buffers).size).toBe(buffers.length);
     expect(buffers).toContain(snapshot.potentials.buffer);
     expect(buffers).toContain(snapshot.field.waveActivity.buffer);
+    expect(buffers).toContain(snapshot.corticothalamic.excitatory.buffer);
   });
 });

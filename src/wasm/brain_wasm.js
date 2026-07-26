@@ -118,6 +118,21 @@ export class WasmNeuralEngine {
         }
     }
     /**
+     * @returns {string}
+     */
+    corticothalamic_state_hash() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.wasmneuralengine_corticothalamic_state_hash(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
      * @returns {Float32Array}
      */
     field_excitatory() {
@@ -158,6 +173,31 @@ export class WasmNeuralEngine {
      */
     firing_rate() {
         const ret = wasm.wasmneuralengine_firing_rate(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    laminar_excitatory() {
+        const ret = wasm.wasmneuralengine_laminar_excitatory(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    laminar_inhibitory() {
+        const ret = wasm.wasmneuralengine_laminar_inhibitory(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    layer6_feedback() {
+        const ret = wasm.wasmneuralengine_layer6_feedback(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -235,6 +275,13 @@ export class WasmNeuralEngine {
         return v1;
     }
     /**
+     * @returns {number}
+     */
+    relay_drive_to_l4() {
+        const ret = wasm.wasmneuralengine_relay_drive_to_l4(this.__wbg_ptr);
+        return ret;
+    }
+    /**
      * @param {number | null} [seed]
      */
     reset(seed) {
@@ -304,6 +351,27 @@ export class WasmNeuralEngine {
         } finally {
             wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
         }
+    }
+    /**
+     * @returns {number}
+     */
+    thalamic_rebound() {
+        const ret = wasm.wasmneuralengine_thalamic_rebound(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    thalamic_relay() {
+        const ret = wasm.wasmneuralengine_thalamic_relay(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    thalamic_trn() {
+        const ret = wasm.wasmneuralengine_thalamic_trn(this.__wbg_ptr);
+        return ret;
     }
     /**
      * @returns {number}

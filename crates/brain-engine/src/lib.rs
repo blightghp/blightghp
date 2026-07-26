@@ -23,8 +23,8 @@ pub use network::{CsrError, SynapseCsr, SynapseEndpoint};
 pub use observables::{mean_absolute_weight, ObservableError, PopulationFiringRate};
 pub use random::{random_u32, random_unit};
 pub use simulation::{
-    NeuralSimulation, NeuralStimulus, SignalBatch, SimulationConfig, SimulationError,
-    SimulationSnapshot, SimulationSynapse, SIMULATION_SCHEMA_VERSION,
+    CorticothalamicSignal, NeuralSimulation, NeuralStimulus, SignalBatch, SimulationConfig,
+    SimulationError, SimulationSnapshot, SimulationSynapse, SIMULATION_SCHEMA_VERSION,
 };
 
 pub const ENGINE_SCHEMA_VERSION: u32 = 1;

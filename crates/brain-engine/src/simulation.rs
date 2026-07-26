@@ -1,11 +1,13 @@
 use core::fmt;
 
 use crate::{
-    mean_absolute_weight, random_unit, FieldConfig, FieldSnapshot, FieldTopology, NeuronKind,
-    PopulationField, PopulationFiringRate, Seconds, SynapseCsr, SynapseEndpoint, MAX_SAFE_TICK,
+    mean_absolute_weight, random_unit, CorticothalamicConfig, CorticothalamicDrive,
+    CorticothalamicEngine, FieldConfig, FieldSnapshot, FieldTopology, LaminarConfig, NeuronKind,
+    PopulationField, PopulationFiringRate, Seconds, SynapseCsr, SynapseEndpoint, LAYER_COUNT,
+    MAX_SAFE_TICK,
 };
 
-pub const SIMULATION_SCHEMA_VERSION: u32 = 3;
+pub const SIMULATION_SCHEMA_VERSION: u32 = 4;
 const MIN_EXCITATORY_WEIGHT: f64 = 0.12;
 const MAX_EXCITATORY_WEIGHT: f64 = 0.92;
 const MAX_SIGNALS_IN_FLIGHT: usize = 900;
@@ -47,6 +49,18 @@ pub struct SignalBatch {
     pub inhibitory: Vec<u8>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CorticothalamicSignal {
+    pub excitatory: [f32; LAYER_COUNT],
+    pub inhibitory: [f32; LAYER_COUNT],
+    pub relay: f32,
+    pub trn: f32,
+    pub rebound: f32,
+    pub relay_drive_to_l4: f32,
+    pub layer6_feedback: f32,
+    pub state_hash: u64,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SimulationSnapshot {
     pub schema_version: u32,
@@ -60,6 +74,7 @@ pub struct SimulationSnapshot {
     pub weights: Vec<f32>,
     pub signals: SignalBatch,
     pub field: FieldSnapshot,
+    pub corticothalamic: CorticothalamicSignal,
     pub state_hash: u64,
 }
 
@@ -81,6 +96,7 @@ pub struct NeuralSimulation {
     synapses: Vec<SimulationSynapse>,
     csr: SynapseCsr,
     population_field: PopulationField,
+    corticothalamic: CorticothalamicEngine,
     potentials: Vec<f32>,
     activations: Vec<f32>,
     conductance_ampa: Vec<f32>,
@@ -178,6 +194,14 @@ impl NeuralSimulation {
         };
         let population_field = PopulationField::new(config.field_topology, field_config)
             .map_err(SimulationError::Field)?;
+        let corticothalamic = CorticothalamicEngine::new(CorticothalamicConfig {
+            laminar: LaminarConfig {
+                dt: config.fixed_step,
+                ..LaminarConfig::default()
+            },
+            ..CorticothalamicConfig::default()
+        })
+        .map_err(SimulationError::Corticothalamic)?;
         let thresholds = thresholds(config.seed, node_count);
         let firing_rate_observable = PopulationFiringRate::new(
             node_count_u32,
@@ -216,6 +240,7 @@ impl NeuralSimulation {
             synapses: config.synapses,
             csr,
             population_field,
+            corticothalamic,
             potentials: vec![0.0; node_count],
             activations: vec![0.0; node_count],
             conductance_ampa: vec![0.0; node_count],
@@ -371,6 +396,12 @@ impl NeuralSimulation {
                 (f64::from(self.potentials[node]) + field_modulation * dt).clamp(-1.4, 1.8),
             );
         }
+        self.corticothalamic
+            .step(CorticothalamicDrive {
+                sensory: intensity,
+                contextual: confidence,
+            })
+            .map_err(SimulationError::Corticothalamic)?;
 
         self.firing_rate = self.firing_rate_observable.sample(spikes);
         self.latest_spike_count = spikes;
@@ -389,6 +420,7 @@ impl NeuralSimulation {
         self.conductance_ampa.fill(0.0);
         self.conductance_gaba.fill(0.0);
         self.population_field.reset();
+        self.corticothalamic.reset();
         self.refractory.fill(0.0);
         self.pre_trace.fill(0.0);
         self.post_trace.fill(0.0);
@@ -409,6 +441,7 @@ impl NeuralSimulation {
     pub fn snapshot(&self) -> SimulationSnapshot {
         let signals = self.signal_batch();
         let field = self.population_field.snapshot();
+        let corticothalamic = corticothalamic_signal(self.corticothalamic.snapshot());
         let state_hash = state_hash(
             self.tick,
             self.latest_spike_count,
@@ -429,6 +462,7 @@ impl NeuralSimulation {
             weights: self.weights.clone(),
             signals,
             field,
+            corticothalamic,
             state_hash,
         }
     }
@@ -626,6 +660,40 @@ fn state_hash(
     hash
 }
 
+fn corticothalamic_signal(snapshot: crate::CorticothalamicSnapshot) -> CorticothalamicSignal {
+    let excitatory = snapshot.laminar.excitatory.map(quantize_f32);
+    let inhibitory = snapshot.laminar.inhibitory.map(quantize_f32);
+    let relay = quantize_f32(snapshot.relay);
+    let trn = quantize_f32(snapshot.trn);
+    let rebound = quantize_f32(snapshot.rebound);
+    let relay_drive_to_l4 = quantize_f32(snapshot.relay_drive_to_l4);
+    let layer6_feedback = quantize_f32(snapshot.layer6_feedback);
+    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+    for byte in snapshot
+        .tick
+        .to_le_bytes()
+        .into_iter()
+        .chain(f32_bytes(&excitatory))
+        .chain(f32_bytes(&inhibitory))
+        .chain(relay.to_bits().to_le_bytes())
+        .chain(trn.to_bits().to_le_bytes())
+        .chain(rebound.to_bits().to_le_bytes())
+    {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    CorticothalamicSignal {
+        excitatory,
+        inhibitory,
+        relay,
+        trn,
+        rebound,
+        relay_drive_to_l4,
+        layer6_feedback,
+        state_hash: hash,
+    }
+}
+
 fn f32_bytes(values: &[f32]) -> impl Iterator<Item = u8> + '_ {
     values
         .iter()
@@ -668,6 +736,7 @@ pub enum SimulationError {
     TickRegression,
     InvalidCsr,
     Field(crate::FieldError),
+    Corticothalamic(crate::EngineError),
 }
 
 impl fmt::Display for SimulationError {
@@ -683,6 +752,7 @@ impl fmt::Display for SimulationError {
             Self::TickRegression => formatter.write_str("target tick cannot move backwards"),
             Self::InvalidCsr => formatter.write_str("invalid synapse CSR"),
             Self::Field(error) => write!(formatter, "field error: {error}"),
+            Self::Corticothalamic(error) => write!(formatter, "corticothalamic error: {error}"),
         }
     }
 }

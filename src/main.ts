@@ -22,6 +22,7 @@ declare global {
         runtime: string;
         schemaVersion: number;
         stateHash?: string;
+        corticothalamicHash?: string;
         degraded: boolean;
         detail?: string;
       };
@@ -428,6 +429,8 @@ async function init(): Promise<void> {
           engineReady?.schemaVersion ??
           0,
         stateHash: latestSnapshot?.diagnostics.stateHash,
+        corticothalamicHash:
+          latestSnapshot?.diagnostics.corticothalamicHash,
         degraded:
           latestSnapshot?.diagnostics.degraded ??
           engineReady?.degraded ??

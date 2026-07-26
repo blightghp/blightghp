@@ -280,6 +280,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
         field_topology,
     })
     .unwrap();
+    let mut previous_corticothalamic_hash = simulation.snapshot().corticothalamic.state_hash;
 
     for (advance, expected) in simulation_fixture
         .advances
@@ -297,6 +298,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
             )
             .unwrap();
         assert_eq!(snapshot.tick, expected.tick);
+        assert_eq!(snapshot.schema_version, 4);
         assert_eq!(snapshot.spikes, expected.spikes);
         assert!((snapshot.firing_rate - expected.firing_rate).abs() <= 1.0e-12);
         assert!((snapshot.mean_weight - expected.mean_weight).abs() <= 1.0e-12);
@@ -313,6 +315,17 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
             snapshot.state_hash,
             u64::from_str_radix(&expected.hash, 16).unwrap()
         );
+        assert!(snapshot
+            .corticothalamic
+            .excitatory
+            .into_iter()
+            .chain(snapshot.corticothalamic.inhibitory)
+            .all(|value| value.is_finite() && (0.0..=1.0).contains(&value)));
+        assert_ne!(
+            snapshot.corticothalamic.state_hash,
+            previous_corticothalamic_hash
+        );
+        previous_corticothalamic_hash = snapshot.corticothalamic.state_hash;
     }
 }
 

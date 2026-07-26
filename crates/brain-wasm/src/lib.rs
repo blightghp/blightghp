@@ -147,6 +147,11 @@ impl WasmNeuralEngine {
     }
 
     #[must_use]
+    pub fn corticothalamic_state_hash(&self) -> String {
+        format!("{:016x}", self.snapshot.corticothalamic.state_hash)
+    }
+
+    #[must_use]
     pub fn time_seconds(&self) -> f64 {
         self.snapshot.time_seconds
     }
@@ -219,6 +224,41 @@ impl WasmNeuralEngine {
     #[must_use]
     pub fn field_wave_activity(&self) -> Vec<f32> {
         self.snapshot.field.wave_activity.clone()
+    }
+
+    #[must_use]
+    pub fn laminar_excitatory(&self) -> Vec<f32> {
+        self.snapshot.corticothalamic.excitatory.to_vec()
+    }
+
+    #[must_use]
+    pub fn laminar_inhibitory(&self) -> Vec<f32> {
+        self.snapshot.corticothalamic.inhibitory.to_vec()
+    }
+
+    #[must_use]
+    pub fn thalamic_relay(&self) -> f32 {
+        self.snapshot.corticothalamic.relay
+    }
+
+    #[must_use]
+    pub fn thalamic_trn(&self) -> f32 {
+        self.snapshot.corticothalamic.trn
+    }
+
+    #[must_use]
+    pub fn thalamic_rebound(&self) -> f32 {
+        self.snapshot.corticothalamic.rebound
+    }
+
+    #[must_use]
+    pub fn relay_drive_to_l4(&self) -> f32 {
+        self.snapshot.corticothalamic.relay_drive_to_l4
+    }
+
+    #[must_use]
+    pub fn layer6_feedback(&self) -> f32 {
+        self.snapshot.corticothalamic.layer6_feedback
     }
 }
 

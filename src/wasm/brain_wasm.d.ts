@@ -39,11 +39,15 @@ export class WasmNeuralEngine {
      * Returns a JavaScript error on tick regression or engine failure.
      */
     advance_to(target_tick: number, intensity: number, confidence: number, learning_rate: number): void;
+    corticothalamic_state_hash(): string;
     field_excitatory(): Float32Array;
     field_inhibitory(): Float32Array;
     field_node_indices(): Uint32Array;
     field_wave_activity(): Float32Array;
     firing_rate(): number;
+    laminar_excitatory(): Float32Array;
+    laminar_inhibitory(): Float32Array;
+    layer6_feedback(): number;
     mean_weight(): number;
     /**
      * Creates the complete browser engine from compact topology buffers.
@@ -55,6 +59,7 @@ export class WasmNeuralEngine {
      */
     constructor(seed: number, dt_seconds: number, neuron_kinds: Uint8Array, synapse_from: Uint32Array, synapse_to: Uint32Array, synapse_weights: Float32Array, synapse_delays_seconds: Float64Array, synapse_plastic: Uint8Array, cortical_nodes: Uint32Array, node_z: Float64Array, field_node_indices: Uint32Array, field_vertex_by_node: Int32Array, field_row_offsets: Uint32Array, field_neighbors: Uint32Array, field_edge_lengths: Float32Array);
     potentials(): Float32Array;
+    relay_drive_to_l4(): number;
     reset(seed?: number | null): void;
     static schema_version(): number;
     signal_inhibitory(): Uint8Array;
@@ -63,6 +68,9 @@ export class WasmNeuralEngine {
     signal_synapse_ids(): Uint32Array;
     spikes(): number;
     state_hash(): string;
+    thalamic_rebound(): number;
+    thalamic_relay(): number;
+    thalamic_trn(): number;
     tick(): number;
     time_seconds(): number;
     weights(): Float32Array;
@@ -83,14 +91,19 @@ export interface InitOutput {
     readonly wasmlaminarengine_tick: (a: number) => bigint;
     readonly wasmneuralengine_activations: (a: number) => [number, number];
     readonly wasmneuralengine_advance_to: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly wasmneuralengine_corticothalamic_state_hash: (a: number) => [number, number];
     readonly wasmneuralengine_field_excitatory: (a: number) => [number, number];
     readonly wasmneuralengine_field_inhibitory: (a: number) => [number, number];
     readonly wasmneuralengine_field_node_indices: (a: number) => [number, number];
     readonly wasmneuralengine_field_wave_activity: (a: number) => [number, number];
     readonly wasmneuralengine_firing_rate: (a: number) => number;
+    readonly wasmneuralengine_laminar_excitatory: (a: number) => [number, number];
+    readonly wasmneuralengine_laminar_inhibitory: (a: number) => [number, number];
+    readonly wasmneuralengine_layer6_feedback: (a: number) => number;
     readonly wasmneuralengine_mean_weight: (a: number) => number;
     readonly wasmneuralengine_new: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number, y: number, z: number, a1: number, b1: number) => [number, number, number];
     readonly wasmneuralengine_potentials: (a: number) => [number, number];
+    readonly wasmneuralengine_relay_drive_to_l4: (a: number) => number;
     readonly wasmneuralengine_reset: (a: number, b: number) => void;
     readonly wasmneuralengine_schema_version: () => number;
     readonly wasmneuralengine_signal_inhibitory: (a: number) => [number, number];
@@ -99,6 +112,9 @@ export interface InitOutput {
     readonly wasmneuralengine_signal_synapse_ids: (a: number) => [number, number];
     readonly wasmneuralengine_spikes: (a: number) => number;
     readonly wasmneuralengine_state_hash: (a: number) => [number, number];
+    readonly wasmneuralengine_thalamic_rebound: (a: number) => number;
+    readonly wasmneuralengine_thalamic_relay: (a: number) => number;
+    readonly wasmneuralengine_thalamic_trn: (a: number) => number;
     readonly wasmneuralengine_tick: (a: number) => number;
     readonly wasmneuralengine_time_seconds: (a: number) => number;
     readonly wasmneuralengine_weights: (a: number) => [number, number];
