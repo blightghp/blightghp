@@ -119,7 +119,7 @@ de qualidade da 0.5, antes de qualquer demonstração científica nova:
   retorno corticotalâmico e ritmo fenomenológico sustentado pelo circuito.
 - [x] **0.6-c · Motor e Worker:** estado corticotalâmico no snapshot Rust,
   ABI Wasm e protocolo transferível sem equações no shell.
-- [ ] **0.6-d · Leitura visual:** aba Lâminas, coluna explodida, vias destacadas
+- [x] **0.6-d · Leitura visual:** aba Lâminas, coluna explodida, vias destacadas
   e LOD com custo e acessibilidade verificados.
 - [ ] **0.6-e · Identidade e promoção:** BRAIN PRO, diário de aprendizagem,
   cronologia desde 2025, Kandel, referências, SIGNALS e auditoria de fechamento.

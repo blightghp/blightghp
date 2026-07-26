@@ -55,3 +55,22 @@ Evidência:
 Limite aceito: o circuito córtico-talâmico observa estímulo/contexto e alimenta
 sua própria coluna. Nesta versão ele não modifica retroativamente a rede 0.5;
 essa separação evita dupla contagem e preserva o oráculo de migração.
+
+## 0.6-d · Aba Lâminas
+
+Estado: **aprovado em 2026-07-26**.
+
+Evidência:
+
+- coluna explodida mostra L1–L6, populações E/I, relé e TRN;
+- nove vias visuais pertencem ao contrato declarado;
+- cores, opacidade e escala leem somente o snapshot ABI v4;
+- LODs baixo/médio/alto submetem 17/21/23 draw calls;
+- parsers rejeitam vistas e LODs desconhecidos;
+- abas suportam setas, Home, End e foco roving;
+- movimento ornamental cessa com preferência reduzida;
+- enquadramento e métricas foram inspecionados no navegador;
+- teste end-to-end ativa a aba e confirma valores finitos.
+
+Limite aceito: ocultar vias reduz draw calls, mas as geometrias continuam
+residentes. A vista não acrescenta anatomia além do modelo agregado.

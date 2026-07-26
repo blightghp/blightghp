@@ -26,6 +26,7 @@ Nenhum corte seguinte pode esconder um achado aberto do anterior.
 | 2026-07-26 | 0.6-a | contrato L1–L6 fechado; vias tipadas, ganhos centralizados e envelopes numéricos testados |
 | 2026-07-26 | 0.6-b | laço relé–TRN–L6 fechado; atraso limitado, controle de laço aberto e ritmo fenomenológico testados |
 | 2026-07-26 | 0.6-c | ABI v4 fechada; estado laminar transferível, hashes separados, replay exato e cotas de Worker testadas |
+| 2026-07-26 | 0.6-d | aba Lâminas fechada; coluna E/I, relé/TRN, teclado, movimento reduzido e custos de LOD validados |
 
 ## Microetapas
 
