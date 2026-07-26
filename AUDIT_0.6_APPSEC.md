@@ -124,3 +124,37 @@ Superfície revisada:
 
 Correção confirmada: testes cobrem entradas válidas e inválidas; a inspeção no
 navegador confirmou seleção, painel ativo, métricas e foco coerentes.
+
+## 0.6-e · Perfil, documentação e automações
+
+Superfície revisada:
+
+- geração remota e commit do SVG SIGNALS;
+- captura do GIF e carimbo de SHA no README;
+- permissões e versões das Actions;
+- CSP do aplicativo Tauri;
+- dependências npm e duplicações Cargo;
+- nomes, versões, cronologia e referências públicas;
+- inventário de arquivos versionados e metadados locais.
+
+### Controles confirmados
+
+- Actions de terceiros estão fixadas por SHA completo;
+- workflows de escrita limitam `contents: write` ao próprio job;
+- GIF é rejeitado vazio, sem assinatura ou acima de 5 MiB;
+- `npm audit --omit=dev` não encontrou vulnerabilidades;
+- a cronologia separa 2025 pessoal do Git iniciado em 2026-07-20;
+- Kandel aparece como estudo, não como calibração;
+- código e documentos versionados não citam ferramentas de autoria.
+
+### Achados
+
+| ID | Severidade | Estado | Descrição |
+| :-- | :-- | :-- | :-- |
+| L06-E-01 | alta | aberto | o serviço externo de SIGNALS entrega `foreignObject`; o workflow valida apenas a moldura `<svg>` antes de commitar |
+| L06-E-02 | média | aberto | repetir o carimbo do GIF com o mesmo SHA falha em vez de produzir uma operação idempotente |
+| L06-E-03 | baixa | aberto | um índice local gerado ainda retém referências de sessões de desenvolvimento já inexistentes |
+
+Critério de correção: remover conteúdo SVG ativo/estrangeiro, rejeitar padrões
+perigosos, testar o sanitizador, aceitar carimbo repetido e regenerar o índice
+local somente com referências Git existentes.
