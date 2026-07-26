@@ -1,8 +1,11 @@
 use crate::{
-    exponential_relaxation, saturating_transfer, validate_non_negative_finite, CorticalLayer,
+    exponential_relaxation, saturating_transfer, validate_bounded_non_negative, CorticalLayer,
     EngineError, LaminarConfig, LaminarEngine, LaminarSnapshot, Seconds, LAYER_COUNT,
 };
-use std::time::Duration;
+
+pub const MAX_CORTICOTHALAMIC_GAIN: f64 = 4.0;
+pub const MAX_CORTICOTHALAMIC_DRIVE: f64 = 4.0;
+pub const MAX_CORTICOTHALAMIC_DELAY_STEPS: usize = 4_096;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CorticothalamicConfig {
@@ -59,7 +62,7 @@ impl CorticothalamicConfig {
             ("rebound_to_relay_gain", self.rebound_to_relay_gain),
             ("relay_to_l4_gain", self.relay_to_l4_gain),
         ] {
-            validate_non_negative_finite(name, value)?;
+            validate_bounded_non_negative(name, value, MAX_CORTICOTHALAMIC_GAIN)?;
         }
         Ok(())
     }
@@ -105,8 +108,9 @@ impl CorticothalamicEngine {
     pub fn new(config: CorticothalamicConfig) -> Result<Self, EngineError> {
         config.validate()?;
         let relay_delay_steps =
-            delay_steps(config.relay_to_trn_delay.get(), config.laminar.dt.get());
-        let trn_delay_steps = delay_steps(config.trn_to_relay_delay.get(), config.laminar.dt.get());
+            delay_steps(config.relay_to_trn_delay.get(), config.laminar.dt.get())?;
+        let trn_delay_steps =
+            delay_steps(config.trn_to_relay_delay.get(), config.laminar.dt.get())?;
         let laminar = LaminarEngine::new(config.laminar)?;
         Ok(Self {
             config,
@@ -160,8 +164,16 @@ impl CorticothalamicEngine {
         &mut self,
         drive: CorticothalamicDrive,
     ) -> Result<CorticothalamicSnapshot, EngineError> {
-        validate_non_negative_finite("corticothalamic_sensory_drive", drive.sensory)?;
-        validate_non_negative_finite("corticothalamic_contextual_drive", drive.contextual)?;
+        validate_bounded_non_negative(
+            "corticothalamic_sensory_drive",
+            drive.sensory,
+            MAX_CORTICOTHALAMIC_DRIVE,
+        )?;
+        validate_bounded_non_negative(
+            "corticothalamic_contextual_drive",
+            drive.contextual,
+            MAX_CORTICOTHALAMIC_DRIVE,
+        )?;
 
         let delayed_relay = self.relay_history[self.relay_cursor];
         let delayed_trn = self.trn_history[self.trn_cursor];
@@ -208,12 +220,21 @@ impl CorticothalamicEngine {
     }
 }
 
-fn delay_steps(delay: f64, dt: f64) -> usize {
-    let delay_nanos = Duration::from_secs_f64(delay).as_nanos();
-    let dt_nanos = Duration::from_secs_f64(dt).as_nanos();
-    usize::try_from(delay_nanos.div_ceil(dt_nanos))
-        .unwrap_or(usize::MAX)
-        .max(1)
+fn delay_steps(delay: f64, dt: f64) -> Result<usize, EngineError> {
+    let mut steps = 1;
+    let mut covered_duration = dt;
+    while covered_duration < delay {
+        if steps == MAX_CORTICOTHALAMIC_DELAY_STEPS {
+            return Err(EngineError::ParameterOutOfRange {
+                name: "corticothalamic_delay_steps",
+                value: (delay / dt).ceil(),
+                maximum: 4_096.0,
+            });
+        }
+        steps += 1;
+        covered_duration += dt;
+    }
+    Ok(steps)
 }
 
 #[cfg(test)]
@@ -272,5 +293,45 @@ mod tests {
         );
         assert!(engine.relay_history.iter().all(|value| *value == 0.0));
         assert!(engine.trn_history.iter().all(|value| *value == 0.0));
+    }
+
+    #[test]
+    fn rejects_delay_lines_above_the_resource_envelope() {
+        let mut config = CorticothalamicConfig::default();
+        config.laminar.dt = Seconds::trusted(1.0e-12);
+        assert!(matches!(
+            CorticothalamicEngine::new(config),
+            Err(EngineError::ParameterOutOfRange {
+                name: "corticothalamic_delay_steps",
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn rejects_excessive_gains_and_drives() {
+        let excessive_gain = CorticothalamicConfig {
+            relay_to_trn_gain: MAX_CORTICOTHALAMIC_GAIN + 0.01,
+            ..CorticothalamicConfig::default()
+        };
+        assert!(matches!(
+            CorticothalamicEngine::new(excessive_gain),
+            Err(EngineError::ParameterOutOfRange {
+                name: "relay_to_trn_gain",
+                ..
+            })
+        ));
+
+        let mut engine = CorticothalamicEngine::new(CorticothalamicConfig::default()).unwrap();
+        assert!(matches!(
+            engine.step(CorticothalamicDrive {
+                sensory: MAX_CORTICOTHALAMIC_DRIVE + 0.01,
+                contextual: 0.0,
+            }),
+            Err(EngineError::ParameterOutOfRange {
+                name: "corticothalamic_sensory_drive",
+                ..
+            })
+        ));
     }
 }

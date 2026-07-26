@@ -13,6 +13,7 @@ mod simulation;
 pub use clock::{ClockError, ClockFrame, FixedStepClock, SimulationTick, MAX_SAFE_TICK};
 pub use corticothalamic::{
     CorticothalamicConfig, CorticothalamicDrive, CorticothalamicEngine, CorticothalamicSnapshot,
+    MAX_CORTICOTHALAMIC_DELAY_STEPS, MAX_CORTICOTHALAMIC_DRIVE, MAX_CORTICOTHALAMIC_GAIN,
 };
 pub use field::{
     project_spikes_to_field, FieldConfig, FieldError, FieldSnapshot, FieldTopology, NeuronKind,

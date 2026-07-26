@@ -58,9 +58,9 @@ Superfície revisada:
 
 | ID | Severidade | Estado | Descrição |
 | :-- | :-- | :-- | :-- |
-| L06-B-01 | alta | aberto | a razão atraso/`dt` ainda pode resultar em alocação excessiva ou divisão por zero quando `dt` é menor que a resolução de `Duration` |
-| L06-B-02 | média | aberto | ganhos e drives são finitos e não negativos, mas ainda não possuem teto explícito antes das multiplicações |
+| L06-B-01 | alta | fechado | a linha de atraso é construída por contagem verificada e rejeitada acima de `MAX_CORTICOTHALAMIC_DELAY_STEPS`, sem depender da resolução de `Duration` |
+| L06-B-02 | média | fechado | ganhos e drives possuem tetos públicos e são rejeitados antes das multiplicações |
 
-Critério de correção: converter atraso em passos sem pânico, rejeitar linhas
-acima de um máximo nomeado, limitar ganhos/drives e testar os pontos de
-fronteira.
+Correção confirmada: a conversão de atraso não faz cast de ponto flutuante nem
+aloca antes de concluir a contagem; os testes cobrem `dt` subnanosegundo, ganho
+imediatamente acima do teto e drive excessivo.
