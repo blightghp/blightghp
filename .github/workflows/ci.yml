@@ -35,10 +35,14 @@ jobs:
       - name: Cache Rust
         uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2.8.1
         with:
-          workspaces: src-tauri
+          workspaces: .
+      - name: Alvo WebAssembly
+        run: rustup target add wasm32-unknown-unknown
       - name: Formatação
-        run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-      - name: Testes Rust
-        run: cargo test --manifest-path src-tauri/Cargo.toml
+        run: cargo fmt --all -- --check
+      - name: Testes do workspace Rust
+        run: cargo test --workspace
+      - name: Compilação WebAssembly
+        run: cargo check -p brain-wasm --target wasm32-unknown-unknown
       - name: Clippy
-        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings

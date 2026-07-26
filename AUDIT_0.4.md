@@ -4,7 +4,8 @@ Data do gate: 26 de julho de 2026.
 
 ## Decisão
 
-**Aprovada para abrir o planejamento da 0.5 · Lâmina.**
+**Aprovada como baseline para a etapa seguinte.** O roadmap posterior moveu a
+Lâmina para a 0.6 e reservou a 0.5 à migração Rust/Wasm.
 
 A revisão inicial não aprovou o commit que declarava a 0.4 concluída: os atrasos
 do campo eram apenas calculados, os buffers de histórico não participavam da
@@ -48,18 +49,18 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
   testado. Ela não demonstra ondas fisiológicas, velocidade biológica calibrada
   ou validade estatística de um fenômeno emergente.
 - O foco regional e o zoom são decisões de apresentação e não alteram o motor.
-  LODs com orçamento de GPU pertencem ao escopo da 0.5.
+  LODs com orçamento de GPU pertencem ao escopo da 0.6.
 - Campo e spikes ainda coexistem no modelo híbrido global. A substituição por
-  máscara de resolução, sem sobreposição micro/macro, continua reservada à 0.6.
+  máscara de resolução, sem sobreposição micro/macro, continua reservada à 0.7.
 - Replay de entradas, perfil contínuo, convergência específica de AMPA/GABA-A e
   snapshots visuais automatizados permanecem no backlog transversal. Eles não
   alteram o contrato do campo, mas bloqueiam qualquer nova alegação científica
   que dependa dessas evidências.
 
-## Contrato de entrada da 0.5
+## Contrato herdado pela nova 0.5
 
-A etapa laminar deve começar sem alterar silenciosamente o significado do campo
-promovido. O primeiro corte de planejamento precisa definir:
+A migração Rust/Wasm deve preservar o significado do campo promovido antes de a
+etapa laminar começar. O contrato laminar da 0.6 ainda precisa definir:
 
 1. IDs e enumeração das seis lâminas;
 2. populações por lâmina e unidades de seus estados;

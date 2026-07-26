@@ -1,17 +1,22 @@
 # Arquitetura estrutural
 
-Esta arquitetura parte do código da 0.2. Ela descreve as próximas costuras do `src/`, não uma árvore final a ser criada de uma vez. Um arquivo só é separado quando passa a ter estado, ciclo de vida ou testes próprios.
+Esta arquitetura registra a evolução desde o motor TypeScript da 0.2 até o
+núcleo Rust/Wasm iniciado na 0.5. Um módulo só é separado quando passa a ter
+estado, ciclo de vida, fronteira de plataforma ou testes próprios.
 
 ## Ponto de partida
 
-Hoje o projeto tem quatro peças centrais:
+O baseline promovido da 0.4 tem quatro peças centrais:
 
 - `brain.ts` gera geometria, regiões, tipos de unidade e conexões;
 - `simulation.ts` guarda o estado mutável e executa integração, atrasos e STDP;
 - `inference.ts` implementa o experimento Bayesiano escalar atual;
 - `main.ts` inicializa a aplicação e ainda concentra relógio, cena, renderização, HUD, captura e controles.
 
-Essa divisão é suficiente para a 0.2. A primeira mudança não será criar um conjunto de pacotes, mas retirar do `main.ts` as duas fronteiras que já têm semântica própria: tempo e protocolo de simulação.
+Esse baseline permanece temporariamente como oráculo de paridade. A partir da
+0.5, `crates/brain-engine` recebe a matemática e `crates/brain-wasm` contém
+somente a ABI para o navegador. Nenhuma função nova de cérebro deve ser
+implementada primeiro em `simulation.ts`.
 
 ## Regras de dependência
 
@@ -29,17 +34,64 @@ flowchart LR
     RENDER --> FRAME["Frame interpolado"]
 ```
 
-As dependências seguem cinco regras:
+As dependências seguem oito regras:
 
 1. O núcleo não importa Three.js, DOM, Tauri nem o conteúdo de um experimento.
 2. O renderer nunca escreve no estado da simulação.
 3. Observáveis leem snapshots ou acumuladores publicados; não alcançam buffers privados do núcleo.
 4. Entradas pessoais são convertidas para eventos genéricos antes de cruzarem o protocolo.
 5. O relógio de parede decide quantos ticks pedir, mas nunca vira argumento livre de uma equação.
+6. `brain-engine` não importa DOM, Web APIs, Tauri, Three.js nem sistema de arquivos.
+7. `brain-wasm` adapta erros e buffers, mas não contém equações alternativas.
+8. TypeScript não muta estado científico e será removido do laço quente depois da paridade.
+
+## Arquitetura 0.5 · Rust nativo e Wasm
+
+```mermaid
+flowchart LR
+    PRESET["Preset + eventos"] --> RUST["brain-engine<br/>Rust puro"]
+    RUST --> NATIVE["Tauri / testes / lotes"]
+    RUST --> ABI["brain-wasm<br/>wasm-bindgen"]
+    ABI --> WORKER["Web Worker"]
+    WORKER --> SNAP["Snapshot versionado<br/>buffers tipados"]
+    SNAP --> SHELL["Shell TypeScript"]
+    SHELL --> VIEW["Three.js + abas + HUD"]
+```
+
+O mesmo `brain-engine` compila para o host nativo e para
+`wasm32-unknown-unknown`. Essa paridade de código-fonte evita manter uma versão
+“web” simplificada e outra “científica” nativa.
+
+### Fronteiras
+
+| Fronteira | Formato | Regra |
+| :-- | :-- | :-- |
+| UI → Worker | comandos versionados | entradas carregam tick e sequência |
+| Worker → Wasm | chamadas estreitas e views de memória | sem objeto DOM ou callback de frame |
+| engine → snapshot | buffers contíguos + metadados | buffers do núcleo nunca são expostos como mutáveis |
+| snapshot → renderer | cópia/transferência ou página de leitura | câmera e LOD não afetam o motor |
+| engine → nativo | API Rust | mesma configuração, replay e hashes do Wasm |
+
+O módulo começa serial dentro de um Worker. Threads Wasm e memória
+compartilhada só entram atrás de detecção de `crossOriginIsolated`, benchmark e
+fusão determinística. O GitHub Pages continua suportado pelo caminho serial.
+
+### Política de linguagem
+
+- **Rust:** modelos, solvers, topologia, RNG, eventos, observáveis, replay e
+  validação numérica.
+- **TypeScript:** bootstrap do Wasm, protocolo Worker, DOM, acessibilidade e
+  renderização até uma migração gráfica ter benefício comprovado.
+- **C#:** serviço opcional nativo/offline; nunca integra o laço web e nunca é
+  descrito como mecanismo de segurança do cliente.
+- **WGSL/WebGPU:** candidato futuro para kernels gráficos ou numéricos
+  massivamente paralelos; não substitui validação nem vira requisito da 0.5.
 
 ## Estado e tipos
 
-Os tipos abaixo são contratos de destino. Eles serão introduzidos conforme cada módulo surgir e não precisam ocupar um arquivo central de tipos.
+Os tipos abaixo descrevem o wire protocol legado. Na 0.5, seus equivalentes
+canônicos vivem em Rust e as declarações TypeScript da ABI devem ser geradas ou
+testadas contra a mesma `schemaVersion`.
 
 ```ts
 type Tick = number;
@@ -149,17 +201,25 @@ O replay guarda:
 
 ### Números aleatórios
 
-O RNG será baseado em contador:
+O RNG é baseado em contador:
 
 ```text
 random(seed, stream, entityId, tick, eventOrdinal) -> uint32
 ```
 
-O endereço, e não a ordem da chamada, escolhe a amostra. Fluxos distintos separam topologia, ruído de canal, liberação sináptica e experimentos. Vetores inteiros do RNG devem ser exatos entre TypeScript e uma futura implementação Rust; transformações em ponto flutuante podem exigir tolerância entre runtimes, a menos que se adote matemática estrita própria.
+O endereço, e não a ordem da chamada, escolhe a amostra. Fluxos distintos
+separam topologia, ruído de canal, liberação sináptica e experimentos. A
+implementação Rust usa as mesmas operações `u32` com overflow modular do
+TypeScript e ambos consomem `fixtures/parity/discrete-v1.json`.
+
+O contrato legado reduz `tick` aos 32 bits baixos antes da avalanche. Isso
+repete o endereço depois de `2^32` ticks; a 60 Hz, após mais de dois anos
+contínuos. Qualquer ampliação desse endereço exige nova versão de fixture,
+protocolo e replay — nunca uma mudança silenciosa.
 
 ### Arestas e reduções
 
-A topologia atribui um ID estável a cada sinapse. O CSR de saída é ordenado por `(origem, destino, id)` e o índice de entrada por `(destino, origem, id)`.
+A topologia atribui um ID estável a cada sinapse. O CSR de saída é ordenado por `(origem, destino, id)` e o índice de entrada por `(destino, origem, id)`. A implementação Rust rejeita endpoints fora do buffer e produz exatamente os mesmos offsets e IDs do fixture TypeScript.
 
 Na primeira implementação, o laço quente permanece serial. Se houver paralelismo posterior:
 
@@ -218,7 +278,7 @@ como fontes independentes.
 O domínio atual é uma aproximação k-NN procedural. Não é uma malha triangular
 anatômica, e seus comprimentos euclidianos não são descritos como geodésicas.
 
-### 0.6 — patch resolvido
+### 0.7 — patch resolvido
 
 Um `ResolutionMap` define:
 
@@ -252,7 +312,7 @@ interface ExperimentDecoder<Result> {
 }
 ```
 
-O experimento Bayesiano atual continua isolado em `inference.ts` até ser substituído por esse contrato. Na 0.7, uma entrada pessoal poderá morar em `experiments/symbolic-sequence.ts`: ela codifica tokens em drives genéricos e interpreta canais de saída, sem importar nem modificar internamente `simulation.ts`.
+O experimento Bayesiano atual continua isolado em `inference.ts` até ser substituído por esse contrato. Na 0.9, uma entrada pessoal poderá morar em `experiments/symbolic-sequence.ts`: ela codifica tokens em drives genéricos e interpreta canais de saída, sem importar nem modificar internamente `simulation.ts`.
 
 Presets guardam parâmetros; adaptadores guardam significado. Essa separação permite executar tarefas perceptivas ou simbólicas sobre o mesmo núcleo e comparar resultados sem ramificações pessoais dentro do motor.
 
@@ -305,7 +365,7 @@ interface RenderLayer {
 
 Pulsos visuais representam eventos reais. Interpolação pode suavizar posição e intensidade, mas não criar spikes entre snapshots. LOD reduz geometria e amostragem visual; não altera o motor.
 
-## Crescimento físico do `src/`
+## Histórico do `src/` e workspace 0.5
 
 ### Corte 0.3-a — relógio e contrato
 
@@ -355,19 +415,37 @@ O `main.ts` permanece como composição: cria dependências, liga controles e in
 
 `field.ts` aparece com o primeiro estado populacional real. Um diretório `models/` só se justifica quando LIF, campo e AdEx coexistirem. Da mesma forma, `experiments/` nasce quando houver mais de uma tarefa. A organização segue a diversidade real do código.
 
-## Primeira sequência de implementação
+### Workspace a partir da 0.5
 
-1. Caracterizar o comportamento atual com testes de relógio e snapshots pequenos.
-2. Extrair `clock.ts` sem alterar a equação vigente.
-3. Introduzir `protocol.ts` e trocar arrays comuns de snapshot por arrays tipados.
-4. Implementar o RNG endereçado e fixar seus vetores de teste.
-5. Construir CSR mantendo a mesma ordem numérica e comparar o resultado com a estrutura atual.
-6. Levar o laço serial ao Worker e validar replay e captura.
-7. Extrair observáveis e a primeira camada de render.
-8. Medir convergência antes de alterar passo, integrador ou modelo sináptico.
-9. Introduzir AMPA/GABA-A atrás de um preset e comparar o modelo antigo ao novo.
+```text
+.
+├── Cargo.toml                  # workspace e políticas comuns
+├── crates/
+│   ├── brain-engine/           # Rust puro, nativo + Wasm
+│   └── brain-wasm/             # ABI wasm-bindgen
+├── src/                        # shell e oráculo TS temporário
+├── src-tauri/                  # host desktop
+└── scripts/                    # captura e artefatos reproduzíveis
+```
 
-Essa ordem mantém cada commit pequeno, reversível e explicável. O motor muda de estrutura antes de mudar de fisiologia, e a imagem melhora apenas quando o novo estado já pode sustentá-la.
+`src-tauri` passa a consumir `brain-engine` quando o engine nativo substituir a
+ponte informativa atual. O `Cargo.lock` único fica na raiz do workspace.
+
+## Sequência de migração 0.5
+
+1. Manter os vetores e replays da 0.4 congelados como oráculo.
+2. Fixar tipos Rust de camada, tick, unidade, configuração, erro e snapshot.
+3. Portar relógio e RNG com igualdade exata.
+4. Portar CSR/topologia e comparar IDs, offsets e hashes.
+5. Portar campo e sinapses por blocos com convergência por grandeza.
+6. Gerar bindings Wasm e carregar o engine no Worker existente.
+7. Rodar TS e Rust em modo sombra, sem renderizar duas atividades.
+8. Promover Rust/Wasm quando paridade, memória e latência passarem.
+9. Remover equações TypeScript e conservar somente o shell/protocolo.
+
+Cada corte deve ser reversível e publicar qual parte ainda depende do oráculo.
+Uma nova função fisiológica não entra enquanto o mesmo subsistema estiver
+duplicado e sem paridade.
 
 ## Comentários e documentação
 

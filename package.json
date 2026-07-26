@@ -1,7 +1,7 @@
 {
   "name": "blightghp",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0-alpha.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "generate:brain-gif": "node scripts/gen_brain_gif.js",
+    "stamp:brain-gif": "node scripts/stamp_brain_gif.js",
     "check": "npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {

@@ -15,6 +15,14 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
 7. Uma aproximação científica deve declarar unidade, escala, hipótese e limite. Código preditivo é um modelo de tarefa, não uma lei universal do motor.
 8. Realismo gráfico não pode ocultar perda de legibilidade, desempenho ou validade científica.
 9. Web, captura automatizada e aplicativo desktop devem reproduzir a mesma experiência observável.
+10. A partir da 0.5, Rust é a única fonte de verdade para estado, integração,
+    aleatoriedade, redução e observáveis científicos.
+11. WebAssembly é uma fronteira de execução, não um segundo modelo: o mesmo
+    crate deve rodar nativamente e no navegador.
+12. TypeScript coordena DOM, acessibilidade e apresentação; não integra
+    equações do cérebro.
+13. C# só entra como serviço nativo/offline depois de benchmark reproduzível;
+    ele não é requisito de segurança nem parte do payload web padrão.
 
 ## Sequência de versões
 
@@ -23,14 +31,14 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
 | **0.2 · Excitabilidade** | LIF fenomenológico, atrasos, sinapses direcionadas, excitação, inibição, STDP e inferência Bayesiana escalar | Atividade por unidade, pulsos ligados a eventos, envoltórios anatômicos e traçado de disparos | Determinismo serial, pesos limitados, inferência normalizada e invariantes do grafo |
 | **0.3 · Fundação** | Relógio desacoplado do frame, ticks inteiros, RNG indexado, CSR, redução ordenada, Worker serial e transição validada para AMPA/GABA-A | Feixes direcionais, instrumentos com unidade, foco progressivo, LOD e interpolação entre snapshots | Vetores exatos do RNG, replay de entradas, convergência temporal, paridade antes/depois do Worker e orçamento medido |
 | **0.4 · Superfície** | Domínio cortical procedural, campo populacional E/I, atrasos de condução e primeiro acoplamento campo/spikes | Atividade sobre o envelope cortical, zoom orbital e foco regional | Convergência da discretização, conservação na projeção, regressão estrutural e ausência de atividade gráfica inventada |
-| **0.5 · Lâmina** | Populações laminares, circuitos feedforward/feedback, tálamo e núcleo reticular quando exigidos pela tarefa | Coluna cortical explodida, seis lâminas legíveis e projeções tálamo-corticais | Testes de conectividade por camada, ritmos reproduzíveis apenas nos circuitos que os sustentam e metas de GPU por LOD |
-| **0.6 · Microscopia** | Patches AdEx, AMPA/NMDA/GABA-A/GABA-B, plasticidade de curto prazo e modulação dependente de receptor | Tipos celulares selecionados, dendritos, terminais, vesículas e inspeção sináptica local | Convergência de disparos e correntes, recursos sinápticos limitados, balanço E/I e ensembles de sementes |
-| **0.7 · Cognição** | Memória de trabalho, tarefas preditivas hierárquicas, hipocampo apenas em tarefas episódicas/espaciais e entrada simbólica pessoal sobre o núcleo genérico | Comparação espacial entre previsão, erro e atividade; trajetória guiada ligada à tarefa | Desempenho sob evidência ambígua, retenção/recuperação reproduzíveis e controles contra interpretações antecipadas |
-| **0.8 · Comportamento** | Leitura motora, acumulação de evidência e núcleos da base em modelos explícitos de seleção de ação | Ação observável, hesitação e retorno visual da escala comportamental ao circuito | Distribuições de escolha e tempo de reação em bandas estatísticas; hipóteses anatômicas documentadas |
-| **0.9 · Núcleo compartilhado** | Migração do laço quente para Rust/WASM somente se o perfil justificar, com protocolo de snapshot versionado | Buffers compactos e interpolação idêntica no navegador e no Tauri | Paridade numérica declarada, benchmarks públicos e replay cruzado dentro da tolerância escolhida |
-| **1.0 · Atlas vivo** | Presets, gravação, reprodução, importação de estímulos e API estável | Tecidos calibrados, transparência multicamada, pós-processamento adaptativo e descida guiada completa | Documentação de referência, acessibilidade, testes end-to-end e pacotes reproduzíveis |
+| **0.5 · Corredor Rust/Wasm** | Crate matemático puro, contrato laminar inicial, ABI Wasm estreita, Worker e paridade contra o motor TypeScript | Shell atual consumindo snapshots Rust sem alterar a experiência | Testes nativos e Wasm, replay cruzado, convergência, orçamento de memória e remoção progressiva do integrador TypeScript |
+| **0.6 · Lâmina e tálamo** | Seis lâminas, populações E/I, projeções feedforward/feedback e circuito tálamo–núcleo reticular apenas quando exigido | Aba Lâminas, coluna explodida e traçado das projeções | Conectividade permitida por camada, ritmos sustentados pelo circuito e custo por LOD |
+| **0.7 · Célula e eletricidade** | Patches AdEx, canais/receptores AMPA/NMDA/GABA-A/GABA-B e, quando necessário, compartimentos dendríticos | Abas Célula e Eletricidade, membrana, dendrito e correntes separadas | Convergência de eventos/correntes, balanço E/I, unidades SI e ensembles de sementes |
+| **0.8 · Sinapse e bioquímica** | Plasticidade, vesículas, ligação receptor-ligante, cascatas selecionadas e reação–difusão local | Abas Sinapse e Bioquímica com recursos, concentração e ocupação | Conservação de massa/carga, positividade, solver para rigidez, calibração e sensibilidade |
+| **0.9 · Sistemas e comportamento** | Memória de trabalho, tarefas preditivas, hipocampo, núcleos da base e leitura motora somente em tarefas explícitas | Abas Sistemas, Experimentos e Comportamento | Desempenho estatístico, controles nulos, retenção/decisão reproduzíveis e hipóteses documentadas |
+| **1.0 · Atlas experimental** | Presets, replay, importação, API estável e modelos multiescala validados | Visão Geral, Superfície, Lâminas, Célula, Sinapse, Bioquímica, Sistemas, Experimentos e Validação | Pacotes reproduzíveis, acessibilidade, testes end-to-end, proveniência e nenhuma alegação além da evidência |
 
-## Versão atual: 0.4 · Superfície promovida (0.5 pronta para abertura)
+## Versão atual: 0.5-alpha · Corredor Rust/Wasm em fundação
 
 ### Gate auditado da 0.4 · Superfície
 
@@ -47,8 +55,34 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
   estrutural do renderer.
 
 O relatório de promoção e as limitações aceitas estão em
-[AUDIT_0.4.md](AUDIT_0.4.md). A etapa 0.5 pode começar pelo contrato laminar;
-ela não deve reinterpretar o grafo k-NN atual como anatomia parcelada.
+[AUDIT_0.4.md](AUDIT_0.4.md). A 0.5 preserva esse baseline como oráculo de
+migração; ela não deve reinterpretar o grafo k-NN atual como anatomia parcelada.
+
+### Cortes da 0.5
+
+- [x] **0.5-a · Workspace Rust:** `brain-engine` sem DOM/Tauri e
+  `brain-wasm` como adaptador `wasm-bindgen`, compiláveis nativamente e para
+  `wasm32-unknown-unknown`.
+- [x] **0.5-b · Contrato laminar mínimo:** seis IDs estáveis, matrizes
+  alvo×origem, passo fixo, relaxação exponencial e estados E/I limitados.
+- [ ] **0.5-c · Paridade:** portar relógio, RNG, CSR, campo 0.4 e observáveis,
+  fixando vetores TS↔Rust antes de trocar o engine padrão.
+  - [x] **0.5-c1 · Discretos:** tipos de tick/segundo, relógio, RNG endereçado e
+    CSR canônico em Rust, aprovados pelo mesmo fixture JSON consumido no Vitest.
+  - [ ] **0.5-c2 · Campo e observáveis:** portar o campo E/I 0.4, agregação de
+    spikes e instrumentos, com convergência e envelopes cruzados.
+  - [ ] **0.5-c3 · Replay sombra:** executar cenários curtos nos dois motores e
+    registrar divergência, custo e hashes antes da promoção.
+- [ ] **0.5-d · Worker Wasm:** carregar o módulo dentro do Worker, transferir
+  snapshots compactos e manter o thread de apresentação livre.
+- [ ] **0.5-e · Promoção:** tornar Rust/Wasm o padrão, conservar fallback
+  diagnóstico temporário e remover as equações duplicadas em TypeScript.
+- [x] **0.5-f · Perfil vivo:** workflow reproduzível para capturar o simulador,
+  atualizar `brain.gif` e carimbar a URL no README com o SHA de origem.
+
+O plano detalhado, incluindo limites do GitHub Pages e a política para C#, está
+em [MIGRATION_0.5.md](MIGRATION_0.5.md). O veredito, a evidência executada e os
+limites operacionais estão em [AUDIT_0.5_ENTRY.md](AUDIT_0.5_ENTRY.md).
 
 ### Fundação entregue
 
@@ -65,12 +99,12 @@ ela não deve reinterpretar o grafo k-NN atual como anatomia parcelada.
 - [x] foco regional e zoom orbital sem alterar o motor;
 - [x] HUD com taxa em Hz/nó e estados adimensionais identificados como `u.a.`.
 
-### Backlog transversal não bloqueador
+### Backlog transversal da migração
 
 Estes itens não mudam o contrato superficial promovido e podem entrar na trilha
 de qualidade da 0.5, antes de qualquer demonstração científica nova:
 
-- [ ] fila genérica de entradas por `(tick, sequence)` e artefato de replay;
+- [ ] fila genérica Rust de entradas por `(tick, sequence)` e artefato de replay;
 - [ ] cadência configurável de snapshots e perfil de CPU/GPU/memória/latência;
 - [ ] estudo de convergência específico das correntes AMPA/GABA-A;
 - [ ] curvas axonais e ciclos de vida independentes para todas as camadas;

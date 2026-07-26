@@ -1,3 +1,4 @@
+use brain_engine::ENGINE_SCHEMA_VERSION;
 use serde::Serialize;
 
 #[derive(Debug, Serialize, PartialEq)]
@@ -6,13 +7,15 @@ struct RuntimeInfo {
     engine: &'static str,
     renderer: &'static str,
     schema: &'static str,
+    brain_engine_schema: u32,
 }
 
 fn runtime_info() -> RuntimeInfo {
     RuntimeInfo {
-        engine: "Rust/Tauri host",
+        engine: "Rust brain-engine host",
         renderer: "Three.js",
         schema: "Zod",
+        brain_engine_schema: ENGINE_SCHEMA_VERSION,
     }
 }
 
@@ -39,9 +42,10 @@ mod tests {
         assert_eq!(
             runtime_info(),
             RuntimeInfo {
-                engine: "Rust/Tauri host",
+                engine: "Rust brain-engine host",
                 renderer: "Three.js",
                 schema: "Zod",
+                brain_engine_schema: 1,
             }
         );
     }

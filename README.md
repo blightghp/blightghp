@@ -16,7 +16,12 @@
 
 Este experimento combina uma topologia cerebral procedural com uma simulação neural determinística. Os sinais visíveis não percorrem trajetórias decorativas: cada pulso nasce de um disparo, atravessa uma sinapse do grafo e chega ao neurônio de destino depois do atraso calculado para aquela conexão.
 
-O modelo foi desenhado para ser compreensível e visualmente expressivo. Ainda é cedo para dizer se é possível fazer aparecer toda a fisiologia do cérebro humano. Busquei trabalhar com uma aproximação tipo *leaky integrate-and-fire*, plasticidade temporal e uma atualização Bayesiana de duas hipóteses, por enquanto.
+O modelo foi desenhado para ser compreensível, mensurável e visualmente
+expressivo. O simulador publicado ainda é o baseline TypeScript da 0.4; a 0.5
+iniciou a migração das equações para um engine Rust comum ao desktop e ao
+navegador via WebAssembly. “Realista” aqui significa declarar unidades,
+hipóteses, solver, erro e evidência — não afirmar que toda a fisiologia humana já
+foi reproduzida.
 
 ### O que está sendo simulado
 
@@ -32,22 +37,20 @@ O modelo foi desenhado para ser compreensível e visualmente expressivo. Ainda �
 - **Foco de circuito, zoom & HUD instrumentado:** isolamento visual por região, zoom orbital e instrumentos nomeados (`Hz/nó`, `spikes`, estado LIF em `u.a.`, peso médio e `FPS`).
 
 ```text
-observação → atualização Bayesiana → corrente de entrada
-                                         ↓
-topologia CSR → campo populacional E/I ↔ acoplamento spikes → STDP
-                                         ↓
-                  Web Worker (EngineHost) ↔ Protocolo & Observáveis
-                                         ↓
-            Ondas Superficiais & Interpolação (render-layers.ts) · Zoom LOD
-                                         ↓
-                         Three.js · WebGL · HUD Instrumentado
+presets/eventos → brain-engine (Rust: matemática e estado)
+                         ├── execução nativa / Tauri
+                         └── brain-wasm → Web Worker → snapshots
+                                                     ↓
+                                  shell TypeScript → Three.js / abas / HUD
 ```
 
 ### Arquitetura
 
 | Camada | Tecnologia | Responsabilidade atual |
 | :-- | :-- | :-- |
-| Núcleo neural | TypeScript | Integração temporal LIF, condutâncias AMPA/GABA-A, plasticidade STDP, matriz CSR (`network.ts`) e PRNG determinístico (`random.ts`) |
+| Núcleo 0.5 | Rust (`brain-engine`) | Fonte de verdade em construção; relógio, RNG, CSR, contrato laminar E/I, unidades e tipos independentes de plataforma |
+| Ponte web | Rust/Wasm (`brain-wasm`) | ABI mínima `wasm-bindgen`, compilável para `wasm32-unknown-unknown` |
+| Oráculo 0.4 | TypeScript | LIF, AMPA/GABA-A, STDP, campo e versões legadas dos discretos mantidos temporariamente para testes de paridade |
 | Campo populacional | TypeScript | Campo E/I por kernel de grafo cortical (`field.ts`), atraso espacial consumido pelo integrador e acoplamento bidirecional com spikes |
 | Motor & Worker | TypeScript · Web Worker | Execução em worker thread (`simulation.worker.ts`), desacoplada da UI via `engine-host.ts` |
 | Tempo & Protocolo | TypeScript | Relógio determinístico (`clock.ts`), protocolo de mensagens (`protocol.ts`) e observáveis (`observables.ts`) |
@@ -55,13 +58,17 @@ topologia CSR → campo populacional E/I ↔ acoplamento spikes → STDP
 | Inferência | TypeScript | Atualização Bayesiana normalizada entre duas hipóteses |
 | Visualização | Three.js · WebGL | Instâncias, bloom, envoltórios anatômicos, atividade por vértice e instrumentação de FPS |
 | Contrato | Zod | Validação dos parâmetros recebidos pela interface e pela URL |
-| Desktop | Tauri 2 · Rust | Empacotamento nativo e ponte segura com a interface |
-| Qualidade | Vitest · Cargo | Campo populacional E/I, grafo CSR, relógio, observáveis, worker host, inferência e runtime nativo |
+| Desktop | Tauri 2 · Rust | Empacotamento nativo; passará a importar o mesmo `brain-engine` |
+| Qualidade | Cargo · Vitest | Testes nativos/Wasm, paridade, convergência, shell e captura |
 
-O núcleo permanece em TypeScript nesta versão para manter paridade imediata entre GitHub Pages e desktop. Ele roda em um Web Worker dedicado (`EngineHost`), enquanto o renderer (`render-layers.ts`) interpola snapshots sem integrar o modelo no frame gráfico. A migração para um crate compartilhado entre Rust nativo e WebAssembly está planejada para quando os perfis de desempenho justificarem a troca.
+O browser continuará usando um Worker: Wasm retira o cálculo do shell, mas não
+deve disputar o thread da interface. TypeScript permanece como camada fina de
+DOM, acessibilidade e apresentação até que uma migração gráfica também demonstre
+benefício. C# não faz parte do payload web; pode surgir como serviço offline
+somente depois de benchmark e necessidade operacional.
 
-O gate técnico da 0.4 e as limitações aceitas antes da abertura da etapa 0.5
-estão registrados em [AUDIT_0.4.md](AUDIT_0.4.md).
+O gate da 0.4 está em [AUDIT_0.4.md](AUDIT_0.4.md), e a migração ativa está em
+[MIGRATION_0.5.md](MIGRATION_0.5.md).
 
 ### Executar localmente
 
@@ -74,7 +81,8 @@ Para validar o projeto inteiro:
 
 ```bash
 npm run check
-cargo test --manifest-path src-tauri/Cargo.toml
+cargo test --workspace
+cargo check -p brain-wasm --target wasm32-unknown-unknown
 ```
 
 O GIF do perfil é reproduzível e usa o mesmo renderer da aplicação:
@@ -82,6 +90,11 @@ O GIF do perfil é reproduzível e usa o mesmo renderer da aplicação:
 ```bash
 npm run generate:brain-gif
 ```
+
+Quando GitHub Actions estiver habilitado, mudanças relevantes em `main`
+executarão a mesma captura e atualizarão o GIF e sua chave de cache no README.
+Essa sincronização é automática após o workflow, não instantânea: runners e o
+cache de imagens do GitHub introduzem latência.
 
 ## Evolução do experimento
 
@@ -91,6 +104,10 @@ Cada versão combina uma melhoria do modelo com um novo patamar gráfico. O proj
 - [MODEL_SPEC.md](MODEL_SPEC.md) registra equações, unidades, hipóteses e limites;
 - [ARCHITECTURE.md](ARCHITECTURE.md) traduz o modelo em módulos, tipos, laços e camadas de render;
 - [VALIDATION.md](VALIDATION.md) define evidências exatas, numéricas, estatísticas e visuais;
+- [MIGRATION_0.5.md](MIGRATION_0.5.md) define a fronteira Rust/Wasm, o papel
+  opcional de C# e a sincronização do GIF;
+- [AUDIT_0.5_ENTRY.md](AUDIT_0.5_ENTRY.md) registra o gate de entrada, as
+  correções executadas e o que ainda bloqueia a promoção do novo motor;
 - [REFERENCES.md](REFERENCES.md) reúne a base científica usada nas decisões.
 
 ## Sobre mim

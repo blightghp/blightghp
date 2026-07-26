@@ -154,3 +154,55 @@ A evidência executável da superfície está concentrada em `brain.test.ts`,
 `render-layers.test.ts`. O resultado da auditoria, incluindo os limites que não
 foram promovidos a afirmações fisiológicas, está em
 [AUDIT_0.4.md](AUDIT_0.4.md).
+
+## Matriz de validação Rust/Wasm da 0.5
+
+O motor Rust só substitui o oráculo TypeScript por subsistema. Cada linha precisa
+de artefato versionado:
+
+| Comparação | Contrato |
+| :-- | :-- |
+| Rust nativo × repetição nativa | igualdade exata de ticks, IDs, eventos e buffers determinísticos |
+| Rust nativo × Wasm no mesmo preset | exatidão para inteiros; tolerância declarada por grandeza em ponto flutuante |
+| Rust × TypeScript legado | vetores exatos para relógio/RNG/CSR; envelopes e eventos pareados para integradores |
+| Worker Wasm × chamada direta | mesmo estado e hash depois da mesma fila de entradas |
+| `f64` interno × snapshot `f32` | erro de quantização abaixo do orçamento do observável |
+| serial × paralelo futuro | mesma ordem lógica e tolerância previamente registrada |
+
+Testes da ABI executam no alvo `wasm32-unknown-unknown` e em navegador real.
+Compilar não basta: o módulo precisa ser carregado dentro do Worker, receber um
+replay, publicar buffers e sobreviver a reset/dispose.
+
+### Gate numérico por subsistema
+
+1. equação, unidade e domínio válidos em `MODEL_SPEC.md`;
+2. solução analítica, referência refinada ou benchmark independente;
+3. estudo de convergência temporal e, quando aplicável, espacial;
+4. invariantes de positividade, conservação, normalização e limites;
+5. sensibilidade a parâmetros e condição inicial;
+6. custo nativo, Wasm, transferência e memória;
+7. paridade do replay e proveniência do preset.
+
+Um solver rígido não é aprovado apenas por permanecer finito. Deve demonstrar
+erro e estabilidade no regime em que será usado.
+
+### C# e aceleradores externos
+
+Um booster C# precisa vencer ou complementar a alternativa Rust em um benchmark
+publicado e resolver uma necessidade fora do navegador. O relatório inclui
+serialização, cópias, latência de rede/processo e operação. C# não recebe acesso
+a segredos no cliente e não é apresentado como camada de segurança do Wasm.
+
+### GIF sincronizado
+
+O workflow de perfil valida o shell, usa captura determinística, atualiza
+`assets/brain.gif` e carimba a referência com o SHA do simulador. O gate verifica:
+
+- captura nasce do mesmo entry point publicado;
+- seed, tempo, câmera, viewport e número de frames são fixos;
+- GIF permanece abaixo do orçamento de tamanho;
+- commit contém somente GIF e referência do README;
+- falha de captura nunca substitui o último GIF válido.
+
+A sincronização é eventual: sucesso do workflow e atualização da URL são
+observáveis; “mudança instantânea” não é critério de aceite.

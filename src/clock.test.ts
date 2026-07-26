@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
+import parityFixture from "../fixtures/parity/discrete-v1.json";
 import { FixedStepClock } from "./clock";
 
 describe("FixedStepClock", () => {
+  it("matches the shared Rust/TypeScript parity artifact", () => {
+    for (const vector of parityFixture.clockVectors) {
+      const clock = new FixedStepClock({ stepSeconds: vector.stepSeconds });
+      for (const chunk of vector.chunksSeconds) clock.advanceExact(chunk);
+      expect(clock.targetTick).toBe(vector.expectedTick);
+      expect(clock.interpolationAlpha).toBeCloseTo(vector.expectedAlpha, 12);
+    }
+  });
+
   it("schedules the same ticks independently of frame partitioning", () => {
     const split = new FixedStepClock({ stepSeconds: 1 / 60 });
     const joined = new FixedStepClock({ stepSeconds: 1 / 60 });

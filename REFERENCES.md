@@ -24,6 +24,15 @@ Esta lista sustenta escolhas e limites do roadmap. Ela não funciona como argume
 - Touboul, J.; Destexhe, A. (2010). [Can power-law scaling and neuronal avalanches arise from stochastic dynamics?](https://pmc.ncbi.nlm.nih.gov/articles/PMC2820096/). Fundamenta os controles contra leis de potência aparentes produzidas por limiarização e processos estocásticos.
 - Levina, A.; Priesemann, V. (2017). [Subsampling scaling](https://pmc.ncbi.nlm.nih.gov/articles/PMC5418619/). Referência para o efeito da subamostragem na inferência de regimes críticos.
 
+## Infraestrutura científica
+
+- [Rust `wasm32-unknown-unknown`](https://doc.rust-lang.org/stable/rustc/platform-support/wasm32-unknown-unknown.html). Contrato e limitações do alvo genérico de WebAssembly.
+- [`wasm-bindgen`: implantação na web](https://wasm-bindgen.github.io/wasm-bindgen/reference/deployment.html) e [execução em Web Worker](https://wasm-bindgen.github.io/wasm-bindgen/examples/wasm-in-web-worker.html). Referências para a ponte estreita entre o motor Rust e o shell do navegador.
+- [Requisitos de segurança de `SharedArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements). Fundamenta o baseline serial: paralelismo Wasm com memória compartilhada só entra após teste de isolamento cross-origin no host real.
+- [Comportamento do `GITHUB_TOKEN` em workflows](https://docs.github.com/en/actions/concepts/security/github_token). Fundamenta a atualização do GIF e do README em um único workflow, sem depender de um segundo workflow disparado pelo commit automatizado.
+- [README de perfil no GitHub](https://docs.github.com/en/account-and-profile/concepts/personal-profile). O GIF é um artefato versionado do perfil; atualização “ao vivo” significa consistência eventual depois da captura, do commit e da invalidação de cache.
+- [ASP.NET Core Blazor](https://learn.microsoft.com/en-us/aspnet/core/blazor/). Referência de plataforma para avaliar um eventual serviço ou cliente .NET; não justifica incluir outro runtime no laço web sem benchmark.
+
 ## Regra de uso
 
 Ao implementar um modelo, o código referencia o preset e a documentação do preset referencia a fonte. Comentários não carregam revisões bibliográficas extensas. Quando duas fontes usam convenções incompatíveis, seus parâmetros não são combinados sem conversão e justificativa explícitas.

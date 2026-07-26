@@ -1,0 +1,17 @@
+[package]
+name = "brain-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Minimal wasm-bindgen boundary for the Sinapse Formalista engine"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+brain-engine = { path = "../brain-engine" }
+wasm-bindgen = "0.2.126"
+
+[lints]
+workspace = true

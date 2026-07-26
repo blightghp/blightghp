@@ -1,8 +1,19 @@
 import { describe, expect, it } from "vitest";
+import parityFixture from "../fixtures/parity/discrete-v1.json";
 import { generateBrainData } from "./brain";
 import { buildSynapseCsr, incomingRow, outgoingRow, SynapseEndpoints } from "./network";
 
 describe("buildSynapseCsr", () => {
+  it("matches the shared Rust/TypeScript parity artifact", () => {
+    const vector = parityFixture.csrVector;
+    const csr = buildSynapseCsr(vector.nodeCount, vector.synapses);
+
+    expect(Array.from(csr.outgoingOffsets)).toEqual(vector.outgoingOffsets);
+    expect(Array.from(csr.outgoingSynapseIds)).toEqual(vector.outgoingSynapseIds);
+    expect(Array.from(csr.incomingOffsets)).toEqual(vector.incomingOffsets);
+    expect(Array.from(csr.incomingSynapseIds)).toEqual(vector.incomingSynapseIds);
+  });
+
   it("orders each row by (endpoint, id) for a known small topology", () => {
     const synapses: SynapseEndpoints[] = [
       { from: 0, to: 2 }, // id 0

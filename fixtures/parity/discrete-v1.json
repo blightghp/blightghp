@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "randomVectors": [
+    { "seed": 0, "stream": 0, "entityId": 0, "tick": 0, "eventOrdinal": 0, "expected": 377036288 },
+    { "seed": 1, "stream": 0, "entityId": 0, "tick": 0, "eventOrdinal": 0, "expected": 603375697 },
+    { "seed": 0, "stream": 1, "entityId": 0, "tick": 0, "eventOrdinal": 0, "expected": 3902836857 },
+    { "seed": 0, "stream": 0, "entityId": 1, "tick": 0, "eventOrdinal": 0, "expected": 3592054408 },
+    { "seed": 0, "stream": 0, "entityId": 0, "tick": 1, "eventOrdinal": 0, "expected": 3532664066 },
+    { "seed": 0, "stream": 0, "entityId": 0, "tick": 0, "eventOrdinal": 1, "expected": 4228700435 },
+    { "seed": 12345, "stream": 2, "entityId": 17, "tick": 900, "eventOrdinal": 3, "expected": 155471040 },
+    { "seed": 1511505425, "stream": 0, "entityId": 0, "tick": 0, "eventOrdinal": 0, "expected": 168948365 },
+    { "seed": 1511505425, "stream": 1, "entityId": 0, "tick": 0, "eventOrdinal": 0, "expected": 148037297 }
+  ],
+  "clockVectors": [
+    {
+      "stepSeconds": 0.016666666666666666,
+      "chunksSeconds": [0.03333333333333333, 0.03333333333333333],
+      "expectedTick": 4,
+      "expectedAlpha": 0
+    },
+    {
+      "stepSeconds": 0.01,
+      "chunksSeconds": [0.016, 0.016, 0.018],
+      "expectedTick": 5,
+      "expectedAlpha": 0
+    },
+    {
+      "stepSeconds": 0.01,
+      "chunksSeconds": [0.025],
+      "expectedTick": 2,
+      "expectedAlpha": 0.5
+    }
+  ],
+  "csrVector": {
+    "nodeCount": 3,
+    "synapses": [
+      { "from": 0, "to": 2 },
+      { "from": 0, "to": 1 },
+      { "from": 1, "to": 2 },
+      { "from": 0, "to": 1 },
+      { "from": 2, "to": 0 }
+    ],
+    "outgoingOffsets": [0, 3, 4, 5],
+    "outgoingSynapseIds": [1, 3, 0, 2, 4],
+    "incomingOffsets": [0, 1, 3, 5],
+    "incomingSynapseIds": [4, 1, 3, 0, 2]
+  }
+}

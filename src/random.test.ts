@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
+import parityFixture from "../fixtures/parity/discrete-v1.json";
 import { randomUint32, randomUnit } from "./random";
 
 describe("randomUint32", () => {
+  it("matches the shared Rust/TypeScript parity artifact", () => {
+    expect(parityFixture.schemaVersion).toBe(1);
+    for (const vector of parityFixture.randomVectors) {
+      expect(
+        randomUint32(vector.seed, vector.stream, vector.entityId, vector.tick, vector.eventOrdinal),
+      ).toBe(vector.expected);
+    }
+  });
+
   it("matches fixed vectors for known addresses", () => {
     expect(randomUint32(0, 0, 0, 0, 0)).toBe(377036288);
     expect(randomUint32(1, 0, 0, 0, 0)).toBe(603375697);

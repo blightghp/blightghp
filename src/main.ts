@@ -26,6 +26,7 @@ interface RuntimeInfo {
   engine: string;
   renderer: string;
   schema: string;
+  brainEngineSchema: number;
 }
 
 const state: BrainSettings = getInitialBrainSettings();
@@ -286,7 +287,8 @@ async function resolveRuntime(): Promise<void> {
   }
   try {
     const info = await invoke<RuntimeInfo>("neural_runtime_info");
-    status.textContent = `${info.engine} · ${info.renderer} · ${info.schema}`.toUpperCase();
+    status.textContent =
+      `${info.engine} v${info.brainEngineSchema} · ${info.renderer} · ${info.schema}`.toUpperCase();
   } catch {
     status.textContent = "TAURI · RUST · THREE.JS";
   }

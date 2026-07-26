@@ -1,9 +1,9 @@
 [package]
 name = "sinapse-formalista"
-version = "0.4.0"
+version.workspace = true
 description = "A procedural 3D neural experiment packaged with Rust and Tauri"
 authors = ["Gabriel Pinheiro"]
-edition = "2021"
+edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -18,6 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+brain-engine = { path = "../crates/brain-engine" }
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }

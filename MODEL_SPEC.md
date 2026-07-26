@@ -11,11 +11,71 @@ Este documento define o significado dos estados e das equações planejadas. Ele
 - O tempo do motor é um tick inteiro. O valor físico é `tick * dt`.
 - Posições atuais estão em coordenadas procedurais sem unidade anatômica. Velocidade de condução física só será introduzida quando a geometria tiver escala declarada.
 
+## Política matemática a partir da 0.5
+
+O crate Rust registra separadamente a equação contínua, o método numérico e o
+observável publicado. “Cálculo forte” significa erro controlado e invariantes
+demonstráveis, não apenas equações mais longas.
+
+1. Estados internos usam `f64` por padrão; snapshots gráficos podem quantizar
+   para `f32` depois de medir o erro.
+2. Tempo, voltagem, corrente, condutância, concentração, comprimento e taxa
+   recebem tipos/unidades distintos antes de entrar em presets públicos.
+3. Nenhum solver altera `dt`, tolerância ou modelo em resposta a FPS.
+4. Sistemas rígidos declaram Jacobiano ou estrutura esparsa suficiente para um
+   método implícito/IMEX; Euler explícito não é fallback silencioso.
+5. Eventos de spike, liberação e troca de resolução preservam ordem canônica.
+6. Massa, carga, probabilidade, positividade e limites de recursos são
+   invariantes testados quando aplicáveis.
+7. Toda promoção inclui convergência temporal/espacial e sensibilidade aos
+   parâmetros; ajuste visual não calibra um modelo.
+
+### Contrato laminar inicial da 0.5
+
+Para cada lâmina `ℓ`, o primeiro kernel Rust usa um sistema populacional E/I:
+
+$$
+\tau^E_\ell\frac{dE_\ell}{dt}
+=-E_\ell+F\left(\sum_j W_{\ell j}E_j-g^I_\ell I_\ell+P_\ell\right),
+$$
+
+$$
+\tau^I_\ell\frac{dI_\ell}{dt}
+=-I_\ell+F\left(g^{EI}_\ell E_\ell\right),
+\qquad
+F(x)=\frac{\max(0,x)}{1+\max(0,x)}.
+$$
+
+Congelando o lado direito durante um tick, cada estado relaxa
+exponencialmente para o alvo:
+
+$$
+x_{n+1}=x_\star+(x_n-x_\star)e^{-\Delta t/\tau}.
+$$
+
+Essa forma mantém `E,I ∈ [0,1]` para entradas válidas e trata exatamente o
+termo linear de relaxação. A matriz é indexada como `[alvo][origem]`. O preset
+inicial existe para validar tipos, determinismo, ABI Wasm e propagação entre
+lâminas; seus pesos **não são uma calibração fisiológica**.
+
+### Solvers previstos por domínio
+
+| Domínio | Formulação inicial | Método candidato | Gate |
+| :-- | :-- | :-- | :-- |
+| campo cortical | kernel atrasado / futura PDE na superfície | histórico discreto; depois FEM/cotangente e IMEX | convergência espacial, fase e velocidade |
+| população laminar | Wilson–Cowan E/I | relaxação exponencial / IMEX | estabilidade, conectividade e ritmos |
+| célula pontual | AdEx híbrido | exponencial + localização de evento | tempo de spike e corrente |
+| receptores | ODE de estados e força motriz | atualização exata de decaimentos ou Rush–Larsen | pico e integral de corrente |
+| bioquímica | ação de massa e reação–difusão | Rosenbrock/BDF ou splitting validado | positividade e conservação |
+| liberação estocástica | processo de saltos | Gillespie ou tau-leaping com erro declarado | distribuições e recursos limitados |
+| acoplamento multiescala | restrição/prolongamento | operadores conservativos | não duplicação e fluxo de contorno |
+
 ## Escalas do estado
 
 | Escala | Estado principal | Interpretação |
 | :-- | :-- | :-- |
-| Rede atual | potencial, ativação, refratariedade e traços por unidade | Aproximação pulsada fenomenológica |
+| Rede legada 0.4 | potencial, ativação, refratariedade e traços por unidade | Oráculo TypeScript temporário da migração |
+| Lâmina 0.5+ | atividade E/I por L1–L6 e matriz alvo×origem | Kernel populacional Rust inicial |
 | Campo | atividade E/I por vértice da malha | Estado populacional macroscópico |
 | Patch microscópico | potencial, adaptação, condutâncias e eventos por célula | Amostra local resolvida em spikes |
 | Sinapse | eficácia, atraso, receptor e recursos de liberação | Canal causal entre unidades |
@@ -26,7 +86,7 @@ Este documento define o significado dos estados e das equações planejadas. Ele
 
 Campo e spikes representam a mesma atividade em escalas diferentes. Isso não significa que compartilhem a mesma equação ou que seus valores possam ser somados diretamente.
 
-Durante a 0.3, os spikes continuam sendo o estado integrado e o campo é apenas uma leitura agregada. A partir da 0.4, o campo passa a representar o domínio macroscópico. Quando um patch microscópico surgir na 0.6, ele substitui a contribuição do campo no suporte espacial selecionado.
+Durante a 0.3, os spikes continuam sendo o estado integrado e o campo é apenas uma leitura agregada. A partir da 0.4, o campo passa a representar o domínio macroscópico. Quando um patch microscópico surgir na 0.7, ele substitui a contribuição do campo no suporte espacial selecionado.
 
 Para uma janela de acoplamento `ΔT`, a atividade microscópica agregada no vértice `v` é
 
@@ -81,7 +141,7 @@ $$
 Cada receptor possui estado e cinética próprios. A progressão planejada é:
 
 1. AMPA e GABA-A na 0.3, depois da validação do integrador;
-2. NMDA e GABA-B nos patches da 0.6;
+2. NMDA e GABA-B nos patches da 0.7;
 3. modulação metabotrópica apenas com mecanismo e circuito declarados.
 
 GABA-A pode produzir hiperpolarização ou inibição por shunt conforme o potencial de reversão do cloro, o potencial de repouso e o estado instantâneo da membrana. O tipo do receptor não será usado sozinho para decidir o efeito.
