@@ -3,6 +3,7 @@
 use core::fmt;
 
 mod clock;
+mod corticothalamic;
 mod field;
 mod network;
 mod observables;
@@ -10,6 +11,9 @@ mod random;
 mod simulation;
 
 pub use clock::{ClockError, ClockFrame, FixedStepClock, SimulationTick, MAX_SAFE_TICK};
+pub use corticothalamic::{
+    CorticothalamicConfig, CorticothalamicDrive, CorticothalamicEngine, CorticothalamicSnapshot,
+};
 pub use field::{
     project_spikes_to_field, FieldConfig, FieldError, FieldSnapshot, FieldTopology, NeuronKind,
     PopulationField, ProjectedSpikeDrive,
