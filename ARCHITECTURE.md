@@ -239,6 +239,18 @@ Essa disciplina evita depender da associatividade de ponto flutuante. Igualdade 
 
 O Worker entra antes do paralelismo. Seu objetivo inicial é isolar o laço fixo do frame.
 
+Na ABI v4, o snapshot acrescenta um bloco córtico-talâmico compacto: dois
+`Float32Array` de seis posições para E/I, cinco escalares de relé/TRN/retorno e
+um hash próprio. O hash legado da rede 0.5 não incorpora esse bloco; assim, o
+replay sombra continua verificando exatamente o baseline promovido enquanto o
+novo circuito ganha sua própria prova de determinismo.
+
+Treze buffers são transferidos ao thread de apresentação, incluindo E/I
+laminar. Antes da construção, o host limita nós, sinapses, vértices e arestas;
+o adaptador Rust repete as cotas. Cada comando avança no máximo 600 ticks para
+que uma única mensagem não monopolize o Worker. O fallback diagnóstico publica
+buffers laminares zerados e nunca substitui o circuito por equações TypeScript.
+
 Mensagens de controle:
 
 ```ts

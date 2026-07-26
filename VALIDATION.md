@@ -170,6 +170,18 @@ um artefato versionado em cada linha:
 | `f64` interno × snapshot `f32` | erro de quantização abaixo do orçamento do observável |
 | serial × paralelo futuro | mesma ordem lógica e tolerância previamente registrada |
 
+### Extensão 0.6 · snapshot córtico-talâmico
+
+| Gate | Evidência executável |
+| :-- | :-- |
+| baseline 0.5 preservado | `scripts/shadow_replay.js` continua exigindo os três hashes exatos e divergência máxima zero |
+| ABI Rust/TypeScript | ambos usam `schemaVersion = 4`; o navegador rejeita qualquer versão diferente |
+| estado laminar compacto | E/I chegam como dois `Float32Array` de seis posições |
+| transferência | teste lista treze `ArrayBuffer` distintos, incluindo E/I laminar |
+| determinismo novo | hash córtico-talâmico muda com o tick e é publicado separadamente |
+| recursos | testes aceitam a cota exata e rejeitam o primeiro valor acima para topologia e ticks por comando |
+| degradação | fallback publica somente zeros e `corticothalamicHash = unavailable` |
+
 Os contratos executáveis atuais são:
 
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
