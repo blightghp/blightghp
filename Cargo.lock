@@ -288,7 +288,7 @@ dependencies = [
 
 [[package]]
 name = "brain-engine"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -296,7 +296,7 @@ dependencies = [
 
 [[package]]
 name = "brain-pro"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "brain-engine",
  "serde",
@@ -308,7 +308,7 @@ dependencies = [
 
 [[package]]
 name = "brain-wasm"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "brain-engine",
  "wasm-bindgen",

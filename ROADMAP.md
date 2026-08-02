@@ -1,4 +1,4 @@
-# Roadmap · BRAIN PRO [v. 0.6.0]
+# Roadmap · BRAIN PRO [v. 0.7.0]
 
 O experimento evolui em dois eixos inseparáveis: desce da atividade global até a sinapse e sobe da excitabilidade até a cognição e o comportamento. Cada entrega fecha uma escala antes de acrescentar outra e combina avanço do motor, ganho gráfico e evidência de validação.
 
@@ -38,7 +38,7 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
 | **0.9 · Sistemas e comportamento** | Memória de trabalho, tarefas preditivas, hipocampo, núcleos da base e leitura motora somente em tarefas explícitas | Abas Sistemas, Experimentos e Comportamento | Desempenho estatístico, controles nulos, retenção/decisão reproduzíveis e hipóteses documentadas |
 | **1.0 · Atlas experimental** | Presets, replay, importação, API estável e modelos multiescala validados | Visão Geral, Superfície, Lâminas, Célula, Sinapse, Bioquímica, Sistemas, Experimentos e Validação | Pacotes reproduzíveis, acessibilidade, testes end-to-end, proveniência e nenhuma alegação além da evidência |
 
-## Versão atual: 0.6.0 · Lâmina e tálamo
+## Versão atual: 0.7.0 · Célula e eletricidade
 
 ### Gate auditado da 0.4 · Superfície
 
@@ -105,11 +105,15 @@ limites operacionais estão em [AUDIT_0.5_ENTRY.md](AUDIT_0.5_ENTRY.md).
 Estes itens não mudam o contrato superficial promovido e podem entrar na trilha
 de qualidade da 0.5, antes de qualquer demonstração científica nova:
 
-- [ ] fila genérica Rust de entradas por `(tick, sequence)` e artefato de replay;
-- [ ] cadência configurável de snapshots e perfil de CPU/GPU/memória/latência;
-- [ ] estudo de convergência específico das correntes AMPA/GABA-A;
-- [ ] curvas axonais e ciclos de vida independentes para todas as camadas;
-- [ ] capturas visuais automatizadas e auditoria contínua de teclado/contraste.
+- [x] fila genérica Rust de entradas por `(tick, sequence)` e artefato de replay;
+- [x] cadência configurável de snapshots e perfil de CPU/GPU/memória/latência;
+- [x] estudo de convergência específico das correntes AMPA/GABA-A;
+- [x] curvas axonais e ciclos de vida independentes para todas as camadas;
+- [x] capturas visuais automatizadas e auditoria contínua de teclado/contraste.
+
+O fechamento executável, os limites e a revisão de qualidade desses itens estão
+em [AUDIT_MIGRATION_BACKLOG.md](AUDIT_MIGRATION_BACKLOG.md). As extensões mantêm
+o schema ABI 4 e os hashes promovidos da 0.6.
 
 ### Cortes da 0.6
 
@@ -123,6 +127,33 @@ de qualidade da 0.5, antes de qualquer demonstração científica nova:
   e LOD com custo e acessibilidade verificados.
 - [x] **0.6-e · Identidade e promoção:** BRAIN PRO, diário de aprendizagem,
   cronologia desde 2025, Kandel, referências, SIGNALS e auditoria de fechamento.
+
+### Cortes da 0.7
+
+- [x] **0.7-a · Patch AdEx em SI:** doze células E/I, adaptação, dendrito passivo,
+  passo microscópico e limites de trabalho explícitos.
+- [x] **0.7-b · Eletricidade:** condutâncias e correntes separadas para AMPA,
+  NMDA com bloqueio por Mg²⁺, GABA-A e GABA-B.
+- [x] **0.7-c · Troca de resolução:** `ResolutionMap` conservativo, contorno
+  campo→patch, substituição no blend e retorno microscópico desativado.
+- [x] **0.7-d · Worker e leitura visual:** ABI v5, 22 buffers, hash celular e
+  abas Célula/Eletricidade sem equações no TypeScript.
+- [x] **0.7-e · Evidência e promoção:** convergência de evento, ensemble de oito
+  sementes, replay versionado, Cargo/Clippy/Vitest, navegador e auditoria visual.
+
+O plano e o veredito estão em [PLAN_0.7.md](PLAN_0.7.md) e
+[AUDIT_0.7.md](AUDIT_0.7.md).
+
+### Preparação para a 0.8
+
+- [x] correntes receptoras possuem IDs, unidades e buffers independentes;
+- [x] replay do patch e hash próprio permitem detectar regressão bioelétrica;
+- [x] ABI v5 reserva a fronteira célula/sinapse sem colocar química no shell;
+- [x] limitações de acoplamento e calibração estão documentadas;
+- [ ] definir o contrato de recursos vesiculares e os invariantes de massa/carga;
+- [ ] escolher um cenário mínimo de plasticidade de curto prazo e seu oráculo;
+- [ ] promover solver de reação–difusão somente após estudo de rigidez e
+  positividade; nenhuma dinâmica 0.8 foi antecipada nesta release.
 
 ## Trilhas que atravessam as versões
 

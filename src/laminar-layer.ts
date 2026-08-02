@@ -4,7 +4,7 @@ import { interpolatePublishedValue } from "./render-layers";
 
 export const CORTICAL_LAYER_LABELS = ["L1", "L2", "L3", "L4", "L5", "L6"] as const;
 export type LaminarLod = "low" | "medium" | "high";
-export type SimulationView = "overview" | "laminar";
+export type SimulationView = "overview" | "laminar" | "cell" | "electricity";
 
 export function parseLaminarLod(value: unknown): LaminarLod | undefined {
   return value === "low" || value === "medium" || value === "high"
@@ -13,16 +13,28 @@ export function parseLaminarLod(value: unknown): LaminarLod | undefined {
 }
 
 export function parseSimulationView(value: unknown): SimulationView | undefined {
-  return value === "overview" || value === "laminar" ? value : undefined;
+  return value === "overview" ||
+    value === "laminar" ||
+    value === "cell" ||
+    value === "electricity"
+    ? value
+    : undefined;
 }
 
 export interface LaminarProjection {
   source: number;
   target: number;
-  kind: "feedforward" | "feedback" | "thalamocortical" | "reticular";
+  kind: "recurrent" | "feedforward" | "feedback" | "thalamocortical" | "reticular";
 }
 
 export const LAMINAR_PROJECTIONS: readonly LaminarProjection[] = [
+  { source: 0, target: 0, kind: "recurrent" },
+  { source: 1, target: 1, kind: "recurrent" },
+  { source: 2, target: 2, kind: "recurrent" },
+  { source: 3, target: 3, kind: "recurrent" },
+  { source: 4, target: 4, kind: "recurrent" },
+  { source: 5, target: 5, kind: "recurrent" },
+  { source: 6, target: 3, kind: "thalamocortical" },
   { source: 3, target: 1, kind: "feedforward" },
   { source: 3, target: 2, kind: "feedforward" },
   { source: 1, target: 4, kind: "feedforward" },
@@ -30,13 +42,12 @@ export const LAMINAR_PROJECTIONS: readonly LaminarProjection[] = [
   { source: 4, target: 5, kind: "feedback" },
   { source: 5, target: 0, kind: "feedback" },
   { source: 5, target: 3, kind: "feedback" },
-  { source: 6, target: 3, kind: "thalamocortical" },
   { source: 6, target: 7, kind: "reticular" },
 ] as const;
 
 export function projectionBudget(lod: LaminarLod): number {
-  if (lod === "low") return 3;
-  if (lod === "medium") return 7;
+  if (lod === "low") return 6;
+  if (lod === "medium") return 11;
   return LAMINAR_PROJECTIONS.length;
 }
 
@@ -54,7 +65,27 @@ export function laminarLodCost(lod: LaminarLod): LaminarLodCost {
     stateValuesRead: 17,
     fixedDrawCalls,
     projectionDrawCalls,
-    totalDrawCalls: fixedDrawCalls + projectionDrawCalls,
+    totalDrawCalls: fixedDrawCalls + projectionDrawCalls * 2,
+  };
+}
+
+export interface AxonalLifecycle {
+  progress: number;
+  opacity: number;
+}
+
+export function axonalLifecycle(
+  projectionIndex: number,
+  timeSeconds: number,
+  sourceActivity: number,
+): AxonalLifecycle {
+  const period = 1.25 + (projectionIndex % 7) * 0.11;
+  const phase = (projectionIndex * 0.381_966_011_25) % 1;
+  const progress = ((timeSeconds / period + phase) % 1 + 1) % 1;
+  const envelope = Math.sin(Math.PI * progress) ** 2;
+  return {
+    progress,
+    opacity: Math.max(0, Math.min(1, sourceActivity)) * envelope,
   };
 }
 
@@ -69,6 +100,7 @@ function projectionPoint(index: number): THREE.Vector3 {
 }
 
 function projectionColor(kind: LaminarProjection["kind"]): number {
+  if (kind === "recurrent") return 0x6aaeff;
   if (kind === "feedforward" || kind === "thalamocortical") return 0x36c8ff;
   if (kind === "feedback") return 0xffb45b;
   return 0xc979ff;
@@ -79,14 +111,16 @@ export class LaminarRenderLayer {
   private readonly excitatoryMeshes: THREE.Mesh[] = [];
   private readonly inhibitoryMeshes: THREE.Mesh[] = [];
   private readonly projectionLines: THREE.Line[] = [];
+  private readonly projectionPulses: THREE.Mesh[] = [];
+  private readonly projectionCurves: THREE.Curve<THREE.Vector3>[] = [];
   private readonly relayMesh: THREE.Mesh;
   private readonly trnMesh: THREE.Mesh;
   private lod: LaminarLod = "medium";
 
   constructor() {
     this.group.name = "laminar-column";
-    this.group.scale.setScalar(0.5);
-    this.group.position.y = 0.15;
+    this.group.scale.setScalar(0.43);
+    this.group.position.y = -0.08;
 
     for (let index = 0; index < CORTICAL_LAYER_LABELS.length; index += 1) {
       const radius = 1.02 - index * 0.035;
@@ -126,14 +160,13 @@ export class LaminarRenderLayer {
     for (const projection of LAMINAR_PROJECTIONS) {
       const source = projectionPoint(projection.source);
       const target = projectionPoint(projection.target);
-      const direction = projection.kind === "feedback" ? 1 : -1;
-      const midpoint = source
-        .clone()
-        .lerp(target, 0.5)
-        .add(new THREE.Vector3(direction * 1.15, 0, 0.32));
-      const curve = new THREE.QuadraticBezierCurve3(source, midpoint, target);
+      const direction = projection.kind === "feedback" || projection.kind === "recurrent" ? 1 : -1;
+      const lateral = 1.05 + (this.projectionCurves.length % 3) * 0.18;
+      const firstControl = source.clone().add(new THREE.Vector3(direction * lateral, 0.18, 0.42));
+      const secondControl = target.clone().add(new THREE.Vector3(direction * lateral, -0.18, -0.34));
+      const curve = new THREE.CubicBezierCurve3(source, firstControl, secondControl, target);
       const line = new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(curve.getPoints(20)),
+        new THREE.BufferGeometry().setFromPoints(curve.getPoints(32)),
         new THREE.LineBasicMaterial({
           color: projectionColor(projection.kind),
           transparent: true,
@@ -146,7 +179,22 @@ export class LaminarRenderLayer {
       line.userData.source = projection.source;
       line.userData.target = projection.target;
       this.projectionLines.push(line);
+      this.projectionCurves.push(curve);
       this.group.add(line);
+
+      const pulse = new THREE.Mesh(
+        new THREE.SphereGeometry(0.045, 10, 8),
+        new THREE.MeshBasicMaterial({
+          color: projectionColor(projection.kind),
+          transparent: true,
+          opacity: 0,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        }),
+      );
+      pulse.name = `axonal-pulse-${this.projectionPulses.length}`;
+      this.projectionPulses.push(pulse);
+      this.group.add(pulse);
     }
 
     this.relayMesh = new THREE.Mesh(
@@ -185,6 +233,7 @@ export class LaminarRenderLayer {
     const budget = projectionBudget(lod);
     this.projectionLines.forEach((line, index) => {
       line.visible = index < budget;
+      this.projectionPulses[index].visible = index < budget;
     });
     this.inhibitoryMeshes.forEach((mesh) => {
       const material = mesh.material as THREE.MeshBasicMaterial;
@@ -233,14 +282,19 @@ export class LaminarRenderLayer {
     (this.relayMesh.material as THREE.MeshBasicMaterial).opacity = 0.24 + relay * 0.7;
     (this.trnMesh.material as THREE.MeshBasicMaterial).opacity = 0.22 + trn * 0.68;
 
-    for (const line of this.projectionLines) {
+    this.projectionLines.forEach((line, index) => {
       const source = Number(line.userData.source);
       const activity = source < 6
         ? snapshot.corticothalamic.excitatory[source] ?? 0
         : source === 6
           ? relay
           : trn;
-      (line.material as THREE.LineBasicMaterial).opacity = 0.12 + activity * 0.72;
-    }
+      const lifecycle = axonalLifecycle(index, snapshot.timeSeconds, activity);
+      (line.material as THREE.LineBasicMaterial).opacity = 0.12 + activity * 0.58;
+      const pulse = this.projectionPulses[index];
+      pulse.position.copy(this.projectionCurves[index].getPoint(lifecycle.progress));
+      (pulse.material as THREE.MeshBasicMaterial).opacity = lifecycle.opacity;
+      pulse.scale.setScalar(0.72 + lifecycle.opacity * 0.72);
+    });
   }
 }

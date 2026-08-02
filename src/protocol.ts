@@ -1,5 +1,5 @@
 import type { BrainData } from "./brain";
-export const SIMULATION_PROTOCOL_VERSION = 4 as const;
+export const SIMULATION_PROTOCOL_VERSION = 5 as const;
 export const SIMULATION_STEP_SECONDS = 1 / 60;
 
 export type SimulationTick = number;
@@ -43,12 +43,30 @@ export interface CorticothalamicSnapshot {
   layer6Feedback: number;
 }
 
+export interface CellPatchSnapshot {
+  kinds: Uint8Array;
+  membraneVolts: Float32Array;
+  dendriteVolts: Float32Array;
+  adaptationAmperes: Float32Array;
+  ampaAmperes: Float32Array;
+  nmdaAmperes: Float32Array;
+  gabaaAmperes: Float32Array;
+  gababAmperes: Float32Array;
+  spiked: Uint8Array;
+  firingRateHz: number;
+  excitatoryInhibitoryRatio: number;
+  firstSpikeSeconds?: number;
+  fieldVertex: number;
+  blend: number;
+}
+
 export type EngineRuntime = "rust-wasm" | "diagnostic-fallback";
 
 export interface EngineDiagnostics {
   runtime: EngineRuntime;
   stateHash: string;
   corticothalamicHash: string;
+  cellPatchHash: string;
   degraded: boolean;
   detail?: string;
 }
@@ -66,12 +84,12 @@ export interface NeuralSnapshot {
   signals: SignalBatch;
   field: FieldSnapshot;
   corticothalamic: CorticothalamicSnapshot;
+  cellPatch: CellPatchSnapshot;
   diagnostics: EngineDiagnostics;
 }
 
-// O motor ainda não tem uma fila de entradas agendadas por tick; "advance" carrega
-// o estímulo corrente junto com o alvo, do mesmo jeito que main.ts já faz hoje.
-// ScheduledDrive/schedule entram quando essa fila existir.
+// O host traduz cada avanço para entradas Rust endereçadas por `(tick, sequence)`;
+// a forma superficial do comando continua compatível com a ABI v4.
 export interface EngineInitializeCommand {
   type: "initialize";
   topology: BrainData;
@@ -86,6 +104,26 @@ export interface EngineAdvanceCommand {
   learningRate?: number;
 }
 
+export type ScheduledEngineInput =
+  | {
+      tick: SimulationTick;
+      sequence: number;
+      kind: "stimulus";
+      intensity: number;
+      confidence: number;
+    }
+  | {
+      tick: SimulationTick;
+      sequence: number;
+      kind: "plasticity";
+      learningRate: number;
+    };
+
+export interface EngineScheduleCommand {
+  type: "schedule";
+  inputs: ScheduledEngineInput[];
+}
+
 export interface EngineResetCommand {
   type: "reset";
   seed?: number;
@@ -98,6 +136,7 @@ export interface EngineDisposeCommand {
 export type EngineCommand =
   | EngineInitializeCommand
   | EngineAdvanceCommand
+  | EngineScheduleCommand
   | EngineResetCommand
   | EngineDisposeCommand;
 
@@ -115,10 +154,19 @@ export interface EngineSnapshotEvent {
   snapshot: NeuralSnapshot;
 }
 
+export interface EngineScheduledEvent {
+  type: "scheduled";
+  accepted: number;
+}
+
 export interface EngineFaultEvent {
   type: "fault";
   code: string;
   message: string;
 }
 
-export type EngineEvent = EngineReadyEvent | EngineSnapshotEvent | EngineFaultEvent;
+export type EngineEvent =
+  | EngineReadyEvent
+  | EngineSnapshotEvent
+  | EngineScheduledEvent
+  | EngineFaultEvent;

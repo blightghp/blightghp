@@ -101,6 +101,20 @@ export class WasmNeuralEngine {
         return v1;
     }
     /**
+     * Advances to a target using the canonical scheduled-input stream.
+     *
+     * # Errors
+     *
+     * Returns a JavaScript error on tick regression, excessive work or solver failure.
+     * @param {number} target_tick
+     */
+    advance_scheduled_to(target_tick) {
+        const ret = wasm.wasmneuralengine_advance_scheduled_to(this.__wbg_ptr, target_tick);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
      * Advances the simulation to a target tick and publishes one snapshot.
      *
      * # Errors
@@ -115,6 +129,137 @@ export class WasmNeuralEngine {
         const ret = wasm.wasmneuralengine_advance_to(this.__wbg_ptr, target_tick, intensity, confidence, learning_rate);
         if (ret[1]) {
             throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_adaptation_amperes() {
+        const ret = wasm.wasmneuralengine_cell_adaptation_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_ampa_amperes() {
+        const ret = wasm.wasmneuralengine_cell_ampa_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_blend() {
+        const ret = wasm.wasmneuralengine_cell_blend(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_dendrite_volts() {
+        const ret = wasm.wasmneuralengine_cell_dendrite_volts(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_excitatory_inhibitory_ratio() {
+        const ret = wasm.wasmneuralengine_cell_excitatory_inhibitory_ratio(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_field_vertex() {
+        const ret = wasm.wasmneuralengine_cell_field_vertex(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_firing_rate_hz() {
+        const ret = wasm.wasmneuralengine_cell_firing_rate_hz(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_first_spike_seconds() {
+        const ret = wasm.wasmneuralengine_cell_first_spike_seconds(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_gabaa_amperes() {
+        const ret = wasm.wasmneuralengine_cell_gabaa_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_gabab_amperes() {
+        const ret = wasm.wasmneuralengine_cell_gabab_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    cell_kinds() {
+        const ret = wasm.wasmneuralengine_cell_kinds(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_membrane_volts() {
+        const ret = wasm.wasmneuralengine_cell_membrane_volts(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_nmda_amperes() {
+        const ret = wasm.wasmneuralengine_cell_nmda_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    cell_spiked() {
+        const ret = wasm.wasmneuralengine_cell_spiked(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @returns {string}
+     */
+    cell_state_hash() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.wasmneuralengine_cell_state_hash(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
         }
     }
     /**
@@ -286,6 +431,39 @@ export class WasmNeuralEngine {
      */
     reset(seed) {
         wasm.wasmneuralengine_reset(this.__wbg_ptr, isLikeNone(seed) ? Number.MAX_SAFE_INTEGER : (seed) >>> 0);
+    }
+    /**
+     * Queues a bounded plasticity update for deterministic replay.
+     *
+     * # Errors
+     *
+     * Returns a JavaScript error for invalid values, addresses or queue limits.
+     * @param {number} tick
+     * @param {number} sequence
+     * @param {number} learning_rate
+     */
+    schedule_plasticity(tick, sequence, learning_rate) {
+        const ret = wasm.wasmneuralengine_schedule_plasticity(this.__wbg_ptr, tick, sequence, learning_rate);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Queues a bounded stimulus for deterministic replay.
+     *
+     * # Errors
+     *
+     * Returns a JavaScript error for invalid values, addresses or queue limits.
+     * @param {number} tick
+     * @param {number} sequence
+     * @param {number} intensity
+     * @param {number} confidence
+     */
+    schedule_stimulus(tick, sequence, intensity, confidence) {
+        const ret = wasm.wasmneuralengine_schedule_stimulus(this.__wbg_ptr, tick, sequence, intensity, confidence);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
     }
     /**
      * @returns {number}

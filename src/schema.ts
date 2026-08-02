@@ -8,6 +8,7 @@ export const brainSettingsSchema = z.object({
   learningRate: z.number().min(0).max(0.02).default(0.004),
   bloomStrength: z.number().min(0).max(4).default(1.15),
   bloomRadius: z.number().min(0).max(2).default(0.45),
+  snapshotCadence: z.union([z.literal(1), z.literal(2), z.literal(4), z.literal(6)]).default(1),
   showLeftHemi: z.boolean().default(true),
   showRightHemi: z.boolean().default(true),
   showCerebellum: z.boolean().default(true),
@@ -34,5 +35,6 @@ export function getInitialBrainSettings(): BrainSettings {
     learningRate: numericParam("learningRate"),
     bloomStrength: numericParam("bloom"),
     bloomRadius: numericParam("bloomRadius"),
+    snapshotCadence: numericParam("snapshotCadence"),
   });
 }

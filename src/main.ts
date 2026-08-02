@@ -6,6 +6,13 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
+import {
+  amperesToPicoamperes,
+  CellRenderLayer,
+  mean,
+  receptorCurrentTotals,
+  voltsToMillivolts,
+} from "./cell-layer";
 import { BayesianBelief, BayesianUpdate } from "./inference";
 import {
   LaminarRenderLayer,
@@ -13,8 +20,20 @@ import {
   parseSimulationView,
 } from "./laminar-layer";
 import type { SimulationView } from "./laminar-layer";
+import {
+  parseSnapshotCadence,
+  RuntimeProfiler,
+  shouldRequestSnapshot,
+} from "./performance-profile";
+import type { RuntimeProfile } from "./performance-profile";
 import { SIMULATION_STEP_SECONDS } from "./protocol";
-import type { EngineCommand, EngineEvent, NeuralSnapshot, SimulationTick } from "./protocol";
+import type {
+  EngineCommand,
+  EngineEvent,
+  NeuralSnapshot,
+  ScheduledEngineInput,
+  SimulationTick,
+} from "./protocol";
 import { BrainRenderLayers } from "./render-layers";
 import { BrainSettings, getInitialBrainSettings } from "./schema";
 
@@ -25,14 +44,17 @@ declare global {
       capture: (time: number, rotation: number) => Promise<void>;
       setCaptureMode: (enabled: boolean) => Promise<void>;
       setView: (view: SimulationView) => void;
+      schedule: (inputs: ScheduledEngineInput[]) => Promise<number>;
       diagnostics: () => {
         runtime: string;
         schemaVersion: number;
         stateHash?: string;
         corticothalamicHash?: string;
+        cellPatchHash?: string;
         degraded: boolean;
         detail?: string;
       };
+      profile: () => RuntimeProfile;
     };
   }
 }
@@ -50,6 +72,7 @@ const simulationClock = new FixedStepClock({
   stepSeconds: SIMULATION_STEP_SECONDS,
   maxInteractiveDeltaSeconds: 0.1,
 });
+const runtimeProfiler = new RuntimeProfiler();
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
@@ -59,6 +82,7 @@ let composer: EffectComposer;
 let bloomPass: UnrealBloomPass;
 let layers: BrainRenderLayers;
 let laminarLayer: LaminarRenderLayer;
+let cellLayer: CellRenderLayer;
 let brainData: BrainData;
 let worker: Worker;
 let latestSnapshot: NeuralSnapshot | undefined;
@@ -132,6 +156,24 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
     snapshot.corticothalamic.trn.toFixed(3);
   element("#rebound-activity").textContent =
     snapshot.corticothalamic.rebound.toFixed(3);
+  element("#cell-membrane").textContent =
+    `${voltsToMillivolts(mean(snapshot.cellPatch.membraneVolts)).toFixed(1)} mV`;
+  element("#cell-dendrite").textContent =
+    `${voltsToMillivolts(mean(snapshot.cellPatch.dendriteVolts)).toFixed(1)} mV`;
+  element("#cell-rate").textContent = `${snapshot.cellPatch.firingRateHz.toFixed(1)} Hz`;
+  element("#cell-ei-ratio").textContent = snapshot.cellPatch.excitatoryInhibitoryRatio.toFixed(2);
+  element("#adaptation-current").textContent =
+    `${amperesToPicoamperes(mean(snapshot.cellPatch.adaptationAmperes)).toFixed(1)} pA`;
+  element("#first-spike").textContent = snapshot.cellPatch.firstSpikeSeconds === undefined
+    ? "—"
+    : `${(snapshot.cellPatch.firstSpikeSeconds * 1_000).toFixed(1)} ms`;
+  const currents = receptorCurrentTotals(snapshot);
+  for (const [receptor, amperes] of Object.entries(currents)) {
+    element(`#${receptor}-current`).textContent =
+      `${amperesToPicoamperes(amperes).toFixed(1)} pA`;
+    const meter = element<HTMLMeterElement>(`#${receptor}-meter`);
+    meter.value = Math.min(meter.max, amperesToPicoamperes(amperes));
+  }
 
   const spikeElement = document.querySelector("#spike-count");
   if (spikeElement) spikeElement.textContent = `${snapshot.spikes} spk`;
@@ -147,6 +189,14 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
     fpsElement.textContent = `${Math.round(1 / delta)} FPS`;
   }
 
+  const profile = runtimeProfiler.report(state.snapshotCadence);
+  const latencyElement = document.querySelector("#worker-latency");
+  if (latencyElement) latencyElement.textContent = `${profile.workerLatencyMs.p95.toFixed(1)} ms`;
+  const drawElement = document.querySelector("#gpu-draw-calls");
+  if (drawElement) drawElement.textContent = String(profile.gpu.drawCalls);
+  const memoryElement = document.querySelector("#snapshot-memory");
+  if (memoryElement) memoryElement.textContent = `${(profile.memory.snapshotBytes / 1024).toFixed(1)} KiB`;
+
   drawActivityTrace();
 }
 
@@ -158,19 +208,23 @@ function sendCommand(command: EngineCommand): Promise<EngineEvent> {
 }
 
 function requestAdvance(targetTick: SimulationTick): void {
-  if (engineBusy) return;
+  const publishedTick = latestSnapshot?.tick ?? 0;
+  if (engineBusy || !shouldRequestSnapshot(publishedTick, targetTick, state.snapshotCadence)) return;
   engineBusy = true;
+  const requestTimestamp = performance.now();
   sendCommand({
     type: "advance",
     targetTick,
     stimulus: { intensity: state.stimulusIntensity, confidence: currentInference.posterior },
     learningRate: state.learningRate,
   }).then((event) => {
+    runtimeProfiler.recordWorkerLatency(performance.now() - requestTimestamp);
     engineBusy = false;
     if (event.type === "snapshot") {
       previousSnapshot = latestSnapshot;
       latestSnapshot = event.snapshot;
       lastSnapshotReceivedTimestamp = performance.now();
+      runtimeProfiler.recordSnapshot(event.snapshot);
     } else if (event.type === "fault") {
       console.error(`falha do motor (${event.code}): ${event.message}`);
     }
@@ -184,6 +238,7 @@ function renderFrame(
   frameDelta = 0,
   nowTimestamp = performance.now(),
 ): void {
+  const frameStarted = performance.now();
   const rotation = forcedRotation ?? 0.34 + time * state.rotationSpeed * 0.115;
   layers.group.rotation.y = rotation;
   layers.group.rotation.x = 0.035 + Math.sin(time * 0.17) * 0.035;
@@ -192,6 +247,8 @@ function renderFrame(
   laminarLayer.group.rotation.x = state.rotationSpeed === 0
     ? -0.06
     : -0.06 + Math.sin(time * 0.12) * 0.025;
+  cellLayer.group.rotation.y = rotation * 0.42;
+  cellLayer.group.rotation.x = -0.04 + Math.sin(time * 0.11) * 0.02;
 
   const alpha = Math.min(
     1,
@@ -200,13 +257,29 @@ function renderFrame(
   if (activeView === "overview") {
     layers.updateVisibility(state, currentFocusRegion);
     layers.updateInterpolated(snapshot, previousSnapshot, alpha, state.pulseCount);
-  } else {
+  } else if (activeView === "laminar") {
     laminarLayer.update(snapshot, previousSnapshot, alpha);
+  } else {
+    cellLayer.update(snapshot, previousSnapshot, alpha);
   }
 
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta);
   controls.update();
+  renderer.info.reset();
   composer.render();
+  const memory = (performance as Performance & {
+    memory?: { usedJSHeapSize: number };
+  }).memory;
+  runtimeProfiler.recordFrame(
+    performance.now() - frameStarted,
+    {
+      calls: renderer.info.render.calls,
+      triangles: renderer.info.render.triangles,
+      geometries: renderer.info.memory.geometries,
+      textures: renderer.info.memory.textures,
+    },
+    memory?.usedJSHeapSize,
+  );
 }
 
 function animate(timestamp: number): void {
@@ -260,8 +333,12 @@ function setActiveView(view: SimulationView): void {
   activeView = view;
   layers.group.visible = view === "overview";
   laminarLayer.group.visible = view === "laminar";
+  cellLayer.group.visible = view === "cell" || view === "electricity";
+  if (view === "cell" || view === "electricity") cellLayer.setMode(view);
   element("#overview-panel").hidden = view !== "overview";
   element("#laminar-panel").hidden = view !== "laminar";
+  element("#cell-panel").hidden = view !== "cell";
+  element("#electricity-panel").hidden = view !== "electricity";
   element("#bayesian-hud").hidden = view !== "overview";
   for (const button of document.querySelectorAll<HTMLButtonElement>("[role='tab']")) {
     const selected = button.dataset.view === view;
@@ -312,6 +389,16 @@ function setupInterface(): void {
       return;
     }
     laminarLayer.setLod(lod);
+  });
+  const cadenceSelect = element<HTMLSelectElement>("#snapshot-cadence");
+  cadenceSelect.value = String(state.snapshotCadence);
+  cadenceSelect.addEventListener("change", () => {
+    const cadence = parseSnapshotCadence(cadenceSelect.value);
+    if (!cadence) {
+      cadenceSelect.value = String(state.snapshotCadence);
+      return;
+    }
+    state.snapshotCadence = cadence;
   });
 
   bindRange("rotation-speed", "rot-speed-val", "rotationSpeed", (value) => `${value.toFixed(1)}×`);
@@ -411,6 +498,7 @@ async function init(): Promise<void> {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.info.autoReset = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
   element("#canvas-container").appendChild(renderer.domElement);
@@ -439,6 +527,9 @@ async function init(): Promise<void> {
   laminarLayer = new LaminarRenderLayer();
   laminarLayer.group.visible = false;
   scene.add(laminarLayer.group);
+  cellLayer = new CellRenderLayer();
+  cellLayer.group.visible = false;
+  scene.add(cellLayer.group);
 
   worker = new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = (event: MessageEvent<EngineEvent>) => {
@@ -517,6 +608,7 @@ async function init(): Promise<void> {
         stateHash: latestSnapshot?.diagnostics.stateHash,
         corticothalamicHash:
           latestSnapshot?.diagnostics.corticothalamicHash,
+        cellPatchHash: latestSnapshot?.diagnostics.cellPatchHash,
         degraded:
           latestSnapshot?.diagnostics.degraded ??
           engineReady?.degraded ??
@@ -525,6 +617,16 @@ async function init(): Promise<void> {
           latestSnapshot?.diagnostics.detail ??
           engineReady?.detail,
       };
+    },
+    async schedule(inputs) {
+      const event = await sendCommand({ type: "schedule", inputs });
+      if (event.type !== "scheduled") {
+        throw new Error(event.type === "fault" ? event.message : "entrada não confirmada");
+      }
+      return event.accepted;
+    },
+    profile() {
+      return runtimeProfiler.report(state.snapshotCadence);
     },
   };
 

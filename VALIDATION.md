@@ -1,4 +1,4 @@
-# Estratégia de validação · BRAIN PRO [v. 0.6.0]
+# Estratégia de validação · BRAIN PRO [v. 0.7.0]
 
 Enquanto aprendo Rust e cálculo numérico, separo quatro perguntas: meu cálculo é
 reproduzível, respeita limites, converge e produz o fenômeno definido pelo
@@ -119,6 +119,12 @@ O alvo visual é manter interação fluida em 60 Hz quando o hardware permitir. 
 
 Mudanças de shader podem usar tolerância perceptual. Mudanças de posição, contagem de objetos e associação entre estado e cor exigem também testes estruturais.
 
+O gate contínuo `scripts/audit_runtime.js` captura Visão Geral, Lâminas, Célula
+e Eletricidade em
+`1440×960`, repete a captura móvel em `390×844`, percorre as abas por teclado,
+mede os textos críticos contra o fundo mais claro do painel e exige razão mínima
+de 4,5:1. O mesmo gate rejeita overflow horizontal e perfil incompleto.
+
 ## Pirâmide de testes no `src/`
 
 ```text
@@ -184,16 +190,41 @@ um artefato versionado em cada linha:
 | recursos | testes aceitam a cota exata e rejeitam o primeiro valor acima para topologia e ticks por comando |
 | degradação | fallback publica somente zeros e `corticothalamicHash = unavailable` |
 
+### Extensão 0.7 · patch celular
+
+| Gate | Evidência executável |
+| :-- | :-- |
+| passo e SI | `CellPatchConfig` adota `1/12000 s`; snapshots publicam volts, amperes, hertz e segundos |
+| convergência de evento | primeiro spike é comparado em `1/6000`, `1/12000` e `1/24000 s`, com erro decrescente |
+| receptores | AMPA/NMDA/GABA-A/GABA-B possuem estados, reversões e constantes temporais separados |
+| mapa de resolução | pesos de célula e contorno somam um; blend fica em `[0,1]` e substitui o campo no vértice |
+| ensemble | oito sementes mantêm estados finitos, taxa limitada e variação não nula |
+| replay | `cell-patch-v1.json` congela quatro marcos, hashes, voltagens e primeiro spike |
+| ABI Rust/TypeScript | ambos usam `schemaVersion = 5`; nove buffers celulares elevam o total a 22 |
+| navegador | Worker real publica três hashes válidos e as quatro abas exibem unidades esperadas |
+| acessibilidade visual | teclado percorre quatro tabs; cinco capturas, contraste e viewport móvel são auditados |
+| degradação | fallback celular é inerte e publica `cellPatchHash = unavailable` |
+
 Os contratos executáveis atuais são:
 
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
 - `field-observables-v1.json`: projeção de spikes, seis passos do campo E/I,
   buffers `f32`, peso absoluto médio e taxa populacional em janela;
+- `input-queue-v1.json`: entradas deliberadamente fora de ordem e a ordem
+  canônica esperada por `(tick, sequence)`;
+- `cell-patch-v1.json`: replay de 60 intervalos macro do patch, com quatro
+  checkpoints exatos e gerador Rust versionado em `examples/`;
 - `scripts/shadow_replay.js`: recompõe o replay no Wasm e exige os hashes do
   oráculo congelado e o SHA-256 auditado do fixture;
 - testes Cargo: reproduzem o artefato, inclusive o replay neural completo, e
   comprovam que o erro do passo médio é
   menor que o do passo grosso no cenário de refinamento.
+
+O teste `synaptic_convergence.rs` trata AMPA (`τ = 5 ms`) e GABA-A
+(`τ = 10 ms`) separadamente. Ele compara a quadratura temporal da resposta
+unitária com sua integral analítica em quatro passos, exige erro estritamente
+decrescente, ordem observada maior que 0,90 e erro relativo final abaixo de
+1,3% do valor de `τ`.
 
 Testes da ABI executam no alvo `wasm32-unknown-unknown` e em navegador real.
 Compilar não basta: o módulo precisa ser carregado dentro do Worker, receber um

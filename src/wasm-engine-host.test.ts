@@ -3,6 +3,7 @@ import { generateBrainData } from "./brain";
 import {
   assertAdvanceWithinEnvelope,
   assertResourceCounts,
+  assertScheduledInputsWithinEnvelope,
   DiagnosticFallbackHost,
   snapshotTransferList,
   WORKER_RESOURCE_LIMITS,
@@ -77,10 +78,32 @@ describe("diagnostic Wasm fallback", () => {
     }).snapshot;
     const buffers = snapshotTransferList(snapshot);
 
-    expect(buffers).toHaveLength(13);
+    expect(buffers).toHaveLength(22);
     expect(new Set(buffers).size).toBe(buffers.length);
     expect(buffers).toContain(snapshot.potentials.buffer);
     expect(buffers).toContain(snapshot.field.waveActivity.buffer);
     expect(buffers).toContain(snapshot.corticothalamic.excitatory.buffer);
+    expect(buffers).toContain(snapshot.cellPatch.membraneVolts.buffer);
+    expect(buffers).toContain(snapshot.cellPatch.gababAmperes.buffer);
+  });
+
+  it("bounds replay input batches and rejects ambiguous addresses", () => {
+    expect(() =>
+      assertScheduledInputsWithinEnvelope(10, {
+        type: "schedule",
+        inputs: [
+          { tick: 11, sequence: 2, kind: "stimulus", intensity: 0.5, confidence: 0.7 },
+        ],
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertScheduledInputsWithinEnvelope(10, {
+        type: "schedule",
+        inputs: [
+          { tick: 11, sequence: 2, kind: "plasticity", learningRate: 0.004 },
+          { tick: 11, sequence: 2, kind: "plasticity", learningRate: 0.002 },
+        ],
+      }),
+    ).toThrow(/duplicado/);
   });
 });

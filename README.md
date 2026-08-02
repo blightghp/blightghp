@@ -3,7 +3,7 @@
 <samp>APRENDER RUST CONSTRUINDO UM CÉREBRO QUE POSSO MEDIR, TESTAR E QUESTIONAR.</samp>
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=12ae80a87b26" width="760" alt="BRAIN PRO alternando entre a rede cerebral e a coluna cortical L1–L6" />
+  <img src="assets/brain.gif?v=12ae80a87b26" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular" />
 </a>
 
 <sub>▲ A captura vem do simulador publicado. O SHA na URL identifica o código-fonte usado pelo workflow.</sub>
@@ -12,7 +12,7 @@
 
 ---
 
-## BRAIN PRO [v. 0.6.0]
+## BRAIN PRO [v. 0.7.0]
 
 Estou construindo o BRAIN PRO como um caderno de aprendizagem executável. Sou
 um programador aprendendo a usar a [Rust Programming Language](https://www.rust-lang.org/)
@@ -25,11 +25,11 @@ livro orienta perguntas e vocabulário; o código não é uma cópia digital do
 Kandel nem recebe validade biológica por associação. Cada aproximação precisa
 de equação, unidade, limite e teste próprios.
 
-Minha pergunta prática nesta versão é: **como uma entrada talâmica pode atravessar
-seis camadas corticais, receber inibição do TRN e voltar por L6 sem bloquear a
-interface do navegador?** A resposta atual combina um motor determinístico em
-Rust, WebAssembly dentro de um Web Worker e uma apresentação Three.js que apenas
-lê snapshots.
+Minha pergunta prática nesta versão é: **como descer do campo populacional para
+um patch de células com voltagem e correntes explícitas sem contar a mesma
+atividade duas vezes?** A resposta atual combina um patch AdEx determinístico em
+Rust, um mapa de resolução unilateral, WebAssembly dentro de um Web Worker e uma
+apresentação Three.js que apenas lê snapshots.
 
 ### O que consigo explorar hoje
 
@@ -37,18 +37,25 @@ lê snapshots.
   condutâncias AMPA/GABA-A, plasticidade STDP e um campo populacional E/I;
 - uma coluna didática com populações E/I em L1–L6, vias feedforward/feedback,
   relé talâmico, TRN e retorno corticotalâmico;
-- duas vistas sincronizadas: **Visão Geral** e **Lâminas**;
-- execução Rust/Wasm em Worker, ABI v4 e treze buffers transferíveis;
-- hashes separados para o baseline 0.5 e para o circuito córtico-talâmico;
-- replay sombra com três marcos exatos e divergência máxima zero;
-- LOD visual com custo declarado de 17, 21 ou 23 draw calls;
+- um patch com 12 células AdEx, dendrito passivo, adaptação e receptores AMPA,
+  NMDA, GABA-A e GABA-B integrados a `83,3 µs`;
+- quatro vistas sincronizadas: **Visão Geral**, **Lâminas**, **Célula** e
+  **Eletricidade**;
+- execução Rust/Wasm em Worker, ABI v5 e 22 buffers transferíveis;
+- hashes separados para o baseline 0.5, circuito córtico-talâmico e patch celular;
+- replay sombra com três marcos exatos, fila genérica `(tick, sequence)` e
+  divergência máxima zero;
+- cadência de snapshots em 60/30/15/10 Hz e perfil de CPU, GPU, memória e
+  latência sem alterar o passo fixo;
+- curvas axonais recorrentes em L1–L6, ciclos independentes e LOD visual com
+  custo de cena declarado de 26, 36 ou 44 draw calls;
 - navegação de abas por teclado, movimento reduzido e fallback diagnóstico
   inerte quando o Wasm não carrega.
 
-O ritmo produzido pelo laço relé–TRN é **fenomenológico**. Sem canais de cálcio
-tipo T, morfologia, núcleos individualizados e calibração experimental, eu não o
-chamo de spindle biológico. Da mesma forma, as formas 3D ajudam a estudar relações
-entre estados; elas não são um atlas anatômico.
+O ritmo produzido pelo laço relé–TRN e as classes celulares são
+**fenomenológicos**. O patch não possui morfologia multicompartimental, canais
+intrínsecos detalhados nem calibração experimental. As formas 3D ajudam a estudar
+relações entre estados; elas não são um atlas anatômico.
 
 ### Como o projeto se organiza
 
@@ -57,7 +64,7 @@ pergunta de estudo
       ↓
 brain-engine (Rust: estado, equações, limites e hashes)
       ├── testes nativos e replay
-      └── brain-wasm → Web Worker → snapshot ABI v4
+      └── brain-wasm → Web Worker → snapshot ABI v5
                                       ↓
                        TypeScript → DOM, teclado e Three.js
 ```
@@ -70,7 +77,7 @@ brain-engine (Rust: estado, equações, limites e hashes)
 | TypeScript | protocolo, acessibilidade, DOM e visualização dos dados publicados |
 | Three.js | transformar estado em leitura espacial sem inventar atividade |
 | Tauri | empacotar a mesma experiência com um host Rust nativo |
-| testes | Cargo, Clippy, Vitest, replay Wasm, navegador real e captura reproduzível |
+| testes | Cargo, Clippy, Vitest, replay celular, convergência de eventos/correntes, ensembles, Wasm em navegador, contraste e captura reproduzível |
 
 C# continua fora do payload web. Só fará sentido como serviço nativo/offline se
 um benchmark reproduzível demonstrar uma necessidade que Rust/Wasm não atende.
@@ -88,9 +95,10 @@ memória de estudo em falsa proveniência Git.
 | 2026-07-24 | fecho relógio, Worker, CSR, campo E/I e a superfície 0.4 |
 | 2026-07-26 | promovo Rust/Wasm como motor padrão na 0.5 e preservo o replay sombra |
 | 2026-07-26 | fecho a 0.6 com L1–L6, relé/TRN, ABI v4, aba Lâminas e auditoria de recursos |
+| 2026-08-02 | fecho a 0.7 com AdEx, quatro receptores, ResolutionMap, ABI v5 e as abas Célula/Eletricidade |
 
-O detalhamento está em [PLAN_0.6.md](PLAN_0.6.md), [ROADMAP.md](ROADMAP.md) e
-[AUDIT_0.6.md](AUDIT_0.6.md).
+O detalhamento está em [PLAN_0.7.md](PLAN_0.7.md), [ROADMAP.md](ROADMAP.md) e
+[AUDIT_0.7.md](AUDIT_0.7.md).
 
 ### Executar e conferir
 
@@ -106,6 +114,13 @@ npm run check
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo check -p brain-wasm --target wasm32-unknown-unknown
+```
+
+O gate web também gera capturas temporárias em desktop/mobile e audita teclado,
+contraste e o perfil de execução. Para preservar esses artefatos em um diretório:
+
+```bash
+BRAIN_AUDIT_DIR=artifacts/visual-audit npm run audit:runtime
 ```
 
 Para regenerar a ponte e a captura:

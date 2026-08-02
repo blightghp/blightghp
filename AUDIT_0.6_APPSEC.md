@@ -109,7 +109,8 @@ Superfície revisada:
 
 - a geometria não escreve no snapshot nem executa equações;
 - índices ausentes recebem apenas zero visual;
-- há seis meshes E, seis anéis I e nove vias estáticas;
+- há seis meshes E, seis anéis I, nove vias interestruturais e seis recorrências
+  L1–L6; curvas e pulsos leem somente o snapshot;
 - LOD só reduz apresentação e não altera o motor;
 - painéis inativos usam `hidden`;
 - o enquadramento foi verificado nas duas vistas.

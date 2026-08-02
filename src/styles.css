@@ -154,6 +154,42 @@ a:focus-visible {
 
 .laminar-panel .lede { max-width: 250px; }
 .laminar-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cell-panel .lede, .electricity-panel .lede { max-width: 255px; }
+.cell-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cell-metrics strong { white-space: nowrap; }
+
+.model-copy {
+  margin: 0;
+  color: #7895b0;
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+.current-stack { display: grid; gap: 7px; }
+.current-stack label {
+  display: flex;
+  justify-content: space-between;
+  color: #8aa9c5;
+  font: 500 9px "JetBrains Mono", monospace;
+}
+.current-stack meter {
+  width: 100%;
+  height: 6px;
+  margin: 0 0 7px;
+  border: 0;
+  background: rgba(62, 122, 179, .14);
+}
+.current-stack meter::-webkit-meter-bar {
+  border: 0;
+  border-radius: 6px;
+  background: rgba(62, 122, 179, .14);
+}
+.current-stack meter::-webkit-meter-optimum-value {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #287edc, #65d5ff);
+  box-shadow: 0 0 9px rgba(70, 190, 255, .45);
+}
+.current-stack label:nth-of-type(n+3) { color: #bf92df; }
 
 .layer-key {
   display: grid;
@@ -185,6 +221,11 @@ a:focus-visible {
   font-size: 8px;
   line-height: 1.55;
 }
+
+.runtime-profile { display: grid; gap: 7px; margin: 0; }
+.runtime-profile div { display: flex; justify-content: space-between; gap: 12px; }
+.runtime-profile dt { color: #7895b0; font-size: 9px; }
+.runtime-profile dd { margin: 0; color: #8edfff; font: 500 9px "JetBrains Mono", monospace; }
 
 .control-panel::-webkit-scrollbar { width: 4px; }
 .control-panel::-webkit-scrollbar-track { background: transparent; }
@@ -427,7 +468,7 @@ body[data-capture="true"] .interaction-hint { display: none !important; }
   .topbar { padding: 0 16px; }
   .runtime { display: none; }
   .view-tabs { top: 72px; }
-  .control-panel { top: 78px; right: 14px; width: 250px; padding: 18px; }
+  .control-panel { top: 116px; right: 14px; width: 250px; max-height: calc(100vh - 130px); padding: 18px; }
   .control-panel h1 { font-size: 27px; }
   .metric-strip, .control-panel section:nth-of-type(2), .control-panel section:nth-of-type(3) { display: none; }
   .inference-panel { left: 14px; bottom: 14px; width: calc(100vw - 292px); min-width: 250px; grid-template-columns: 1fr; }
@@ -435,6 +476,8 @@ body[data-capture="true"] .interaction-hint { display: none !important; }
 }
 
 @media (max-width: 560px) {
+  .view-tabs { max-width: calc(100vw - 20px); overflow-x: auto; }
+  .view-tabs button { padding-inline: 9px; white-space: nowrap; }
   .control-panel { width: 210px; }
   .inference-panel { width: calc(100vw - 28px); }
   .inference-copy { padding: 15px 18px; }

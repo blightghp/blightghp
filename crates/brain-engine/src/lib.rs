@@ -2,14 +2,23 @@
 
 use core::fmt;
 
+mod cell_patch;
 mod clock;
 mod corticothalamic;
 mod field;
+mod input_queue;
 mod network;
 mod observables;
 mod random;
 mod simulation;
+mod synaptic;
 
+pub use cell_patch::{
+    CellPatch, CellPatchConfig, CellPatchDrive, CellPatchError, CellPatchSnapshot, PatchCellKind,
+    ResolutionMap, CELL_COUNT, CELL_PATCH_SCHEMA_VERSION, DEFAULT_CELL_STEP_SECONDS,
+    EXCITATORY_CELL_COUNT, MAX_BOUNDARY_CURRENT_AMPERES, MAX_CELL_SUBSTEPS_PER_INTERVAL,
+    MAX_PATCH_DRIVE_HZ,
+};
 pub use clock::{ClockError, ClockFrame, FixedStepClock, SimulationTick, MAX_SAFE_TICK};
 pub use corticothalamic::{
     CorticothalamicConfig, CorticothalamicDrive, CorticothalamicEngine, CorticothalamicSnapshot,
@@ -19,12 +28,17 @@ pub use field::{
     project_spikes_to_field, FieldConfig, FieldError, FieldSnapshot, FieldTopology, NeuronKind,
     PopulationField, ProjectedSpikeDrive,
 };
+pub use input_queue::{DeterministicInputQueue, InputAddress, InputQueueError, ScheduledInput};
 pub use network::{CsrError, SynapseCsr, SynapseEndpoint};
 pub use observables::{mean_absolute_weight, ObservableError, PopulationFiringRate};
 pub use random::{random_u32, random_unit};
 pub use simulation::{
     CorticothalamicSignal, NeuralSimulation, NeuralStimulus, SignalBatch, SimulationConfig,
-    SimulationError, SimulationSnapshot, SimulationSynapse, SIMULATION_SCHEMA_VERSION,
+    SimulationError, SimulationInput, SimulationSnapshot, SimulationSynapse, MAX_SCHEDULED_INPUTS,
+    SIMULATION_SCHEMA_VERSION,
+};
+pub use synaptic::{
+    analytic_response_area, response_area, AMPA_TIME_CONSTANT_SECONDS, GABAA_TIME_CONSTANT_SECONDS,
 };
 
 pub const ENGINE_SCHEMA_VERSION: u32 = 1;
