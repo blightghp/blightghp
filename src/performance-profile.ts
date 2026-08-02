@@ -31,6 +31,15 @@ export function snapshotByteLength(snapshot: NeuralSnapshot): number {
     snapshot.field.waveActivity,
     snapshot.corticothalamic.excitatory,
     snapshot.corticothalamic.inhibitory,
+    snapshot.cellPatch.kinds,
+    snapshot.cellPatch.membraneVolts,
+    snapshot.cellPatch.dendriteVolts,
+    snapshot.cellPatch.adaptationAmperes,
+    snapshot.cellPatch.ampaAmperes,
+    snapshot.cellPatch.nmdaAmperes,
+    snapshot.cellPatch.gabaaAmperes,
+    snapshot.cellPatch.gababAmperes,
+    snapshot.cellPatch.spiked,
   ].reduce((sum, view) => sum + view.byteLength, 0);
 }
 

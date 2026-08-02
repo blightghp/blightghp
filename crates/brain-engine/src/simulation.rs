@@ -2,14 +2,15 @@ use core::fmt;
 
 use crate::synaptic::decay_conductance;
 use crate::{
-    mean_absolute_weight, random_unit, CorticothalamicConfig, CorticothalamicDrive,
-    CorticothalamicEngine, DeterministicInputQueue, FieldConfig, FieldSnapshot, FieldTopology,
-    InputQueueError, LaminarConfig, NeuronKind, PopulationField, PopulationFiringRate, Seconds,
+    mean_absolute_weight, random_unit, CellPatch, CellPatchConfig, CellPatchDrive,
+    CellPatchSnapshot, CorticothalamicConfig, CorticothalamicDrive, CorticothalamicEngine,
+    DeterministicInputQueue, FieldConfig, FieldSnapshot, FieldTopology, InputQueueError,
+    LaminarConfig, NeuronKind, PopulationField, PopulationFiringRate, ResolutionMap, Seconds,
     SynapseCsr, SynapseEndpoint, AMPA_TIME_CONSTANT_SECONDS, GABAA_TIME_CONSTANT_SECONDS,
     LAYER_COUNT, MAX_SAFE_TICK,
 };
 
-pub const SIMULATION_SCHEMA_VERSION: u32 = 4;
+pub const SIMULATION_SCHEMA_VERSION: u32 = 5;
 const MIN_EXCITATORY_WEIGHT: f64 = 0.12;
 const MAX_EXCITATORY_WEIGHT: f64 = 0.92;
 const MAX_SIGNALS_IN_FLIGHT: usize = 900;
@@ -84,6 +85,7 @@ pub struct SimulationSnapshot {
     pub signals: SignalBatch,
     pub field: FieldSnapshot,
     pub corticothalamic: CorticothalamicSignal,
+    pub cell_patch: CellPatchSnapshot,
     pub state_hash: u64,
 }
 
@@ -106,6 +108,7 @@ pub struct NeuralSimulation {
     csr: SynapseCsr,
     population_field: PopulationField,
     corticothalamic: CorticothalamicEngine,
+    cell_patch: CellPatch,
     potentials: Vec<f32>,
     activations: Vec<f32>,
     conductance_ampa: Vec<f32>,
@@ -213,6 +216,10 @@ impl NeuralSimulation {
             ..CorticothalamicConfig::default()
         })
         .map_err(SimulationError::Corticothalamic)?;
+        let resolution =
+            ResolutionMap::learning_patch(Some(0)).map_err(SimulationError::CellPatch)?;
+        let cell_patch = CellPatch::new(config.seed, CellPatchConfig::default(), resolution)
+            .map_err(SimulationError::CellPatch)?;
         let thresholds = thresholds(config.seed, node_count);
         let firing_rate_observable = PopulationFiringRate::new(
             node_count_u32,
@@ -254,6 +261,7 @@ impl NeuralSimulation {
             csr,
             population_field,
             corticothalamic,
+            cell_patch,
             potentials: vec![0.0; node_count],
             activations: vec![0.0; node_count],
             conductance_ampa: vec![0.0; node_count],
@@ -497,12 +505,38 @@ impl NeuralSimulation {
                 contextual: confidence,
             })
             .map_err(SimulationError::Corticothalamic)?;
+        self.advance_cell_patch(intensity, confidence)?;
 
         self.firing_rate = self.firing_rate_observable.sample(spikes);
         self.latest_spike_count = spikes;
         self.tick = next_tick;
         self.queue_cursor = (self.queue_cursor + 1) % self.pending.len();
         Ok(())
+    }
+
+    fn advance_cell_patch(
+        &mut self,
+        stimulus_intensity: f64,
+        stimulus_confidence: f64,
+    ) -> Result<(), SimulationError> {
+        let boundary_activity = self
+            .population_field
+            .snapshot()
+            .wave_activity
+            .first()
+            .copied()
+            .map_or(0.0, f64::from);
+        self.cell_patch
+            .advance_interval(
+                self.fixed_step,
+                CellPatchDrive {
+                    excitatory_rate_hz: 8.0 + stimulus_intensity * 70.0,
+                    inhibitory_rate_hz: 4.0 + stimulus_confidence * 35.0,
+                    boundary_current_amperes: 40.0e-12 + boundary_activity * 260.0e-12,
+                },
+            )
+            .map(|_| ())
+            .map_err(SimulationError::CellPatch)
     }
 
     pub fn reset(&mut self, seed: Option<u32>) {
@@ -516,6 +550,7 @@ impl NeuralSimulation {
         self.conductance_gaba.fill(0.0);
         self.population_field.reset();
         self.corticothalamic.reset();
+        self.cell_patch.reset(seed);
         self.refractory.fill(0.0);
         self.pre_trace.fill(0.0);
         self.post_trace.fill(0.0);
@@ -540,16 +575,27 @@ impl NeuralSimulation {
     #[must_use]
     pub fn snapshot(&self) -> SimulationSnapshot {
         let signals = self.signal_batch();
-        let field = self.population_field.snapshot();
+        let mut field = self.population_field.snapshot();
+        let raw_field = field.clone();
         let corticothalamic = corticothalamic_signal(self.corticothalamic.snapshot());
+        let cell_patch = self.cell_patch.snapshot();
         let state_hash = state_hash(
             self.tick,
             self.latest_spike_count,
             &self.potentials,
             &self.activations,
             &self.weights,
-            &field,
+            &raw_field,
         );
+        if let Some(value) = field
+            .wave_activity
+            .get_mut(usize::try_from(cell_patch.field_vertex).unwrap_or(usize::MAX))
+        {
+            *value = quantize_f32(
+                (1.0 - f64::from(cell_patch.blend)) * f64::from(*value)
+                    + f64::from(cell_patch.blend) * self.cell_patch.activity(),
+            );
+        }
         SimulationSnapshot {
             schema_version: SIMULATION_SCHEMA_VERSION,
             tick: self.tick,
@@ -563,6 +609,7 @@ impl NeuralSimulation {
             signals,
             field,
             corticothalamic,
+            cell_patch,
             state_hash,
         }
     }
@@ -837,6 +884,7 @@ pub enum SimulationError {
     InvalidCsr,
     InvalidInput,
     InputQueue(InputQueueError),
+    CellPatch(crate::CellPatchError),
     Field(crate::FieldError),
     Corticothalamic(crate::EngineError),
 }
@@ -855,6 +903,7 @@ impl fmt::Display for SimulationError {
             Self::InvalidCsr => formatter.write_str("invalid synapse CSR"),
             Self::InvalidInput => formatter.write_str("invalid scheduled simulation input"),
             Self::InputQueue(error) => write!(formatter, "input queue error: {error}"),
+            Self::CellPatch(error) => write!(formatter, "cell patch error: {error}"),
             Self::Field(error) => write!(formatter, "field error: {error}"),
             Self::Corticothalamic(error) => write!(formatter, "corticothalamic error: {error}"),
         }

@@ -281,6 +281,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
     })
     .unwrap();
     let mut previous_corticothalamic_hash = simulation.snapshot().corticothalamic.state_hash;
+    let mut previous_cell_patch_hash = simulation.snapshot().cell_patch.state_hash;
 
     for (advance, expected) in simulation_fixture
         .advances
@@ -298,7 +299,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
             )
             .unwrap();
         assert_eq!(snapshot.tick, expected.tick);
-        assert_eq!(snapshot.schema_version, 4);
+        assert_eq!(snapshot.schema_version, 5);
         assert_eq!(snapshot.spikes, expected.spikes);
         assert!((snapshot.firing_rate - expected.firing_rate).abs() <= 1.0e-12);
         assert!((snapshot.mean_weight - expected.mean_weight).abs() <= 1.0e-12);
@@ -311,6 +312,15 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
         assert_eq!(snapshot.signals.inhibitory, expected.signal_inhibitory);
         assert_f32_vectors_close(&snapshot.field.excitatory, &expected.field_excitatory);
         assert_f32_vectors_close(&snapshot.field.inhibitory, &expected.field_inhibitory);
+        assert_eq!(snapshot.cell_patch.field_vertex, 0);
+        assert_eq!(snapshot.cell_patch.blend.to_bits(), 1.0_f32.to_bits());
+        assert!(
+            (f64::from(snapshot.field.wave_activity[0])
+                - (snapshot.cell_patch.firing_rate_hz / 100.0).clamp(0.0, 1.0))
+            .abs()
+                <= f64::from(f32::EPSILON),
+            "the microscopic patch must substitute, not add to, its field vertex"
+        );
         assert_eq!(
             snapshot.state_hash,
             u64::from_str_radix(&expected.hash, 16).unwrap()
@@ -326,6 +336,8 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
             previous_corticothalamic_hash
         );
         previous_corticothalamic_hash = snapshot.corticothalamic.state_hash;
+        assert_ne!(snapshot.cell_patch.state_hash, previous_cell_patch_hash);
+        previous_cell_patch_hash = snapshot.cell_patch.state_hash;
     }
 }
 

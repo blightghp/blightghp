@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#020711" />
-    <meta name="description" content="BRAIN PRO [v. 0.6.0] — um programador aprendendo Rust enquanto constrói um simulador neural didático." />
-    <meta property="og:title" content="BRAIN PRO [v. 0.6.0]" />
+    <meta name="description" content="BRAIN PRO [v. 0.7.0] — células AdEx e correntes AMPA, NMDA, GABA-A e GABA-B em Rust/Wasm." />
+    <meta property="og:title" content="BRAIN PRO [v. 0.7.0]" />
     <meta property="og:description" content="Rust, WebAssembly, L1–L6, relé talâmico e TRN em um caderno de aprendizagem executável." />
     <meta property="og:image" content="https://raw.githubusercontent.com/blightghp/blightghp/main/assets/brain-concept.png" />
-    <title>BRAIN PRO [v. 0.6.0]</title>
+    <title>BRAIN PRO [v. 0.7.0]</title>
     <link rel="stylesheet" href="/src/styles.css" />
     <script type="module" src="/src/main.ts"></script>
   </head>
@@ -19,7 +19,7 @@
     <header class="topbar">
       <a class="brand" href="https://github.com/blightghp" aria-label="Perfil blightghp no GitHub">
         <span class="brand-mark" aria-hidden="true"></span>
-        <span>BRAIN PRO [v. 0.6.0]</span>
+        <span>BRAIN PRO [v. 0.7.0]</span>
       </a>
       <div class="runtime"><span class="runtime-dot"></span><span id="runtime-status">INICIALIZANDO MOTOR</span></div>
     </header>
@@ -27,10 +27,12 @@
     <nav class="view-tabs" role="tablist" aria-label="Vistas do simulador">
       <button id="tab-overview" type="button" role="tab" aria-selected="true" aria-controls="overview-panel" data-view="overview">VISÃO GERAL</button>
       <button id="tab-laminar" type="button" role="tab" aria-selected="false" aria-controls="laminar-panel" data-view="laminar">LÂMINAS</button>
+      <button id="tab-cell" type="button" role="tab" aria-selected="false" aria-controls="cell-panel" data-view="cell" tabindex="-1">CÉLULA</button>
+      <button id="tab-electricity" type="button" role="tab" aria-selected="false" aria-controls="electricity-panel" data-view="electricity" tabindex="-1">ELETRICIDADE</button>
     </nav>
 
     <aside class="glass-panel control-panel" id="overview-panel" role="tabpanel" aria-labelledby="tab-overview">
-      <div class="eyebrow">RUST LEARNING LAB / 0.6</div>
+      <div class="eyebrow">RUST LEARNING LAB / 0.7</div>
       <h1>Aprender<br /><span>simulando.</span></h1>
       <p class="lede">Meu laboratório didático transforma entradas em disparos, atrasos e estados que consigo medir e revisar.</p>
 
@@ -154,6 +156,64 @@
       </section>
 
       <p class="model-caveat">Modelo fenomenológico de aprendizagem: sem canais de cálcio tipo T, morfologia ou calibração clínica.</p>
+    </aside>
+
+    <aside class="glass-panel control-panel cell-panel" id="cell-panel" role="tabpanel" aria-labelledby="tab-cell" hidden>
+      <div class="eyebrow">PATCH MICROSCÓPICO · AdEx 0.7</div>
+      <h1>Célula<br /><span>em SI.</span></h1>
+      <p class="lede">Doze células AdEx, oito excitatórias e quatro inibitórias, recebem a fronteira do campo. O patch substitui — não soma — a contribuição macro no vértice selecionado.</p>
+
+      <div class="metric-strip cell-metrics">
+        <div><strong id="cell-membrane">−70.0 mV</strong><span>SOMA</span></div>
+        <div><strong id="cell-dendrite">−70.0 mV</strong><span>DENDRITO</span></div>
+        <div><strong id="cell-rate">0.0 Hz</strong><span>DISPAROS</span></div>
+      </div>
+
+      <section>
+        <div class="section-heading"><span>RESOLUTION MAP</span><span>UNILATERAL</span></div>
+        <dl class="runtime-profile" aria-label="Contrato do patch celular">
+          <div><dt>Composição E/I</dt><dd>8 / 4</dd></div>
+          <div><dt>Razão E/I observada</dt><dd id="cell-ei-ratio">0.00</dd></div>
+          <div><dt>Passo interno</dt><dd>83.3 µs</dd></div>
+          <div><dt>Blend microscópico</dt><dd>100%</dd></div>
+        </dl>
+      </section>
+
+      <section>
+        <div class="section-heading"><span>MODELO</span><span>AdEx + DENDRITO</span></div>
+        <p class="model-copy">O soma integra capacitância, fuga exponencial e adaptação. O compartimento dendrítico passivo recebe as condutâncias e acopla corrente ao soma.</p>
+      </section>
+
+      <p class="model-caveat">Escala didática: valores internos em volts, amperes, siemens e segundos; a interface converte apenas para mV, pA e ms.</p>
+    </aside>
+
+    <aside class="glass-panel control-panel electricity-panel" id="electricity-panel" role="tabpanel" aria-labelledby="tab-electricity" hidden>
+      <div class="eyebrow">CONDUTÂNCIAS · ABI V5</div>
+      <h1>Correntes<br /><span>sinápticas.</span></h1>
+      <p class="lede">AMPA e GABA-A mostram a resposta rápida; NMDA e GABA-B preservam componentes lentas. Os medidores exibem a média absoluta por célula.</p>
+
+      <section class="current-stack" aria-label="Correntes receptoras médias">
+        <label for="ampa-meter"><span>AMPA</span><output id="ampa-current">0.0 pA</output></label>
+        <meter id="ampa-meter" min="0" max="300" value="0"></meter>
+        <label for="nmda-meter"><span>NMDA · Mg²⁺</span><output id="nmda-current">0.0 pA</output></label>
+        <meter id="nmda-meter" min="0" max="300" value="0"></meter>
+        <label for="gabaa-meter"><span>GABA-A</span><output id="gabaa-current">0.0 pA</output></label>
+        <meter id="gabaa-meter" min="0" max="300" value="0"></meter>
+        <label for="gabab-meter"><span>GABA-B</span><output id="gabab-current">0.0 pA</output></label>
+        <meter id="gabab-meter" min="0" max="300" value="0"></meter>
+      </section>
+
+      <section>
+        <div class="section-heading"><span>TEMPORALIDADE</span><span>EVENTOS</span></div>
+        <dl class="runtime-profile">
+          <div><dt>Primeiro disparo</dt><dd id="first-spike">—</dd></div>
+          <div><dt>Adaptação média</dt><dd id="adaptation-current">0.0 pA</dd></div>
+          <div><dt>τ AMPA / NMDA</dt><dd>5 / 80 ms</dd></div>
+          <div><dt>τ GABA-A / B</dt><dd>10 / 150 ms</dd></div>
+        </dl>
+      </section>
+
+      <p class="model-caveat">O retorno microscópico ao campo permanece desativado nesta fase; isso torna a direção do acoplamento explícita e evita contribuição duplicada.</p>
     </aside>
 
     <section class="glass-panel inference-panel" id="bayesian-hud">

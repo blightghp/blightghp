@@ -1,4 +1,4 @@
-# Arquitetura de aprendizagem · BRAIN PRO [v. 0.6.0]
+# Arquitetura de aprendizagem · BRAIN PRO [v. 0.7.0]
 
 Uso este documento para aprender a decompor um sistema Rust sem esconder as
 decisões que ainda estou amadurecendo. Ele registra a evolução desde o motor
@@ -247,17 +247,22 @@ Essa disciplina evita depender da associatividade de ponto flutuante. Igualdade 
 
 O Worker entra antes do paralelismo. Seu objetivo inicial é isolar o laço fixo do frame.
 
-Na ABI v4, o snapshot acrescenta um bloco córtico-talâmico compacto: dois
+Na ABI v5, o snapshot preserva o bloco córtico-talâmico da v4 e acrescenta um
+bloco de patch celular. O bloco laminar mantém dois
 `Float32Array` de seis posições para E/I, cinco escalares de relé/TRN/retorno e
-um hash próprio. O hash legado da rede 0.5 não incorpora esse bloco; assim, o
+um hash próprio. O patch publica nove arrays de doze posições — tipo, soma,
+dendrito, adaptação, quatro correntes receptoras e eventos — além de taxa, razão
+E/I, primeiro spike, vértice, blend e hash. O hash legado da rede 0.5 não
+incorpora esses blocos; assim, o
 replay sombra continua verificando exatamente o baseline promovido enquanto o
-novo circuito ganha sua própria prova de determinismo.
+novo circuito e o patch ganham provas separadas de determinismo.
 
-Treze buffers são transferidos ao thread de apresentação, incluindo E/I
-laminar. Antes da construção, o host limita nós, sinapses, vértices e arestas;
+Vinte e dois buffers são transferidos ao thread de apresentação. Antes da
+construção, o host limita nós, sinapses, vértices e arestas;
 o adaptador Rust repete as cotas. Cada comando avança no máximo 600 ticks para
 que uma única mensagem não monopolize o Worker. O fallback diagnóstico publica
-buffers laminares zerados e nunca substitui o circuito por equações TypeScript.
+buffers laminares/celulares zerados e nunca substitui o circuito por equações
+TypeScript.
 
 Mensagens de controle:
 
@@ -277,7 +282,7 @@ type EngineEvent =
 
 O perfil não atravessa a ABI científica: `RuntimeProfiler` mede no shell a
 latência de ida e volta do Worker, o custo de CPU do frame, contadores acumulados
-do renderer, heap quando disponível e bytes dos treze buffers. A cadência
+do renderer, heap quando disponível e bytes dos 22 buffers. A cadência
 configurável decide quando pedir o próximo snapshot, sem mudar o tick do motor.
 
 Não haverá uma mensagem por spike. Eventos de alta frequência são compactados no snapshot em arrays de IDs, offsets temporais e amplitudes.
@@ -335,7 +340,13 @@ interface ResolutionMap {
 }
 ```
 
-O campo alimenta as condições de contorno do patch. A atividade agregada dos spikes substitui o campo dentro da máscara `blendByVertex`. O retorno microscópico para o campo começa desativado; quando ativado, ocorre em janelas de acoplamento e passa por testes de conservação e estabilidade.
+O preset `learning_patch` mapeia doze células para o primeiro vértice com pesos
+`1/12`, peso de contorno 1 e blend 1. A validação rejeita comprimentos divergentes,
+IDs fora da sequência, números não finitos e pesos não conservativos. O campo
+alimenta uma corrente de contorno limitada; a atividade agregada dos spikes
+substitui o campo dentro da máscara `blendByVertex`. O retorno microscópico para
+o campo permanece desativado na 0.7 e só poderá entrar em janelas explícitas,
+depois de testes de conservação e estabilidade.
 
 Assim, a troca de resolução acompanha o zoom sem fazer a dinâmica depender da câmera. A câmera escolhe o que mostrar, nunca qual equação executar.
 

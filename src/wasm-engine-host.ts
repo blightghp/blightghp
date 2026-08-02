@@ -157,6 +157,15 @@ export function snapshotTransferList(snapshot: NeuralSnapshot): ArrayBuffer[] {
     snapshot.field.waveActivity.buffer,
     snapshot.corticothalamic.excitatory.buffer,
     snapshot.corticothalamic.inhibitory.buffer,
+    snapshot.cellPatch.kinds.buffer,
+    snapshot.cellPatch.membraneVolts.buffer,
+    snapshot.cellPatch.dendriteVolts.buffer,
+    snapshot.cellPatch.adaptationAmperes.buffer,
+    snapshot.cellPatch.ampaAmperes.buffer,
+    snapshot.cellPatch.nmdaAmperes.buffer,
+    snapshot.cellPatch.gabaaAmperes.buffer,
+    snapshot.cellPatch.gababAmperes.buffer,
+    snapshot.cellPatch.spiked.buffer,
   ];
 }
 
@@ -302,10 +311,12 @@ export class WasmEngineHost {
 
   private snapshot(): NeuralSnapshot {
     const engine = this.requireEngine();
+    const firstSpikeSeconds = engine.cell_first_spike_seconds();
     const diagnostics: EngineDiagnostics = {
       runtime: "rust-wasm",
       stateHash: engine.state_hash(),
       corticothalamicHash: engine.corticothalamic_state_hash(),
+      cellPatchHash: engine.cell_state_hash(),
       degraded: false,
     };
     return {
@@ -338,6 +349,22 @@ export class WasmEngineHost {
         rebound: engine.thalamic_rebound(),
         relayDriveToL4: engine.relay_drive_to_l4(),
         layer6Feedback: engine.layer6_feedback(),
+      },
+      cellPatch: {
+        kinds: engine.cell_kinds(),
+        membraneVolts: engine.cell_membrane_volts(),
+        dendriteVolts: engine.cell_dendrite_volts(),
+        adaptationAmperes: engine.cell_adaptation_amperes(),
+        ampaAmperes: engine.cell_ampa_amperes(),
+        nmdaAmperes: engine.cell_nmda_amperes(),
+        gabaaAmperes: engine.cell_gabaa_amperes(),
+        gababAmperes: engine.cell_gabab_amperes(),
+        spiked: engine.cell_spiked(),
+        firingRateHz: engine.cell_firing_rate_hz(),
+        excitatoryInhibitoryRatio: engine.cell_excitatory_inhibitory_ratio(),
+        firstSpikeSeconds: firstSpikeSeconds < 0 ? undefined : firstSpikeSeconds,
+        fieldVertex: engine.cell_field_vertex(),
+        blend: engine.cell_blend(),
       },
       diagnostics,
     };
@@ -396,10 +423,26 @@ export class DiagnosticFallbackHost {
           relayDriveToL4: 0,
           layer6Feedback: 0,
         },
+        cellPatch: {
+          kinds: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]),
+          membraneVolts: new Float32Array(12),
+          dendriteVolts: new Float32Array(12),
+          adaptationAmperes: new Float32Array(12),
+          ampaAmperes: new Float32Array(12),
+          nmdaAmperes: new Float32Array(12),
+          gabaaAmperes: new Float32Array(12),
+          gababAmperes: new Float32Array(12),
+          spiked: new Uint8Array(12),
+          firingRateHz: 0,
+          excitatoryInhibitoryRatio: 0,
+          fieldVertex: 0,
+          blend: 0,
+        },
         diagnostics: {
           runtime: "diagnostic-fallback",
           stateHash: "unavailable",
           corticothalamicHash: "unavailable",
+          cellPatchHash: "unavailable",
           degraded: true,
           detail: this.detail,
         },

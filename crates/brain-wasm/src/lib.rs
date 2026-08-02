@@ -374,6 +374,81 @@ impl WasmNeuralEngine {
     pub fn layer6_feedback(&self) -> f32 {
         self.snapshot.corticothalamic.layer6_feedback
     }
+
+    #[must_use]
+    pub fn cell_kinds(&self) -> Vec<u8> {
+        self.snapshot.cell_patch.kinds.clone()
+    }
+
+    #[must_use]
+    pub fn cell_membrane_volts(&self) -> Vec<f32> {
+        self.snapshot.cell_patch.membrane_volts.clone()
+    }
+
+    #[must_use]
+    pub fn cell_dendrite_volts(&self) -> Vec<f32> {
+        self.snapshot.cell_patch.dendrite_volts.clone()
+    }
+
+    #[must_use]
+    pub fn cell_adaptation_amperes(&self) -> Vec<f32> {
+        self.snapshot.cell_patch.adaptation_amperes.clone()
+    }
+
+    #[must_use]
+    pub fn cell_ampa_amperes(&self) -> Vec<f32> {
+        self.snapshot.cell_patch.ampa_amperes.clone()
+    }
+
+    #[must_use]
+    pub fn cell_nmda_amperes(&self) -> Vec<f32> {
+        self.snapshot.cell_patch.nmda_amperes.clone()
+    }
+
+    #[must_use]
+    pub fn cell_gabaa_amperes(&self) -> Vec<f32> {
+        self.snapshot.cell_patch.gabaa_amperes.clone()
+    }
+
+    #[must_use]
+    pub fn cell_gabab_amperes(&self) -> Vec<f32> {
+        self.snapshot.cell_patch.gabab_amperes.clone()
+    }
+
+    #[must_use]
+    pub fn cell_spiked(&self) -> Vec<u8> {
+        self.snapshot.cell_patch.spiked.clone()
+    }
+
+    #[must_use]
+    pub fn cell_firing_rate_hz(&self) -> f64 {
+        self.snapshot.cell_patch.firing_rate_hz
+    }
+
+    #[must_use]
+    pub fn cell_excitatory_inhibitory_ratio(&self) -> f64 {
+        self.snapshot.cell_patch.excitatory_inhibitory_ratio
+    }
+
+    #[must_use]
+    pub fn cell_first_spike_seconds(&self) -> f64 {
+        self.snapshot.cell_patch.first_spike_seconds.unwrap_or(-1.0)
+    }
+
+    #[must_use]
+    pub fn cell_field_vertex(&self) -> u32 {
+        self.snapshot.cell_patch.field_vertex
+    }
+
+    #[must_use]
+    pub fn cell_blend(&self) -> f32 {
+        self.snapshot.cell_patch.blend
+    }
+
+    #[must_use]
+    pub fn cell_state_hash(&self) -> String {
+        format!("{:016x}", self.snapshot.cell_patch.state_hash)
+    }
 }
 
 fn js_error(error: impl core::fmt::Display) -> JsValue {

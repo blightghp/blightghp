@@ -6,6 +6,13 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
+import {
+  amperesToPicoamperes,
+  CellRenderLayer,
+  mean,
+  receptorCurrentTotals,
+  voltsToMillivolts,
+} from "./cell-layer";
 import { BayesianBelief, BayesianUpdate } from "./inference";
 import {
   LaminarRenderLayer,
@@ -43,6 +50,7 @@ declare global {
         schemaVersion: number;
         stateHash?: string;
         corticothalamicHash?: string;
+        cellPatchHash?: string;
         degraded: boolean;
         detail?: string;
       };
@@ -74,6 +82,7 @@ let composer: EffectComposer;
 let bloomPass: UnrealBloomPass;
 let layers: BrainRenderLayers;
 let laminarLayer: LaminarRenderLayer;
+let cellLayer: CellRenderLayer;
 let brainData: BrainData;
 let worker: Worker;
 let latestSnapshot: NeuralSnapshot | undefined;
@@ -147,6 +156,24 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
     snapshot.corticothalamic.trn.toFixed(3);
   element("#rebound-activity").textContent =
     snapshot.corticothalamic.rebound.toFixed(3);
+  element("#cell-membrane").textContent =
+    `${voltsToMillivolts(mean(snapshot.cellPatch.membraneVolts)).toFixed(1)} mV`;
+  element("#cell-dendrite").textContent =
+    `${voltsToMillivolts(mean(snapshot.cellPatch.dendriteVolts)).toFixed(1)} mV`;
+  element("#cell-rate").textContent = `${snapshot.cellPatch.firingRateHz.toFixed(1)} Hz`;
+  element("#cell-ei-ratio").textContent = snapshot.cellPatch.excitatoryInhibitoryRatio.toFixed(2);
+  element("#adaptation-current").textContent =
+    `${amperesToPicoamperes(mean(snapshot.cellPatch.adaptationAmperes)).toFixed(1)} pA`;
+  element("#first-spike").textContent = snapshot.cellPatch.firstSpikeSeconds === undefined
+    ? "—"
+    : `${(snapshot.cellPatch.firstSpikeSeconds * 1_000).toFixed(1)} ms`;
+  const currents = receptorCurrentTotals(snapshot);
+  for (const [receptor, amperes] of Object.entries(currents)) {
+    element(`#${receptor}-current`).textContent =
+      `${amperesToPicoamperes(amperes).toFixed(1)} pA`;
+    const meter = element<HTMLMeterElement>(`#${receptor}-meter`);
+    meter.value = Math.min(meter.max, amperesToPicoamperes(amperes));
+  }
 
   const spikeElement = document.querySelector("#spike-count");
   if (spikeElement) spikeElement.textContent = `${snapshot.spikes} spk`;
@@ -220,6 +247,8 @@ function renderFrame(
   laminarLayer.group.rotation.x = state.rotationSpeed === 0
     ? -0.06
     : -0.06 + Math.sin(time * 0.12) * 0.025;
+  cellLayer.group.rotation.y = rotation * 0.42;
+  cellLayer.group.rotation.x = -0.04 + Math.sin(time * 0.11) * 0.02;
 
   const alpha = Math.min(
     1,
@@ -228,8 +257,10 @@ function renderFrame(
   if (activeView === "overview") {
     layers.updateVisibility(state, currentFocusRegion);
     layers.updateInterpolated(snapshot, previousSnapshot, alpha, state.pulseCount);
-  } else {
+  } else if (activeView === "laminar") {
     laminarLayer.update(snapshot, previousSnapshot, alpha);
+  } else {
+    cellLayer.update(snapshot, previousSnapshot, alpha);
   }
 
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta);
@@ -302,8 +333,12 @@ function setActiveView(view: SimulationView): void {
   activeView = view;
   layers.group.visible = view === "overview";
   laminarLayer.group.visible = view === "laminar";
+  cellLayer.group.visible = view === "cell" || view === "electricity";
+  if (view === "cell" || view === "electricity") cellLayer.setMode(view);
   element("#overview-panel").hidden = view !== "overview";
   element("#laminar-panel").hidden = view !== "laminar";
+  element("#cell-panel").hidden = view !== "cell";
+  element("#electricity-panel").hidden = view !== "electricity";
   element("#bayesian-hud").hidden = view !== "overview";
   for (const button of document.querySelectorAll<HTMLButtonElement>("[role='tab']")) {
     const selected = button.dataset.view === view;
@@ -492,6 +527,9 @@ async function init(): Promise<void> {
   laminarLayer = new LaminarRenderLayer();
   laminarLayer.group.visible = false;
   scene.add(laminarLayer.group);
+  cellLayer = new CellRenderLayer();
+  cellLayer.group.visible = false;
+  scene.add(cellLayer.group);
 
   worker = new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = (event: MessageEvent<EngineEvent>) => {
@@ -570,6 +608,7 @@ async function init(): Promise<void> {
         stateHash: latestSnapshot?.diagnostics.stateHash,
         corticothalamicHash:
           latestSnapshot?.diagnostics.corticothalamicHash,
+        cellPatchHash: latestSnapshot?.diagnostics.cellPatchHash,
         degraded:
           latestSnapshot?.diagnostics.degraded ??
           engineReady?.degraded ??

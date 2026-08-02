@@ -29,6 +29,8 @@ describe("laminar presentation contract", () => {
     expect(parseLaminarLod("high")).toBe("high");
     expect(parseLaminarLod("maximum")).toBeUndefined();
     expect(parseSimulationView("laminar")).toBe("laminar");
+    expect(parseSimulationView("cell")).toBe("cell");
+    expect(parseSimulationView("electricity")).toBe("electricity");
     expect(parseSimulationView("layers")).toBeUndefined();
   });
 

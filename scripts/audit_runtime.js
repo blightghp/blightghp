@@ -44,6 +44,18 @@ try {
       document.querySelector("#tab-laminar")?.getAttribute("aria-selected") === "true",
   );
   await page.screenshot({ path: path.join(outputDirectory, "laminar-desktop.png") });
+  await page.keyboard.press("ArrowRight");
+  await page.waitForFunction(
+    () => document.activeElement?.id === "tab-cell" &&
+      document.querySelector("#tab-cell")?.getAttribute("aria-selected") === "true",
+  );
+  await page.screenshot({ path: path.join(outputDirectory, "cell-desktop.png") });
+  await page.keyboard.press("ArrowRight");
+  await page.waitForFunction(
+    () => document.activeElement?.id === "tab-electricity" &&
+      document.querySelector("#tab-electricity")?.getAttribute("aria-selected") === "true",
+  );
+  await page.screenshot({ path: path.join(outputDirectory, "electricity-desktop.png") });
   await page.keyboard.press("Home");
   const keyboard = await page.evaluate(() => ({
     focused: document.activeElement?.id,
@@ -112,7 +124,13 @@ try {
     schemaVersion: 1,
     capturedAt: new Date().toISOString(),
     viewports: ["1440x960", "390x844"],
-    captures: ["overview-desktop.png", "laminar-desktop.png", "overview-mobile.png"],
+    captures: [
+      "overview-desktop.png",
+      "laminar-desktop.png",
+      "cell-desktop.png",
+      "electricity-desktop.png",
+      "overview-mobile.png",
+    ],
     keyboard,
     contrast,
     profile,

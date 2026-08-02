@@ -154,6 +154,42 @@ a:focus-visible {
 
 .laminar-panel .lede { max-width: 250px; }
 .laminar-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cell-panel .lede, .electricity-panel .lede { max-width: 255px; }
+.cell-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cell-metrics strong { white-space: nowrap; }
+
+.model-copy {
+  margin: 0;
+  color: #7895b0;
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+.current-stack { display: grid; gap: 7px; }
+.current-stack label {
+  display: flex;
+  justify-content: space-between;
+  color: #8aa9c5;
+  font: 500 9px "JetBrains Mono", monospace;
+}
+.current-stack meter {
+  width: 100%;
+  height: 6px;
+  margin: 0 0 7px;
+  border: 0;
+  background: rgba(62, 122, 179, .14);
+}
+.current-stack meter::-webkit-meter-bar {
+  border: 0;
+  border-radius: 6px;
+  background: rgba(62, 122, 179, .14);
+}
+.current-stack meter::-webkit-meter-optimum-value {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #287edc, #65d5ff);
+  box-shadow: 0 0 9px rgba(70, 190, 255, .45);
+}
+.current-stack label:nth-of-type(n+3) { color: #bf92df; }
 
 .layer-key {
   display: grid;
@@ -440,6 +476,8 @@ body[data-capture="true"] .interaction-hint { display: none !important; }
 }
 
 @media (max-width: 560px) {
+  .view-tabs { max-width: calc(100vw - 20px); overflow-x: auto; }
+  .view-tabs button { padding-inline: 9px; white-space: nowrap; }
   .control-panel { width: 210px; }
   .inference-panel { width: calc(100vw - 28px); }
   .inference-copy { padding: 15px 18px; }

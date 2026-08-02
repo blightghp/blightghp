@@ -38,10 +38,11 @@ try {
   const diagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   if (
     diagnostics.runtime !== "rust-wasm" ||
-    diagnostics.schemaVersion !== 4 ||
+    diagnostics.schemaVersion !== 5 ||
     diagnostics.degraded ||
     !/^[0-9a-f]{16}$/.test(diagnostics.stateHash) ||
-    !/^[0-9a-f]{16}$/.test(diagnostics.corticothalamicHash)
+    !/^[0-9a-f]{16}$/.test(diagnostics.corticothalamicHash) ||
+    !/^[0-9a-f]{16}$/.test(diagnostics.cellPatchHash)
   ) {
     throw new Error(`diagnóstico inesperado: ${JSON.stringify(diagnostics)}`);
   }
@@ -82,9 +83,34 @@ try {
   ) {
     throw new Error(`aba laminar inválida: ${JSON.stringify(laminar)}`);
   }
+  await page.click("#tab-cell");
+  await page.waitForFunction(
+    () => document.querySelector("#tab-cell")?.getAttribute("aria-selected") === "true",
+  );
+  const cell = await page.evaluate(() => ({
+    membrane: document.querySelector("#cell-membrane")?.textContent,
+    rate: document.querySelector("#cell-rate")?.textContent,
+    hidden: document.querySelector("#cell-panel")?.hidden,
+  }));
+  if (cell.hidden || !cell.membrane?.endsWith("mV") || !cell.rate?.endsWith("Hz")) {
+    throw new Error(`aba celular inválida: ${JSON.stringify(cell)}`);
+  }
+  await page.click("#tab-electricity");
+  const electricity = await page.evaluate(() => ({
+    ampa: document.querySelector("#ampa-current")?.textContent,
+    gabab: document.querySelector("#gabab-current")?.textContent,
+    hidden: document.querySelector("#electricity-panel")?.hidden,
+  }));
+  if (
+    electricity.hidden ||
+    !electricity.ampa?.endsWith("pA") ||
+    !electricity.gabab?.endsWith("pA")
+  ) {
+    throw new Error(`aba elétrica inválida: ${JSON.stringify(electricity)}`);
+  }
   console.log(
     `Worker Wasm verificado no navegador: schema ${diagnostics.schemaVersion}, ` +
-      `hash ${diagnostics.stateHash}, aba Lâminas ativa`,
+      `hash ${diagnostics.stateHash}, quatro abas operantes`,
   );
 } finally {
   await browser?.close();

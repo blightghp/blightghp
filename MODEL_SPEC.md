@@ -1,4 +1,4 @@
-# Caderno matemático · BRAIN PRO [v. 0.6.0]
+# Caderno matemático · BRAIN PRO [v. 0.7.0]
 
 Aqui anoto o que cada estado e equação significa enquanto aprendo a implementá-los
 em Rust. Não escrevo como se toda a fisiologia já existisse: cada seção declara
@@ -147,7 +147,7 @@ Assim, a região microscópica substitui gradualmente a macroscópica, em vez de
 
 ## Unidade microscópica
 
-O modelo-alvo para patches é o Adaptive Exponential Integrate-and-Fire:
+O patch promovido na 0.7 usa Adaptive Exponential Integrate-and-Fire:
 
 $$
 C\frac{dV_i}{dt} = -g_L(V_i-E_L)
@@ -162,6 +162,18 @@ $$
 Ao cruzar o limiar de evento, registra-se um spike, aplica-se `V ← V_reset` e `w ← w + b`. O modelo reproduz diferentes padrões de disparo, mas o evento continua sendo um limiar seguido de reset; ele não produz a forma completa de um potencial de ação.
 
 Classes celulares são presets multiparamétricos. Capacitância, fuga, limiar, inclinação exponencial, adaptação e reset participam da classificação; `a` e `b` não bastam isoladamente para definir uma célula piramidal ou fast-spiking.
+
+O preset contém 8 células excitatórias e 4 inibitórias. Para E/I,
+respectivamente: `C = 200/100 pF`, `gL = 10/12 nS`, `ΔT = 2/0,5 mV`,
+`a = 2/0 nS`, `b = 40/0 pA`, `τw = 200/30 ms` e reset em `−58/−55 mV`.
+O repouso é `−70 mV`, o limiar exponencial `−50 mV` e o evento é registrado em
+`−30 mV`. O passo microscópico fixo é `1/12000 s = 83,3 µs`; cada tick macro de
+`1/60 s` executa exatamente 200 subpassos e o envelope rejeita mais de 4.096.
+
+Cada célula possui um compartimento dendrítico passivo (`C = 100 pF`,
+`gL = 5 nS`) acoplado ao soma por `4 nS`. Ele não representa árvore morfológica,
+propagação de cabo ou canais dendríticos; sua função é separar o ponto de entrada
+sináptica do compartimento de disparo.
 
 O ruído colorido pode ser representado por Ornstein–Uhlenbeck:
 
@@ -181,11 +193,12 @@ $$
 I_i^{\mathrm{syn}} = -\sum_r g_i^r(t)\bigl(V_i-E_r\bigr).
 $$
 
-Cada receptor possui estado e cinética próprios. A progressão planejada é:
-
-1. AMPA e GABA-A na 0.3, depois da validação do integrador;
-2. NMDA e GABA-B nos patches da 0.7;
-3. modulação metabotrópica apenas com mecanismo e circuito declarados.
+Cada receptor possui estado e cinética próprios. No patch 0.7, AMPA, NMDA,
+GABA-A e GABA-B usam decaimento exponencial exato com `τ = 5, 80, 10 e 150 ms`.
+Os potenciais de reversão são `0, 0, −70 e −90 mV`. Eventos externos são
+endereçados deterministicamente por semente, célula e microtick; spikes internos
+excitatórios alimentam AMPA/NMDA e os inibitórios alimentam GABA-A/GABA-B.
+Modulação metabotrópica permanece fora desta fase.
 
 GABA-A pode produzir hiperpolarização ou inibição por shunt conforme o potencial de reversão do cloro, o potencial de repouso e o estado instantâneo da membrana. O tipo do receptor não será usado sozinho para decidir o efeito.
 
@@ -196,10 +209,17 @@ mas o passo interativo padrão de `1/60 s` é mais grosso que ambas as constante
 Assim, a baseline é estável e reproduzível, porém não resolve a forma temporal
 dessas correntes e não implementa ainda a equação por potencial de reversão
 acima. O estudo em `synaptic_convergence.rs` caracteriza passos de 1 a 0,125 ms;
-um preset bioelétrico só pode ser promovido na 0.7 com passo próprio, custo
-medido e novo replay, sem alterar retroativamente os hashes da 0.6.
+o preset bioelétrico 0.7 usa passo próprio e replay separado, sem alterar
+retroativamente os hashes da 0.6.
 
-Para NMDA, o bloqueio por magnésio pode entrar como fator dependente de voltagem, com parâmetros e unidade explicitados no preset. A equação concreta será escolhida junto com os dados de calibração, sem misturar convenções de artigos diferentes.
+O bloqueio por magnésio do NMDA é
+
+$$
+B(V)=\frac{1}{1 + [Mg^{2+}]/3{,}57\;\exp(-0{,}062 V_{mV})},
+$$
+
+com `[Mg²⁺] = 1 mmol/L`. Ele multiplica a condutância NMDA. A escolha é uma
+aproximação didática não calibrada para uma preparação biológica específica.
 
 ### Plasticidade de curto prazo
 

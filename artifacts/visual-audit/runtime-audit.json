@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-08-02T09:20:25.193Z",
+  "capturedAt": "2026-08-02T09:57:29.704Z",
   "viewports": [
     "1440x960",
     "390x844"
@@ -8,6 +8,8 @@
   "captures": [
     "overview-desktop.png",
     "laminar-desktop.png",
+    "cell-desktop.png",
+    "electricity-desktop.png",
     "overview-mobile.png"
   ],
   "keyboard": {
@@ -39,23 +41,23 @@
   ],
   "profile": {
     "snapshotCadenceTicks": 2,
-    "sampleCount": 24,
+    "sampleCount": 39,
     "workerLatencyMs": {
-      "mean": 14.34999999900659,
-      "p95": 27.5
+      "mean": 16.08974358363029,
+      "p95": 64.89999997615814
     },
     "frameCpuMs": {
-      "mean": 45.05185184876124,
-      "p95": 94.89999997615814
+      "mean": 37.853333327505325,
+      "p95": 81.5
     },
     "gpu": {
       "drawCalls": 31,
       "triangles": 72896
     },
     "memory": {
-      "snapshotBytes": 72959,
-      "jsHeapBytes": 12511724,
-      "geometries": 54,
+      "snapshotBytes": 73410,
+      "jsHeapBytes": 14039462,
+      "geometries": 58,
       "textures": 13
     }
   }

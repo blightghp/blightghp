@@ -47,6 +47,21 @@ export class WasmNeuralEngine {
      * Returns a JavaScript error on tick regression or engine failure.
      */
     advance_to(target_tick: number, intensity: number, confidence: number, learning_rate: number): void;
+    cell_adaptation_amperes(): Float32Array;
+    cell_ampa_amperes(): Float32Array;
+    cell_blend(): number;
+    cell_dendrite_volts(): Float32Array;
+    cell_excitatory_inhibitory_ratio(): number;
+    cell_field_vertex(): number;
+    cell_firing_rate_hz(): number;
+    cell_first_spike_seconds(): number;
+    cell_gabaa_amperes(): Float32Array;
+    cell_gabab_amperes(): Float32Array;
+    cell_kinds(): Uint8Array;
+    cell_membrane_volts(): Float32Array;
+    cell_nmda_amperes(): Float32Array;
+    cell_spiked(): Uint8Array;
+    cell_state_hash(): string;
     corticothalamic_state_hash(): string;
     field_excitatory(): Float32Array;
     field_inhibitory(): Float32Array;
@@ -116,6 +131,21 @@ export interface InitOutput {
     readonly wasmneuralengine_activations: (a: number) => [number, number];
     readonly wasmneuralengine_advance_scheduled_to: (a: number, b: number) => [number, number];
     readonly wasmneuralengine_advance_to: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly wasmneuralengine_cell_adaptation_amperes: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_ampa_amperes: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_blend: (a: number) => number;
+    readonly wasmneuralengine_cell_dendrite_volts: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_excitatory_inhibitory_ratio: (a: number) => number;
+    readonly wasmneuralengine_cell_field_vertex: (a: number) => number;
+    readonly wasmneuralengine_cell_firing_rate_hz: (a: number) => number;
+    readonly wasmneuralengine_cell_first_spike_seconds: (a: number) => number;
+    readonly wasmneuralengine_cell_gabaa_amperes: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_gabab_amperes: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_kinds: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_membrane_volts: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_nmda_amperes: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_spiked: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_state_hash: (a: number) => [number, number];
     readonly wasmneuralengine_corticothalamic_state_hash: (a: number) => [number, number];
     readonly wasmneuralengine_field_excitatory: (a: number) => [number, number];
     readonly wasmneuralengine_field_inhibitory: (a: number) => [number, number];

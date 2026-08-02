@@ -2,6 +2,7 @@
 
 use core::fmt;
 
+mod cell_patch;
 mod clock;
 mod corticothalamic;
 mod field;
@@ -12,6 +13,12 @@ mod random;
 mod simulation;
 mod synaptic;
 
+pub use cell_patch::{
+    CellPatch, CellPatchConfig, CellPatchDrive, CellPatchError, CellPatchSnapshot, PatchCellKind,
+    ResolutionMap, CELL_COUNT, CELL_PATCH_SCHEMA_VERSION, DEFAULT_CELL_STEP_SECONDS,
+    EXCITATORY_CELL_COUNT, MAX_BOUNDARY_CURRENT_AMPERES, MAX_CELL_SUBSTEPS_PER_INTERVAL,
+    MAX_PATCH_DRIVE_HZ,
+};
 pub use clock::{ClockError, ClockFrame, FixedStepClock, SimulationTick, MAX_SAFE_TICK};
 pub use corticothalamic::{
     CorticothalamicConfig, CorticothalamicDrive, CorticothalamicEngine, CorticothalamicSnapshot,

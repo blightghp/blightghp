@@ -132,6 +132,137 @@ export class WasmNeuralEngine {
         }
     }
     /**
+     * @returns {Float32Array}
+     */
+    cell_adaptation_amperes() {
+        const ret = wasm.wasmneuralengine_cell_adaptation_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_ampa_amperes() {
+        const ret = wasm.wasmneuralengine_cell_ampa_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_blend() {
+        const ret = wasm.wasmneuralengine_cell_blend(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_dendrite_volts() {
+        const ret = wasm.wasmneuralengine_cell_dendrite_volts(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_excitatory_inhibitory_ratio() {
+        const ret = wasm.wasmneuralengine_cell_excitatory_inhibitory_ratio(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_field_vertex() {
+        const ret = wasm.wasmneuralengine_cell_field_vertex(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_firing_rate_hz() {
+        const ret = wasm.wasmneuralengine_cell_firing_rate_hz(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_first_spike_seconds() {
+        const ret = wasm.wasmneuralengine_cell_first_spike_seconds(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_gabaa_amperes() {
+        const ret = wasm.wasmneuralengine_cell_gabaa_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_gabab_amperes() {
+        const ret = wasm.wasmneuralengine_cell_gabab_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    cell_kinds() {
+        const ret = wasm.wasmneuralengine_cell_kinds(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_membrane_volts() {
+        const ret = wasm.wasmneuralengine_cell_membrane_volts(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_nmda_amperes() {
+        const ret = wasm.wasmneuralengine_cell_nmda_amperes(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    cell_spiked() {
+        const ret = wasm.wasmneuralengine_cell_spiked(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @returns {string}
+     */
+    cell_state_hash() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.wasmneuralengine_cell_state_hash(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
      * @returns {string}
      */
     corticothalamic_state_hash() {
