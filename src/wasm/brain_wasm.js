@@ -101,6 +101,20 @@ export class WasmNeuralEngine {
         return v1;
     }
     /**
+     * Advances to a target using the canonical scheduled-input stream.
+     *
+     * # Errors
+     *
+     * Returns a JavaScript error on tick regression, excessive work or solver failure.
+     * @param {number} target_tick
+     */
+    advance_scheduled_to(target_tick) {
+        const ret = wasm.wasmneuralengine_advance_scheduled_to(this.__wbg_ptr, target_tick);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
      * Advances the simulation to a target tick and publishes one snapshot.
      *
      * # Errors
@@ -286,6 +300,39 @@ export class WasmNeuralEngine {
      */
     reset(seed) {
         wasm.wasmneuralengine_reset(this.__wbg_ptr, isLikeNone(seed) ? Number.MAX_SAFE_INTEGER : (seed) >>> 0);
+    }
+    /**
+     * Queues a bounded plasticity update for deterministic replay.
+     *
+     * # Errors
+     *
+     * Returns a JavaScript error for invalid values, addresses or queue limits.
+     * @param {number} tick
+     * @param {number} sequence
+     * @param {number} learning_rate
+     */
+    schedule_plasticity(tick, sequence, learning_rate) {
+        const ret = wasm.wasmneuralengine_schedule_plasticity(this.__wbg_ptr, tick, sequence, learning_rate);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Queues a bounded stimulus for deterministic replay.
+     *
+     * # Errors
+     *
+     * Returns a JavaScript error for invalid values, addresses or queue limits.
+     * @param {number} tick
+     * @param {number} sequence
+     * @param {number} intensity
+     * @param {number} confidence
+     */
+    schedule_stimulus(tick, sequence, intensity, confidence) {
+        const ret = wasm.wasmneuralengine_schedule_stimulus(this.__wbg_ptr, tick, sequence, intensity, confidence);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
     }
     /**
      * @returns {number}

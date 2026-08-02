@@ -5,10 +5,12 @@ use core::fmt;
 mod clock;
 mod corticothalamic;
 mod field;
+mod input_queue;
 mod network;
 mod observables;
 mod random;
 mod simulation;
+mod synaptic;
 
 pub use clock::{ClockError, ClockFrame, FixedStepClock, SimulationTick, MAX_SAFE_TICK};
 pub use corticothalamic::{
@@ -19,12 +21,17 @@ pub use field::{
     project_spikes_to_field, FieldConfig, FieldError, FieldSnapshot, FieldTopology, NeuronKind,
     PopulationField, ProjectedSpikeDrive,
 };
+pub use input_queue::{DeterministicInputQueue, InputAddress, InputQueueError, ScheduledInput};
 pub use network::{CsrError, SynapseCsr, SynapseEndpoint};
 pub use observables::{mean_absolute_weight, ObservableError, PopulationFiringRate};
 pub use random::{random_u32, random_unit};
 pub use simulation::{
     CorticothalamicSignal, NeuralSimulation, NeuralStimulus, SignalBatch, SimulationConfig,
-    SimulationError, SimulationSnapshot, SimulationSynapse, SIMULATION_SCHEMA_VERSION,
+    SimulationError, SimulationInput, SimulationSnapshot, SimulationSynapse, MAX_SCHEDULED_INPUTS,
+    SIMULATION_SCHEMA_VERSION,
+};
+pub use synaptic::{
+    analytic_response_area, response_area, AMPA_TIME_CONSTANT_SECONDS, GABAA_TIME_CONSTANT_SECONDS,
 };
 
 pub const ENGINE_SCHEMA_VERSION: u32 = 1;

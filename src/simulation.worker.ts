@@ -49,6 +49,9 @@ async function handle(command: EngineCommand): Promise<void> {
     case "advance":
       publish(active.advance(command) as EngineSnapshotEvent);
       return;
+    case "schedule":
+      publish(active.schedule(command));
+      return;
     case "reset":
       if (!initialization) throw new Error("reset recebido antes de initialize");
       if (command.seed === undefined) {

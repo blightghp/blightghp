@@ -13,8 +13,20 @@ import {
   parseSimulationView,
 } from "./laminar-layer";
 import type { SimulationView } from "./laminar-layer";
+import {
+  parseSnapshotCadence,
+  RuntimeProfiler,
+  shouldRequestSnapshot,
+} from "./performance-profile";
+import type { RuntimeProfile } from "./performance-profile";
 import { SIMULATION_STEP_SECONDS } from "./protocol";
-import type { EngineCommand, EngineEvent, NeuralSnapshot, SimulationTick } from "./protocol";
+import type {
+  EngineCommand,
+  EngineEvent,
+  NeuralSnapshot,
+  ScheduledEngineInput,
+  SimulationTick,
+} from "./protocol";
 import { BrainRenderLayers } from "./render-layers";
 import { BrainSettings, getInitialBrainSettings } from "./schema";
 
@@ -25,6 +37,7 @@ declare global {
       capture: (time: number, rotation: number) => Promise<void>;
       setCaptureMode: (enabled: boolean) => Promise<void>;
       setView: (view: SimulationView) => void;
+      schedule: (inputs: ScheduledEngineInput[]) => Promise<number>;
       diagnostics: () => {
         runtime: string;
         schemaVersion: number;
@@ -33,6 +46,7 @@ declare global {
         degraded: boolean;
         detail?: string;
       };
+      profile: () => RuntimeProfile;
     };
   }
 }
@@ -50,6 +64,7 @@ const simulationClock = new FixedStepClock({
   stepSeconds: SIMULATION_STEP_SECONDS,
   maxInteractiveDeltaSeconds: 0.1,
 });
+const runtimeProfiler = new RuntimeProfiler();
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
@@ -147,6 +162,14 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
     fpsElement.textContent = `${Math.round(1 / delta)} FPS`;
   }
 
+  const profile = runtimeProfiler.report(state.snapshotCadence);
+  const latencyElement = document.querySelector("#worker-latency");
+  if (latencyElement) latencyElement.textContent = `${profile.workerLatencyMs.p95.toFixed(1)} ms`;
+  const drawElement = document.querySelector("#gpu-draw-calls");
+  if (drawElement) drawElement.textContent = String(profile.gpu.drawCalls);
+  const memoryElement = document.querySelector("#snapshot-memory");
+  if (memoryElement) memoryElement.textContent = `${(profile.memory.snapshotBytes / 1024).toFixed(1)} KiB`;
+
   drawActivityTrace();
 }
 
@@ -158,19 +181,23 @@ function sendCommand(command: EngineCommand): Promise<EngineEvent> {
 }
 
 function requestAdvance(targetTick: SimulationTick): void {
-  if (engineBusy) return;
+  const publishedTick = latestSnapshot?.tick ?? 0;
+  if (engineBusy || !shouldRequestSnapshot(publishedTick, targetTick, state.snapshotCadence)) return;
   engineBusy = true;
+  const requestTimestamp = performance.now();
   sendCommand({
     type: "advance",
     targetTick,
     stimulus: { intensity: state.stimulusIntensity, confidence: currentInference.posterior },
     learningRate: state.learningRate,
   }).then((event) => {
+    runtimeProfiler.recordWorkerLatency(performance.now() - requestTimestamp);
     engineBusy = false;
     if (event.type === "snapshot") {
       previousSnapshot = latestSnapshot;
       latestSnapshot = event.snapshot;
       lastSnapshotReceivedTimestamp = performance.now();
+      runtimeProfiler.recordSnapshot(event.snapshot);
     } else if (event.type === "fault") {
       console.error(`falha do motor (${event.code}): ${event.message}`);
     }
@@ -184,6 +211,7 @@ function renderFrame(
   frameDelta = 0,
   nowTimestamp = performance.now(),
 ): void {
+  const frameStarted = performance.now();
   const rotation = forcedRotation ?? 0.34 + time * state.rotationSpeed * 0.115;
   layers.group.rotation.y = rotation;
   layers.group.rotation.x = 0.035 + Math.sin(time * 0.17) * 0.035;
@@ -206,7 +234,21 @@ function renderFrame(
 
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta);
   controls.update();
+  renderer.info.reset();
   composer.render();
+  const memory = (performance as Performance & {
+    memory?: { usedJSHeapSize: number };
+  }).memory;
+  runtimeProfiler.recordFrame(
+    performance.now() - frameStarted,
+    {
+      calls: renderer.info.render.calls,
+      triangles: renderer.info.render.triangles,
+      geometries: renderer.info.memory.geometries,
+      textures: renderer.info.memory.textures,
+    },
+    memory?.usedJSHeapSize,
+  );
 }
 
 function animate(timestamp: number): void {
@@ -313,6 +355,16 @@ function setupInterface(): void {
     }
     laminarLayer.setLod(lod);
   });
+  const cadenceSelect = element<HTMLSelectElement>("#snapshot-cadence");
+  cadenceSelect.value = String(state.snapshotCadence);
+  cadenceSelect.addEventListener("change", () => {
+    const cadence = parseSnapshotCadence(cadenceSelect.value);
+    if (!cadence) {
+      cadenceSelect.value = String(state.snapshotCadence);
+      return;
+    }
+    state.snapshotCadence = cadence;
+  });
 
   bindRange("rotation-speed", "rot-speed-val", "rotationSpeed", (value) => `${value.toFixed(1)}×`);
   bindRange("pulse-speed", "pulse-speed-val", "pulseSpeed", (value) => `${value.toFixed(1)}×`);
@@ -411,6 +463,7 @@ async function init(): Promise<void> {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.info.autoReset = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
   element("#canvas-container").appendChild(renderer.domElement);
@@ -525,6 +578,16 @@ async function init(): Promise<void> {
           latestSnapshot?.diagnostics.detail ??
           engineReady?.detail,
       };
+    },
+    async schedule(inputs) {
+      const event = await sendCommand({ type: "schedule", inputs });
+      if (event.type !== "scheduled") {
+        throw new Error(event.type === "fault" ? event.message : "entrada não confirmada");
+      }
+      return event.accepted;
+    },
+    profile() {
+      return runtimeProfiler.report(state.snapshotCadence);
     },
   };
 

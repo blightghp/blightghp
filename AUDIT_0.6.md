@@ -63,9 +63,9 @@ Estado: **aprovado em 2026-07-26**.
 Evidência:
 
 - coluna explodida mostra L1–L6, populações E/I, relé e TRN;
-- nove vias visuais pertencem ao contrato declarado;
+- nove vias interestruturais e seis recorrências L1–L6 pertencem ao contrato declarado;
 - cores, opacidade e escala leem somente o snapshot ABI v4;
-- LODs baixo/médio/alto submetem 17/21/23 draw calls;
+- LODs baixo/médio/alto submetem 26/36/44 draw calls de cena depois da extensão transversal;
 - parsers rejeitam vistas e LODs desconhecidos;
 - abas suportam setas, Home, End e foco roving;
 - movimento ornamental cessa com preferência reduzida;

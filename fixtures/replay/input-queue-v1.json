@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "initialTick": 10,
+  "inputs": [
+    { "tick": 14, "sequence": 7, "payload": "context-0.70" },
+    { "tick": 12, "sequence": 4, "payload": "stimulus-0.25" },
+    { "tick": 14, "sequence": 1, "payload": "stimulus-0.80" },
+    { "tick": 14, "sequence": 3, "payload": "plasticity-0.002" }
+  ],
+  "expected": [
+    "12:4:stimulus-0.25",
+    "14:1:stimulus-0.80",
+    "14:3:plasticity-0.002",
+    "14:7:context-0.70"
+  ]
+}

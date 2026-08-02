@@ -8,6 +8,7 @@ describe("brainSettingsSchema", () => {
       pulseCount: 140,
       stimulusIntensity: 0.5,
       learningRate: 0.004,
+      snapshotCadence: 1,
       showLeftHemi: true,
     });
   });
@@ -15,5 +16,6 @@ describe("brainSettingsSchema", () => {
   it("rejects unsafe renderer values", () => {
     expect(() => brainSettingsSchema.parse({ pulseCount: 9999 })).toThrow();
     expect(() => brainSettingsSchema.parse({ learningRate: 0.5 })).toThrow();
+    expect(() => brainSettingsSchema.parse({ snapshotCadence: 3 })).toThrow();
   });
 });

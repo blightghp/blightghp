@@ -40,8 +40,12 @@ lê snapshots.
 - duas vistas sincronizadas: **Visão Geral** e **Lâminas**;
 - execução Rust/Wasm em Worker, ABI v4 e treze buffers transferíveis;
 - hashes separados para o baseline 0.5 e para o circuito córtico-talâmico;
-- replay sombra com três marcos exatos e divergência máxima zero;
-- LOD visual com custo declarado de 17, 21 ou 23 draw calls;
+- replay sombra com três marcos exatos, fila genérica `(tick, sequence)` e
+  divergência máxima zero;
+- cadência de snapshots em 60/30/15/10 Hz e perfil de CPU, GPU, memória e
+  latência sem alterar o passo fixo;
+- curvas axonais recorrentes em L1–L6, ciclos independentes e LOD visual com
+  custo de cena declarado de 26, 36 ou 44 draw calls;
 - navegação de abas por teclado, movimento reduzido e fallback diagnóstico
   inerte quando o Wasm não carrega.
 
@@ -70,7 +74,7 @@ brain-engine (Rust: estado, equações, limites e hashes)
 | TypeScript | protocolo, acessibilidade, DOM e visualização dos dados publicados |
 | Three.js | transformar estado em leitura espacial sem inventar atividade |
 | Tauri | empacotar a mesma experiência com um host Rust nativo |
-| testes | Cargo, Clippy, Vitest, replay Wasm, navegador real e captura reproduzível |
+| testes | Cargo, Clippy, Vitest, replay Wasm, convergência AMPA/GABA-A, navegador real, contraste e captura reproduzível |
 
 C# continua fora do payload web. Só fará sentido como serviço nativo/offline se
 um benchmark reproduzível demonstrar uma necessidade que Rust/Wasm não atende.
@@ -106,6 +110,13 @@ npm run check
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo check -p brain-wasm --target wasm32-unknown-unknown
+```
+
+O gate web também gera capturas temporárias em desktop/mobile e audita teclado,
+contraste e o perfil de execução. Para preservar esses artefatos em um diretório:
+
+```bash
+BRAIN_AUDIT_DIR=artifacts/visual-audit npm run audit:runtime
 ```
 
 Para regenerar a ponte e a captura:

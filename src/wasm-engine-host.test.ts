@@ -3,6 +3,7 @@ import { generateBrainData } from "./brain";
 import {
   assertAdvanceWithinEnvelope,
   assertResourceCounts,
+  assertScheduledInputsWithinEnvelope,
   DiagnosticFallbackHost,
   snapshotTransferList,
   WORKER_RESOURCE_LIMITS,
@@ -82,5 +83,25 @@ describe("diagnostic Wasm fallback", () => {
     expect(buffers).toContain(snapshot.potentials.buffer);
     expect(buffers).toContain(snapshot.field.waveActivity.buffer);
     expect(buffers).toContain(snapshot.corticothalamic.excitatory.buffer);
+  });
+
+  it("bounds replay input batches and rejects ambiguous addresses", () => {
+    expect(() =>
+      assertScheduledInputsWithinEnvelope(10, {
+        type: "schedule",
+        inputs: [
+          { tick: 11, sequence: 2, kind: "stimulus", intensity: 0.5, confidence: 0.7 },
+        ],
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertScheduledInputsWithinEnvelope(10, {
+        type: "schedule",
+        inputs: [
+          { tick: 11, sequence: 2, kind: "plasticity", learningRate: 0.004 },
+          { tick: 11, sequence: 2, kind: "plasticity", learningRate: 0.002 },
+        ],
+      }),
+    ).toThrow(/duplicado/);
   });
 });

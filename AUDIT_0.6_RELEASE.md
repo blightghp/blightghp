@@ -26,7 +26,7 @@ Data: 2026-07-26.
 
 - Visão Geral e Lâminas leem o mesmo snapshot;
 - L1–L6, relé e TRN aparecem na coluna explodida;
-- LODs possuem 17, 21 e 23 draw calls;
+- LODs possuem 26, 36 e 44 draw calls de cena depois da extensão axonal transversal;
 - abas passam por teclado e movimento reduzido;
 - teste Chromium ativa Lâminas e confirma métricas finitas.
 

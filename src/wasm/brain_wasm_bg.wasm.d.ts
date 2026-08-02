@@ -11,6 +11,7 @@ export const wasmlaminarengine_schema_version: () => number;
 export const wasmlaminarengine_step_with_layer_four_drive: (a: number, b: number) => [number, number];
 export const wasmlaminarengine_tick: (a: number) => bigint;
 export const wasmneuralengine_activations: (a: number) => [number, number];
+export const wasmneuralengine_advance_scheduled_to: (a: number, b: number) => [number, number];
 export const wasmneuralengine_advance_to: (a: number, b: number, c: number, d: number, e: number) => [number, number];
 export const wasmneuralengine_corticothalamic_state_hash: (a: number) => [number, number];
 export const wasmneuralengine_field_excitatory: (a: number) => [number, number];
@@ -26,6 +27,8 @@ export const wasmneuralengine_new: (a: number, b: number, c: number, d: number, 
 export const wasmneuralengine_potentials: (a: number) => [number, number];
 export const wasmneuralengine_relay_drive_to_l4: (a: number) => number;
 export const wasmneuralengine_reset: (a: number, b: number) => void;
+export const wasmneuralengine_schedule_plasticity: (a: number, b: number, c: number, d: number) => [number, number];
+export const wasmneuralengine_schedule_stimulus: (a: number, b: number, c: number, d: number, e: number) => [number, number];
 export const wasmneuralengine_schema_version: () => number;
 export const wasmneuralengine_signal_inhibitory: (a: number) => [number, number];
 export const wasmneuralengine_signal_progress: (a: number) => [number, number];

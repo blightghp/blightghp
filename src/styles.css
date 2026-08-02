@@ -186,6 +186,11 @@ a:focus-visible {
   line-height: 1.55;
 }
 
+.runtime-profile { display: grid; gap: 7px; margin: 0; }
+.runtime-profile div { display: flex; justify-content: space-between; gap: 12px; }
+.runtime-profile dt { color: #7895b0; font-size: 9px; }
+.runtime-profile dd { margin: 0; color: #8edfff; font: 500 9px "JetBrains Mono", monospace; }
+
 .control-panel::-webkit-scrollbar { width: 4px; }
 .control-panel::-webkit-scrollbar-track { background: transparent; }
 .control-panel::-webkit-scrollbar-thumb { border-radius: 4px; background: rgba(65, 143, 214, .3); }
@@ -427,7 +432,7 @@ body[data-capture="true"] .interaction-hint { display: none !important; }
   .topbar { padding: 0 16px; }
   .runtime { display: none; }
   .view-tabs { top: 72px; }
-  .control-panel { top: 78px; right: 14px; width: 250px; padding: 18px; }
+  .control-panel { top: 116px; right: 14px; width: 250px; max-height: calc(100vh - 130px); padding: 18px; }
   .control-panel h1 { font-size: 27px; }
   .metric-strip, .control-panel section:nth-of-type(2), .control-panel section:nth-of-type(3) { display: none; }
   .inference-panel { left: 14px; bottom: 14px; width: calc(100vw - 292px); min-width: 250px; grid-template-columns: 1fr; }

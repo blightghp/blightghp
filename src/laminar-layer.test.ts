@@ -6,6 +6,7 @@ import {
   parseLaminarLod,
   parseSimulationView,
   projectionBudget,
+  axonalLifecycle,
 } from "./laminar-layer";
 
 describe("laminar presentation contract", () => {
@@ -17,11 +18,11 @@ describe("laminar presentation contract", () => {
     expect(laminarLodCost("low")).toEqual({
       stateValuesRead: 17,
       fixedDrawCalls: 14,
-      projectionDrawCalls: 3,
-      totalDrawCalls: 17,
+      projectionDrawCalls: 6,
+      totalDrawCalls: 26,
     });
-    expect(laminarLodCost("medium").totalDrawCalls).toBe(21);
-    expect(laminarLodCost("high").totalDrawCalls).toBe(23);
+    expect(laminarLodCost("medium").totalDrawCalls).toBe(36);
+    expect(laminarLodCost("high").totalDrawCalls).toBe(44);
   });
 
   it("rejects view and LOD values outside their closed contracts", () => {
@@ -32,11 +33,26 @@ describe("laminar presentation contract", () => {
   });
 
   it("uses bounded, monotonic LOD projection budgets", () => {
-    expect(projectionBudget("low")).toBe(3);
-    expect(projectionBudget("medium")).toBe(7);
+    expect(projectionBudget("low")).toBe(6);
+    expect(projectionBudget("medium")).toBe(11);
     expect(projectionBudget("high")).toBe(LAMINAR_PROJECTIONS.length);
     expect(projectionBudget("low")).toBeLessThan(projectionBudget("medium"));
     expect(projectionBudget("medium")).toBeLessThan(projectionBudget("high"));
+  });
+
+  it("gives every cortical layer a recurrent axonal curve and an independent lifecycle", () => {
+    for (let layer = 0; layer < 6; layer += 1) {
+      expect(LAMINAR_PROJECTIONS).toContainEqual({
+        source: layer,
+        target: layer,
+        kind: "recurrent",
+      });
+    }
+    const phases = LAMINAR_PROJECTIONS.map((_, index) =>
+      axonalLifecycle(index, 0, 0.8).progress,
+    );
+    expect(new Set(phases).size).toBe(LAMINAR_PROJECTIONS.length);
+    expect(axonalLifecycle(2, 0.5, 2).opacity).toBeLessThanOrEqual(1);
   });
 
   it("declares every visual path inside the layer, relay and TRN domain", () => {

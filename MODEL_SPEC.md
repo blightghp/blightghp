@@ -189,6 +189,16 @@ Cada receptor possui estado e cinética próprios. A progressão planejada é:
 
 GABA-A pode produzir hiperpolarização ou inibição por shunt conforme o potencial de reversão do cloro, o potencial de repouso e o estado instantâneo da membrana. O tipo do receptor não será usado sozinho para decidir o efeito.
 
+Na rede abstrata preservada da 0.6, `conductance_ampa` e `conductance_gaba` são
+traços normalizados com `τ = 5 ms` e `τ = 10 ms`; a corrente usada pelo LIF é o
+proxy adimensional `g_AMPA - g_GABAA`. O decaimento por tick é exponencial exato,
+mas o passo interativo padrão de `1/60 s` é mais grosso que ambas as constantes.
+Assim, a baseline é estável e reproduzível, porém não resolve a forma temporal
+dessas correntes e não implementa ainda a equação por potencial de reversão
+acima. O estudo em `synaptic_convergence.rs` caracteriza passos de 1 a 0,125 ms;
+um preset bioelétrico só pode ser promovido na 0.7 com passo próprio, custo
+medido e novo replay, sem alterar retroativamente os hashes da 0.6.
+
 Para NMDA, o bloqueio por magnésio pode entrar como fator dependente de voltagem, com parâmetros e unidade explicitados no preset. A equação concreta será escolhida junto com os dados de calibração, sem misturar convenções de artigos diferentes.
 
 ### Plasticidade de curto prazo

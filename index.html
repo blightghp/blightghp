@@ -113,11 +113,29 @@
         <div class="control-group compact">
           <label for="laminar-lod"><span>Detalhe geométrico</span></label>
           <select id="laminar-lod" class="glass-select">
-            <option value="low">Baixo · 3 vias</option>
-            <option value="medium" selected>Médio · 7 vias</option>
-            <option value="high">Alto · 9 vias</option>
+            <option value="low">Baixo · 6 vias</option>
+            <option value="medium" selected>Médio · 11 vias</option>
+            <option value="high">Alto · 15 vias</option>
           </select>
         </div>
+        <div class="control-group compact">
+          <label for="snapshot-cadence"><span>Cadência de snapshots</span></label>
+          <select id="snapshot-cadence" class="glass-select">
+            <option value="1" selected>60 Hz · cada tick</option>
+            <option value="2">30 Hz · 2 ticks</option>
+            <option value="4">15 Hz · 4 ticks</option>
+            <option value="6">10 Hz · 6 ticks</option>
+          </select>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading"><span>PERFIL</span><span>CPU/GPU/MEMÓRIA</span></div>
+        <dl class="runtime-profile" aria-label="Perfil de desempenho em tempo real">
+          <div><dt>Worker p95</dt><dd id="worker-latency">0.0 ms</dd></div>
+          <div><dt>Draw calls</dt><dd id="gpu-draw-calls">0</dd></div>
+          <div><dt>Snapshot</dt><dd id="snapshot-memory">0.0 KiB</dd></div>
+        </dl>
       </section>
 
       <section>

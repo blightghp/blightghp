@@ -69,9 +69,8 @@ export interface NeuralSnapshot {
   diagnostics: EngineDiagnostics;
 }
 
-// O motor ainda não tem uma fila de entradas agendadas por tick; "advance" carrega
-// o estímulo corrente junto com o alvo, do mesmo jeito que main.ts já faz hoje.
-// ScheduledDrive/schedule entram quando essa fila existir.
+// O host traduz cada avanço para entradas Rust endereçadas por `(tick, sequence)`;
+// a forma superficial do comando continua compatível com a ABI v4.
 export interface EngineInitializeCommand {
   type: "initialize";
   topology: BrainData;
@@ -86,6 +85,26 @@ export interface EngineAdvanceCommand {
   learningRate?: number;
 }
 
+export type ScheduledEngineInput =
+  | {
+      tick: SimulationTick;
+      sequence: number;
+      kind: "stimulus";
+      intensity: number;
+      confidence: number;
+    }
+  | {
+      tick: SimulationTick;
+      sequence: number;
+      kind: "plasticity";
+      learningRate: number;
+    };
+
+export interface EngineScheduleCommand {
+  type: "schedule";
+  inputs: ScheduledEngineInput[];
+}
+
 export interface EngineResetCommand {
   type: "reset";
   seed?: number;
@@ -98,6 +117,7 @@ export interface EngineDisposeCommand {
 export type EngineCommand =
   | EngineInitializeCommand
   | EngineAdvanceCommand
+  | EngineScheduleCommand
   | EngineResetCommand
   | EngineDisposeCommand;
 
@@ -115,10 +135,19 @@ export interface EngineSnapshotEvent {
   snapshot: NeuralSnapshot;
 }
 
+export interface EngineScheduledEvent {
+  type: "scheduled";
+  accepted: number;
+}
+
 export interface EngineFaultEvent {
   type: "fault";
   code: string;
   message: string;
 }
 
-export type EngineEvent = EngineReadyEvent | EngineSnapshotEvent | EngineFaultEvent;
+export type EngineEvent =
+  | EngineReadyEvent
+  | EngineSnapshotEvent
+  | EngineScheduledEvent
+  | EngineFaultEvent;

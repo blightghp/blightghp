@@ -287,7 +287,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
         .into_iter()
         .zip(fixture.expected.simulation_snapshots)
     {
-        simulation.set_plasticity(advance.learning_rate);
+        simulation.set_plasticity(advance.learning_rate).unwrap();
         let snapshot = simulation
             .advance_to(
                 advance.target_tick,

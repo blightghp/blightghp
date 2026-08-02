@@ -119,6 +119,11 @@ O alvo visual é manter interação fluida em 60 Hz quando o hardware permitir. 
 
 Mudanças de shader podem usar tolerância perceptual. Mudanças de posição, contagem de objetos e associação entre estado e cor exigem também testes estruturais.
 
+O gate contínuo `scripts/audit_runtime.js` captura Visão Geral e Lâminas em
+`1440×960`, repete a captura móvel em `390×844`, percorre as abas por teclado,
+mede os textos críticos contra o fundo mais claro do painel e exige razão mínima
+de 4,5:1. O mesmo gate rejeita overflow horizontal e perfil incompleto.
+
 ## Pirâmide de testes no `src/`
 
 ```text
@@ -189,11 +194,19 @@ Os contratos executáveis atuais são:
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
 - `field-observables-v1.json`: projeção de spikes, seis passos do campo E/I,
   buffers `f32`, peso absoluto médio e taxa populacional em janela;
+- `input-queue-v1.json`: entradas deliberadamente fora de ordem e a ordem
+  canônica esperada por `(tick, sequence)`;
 - `scripts/shadow_replay.js`: recompõe o replay no Wasm e exige os hashes do
   oráculo congelado e o SHA-256 auditado do fixture;
 - testes Cargo: reproduzem o artefato, inclusive o replay neural completo, e
   comprovam que o erro do passo médio é
   menor que o do passo grosso no cenário de refinamento.
+
+O teste `synaptic_convergence.rs` trata AMPA (`τ = 5 ms`) e GABA-A
+(`τ = 10 ms`) separadamente. Ele compara a quadratura temporal da resposta
+unitária com sua integral analítica em quatro passos, exige erro estritamente
+decrescente, ordem observada maior que 0,90 e erro relativo final abaixo de
+1,3% do valor de `τ`.
 
 Testes da ABI executam no alvo `wasm32-unknown-unknown` e em navegador real.
 Compilar não basta: o módulo precisa ser carregado dentro do Worker, receber um

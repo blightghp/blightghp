@@ -196,6 +196,13 @@ A velocidade da interface altera a relação entre tempo real e tick-alvo. Ela n
 
 Toda entrada recebe `tick` e `sequence`. A ordenação é `(tick, sequence)`. Controles contínuos são amostrados e registrados como eventos; o núcleo não consulta diretamente o estado atual do DOM.
 
+Na implementação 0.6, `DeterministicInputQueue<T>` usa um `BTreeMap` com chave
+`InputAddress`, rejeita endereços duplicados ou passados e limita a fila a 4.096
+entradas. O adaptador Wasm expõe estímulo e plasticidade como payloads tipados;
+o host converte também o comando interativo compatível nas sequências reservadas
+0 e 1. Replays explícitos começam em 2, têm no máximo 256 entradas por mensagem
+e compartilham a cota total de 4.096.
+
 O replay guarda:
 
 - versão do protocolo;
@@ -265,9 +272,13 @@ type EngineCommand =
 type EngineEvent =
   | { type: "ready"; tick: Tick }
   | { type: "snapshot"; snapshot: EngineSnapshot }
-  | { type: "profile"; sample: EngineProfile }
   | { type: "fault"; code: string; tick: Tick };
 ```
+
+O perfil não atravessa a ABI científica: `RuntimeProfiler` mede no shell a
+latência de ida e volta do Worker, o custo de CPU do frame, contadores acumulados
+do renderer, heap quando disponível e bytes dos treze buffers. A cadência
+configurável decide quando pedir o próximo snapshot, sem mudar o tick do motor.
 
 Não haverá uma mensagem por spike. Eventos de alta frequência são compactados no snapshot em arrays de IDs, offsets temporais e amplitudes.
 

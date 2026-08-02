@@ -32,6 +32,14 @@ export class WasmNeuralEngine {
     [Symbol.dispose](): void;
     activations(): Float32Array;
     /**
+     * Advances to a target using the canonical scheduled-input stream.
+     *
+     * # Errors
+     *
+     * Returns a JavaScript error on tick regression, excessive work or solver failure.
+     */
+    advance_scheduled_to(target_tick: number): void;
+    /**
      * Advances the simulation to a target tick and publishes one snapshot.
      *
      * # Errors
@@ -61,6 +69,22 @@ export class WasmNeuralEngine {
     potentials(): Float32Array;
     relay_drive_to_l4(): number;
     reset(seed?: number | null): void;
+    /**
+     * Queues a bounded plasticity update for deterministic replay.
+     *
+     * # Errors
+     *
+     * Returns a JavaScript error for invalid values, addresses or queue limits.
+     */
+    schedule_plasticity(tick: number, sequence: number, learning_rate: number): void;
+    /**
+     * Queues a bounded stimulus for deterministic replay.
+     *
+     * # Errors
+     *
+     * Returns a JavaScript error for invalid values, addresses or queue limits.
+     */
+    schedule_stimulus(tick: number, sequence: number, intensity: number, confidence: number): void;
     static schema_version(): number;
     signal_inhibitory(): Uint8Array;
     signal_progress(): Float32Array;
@@ -90,6 +114,7 @@ export interface InitOutput {
     readonly wasmlaminarengine_step_with_layer_four_drive: (a: number, b: number) => [number, number];
     readonly wasmlaminarengine_tick: (a: number) => bigint;
     readonly wasmneuralengine_activations: (a: number) => [number, number];
+    readonly wasmneuralengine_advance_scheduled_to: (a: number, b: number) => [number, number];
     readonly wasmneuralengine_advance_to: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly wasmneuralengine_corticothalamic_state_hash: (a: number) => [number, number];
     readonly wasmneuralengine_field_excitatory: (a: number) => [number, number];
@@ -105,6 +130,8 @@ export interface InitOutput {
     readonly wasmneuralengine_potentials: (a: number) => [number, number];
     readonly wasmneuralengine_relay_drive_to_l4: (a: number) => number;
     readonly wasmneuralengine_reset: (a: number, b: number) => void;
+    readonly wasmneuralengine_schedule_plasticity: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly wasmneuralengine_schedule_stimulus: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly wasmneuralengine_schema_version: () => number;
     readonly wasmneuralengine_signal_inhibitory: (a: number) => [number, number];
     readonly wasmneuralengine_signal_progress: (a: number) => [number, number];

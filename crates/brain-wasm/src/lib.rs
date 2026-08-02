@@ -2,7 +2,7 @@
 
 use brain_engine::{
     CorticalLayer, FieldTopology, LaminarConfig, LaminarEngine, NeuralSimulation, NeuralStimulus,
-    NeuronKind, Seconds, SimulationConfig, SimulationSnapshot, SimulationSynapse,
+    NeuronKind, Seconds, SimulationConfig, SimulationInput, SimulationSnapshot, SimulationSynapse,
     ENGINE_SCHEMA_VERSION, LAYER_COUNT, SIMULATION_SCHEMA_VERSION,
 };
 use wasm_bindgen::prelude::*;
@@ -170,7 +170,7 @@ impl WasmNeuralEngine {
                 "advance exceeds per-command tick resource limit",
             ));
         }
-        self.inner.set_plasticity(learning_rate);
+        self.inner.set_plasticity(learning_rate).map_err(js_error)?;
         self.snapshot = self
             .inner
             .advance_to(
@@ -180,6 +180,72 @@ impl WasmNeuralEngine {
                     confidence,
                 },
             )
+            .map_err(js_error)?;
+        Ok(())
+    }
+
+    /// Queues a bounded stimulus for deterministic replay.
+    ///
+    /// # Errors
+    ///
+    /// Returns a JavaScript error for invalid values, addresses or queue limits.
+    pub fn schedule_stimulus(
+        &mut self,
+        tick: u32,
+        sequence: u32,
+        intensity: f64,
+        confidence: f64,
+    ) -> Result<(), JsValue> {
+        self.inner
+            .schedule_input(
+                u64::from(tick),
+                u64::from(sequence),
+                SimulationInput::Stimulus(NeuralStimulus {
+                    intensity,
+                    confidence,
+                }),
+            )
+            .map_err(js_error)
+    }
+
+    /// Queues a bounded plasticity update for deterministic replay.
+    ///
+    /// # Errors
+    ///
+    /// Returns a JavaScript error for invalid values, addresses or queue limits.
+    pub fn schedule_plasticity(
+        &mut self,
+        tick: u32,
+        sequence: u32,
+        learning_rate: f64,
+    ) -> Result<(), JsValue> {
+        self.inner
+            .schedule_input(
+                u64::from(tick),
+                u64::from(sequence),
+                SimulationInput::Plasticity(learning_rate),
+            )
+            .map_err(js_error)
+    }
+
+    /// Advances to a target using the canonical scheduled-input stream.
+    ///
+    /// # Errors
+    ///
+    /// Returns a JavaScript error on tick regression, excessive work or solver failure.
+    pub fn advance_scheduled_to(&mut self, target_tick: u32) -> Result<(), JsValue> {
+        let target_tick = u64::from(target_tick);
+        let pending_ticks = target_tick
+            .checked_sub(self.snapshot.tick)
+            .ok_or_else(|| JsValue::from_str("target tick cannot move backwards"))?;
+        if pending_ticks > MAX_ADVANCE_TICKS_PER_COMMAND {
+            return Err(JsValue::from_str(
+                "advance exceeds per-command tick resource limit",
+            ));
+        }
+        self.snapshot = self
+            .inner
+            .advance_scheduled_to(target_tick)
             .map_err(js_error)?;
         Ok(())
     }

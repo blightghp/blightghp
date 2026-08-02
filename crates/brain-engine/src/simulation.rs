@@ -1,10 +1,12 @@
 use core::fmt;
 
+use crate::synaptic::decay_conductance;
 use crate::{
     mean_absolute_weight, random_unit, CorticothalamicConfig, CorticothalamicDrive,
-    CorticothalamicEngine, FieldConfig, FieldSnapshot, FieldTopology, LaminarConfig, NeuronKind,
-    PopulationField, PopulationFiringRate, Seconds, SynapseCsr, SynapseEndpoint, LAYER_COUNT,
-    MAX_SAFE_TICK,
+    CorticothalamicEngine, DeterministicInputQueue, FieldConfig, FieldSnapshot, FieldTopology,
+    InputQueueError, LaminarConfig, NeuronKind, PopulationField, PopulationFiringRate, Seconds,
+    SynapseCsr, SynapseEndpoint, AMPA_TIME_CONSTANT_SECONDS, GABAA_TIME_CONSTANT_SECONDS,
+    LAYER_COUNT, MAX_SAFE_TICK,
 };
 
 pub const SIMULATION_SCHEMA_VERSION: u32 = 4;
@@ -14,6 +16,7 @@ const MAX_SIGNALS_IN_FLIGHT: usize = 900;
 const FIRING_RATE_WINDOW_SECONDS: f64 = 0.2;
 const RANDOM_STREAM_CELL_THRESHOLD: u32 = 0;
 const RANDOM_STREAM_CELL_REFRACTORY: u32 = 1;
+pub const MAX_SCHEDULED_INPUTS: usize = 4_096;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SimulationSynapse {
@@ -39,6 +42,12 @@ pub struct SimulationConfig {
 pub struct NeuralStimulus {
     pub intensity: f64,
     pub confidence: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum SimulationInput {
+    Stimulus(NeuralStimulus),
+    Plasticity(f64),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -119,6 +128,8 @@ pub struct NeuralSimulation {
     firing_rate: f64,
     latest_spike_count: u32,
     learning_rate: f64,
+    scheduled_inputs: DeterministicInputQueue<SimulationInput>,
+    active_stimulus: NeuralStimulus,
 }
 
 impl NeuralSimulation {
@@ -232,6 +243,8 @@ impl NeuralSimulation {
             .map(|index| (usize_to_f64(index) * 0.618_033_988_75) % 1.0)
             .collect::<Vec<_>>();
         let pending_length = usize::from(longest_delay) + 2;
+        let scheduled_inputs = DeterministicInputQueue::new(MAX_SCHEDULED_INPUTS)
+            .map_err(|_| SimulationError::InvalidTopology("invalid input queue capacity"))?;
 
         Ok(Self {
             seed: config.seed,
@@ -263,6 +276,11 @@ impl NeuralSimulation {
             firing_rate: 0.0,
             latest_spike_count: 0,
             learning_rate: 0.004,
+            scheduled_inputs,
+            active_stimulus: NeuralStimulus {
+                intensity: 0.0,
+                confidence: 0.0,
+            },
         })
     }
 
@@ -271,8 +289,61 @@ impl NeuralSimulation {
         self.tick
     }
 
-    pub fn set_plasticity(&mut self, rate: f64) {
-        self.learning_rate = rate.clamp(0.0, 0.02);
+    /// Updates the bounded STDP rate used by subsequent ticks.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SimulationError::InvalidInput`] for non-finite or out-of-range rates.
+    pub fn set_plasticity(&mut self, rate: f64) -> Result<(), SimulationError> {
+        if !rate.is_finite() || !(0.0..=0.02).contains(&rate) {
+            return Err(SimulationError::InvalidInput);
+        }
+        self.learning_rate = rate;
+        Ok(())
+    }
+
+    /// Schedules a replayable external input at a canonical address.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SimulationError`] for invalid values or queue addresses.
+    pub fn schedule_input(
+        &mut self,
+        tick: u64,
+        sequence: u64,
+        input: SimulationInput,
+    ) -> Result<(), SimulationError> {
+        match input {
+            SimulationInput::Stimulus(stimulus)
+                if !stimulus.intensity.is_finite()
+                    || !stimulus.confidence.is_finite()
+                    || !(0.0..=1.0).contains(&stimulus.intensity)
+                    || !(0.0..=1.0).contains(&stimulus.confidence) =>
+            {
+                return Err(SimulationError::InvalidInput)
+            }
+            SimulationInput::Plasticity(rate)
+                if !rate.is_finite() || !(0.0..=0.02).contains(&rate) =>
+            {
+                return Err(SimulationError::InvalidInput)
+            }
+            _ => {}
+        }
+        self.scheduled_inputs
+            .schedule(self.tick, tick, sequence, input)
+            .map_err(SimulationError::InputQueue)
+    }
+
+    /// Advances using only the last scheduled stimulus, initially zero.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SimulationError`] on tick regression, overflow or solver failure.
+    pub fn advance_scheduled_to(
+        &mut self,
+        target_tick: u64,
+    ) -> Result<SimulationSnapshot, SimulationError> {
+        self.advance_with_default(target_tick, None)
     }
 
     /// Advances to a monotonic target tick with a constant stimulus.
@@ -286,6 +357,22 @@ impl NeuralSimulation {
         target_tick: u64,
         stimulus: NeuralStimulus,
     ) -> Result<SimulationSnapshot, SimulationError> {
+        self.advance_with_default(target_tick, Some(stimulus))
+    }
+
+    fn advance_with_default(
+        &mut self,
+        target_tick: u64,
+        default_stimulus: Option<NeuralStimulus>,
+    ) -> Result<SimulationSnapshot, SimulationError> {
+        if default_stimulus.is_some_and(|stimulus| {
+            !stimulus.intensity.is_finite()
+                || !stimulus.confidence.is_finite()
+                || !(0.0..=1.0).contains(&stimulus.intensity)
+                || !(0.0..=1.0).contains(&stimulus.confidence)
+        }) {
+            return Err(SimulationError::InvalidInput);
+        }
         if target_tick < self.tick {
             return Err(SimulationError::TickRegression);
         }
@@ -293,7 +380,17 @@ impl NeuralSimulation {
             return Err(SimulationError::TickOverflow);
         }
         while self.tick < target_tick {
-            self.step(stimulus)?;
+            if let Some(stimulus) = default_stimulus {
+                self.active_stimulus = stimulus;
+            }
+            let next_tick = self.tick + 1;
+            for entry in self.scheduled_inputs.drain_tick(next_tick) {
+                match entry.payload {
+                    SimulationInput::Stimulus(stimulus) => self.active_stimulus = stimulus,
+                    SimulationInput::Plasticity(rate) => self.learning_rate = rate,
+                }
+            }
+            self.step(self.active_stimulus)?;
         }
         Ok(self.snapshot())
     }
@@ -317,8 +414,6 @@ impl NeuralSimulation {
         self.age_signals(dt);
 
         let membrane_decay = (-dt / 0.32).exp();
-        let ampa_decay = (-dt / 0.005).exp();
-        let gaba_decay = (-dt / 0.010).exp();
         let activity_decay = (-dt / 0.16).exp();
         let trace_decay = (-dt / 0.2).exp();
         let arriving = &mut self.pending[self.queue_cursor];
@@ -337,9 +432,9 @@ impl NeuralSimulation {
             *arrived = 0.0;
 
             self.conductance_ampa[node] =
-                quantize_f32(f64::from(self.conductance_ampa[node]) * ampa_decay);
+                decay_conductance(self.conductance_ampa[node], dt, AMPA_TIME_CONSTANT_SECONDS);
             self.conductance_gaba[node] =
-                quantize_f32(f64::from(self.conductance_gaba[node]) * gaba_decay);
+                decay_conductance(self.conductance_gaba[node], dt, GABAA_TIME_CONSTANT_SECONDS);
             let synaptic_current =
                 f64::from(self.conductance_ampa[node] - self.conductance_gaba[node]);
             self.potentials[node] = quantize_f32(
@@ -435,6 +530,11 @@ impl NeuralSimulation {
         self.firing_rate_observable.reset();
         self.firing_rate = 0.0;
         self.latest_spike_count = 0;
+        self.scheduled_inputs.clear();
+        self.active_stimulus = NeuralStimulus {
+            intensity: 0.0,
+            confidence: 0.0,
+        };
     }
 
     #[must_use]
@@ -735,6 +835,8 @@ pub enum SimulationError {
     TickOverflow,
     TickRegression,
     InvalidCsr,
+    InvalidInput,
+    InputQueue(InputQueueError),
     Field(crate::FieldError),
     Corticothalamic(crate::EngineError),
 }
@@ -751,6 +853,8 @@ impl fmt::Display for SimulationError {
             Self::TickOverflow => formatter.write_str("simulation tick overflow"),
             Self::TickRegression => formatter.write_str("target tick cannot move backwards"),
             Self::InvalidCsr => formatter.write_str("invalid synapse CSR"),
+            Self::InvalidInput => formatter.write_str("invalid scheduled simulation input"),
+            Self::InputQueue(error) => write!(formatter, "input queue error: {error}"),
             Self::Field(error) => write!(formatter, "field error: {error}"),
             Self::Corticothalamic(error) => write!(formatter, "corticothalamic error: {error}"),
         }

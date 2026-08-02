@@ -105,11 +105,15 @@ limites operacionais estão em [AUDIT_0.5_ENTRY.md](AUDIT_0.5_ENTRY.md).
 Estes itens não mudam o contrato superficial promovido e podem entrar na trilha
 de qualidade da 0.5, antes de qualquer demonstração científica nova:
 
-- [ ] fila genérica Rust de entradas por `(tick, sequence)` e artefato de replay;
-- [ ] cadência configurável de snapshots e perfil de CPU/GPU/memória/latência;
-- [ ] estudo de convergência específico das correntes AMPA/GABA-A;
-- [ ] curvas axonais e ciclos de vida independentes para todas as camadas;
-- [ ] capturas visuais automatizadas e auditoria contínua de teclado/contraste.
+- [x] fila genérica Rust de entradas por `(tick, sequence)` e artefato de replay;
+- [x] cadência configurável de snapshots e perfil de CPU/GPU/memória/latência;
+- [x] estudo de convergência específico das correntes AMPA/GABA-A;
+- [x] curvas axonais e ciclos de vida independentes para todas as camadas;
+- [x] capturas visuais automatizadas e auditoria contínua de teclado/contraste.
+
+O fechamento executável, os limites e a revisão de qualidade desses itens estão
+em [AUDIT_MIGRATION_BACKLOG.md](AUDIT_MIGRATION_BACKLOG.md). As extensões mantêm
+o schema ABI 4 e os hashes promovidos da 0.6.
 
 ### Cortes da 0.6
 

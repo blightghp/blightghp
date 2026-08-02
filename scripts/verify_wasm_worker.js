@@ -48,6 +48,20 @@ try {
   if (faults.length > 0) {
     throw new Error(`erros no navegador: ${faults.join(" | ")}`);
   }
+  const replay = await page.evaluate(async () => {
+    await window.__BRAIN_ENGINE__.setCaptureMode(true);
+    const accepted = await window.__BRAIN_ENGINE__.schedule([
+      { tick: 121, sequence: 10, kind: "stimulus", intensity: 0.8, confidence: 0.7 },
+      { tick: 121, sequence: 11, kind: "plasticity", learningRate: 0.002 },
+    ]);
+    await window.__BRAIN_ENGINE__.capture(1 / 60, 0);
+    const after = window.__BRAIN_ENGINE__.diagnostics();
+    await window.__BRAIN_ENGINE__.setCaptureMode(false);
+    return { accepted, after };
+  });
+  if (replay.accepted !== 2 || replay.after.stateHash === diagnostics.stateHash) {
+    throw new Error(`fila de replay não avançou no navegador: ${JSON.stringify(replay)}`);
+  }
   await page.click("#tab-laminar");
   await page.waitForFunction(
     () =>
