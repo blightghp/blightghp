@@ -1,9 +1,89 @@
 <div align="center">
 
-<samp>APRENDER RUST CONSTRUINDO UM CÉREBRO QUE POSSO MEDIR, TESTAR E QUESTIONAR.</samp>
+<samp>TO THE TRAINED EYE, THERE ARE NO COINCIDENCES...</samp>
+
+</div>
+
+## SOBRE MIM
+
+> *Interesso-me pelas regiões de fronteira em que a lógica encontra a linguagem,
+> a computação encontra a biologia e o rigor formal precisa aprender a conviver
+> com a ambiguidade, a historicidade e a complexidade dos fenômenos humanos.*
+
+Atuo entre pesquisa e desenvolvimento, articulando linguística, cognição,
+aprendizagem, ciência de dados e engenharia de software. Meu GitHub é um portal
+de experimentos: uso código para pensar, mas procuro não reduzir um fenômeno
+àquilo que é mais fácil medir.
+
+O BRAIN PRO expressa uma particularidade desse percurso. Ao estudar Rust e o
+Kandel lado a lado, exploro aproximações e diferenças entre biologia e máquina:
+o que pode ser formalizado, o que permanece interpretação e o que ainda exige
+melhor evidência.
+
+### Eixo Norteador e Áreas de Atuação
+
+Minha pesquisa e atuação profissional são guiadas pela investigação da interface
+entre **mecanismos biológicos e modelos formais**, tendo a estrutura da linguagem
+humana como a principal chave para a compreensão da cognição. Nesse ecossistema,
+utilizo a Inteligência Artificial, a Matemática e a Ciência de Dados como
+instrumentais metodológicos para modelar, analisar e prever o processamento
+linguístico e cognitivo. O objetivo final é traduzir esse conhecimento analítico
+em práxis: desenvolver técnicas, abordagens e tecnologias aplicadas à compreensão,
+avaliação e intervenção direta nos processos de aprendizagem humana.
+
+Sob esta ótica, minhas áreas de interesse se articulam de forma interdependente:
+
+**Fundamentos Simbólicos (Linguística Teórica, Lógica e Filosofia):** A
+Arquitetura da Gramática (Sintaxe e Semântica) e a Lógica Formal fornecem o
+arcabouço teórico para mapear como o cérebro organiza e computa a informação.
+Aqui, a linguagem atua como a matriz fundamental para decodificar a mente.
+
+**Substrato Biológico (Ciências Cognitivas e Neurociências):** O estudo dos
+mecanismos biológicos e cognitivos que regem a aprendizagem. É o campo onde o
+modelo formal da linguagem se encontra com a realidade neurológica, fundamentando
+cientificamente as intervenções educacionais e clínicas.
+
+**Instrumental Analítico (Ciência de Dados e Matemática Aplicada):** O emprego
+de Álgebra, Cálculo, Estatística e *Machine Learning* como motores de pesquisa.
+Estas disciplinas fornecem os modelos preditivos e de regressão necessários para
+extrair padrões, validar hipóteses sobre o processamento de linguagem e compreender
+o funcionamento cognitivo em larga escala.
+
+**Materialização e Intervenção (Engenharia de Software e PLN):** A camada de
+aplicação prática. O desenvolvimento de sistemas de alta performance (utilizando
+Rust, Tauri, TypeScript e JavaScript) e o Processamento de Linguagem Natural
+servem para transformar a teoria linguística, os modelos matemáticos e as
+descobertas cognitivas em ferramentas tecnológicas concretas, voltadas para o
+diagnóstico, avaliação e intervenção na aprendizagem.
+
+<div align="center">
+
+[![Email](https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:ghpgois@gmail.com)
+[![Léxikognos](https://img.shields.io/badge/L%C3%A9xikognos-246BCE?style=flat-square&logo=google-scholar&logoColor=white)](http://lexikognos.com.br) *domínio offline*
+[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://instagram.com/ppgabrielpinheiro)
+
+<sub><code>fn perceive(signal: &Evidence) -&gt; Result&lt;Knowledge, Entropy&gt;</code></sub>
+
+</div>
+
+## FLUXO DE PRODUÇÃO
+
+O gráfico funciona como um traço longitudinal do trabalho público. Ele não
+inventa atividade anterior ao Git: a indicação “desde 2025” pertence à linha de
+aprendizagem descrita neste perfil; os pontos vêm das contribuições registradas
+pelo GitHub. O artefato é atualizado diariamente e também a cada novo commit
+publicado neste repositório.
+
+### CONTRIBUIÇÕES
+
+<div align="center">
+  <img src="assets/activity_flow.svg?v=4" width="850" alt="Contribuições públicas no GitHub como fluxo longitudinal de produção" />
+</div>
+
+<div align="center">
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=1a4463b79b54" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular elétrico" />
+  <img src="assets/brain.gif?v=1a4463b79b54" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular com correntes assinadas" />
 </a>
 
 <sub>▲ Captura do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI e aos três hashes do motor.</sub>
@@ -29,8 +109,8 @@ Minha pergunta prática nesta fase é: **como ampliar a resolução — da rede 
 sinapse e da forma à química — sem desenhar um fenômeno que o motor não
 calcula?** A base 0.7 continua sendo um patch AdEx determinístico em Rust, com
 WebAssembly dentro de um Web Worker. A 0.8 começou pelo contrato: separou matéria
-de emissão na imagem e congelou recursos, unidades e conservação antes de criar
-dinâmica química.
+de emissão na imagem, congelou recursos, unidades e conservação e agora preserva
+o sinal das correntes antes de criar dinâmica química.
 
 ### O que consigo explorar hoje
 
@@ -46,6 +126,10 @@ dinâmica química.
 - hashes separados para o baseline 0.5, circuito córtico-talâmico e patch celular;
 - pipeline visual com matéria, emissão e composição; bloom restrito ao que
   realmente emite e proveniência declarada por objeto;
+- corrente receptora média com sinal, halos orientados para entrada, saída e
+  shunt, além de forma redundante para leitura sem depender de matiz;
+- gates automáticos de rampa invertível, saturação, modo monocromático,
+  proveniência e baseline com navegador, hardware, preset e custo de cena;
 - contrato 0.8-a para recurso vesicular `R`, utilização `u`, liberação `uR`,
   cinco estoques em mol equivalente e carga transmembrana em coulombs;
 - replay sombra com três marcos exatos, fila genérica `(tick, sequence)` e
@@ -103,6 +187,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-07-26 | fecho a 0.6 com L1–L6, relé/TRN, ABI v4, aba Lâminas e auditoria de recursos |
 | 2026-08-02 | fecho a 0.7 com AdEx, quatro receptores, ResolutionMap, ABI v5 e as abas Célula/Eletricidade |
 | 2026-08-10 | abro a 0.8 com auditoria visual, passes matéria/emissão e o contrato de recursos, massa e carga antes da dinâmica química |
+| 2026-08-10 | preservo o sinal das quatro correntes e fecho os gates visuais de invertibilidade, monocromia, proveniência e hardware |
 
 O detalhamento da base está em [PLAN_0.7.md](PLAN_0.7.md) e
 [AUDIT_0.7.md](AUDIT_0.7.md). A sequência atual, o contrato visual e a auditoria
@@ -164,51 +249,3 @@ As referências científicas específicas de cada modelo estão em
 [MODEL_SPEC.md](MODEL_SPEC.md), a separação dos módulos em
 [ARCHITECTURE.md](ARCHITECTURE.md) e os critérios de evidência em
 [VALIDATION.md](VALIDATION.md).
-
-## Sobre mim
-
-> *Interesso-me pelas regiões de fronteira em que a lógica encontra a linguagem,
-> a computação encontra a biologia e o rigor formal precisa aprender a conviver
-> com a ambiguidade, a historicidade e a complexidade dos fenômenos humanos.*
-
-Atuo entre pesquisa e desenvolvimento, articulando linguística, cognição,
-aprendizagem, ciência de dados e engenharia de software. Meu GitHub é um portal
-de experimentos: uso código para pensar, mas procuro não reduzir um fenômeno
-àquilo que é mais fácil medir.
-
-O BRAIN PRO expressa uma particularidade desse percurso. Ao estudar Rust e o
-Kandel lado a lado, exploro aproximações e diferenças entre biologia e máquina:
-o que pode ser formalizado, o que permanece interpretação e o que ainda exige
-melhor evidência.
-
-> **Áreas de interesse**
->
-> - lógica formal e filosofia da lógica;
-> - linguística teórica e gramática gerativa;
-> - psicometria, neuropsicologia e aprendizagem;
-> - ciência de dados e modelagem estatística;
-> - engenharia de software e arquitetura de sistemas;
-> - inteligência artificial e sistemas complexos;
-> - matemática aplicada e teoria da computação;
-> - neurociências cognitivas e biologia da cognição.
-
-### SIGNALS
-
-O gráfico abaixo funciona como um traço longitudinal do trabalho público. Ele
-não inventa atividade anterior ao Git: a indicação “desde 2025” pertence à
-linha de aprendizagem descrita acima; os pontos vêm das contribuições
-registradas pelo GitHub.
-
-<div align="center">
-  <img src="assets/activity_flow.svg?v=4" width="850" alt="BRAIN PRO SIGNALS: contribuições públicas como traços do percurso de aprendizagem" />
-</div>
-
-<div align="center">
-
-[![Email](https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:ghpgois@gmail.com)
-[![Léxikognos](https://img.shields.io/badge/L%C3%A9xikognos-246BCE?style=flat-square&logo=google-scholar&logoColor=white)](http://lexikognos.com.br) *domínio offline*
-[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://instagram.com/ppgabrielpinheiro)
-
-<sub><code>fn perceive(signal: &Evidence) -&gt; Result&lt;Knowledge, Entropy&gt;</code></sub>
-
-</div>

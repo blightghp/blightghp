@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import graphModule from "./animate_graph.cjs";
 
-const { sanitizeActivityGraph } = graphModule;
+const { GRAPH_TITLE, sanitizeActivityGraph } = graphModule;
 
 describe("sanitizeActivityGraph", () => {
+  it("keeps the profile contribution heading stable", () => {
+    expect(GRAPH_TITLE).toBe("CONTRIBUIÇÕES");
+  });
   it("removes foreignObject content from the remote SVG", () => {
     const source =
       '<svg><foreignObject><div>remote title</div></foreignObject><path /></svg>';

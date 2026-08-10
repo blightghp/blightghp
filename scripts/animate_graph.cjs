@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const GRAPH_TITLE = "CONTRIBUIÇÕES";
 
 const url = new URL("https://github-readme-activity-graph.vercel.app/graph");
 url.search = new URLSearchParams({
@@ -10,7 +11,7 @@ url.search = new URLSearchParams({
   point: "b8e3ff",
   area: "true",
   hide_border: "true",
-  custom_title: "BRAIN PRO · SIGNALS — APRENDIZAGEM EM MOVIMENTO",
+  custom_title: GRAPH_TITLE,
 }).toString();
 
 const outputPath = path.resolve(__dirname, "../assets/activity_flow.svg");
@@ -35,10 +36,16 @@ function sanitizeActivityGraph(svg) {
 }
 
 async function updateGraph() {
-  const response = await fetch(url, {
-    headers: { "user-agent": "blightghp-profile-workflow" },
-    signal: AbortSignal.timeout(20_000),
-  });
+  let response;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    response = await fetch(url, {
+      headers: { "user-agent": "blightghp-profile-workflow" },
+      signal: AbortSignal.timeout(20_000),
+    }).catch(() => undefined);
+    if (response?.ok) break;
+    if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 1_000));
+  }
+  if (!response) throw new Error("activity graph did not respond after 3 attempts");
   if (!response.ok) throw new Error(`activity graph returned HTTP ${response.status}`);
 
   let svg = await response.text();
@@ -69,16 +76,16 @@ async function updateGraph() {
     </style>`;
 
   const accessibleText = `
-    <title>BRAIN PRO · SIGNALS</title>
-    <desc>Contribuições públicas no GitHub como traços de um percurso de aprendizagem iniciado em 2025.</desc>
-    <text x="600" y="32" text-anchor="middle" fill="#58a6ff" font-size="18" font-family="Segoe UI, sans-serif">BRAIN PRO · SIGNALS — APRENDIZAGEM EM MOVIMENTO</text>`;
+    <title>${GRAPH_TITLE}</title>
+    <desc>Contribuições públicas no GitHub como fluxo longitudinal de produção.</desc>
+    <text x="600" y="32" text-anchor="middle" fill="#58a6ff" font-size="18" font-family="Segoe UI, sans-serif">${GRAPH_TITLE}</text>`;
   svg = svg.replace(/<svg([^>]*)>/i, `<svg$1>${accessibleText}${definitions}`);
   svg = svg.replace(/<\/svg>\s*$/i, `${animation}</svg>`);
   fs.writeFileSync(outputPath, svg, "utf8");
   console.log(`updated ${outputPath}`);
 }
 
-module.exports = { sanitizeActivityGraph };
+module.exports = { GRAPH_TITLE, sanitizeActivityGraph };
 
 if (require.main === module) {
   updateGraph().catch((error) => {
