@@ -7,7 +7,7 @@ import {
   parseSimulationView,
   projectionBudget,
   axonalLifecycle,
-} from "./laminar-layer";
+} from "./render/laminar-layer";
 
 describe("laminar presentation contract", () => {
   it("keeps six stable cortical labels", () => {

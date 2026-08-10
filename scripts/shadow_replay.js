@@ -31,7 +31,17 @@ async function verify() {
   const fixture = JSON.parse(fixtureBytes);
   const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
   const fixtureSha256 = crypto.createHash("sha256").update(fixtureBytes).digest("hex");
-  if (fixtureSha256 !== report.fixtureSha256) {
+  // Git may materialize a text fixture with CRLF on Windows even though the
+  // registered evidence was hashed with LF. Accept only that checkout-level
+  // normalization; every JSON byte other than the line endings stays covered.
+  const normalizedFixtureSha256 = crypto
+    .createHash("sha256")
+    .update(fixtureBytes.toString("utf8").replaceAll("\r\n", "\n"))
+    .digest("hex");
+  if (
+    fixtureSha256 !== report.fixtureSha256 &&
+    normalizedFixtureSha256 !== report.fixtureSha256
+  ) {
     throw new Error("o fixture mudou depois do replay sombra registrado");
   }
   if (!report.passed || !report.samples.every((sample) => sample.exactHash)) {

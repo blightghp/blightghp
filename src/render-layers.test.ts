@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   composeNodeActivity,
   interpolatePublishedValue,
-} from "./render-layers";
+} from "./render/brain-layer";
 
 describe("render activity composition", () => {
   it("interpolates only between published values and clamps presentation alpha", () => {

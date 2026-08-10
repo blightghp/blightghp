@@ -1,8 +1,25 @@
 import * as THREE from "three";
 import { ConvexGeometry } from "three/examples/jsm/geometries/ConvexGeometry.js";
-import type { BrainData, BrainRegion } from "./brain";
-import type { NeuralSnapshot } from "./protocol";
-import type { BrainSettings } from "./schema";
+import type { BrainData, BrainRegion } from "../brain";
+import type { NeuralSnapshot } from "../protocol";
+import type { BrainSettings } from "../schema";
+import {
+  declareVisual,
+  disposeObjectTree,
+  mountLayer,
+} from "./render-types";
+import type {
+  InterpolatedSnapshot,
+  RenderContext,
+  RenderLayer,
+  RenderTopology,
+} from "./render-types";
+import {
+  COLOR_TOKENS,
+  POINT_TEXTURE_STOPS,
+  REGION_COLOR_TOKENS,
+  VISUAL_COLORS,
+} from "./visual-tokens";
 
 export interface PointVisual {
   nodeIndices: number[];
@@ -32,21 +49,9 @@ export interface ShellVisual {
 const TRAIL_LENGTH = 3;
 const MAX_VISIBLE_SIGNALS = 300;
 
-export const PALETTE = {
-  network: new THREE.Color(0x147df5),
-  featured: new THREE.Color(0x2ed9ff),
-  pulseCore: new THREE.Color(0xf4fbff),
-  pulseTrail: new THREE.Color(0x36bfff),
-  inhibitory: new THREE.Color(0xc779ff),
-  hot: new THREE.Color(0xeafcff),
-};
+export const PALETTE = COLOR_TOKENS;
 
-export const REGION_COLORS: Record<BrainRegion, THREE.Color> = {
-  leftHemi: new THREE.Color(0x1788f4),
-  rightHemi: new THREE.Color(0x24a5ff),
-  cerebellum: new THREE.Color(0x21bfea),
-  stem: new THREE.Color(0x6f9cff),
-};
+export const REGION_COLORS: Record<BrainRegion, THREE.Color> = REGION_COLOR_TOKENS;
 
 export function interpolatePublishedValue(
   current: number,
@@ -69,10 +74,9 @@ function createPointTexture(): THREE.CanvasTexture {
   canvas.height = 32;
   const context = canvas.getContext("2d")!;
   const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
-  gradient.addColorStop(0, "rgba(255,255,255,1)");
-  gradient.addColorStop(0.18, "rgba(112,220,255,.95)");
-  gradient.addColorStop(0.52, "rgba(13,112,255,.32)");
-  gradient.addColorStop(1, "rgba(0,0,0,0)");
+  for (const [offset, color] of POINT_TEXTURE_STOPS) {
+    gradient.addColorStop(offset, color);
+  }
   context.fillStyle = gradient;
   context.fillRect(0, 0, 32, 32);
   const texture = new THREE.CanvasTexture(canvas);
@@ -80,7 +84,7 @@ function createPointTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-export class BrainRenderLayers {
+export class BrainRenderLayers implements RenderLayer {
   readonly group: THREE.Group;
   readonly regionObjects = new Map<BrainRegion, THREE.Object3D[]>();
   readonly pointVisuals: PointVisual[] = [];
@@ -94,6 +98,7 @@ export class BrainRenderLayers {
   private readonly tempScale = new THREE.Vector3();
   private readonly tempQuaternion = new THREE.Quaternion();
   private readonly tempColor = new THREE.Color();
+  private visibleSignalLimit = MAX_VISIBLE_SIGNALS;
 
   constructor(data: BrainData) {
     this.data = data;
@@ -118,7 +123,7 @@ export class BrainRenderLayers {
       const points = new THREE.Points(
         geometry,
         new THREE.PointsMaterial({
-          color: 0xffffff,
+          color: VISUAL_COLORS.white,
           vertexColors: true,
           size: region === "stem" ? 0.027 : 0.022,
           map: pointTexture,
@@ -129,6 +134,7 @@ export class BrainRenderLayers {
         }),
       );
       this.pointVisuals.push({ nodeIndices, geometry, baseColor: REGION_COLORS[region].clone() });
+      declareVisual(points, "emission", "state");
       this.addRegionObject(region, points);
       this.createShell(region, pointsForRegion);
     }
@@ -164,14 +170,15 @@ export class BrainRenderLayers {
       const lines = new THREE.LineSegments(
         geometry,
         new THREE.LineBasicMaterial({
-          color: 0xffffff,
+          color: VISUAL_COLORS.white,
           vertexColors: true,
           transparent: true,
           opacity: regions.length > 1 ? 0.3 : 0.18,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
+          blending: THREE.NormalBlending,
+          depthWrite: true,
         }),
       );
+      declareVisual(lines, "matter", "state");
       this.connectionVisuals.push({ records, regions, lines, geometry, baseColor });
       this.group.add(lines);
     }
@@ -179,7 +186,7 @@ export class BrainRenderLayers {
     this.pulseMesh = new THREE.InstancedMesh(
       new THREE.IcosahedronGeometry(0.018, 1),
       new THREE.MeshBasicMaterial({
-        color: 0xffffff,
+        color: VISUAL_COLORS.white,
         vertexColors: true,
         transparent: true,
         opacity: 1,
@@ -189,6 +196,7 @@ export class BrainRenderLayers {
       MAX_VISIBLE_SIGNALS * TRAIL_LENGTH,
     );
     this.pulseMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    declareVisual(this.pulseMesh, "emission", "state");
     this.group.add(this.pulseMesh);
   }
 
@@ -233,12 +241,13 @@ export class BrainRenderLayers {
         }
       `,
       transparent: true,
-      depthWrite: false,
+      depthWrite: true,
       side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.NormalBlending,
     });
     const shell = new THREE.Mesh(geometry, material);
     shell.renderOrder = -1;
+    declareVisual(shell, "matter", "state");
     this.shellVisuals.push({ region, material });
     this.addRegionObject(region, shell);
   }
@@ -351,6 +360,31 @@ export class BrainRenderLayers {
     }
 
     this.renderSignals(currSnapshot, visibleSignalLimit);
+  }
+
+  mount(context: RenderContext, _topology: RenderTopology): void {
+    mountLayer(this.group, context);
+  }
+
+  update(view: InterpolatedSnapshot): void {
+    this.updateInterpolated(
+      view.current,
+      view.previous,
+      view.alpha,
+      this.visibleSignalLimit,
+    );
+  }
+
+  setDetail(level: number): void {
+    this.visibleSignalLimit = Math.max(0, Math.min(MAX_VISIBLE_SIGNALS, Math.floor(level)));
+  }
+
+  setVisible(visible: boolean): void {
+    this.group.visible = visible;
+  }
+
+  dispose(): void {
+    disposeObjectTree(this.group);
   }
 
   private renderSignals(snapshot: NeuralSnapshot, visibleSignalLimit: number): void {

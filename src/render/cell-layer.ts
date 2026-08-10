@@ -1,14 +1,26 @@
 import * as THREE from "three";
-import type { NeuralSnapshot } from "./protocol";
-import { interpolatePublishedValue } from "./render-layers";
+import type { NeuralSnapshot } from "../protocol";
+import { interpolatePublishedValue } from "./brain-layer";
+import {
+  declareVisual,
+  disposeObjectTree,
+  mountLayer,
+} from "./render-types";
+import type {
+  InterpolatedSnapshot,
+  RenderContext,
+  RenderLayer,
+  RenderTopology,
+} from "./render-types";
+import { COLOR_TOKENS, VISUAL_COLORS } from "./visual-tokens";
 
 export type CellLayerMode = "cell" | "electricity";
 
 const RESTING_VOLTS = -0.07;
 const SPIKE_THRESHOLD_VOLTS = -0.045;
-const EXCITATORY_COLOR = new THREE.Color(0x31c8ff);
-const INHIBITORY_COLOR = new THREE.Color(0xc879ff);
-const SPIKE_COLOR = new THREE.Color(0xffffff);
+const EXCITATORY_COLOR = COLOR_TOKENS.excitatory;
+const INHIBITORY_COLOR = COLOR_TOKENS.inhibitory;
+const SPIKE_COLOR = COLOR_TOKENS.white;
 
 export function voltsToMillivolts(value: number): number {
   return value * 1_000;
@@ -63,7 +75,7 @@ function cellPosition(index: number): THREE.Vector3 {
   );
 }
 
-export class CellRenderLayer {
+export class CellRenderLayer implements RenderLayer {
   readonly group = new THREE.Group();
   private readonly somata: THREE.InstancedMesh;
   private readonly electricHalos: THREE.InstancedMesh;
@@ -81,13 +93,14 @@ export class CellRenderLayer {
       new THREE.MeshBasicMaterial({
         transparent: true,
         opacity: 0.82,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
+        blending: THREE.NormalBlending,
+        depthWrite: true,
       }),
       cellCount,
     );
     this.somata.name = "adex-somata";
     this.somata.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    declareVisual(this.somata, "matter", "state");
     this.group.add(this.somata);
 
     this.electricHalos = new THREE.InstancedMesh(
@@ -102,6 +115,7 @@ export class CellRenderLayer {
     );
     this.electricHalos.name = "receptor-current-halos";
     this.electricHalos.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    declareVisual(this.electricHalos, "emission", "state");
     this.group.add(this.electricHalos);
 
     const dendritePositions = new Float32Array(cellCount * 3 * 2 * 3);
@@ -124,27 +138,30 @@ export class CellRenderLayer {
     this.dendrites = new THREE.LineSegments(
       dendriteGeometry,
       new THREE.LineBasicMaterial({
-        color: 0x4ac9ff,
+        color: VISUAL_COLORS.dendrite,
         transparent: true,
         opacity: 0.24,
-        blending: THREE.AdditiveBlending,
+        blending: THREE.NormalBlending,
+        depthWrite: true,
       }),
     );
     this.dendrites.name = "passive-dendrites";
+    declareVisual(this.dendrites, "matter", "topology");
     this.group.add(this.dendrites);
 
     this.boundary = new THREE.Mesh(
       new THREE.TorusGeometry(1.66, 0.018, 8, 96),
       new THREE.MeshBasicMaterial({
-        color: 0x2d91ff,
+        color: VISUAL_COLORS.fieldBoundary,
         transparent: true,
         opacity: 0.24,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
+        blending: THREE.NormalBlending,
+        depthWrite: true,
       }),
     );
     this.boundary.name = "field-boundary";
     this.boundary.rotation.x = Math.PI / 2;
+    declareVisual(this.boundary, "matter", "state");
     this.group.add(this.boundary);
     this.setMode("cell");
   }
@@ -156,7 +173,7 @@ export class CellRenderLayer {
       mode === "cell" ? 0.32 : 0.12;
   }
 
-  update(
+  updateInterpolated(
     snapshot: NeuralSnapshot,
     previous: NeuralSnapshot | undefined,
     alpha: number,
@@ -212,5 +229,26 @@ export class CellRenderLayer {
     const currentActivity = Math.min(1, totalCurrent * 2.5e10);
     (this.boundary.material as THREE.MeshBasicMaterial).opacity =
       0.14 + (this.mode === "electricity" ? currentActivity : activity) * 0.5;
+  }
+
+  mount(context: RenderContext, _topology: RenderTopology): void {
+    mountLayer(this.group, context);
+  }
+
+  update(view: InterpolatedSnapshot): void {
+    this.updateInterpolated(view.current, view.previous, view.alpha);
+  }
+
+  setDetail(_level: number): void {
+    // The current cell patch has one fixed geometry budget. This method is the
+    // stable hook for the resolved-neuron LOD introduced in 0.9.
+  }
+
+  setVisible(visible: boolean): void {
+    this.group.visible = visible;
+  }
+
+  dispose(): void {
+    disposeObjectTree(this.group);
   }
 }

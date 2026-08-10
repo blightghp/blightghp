@@ -1,6 +1,18 @@
 import * as THREE from "three";
-import type { NeuralSnapshot } from "./protocol";
-import { interpolatePublishedValue } from "./render-layers";
+import type { NeuralSnapshot } from "../protocol";
+import { interpolatePublishedValue } from "./brain-layer";
+import {
+  declareVisual,
+  disposeObjectTree,
+  mountLayer,
+} from "./render-types";
+import type {
+  InterpolatedSnapshot,
+  RenderContext,
+  RenderLayer,
+  RenderTopology,
+} from "./render-types";
+import { projectionColorToken, VISUAL_COLORS } from "./visual-tokens";
 
 export const CORTICAL_LAYER_LABELS = ["L1", "L2", "L3", "L4", "L5", "L6"] as const;
 export type LaminarLod = "low" | "medium" | "high";
@@ -99,14 +111,7 @@ function projectionPoint(index: number): THREE.Vector3 {
   return new THREE.Vector3(0, layerY(index), 0);
 }
 
-function projectionColor(kind: LaminarProjection["kind"]): number {
-  if (kind === "recurrent") return 0x6aaeff;
-  if (kind === "feedforward" || kind === "thalamocortical") return 0x36c8ff;
-  if (kind === "feedback") return 0xffb45b;
-  return 0xc979ff;
-}
-
-export class LaminarRenderLayer {
+export class LaminarRenderLayer implements RenderLayer {
   readonly group = new THREE.Group();
   private readonly excitatoryMeshes: THREE.Mesh[] = [];
   private readonly inhibitoryMeshes: THREE.Mesh[] = [];
@@ -127,32 +132,34 @@ export class LaminarRenderLayer {
       const excitatory = new THREE.Mesh(
         new THREE.CylinderGeometry(radius, radius * 0.96, 0.34, 48, 1, true),
         new THREE.MeshBasicMaterial({
-          color: 0x249cff,
+          color: VISUAL_COLORS.excitatory,
           transparent: true,
           opacity: 0.18,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
+          blending: THREE.NormalBlending,
+          depthWrite: true,
           side: THREE.DoubleSide,
         }),
       );
       excitatory.position.y = layerY(index);
       excitatory.name = `${CORTICAL_LAYER_LABELS[index]}-excitatory`;
+      declareVisual(excitatory, "matter", "state");
       this.excitatoryMeshes.push(excitatory);
       this.group.add(excitatory);
 
       const inhibitory = new THREE.Mesh(
         new THREE.TorusGeometry(radius * 0.62, 0.035, 8, 32),
         new THREE.MeshBasicMaterial({
-          color: 0xc979ff,
+          color: VISUAL_COLORS.inhibitory,
           transparent: true,
           opacity: 0.2,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
+          blending: THREE.NormalBlending,
+          depthWrite: true,
         }),
       );
       inhibitory.position.y = layerY(index);
       inhibitory.rotation.x = Math.PI / 2;
       inhibitory.name = `${CORTICAL_LAYER_LABELS[index]}-inhibitory`;
+      declareVisual(inhibitory, "matter", "state");
       this.inhibitoryMeshes.push(inhibitory);
       this.group.add(inhibitory);
     }
@@ -168,16 +175,17 @@ export class LaminarRenderLayer {
       const line = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints(curve.getPoints(32)),
         new THREE.LineBasicMaterial({
-          color: projectionColor(projection.kind),
+          color: projectionColorToken(projection.kind),
           transparent: true,
           opacity: 0.34,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
+          blending: THREE.NormalBlending,
+          depthWrite: true,
         }),
       );
       line.userData.kind = projection.kind;
       line.userData.source = projection.source;
       line.userData.target = projection.target;
+      declareVisual(line, "matter", "state");
       this.projectionLines.push(line);
       this.projectionCurves.push(curve);
       this.group.add(line);
@@ -185,7 +193,7 @@ export class LaminarRenderLayer {
       const pulse = new THREE.Mesh(
         new THREE.SphereGeometry(0.045, 10, 8),
         new THREE.MeshBasicMaterial({
-          color: projectionColor(projection.kind),
+          color: projectionColorToken(projection.kind),
           transparent: true,
           opacity: 0,
           blending: THREE.AdditiveBlending,
@@ -193,6 +201,7 @@ export class LaminarRenderLayer {
         }),
       );
       pulse.name = `axonal-pulse-${this.projectionPulses.length}`;
+      declareVisual(pulse, "emission", "state");
       this.projectionPulses.push(pulse);
       this.group.add(pulse);
     }
@@ -200,30 +209,32 @@ export class LaminarRenderLayer {
     this.relayMesh = new THREE.Mesh(
       new THREE.IcosahedronGeometry(0.28, 2),
       new THREE.MeshBasicMaterial({
-        color: 0x36c8ff,
+        color: VISUAL_COLORS.excitatory,
         transparent: true,
         opacity: 0.5,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
+        blending: THREE.NormalBlending,
+        depthWrite: true,
       }),
     );
     this.relayMesh.position.copy(projectionPoint(6));
     this.relayMesh.name = "thalamic-relay";
+    declareVisual(this.relayMesh, "matter", "state");
     this.group.add(this.relayMesh);
 
     this.trnMesh = new THREE.Mesh(
       new THREE.TorusGeometry(0.34, 0.065, 12, 36),
       new THREE.MeshBasicMaterial({
-        color: 0xc979ff,
+        color: VISUAL_COLORS.inhibitory,
         transparent: true,
         opacity: 0.45,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
+        blending: THREE.NormalBlending,
+        depthWrite: true,
       }),
     );
     this.trnMesh.position.copy(projectionPoint(7));
     this.trnMesh.rotation.x = Math.PI / 2;
     this.trnMesh.name = "thalamic-reticular-nucleus";
+    declareVisual(this.trnMesh, "matter", "state");
     this.group.add(this.trnMesh);
     this.setLod(this.lod);
   }
@@ -241,7 +252,7 @@ export class LaminarRenderLayer {
     });
   }
 
-  update(
+  updateInterpolated(
     snapshot: NeuralSnapshot,
     previous: NeuralSnapshot | undefined,
     alpha: number,
@@ -296,5 +307,25 @@ export class LaminarRenderLayer {
       (pulse.material as THREE.MeshBasicMaterial).opacity = lifecycle.opacity;
       pulse.scale.setScalar(0.72 + lifecycle.opacity * 0.72);
     });
+  }
+
+  mount(context: RenderContext, _topology: RenderTopology): void {
+    mountLayer(this.group, context);
+  }
+
+  update(view: InterpolatedSnapshot): void {
+    this.updateInterpolated(view.current, view.previous, view.alpha);
+  }
+
+  setDetail(level: number): void {
+    this.setLod(level <= 0 ? "low" : level >= 2 ? "high" : "medium");
+  }
+
+  setVisible(visible: boolean): void {
+    this.group.visible = visible;
+  }
+
+  dispose(): void {
+    disposeObjectTree(this.group);
   }
 }

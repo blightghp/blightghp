@@ -1,25 +1,24 @@
 import * as THREE from "three";
 import { invoke } from "@tauri-apps/api/core";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
 import {
   amperesToPicoamperes,
+  BrainRenderLayers,
   CellRenderLayer,
-  mean,
-  receptorCurrentTotals,
-  voltsToMillivolts,
-} from "./cell-layer";
-import { BayesianBelief, BayesianUpdate } from "./inference";
-import {
   LaminarRenderLayer,
+  mean,
   parseLaminarLod,
   parseSimulationView,
-} from "./laminar-layer";
-import type { SimulationView } from "./laminar-layer";
+  receptorCurrentTotals,
+  SelectiveBloomPipeline,
+  VISUAL_COLORS,
+  ACTIVITY_TRACE_STOPS,
+  voltsToMillivolts,
+} from "./render";
+import type { SimulationView } from "./render";
+import { BayesianBelief, BayesianUpdate } from "./inference";
 import {
   parseSnapshotCadence,
   RuntimeProfiler,
@@ -34,7 +33,6 @@ import type {
   ScheduledEngineInput,
   SimulationTick,
 } from "./protocol";
-import { BrainRenderLayers } from "./render-layers";
 import { BrainSettings, getInitialBrainSettings } from "./schema";
 
 declare global {
@@ -78,8 +76,7 @@ let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let controls: OrbitControls;
-let composer: EffectComposer;
-let bloomPass: UnrealBloomPass;
+let renderPipeline: SelectiveBloomPipeline;
 let layers: BrainRenderLayers;
 let laminarLayer: LaminarRenderLayer;
 let cellLayer: CellRenderLayer;
@@ -122,8 +119,9 @@ function drawActivityTrace(): void {
   context.clearRect(0, 0, width, height);
   const peak = Math.max(1, ...activitySamples);
   const gradient = context.createLinearGradient(0, 0, width, 0);
-  gradient.addColorStop(0, "rgba(29,126,235,.25)");
-  gradient.addColorStop(1, "rgba(100,220,255,.95)");
+  for (const [offset, color] of ACTIVITY_TRACE_STOPS) {
+    gradient.addColorStop(offset, color);
+  }
   context.strokeStyle = gradient;
   context.lineWidth = 1.25;
   context.beginPath();
@@ -256,17 +254,18 @@ function renderFrame(
   );
   if (activeView === "overview") {
     layers.updateVisibility(state, currentFocusRegion);
-    layers.updateInterpolated(snapshot, previousSnapshot, alpha, state.pulseCount);
+    layers.setDetail(state.pulseCount);
+    layers.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else if (activeView === "laminar") {
-    laminarLayer.update(snapshot, previousSnapshot, alpha);
+    laminarLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else {
-    cellLayer.update(snapshot, previousSnapshot, alpha);
+    cellLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   }
 
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta);
   controls.update();
   renderer.info.reset();
-  composer.render();
+  renderPipeline.render();
   const memory = (performance as Performance & {
     memory?: { usedJSHeapSize: number };
   }).memory;
@@ -331,9 +330,9 @@ function showInference(update: BayesianUpdate): void {
 
 function setActiveView(view: SimulationView): void {
   activeView = view;
-  layers.group.visible = view === "overview";
-  laminarLayer.group.visible = view === "laminar";
-  cellLayer.group.visible = view === "cell" || view === "electricity";
+  layers.setVisible(view === "overview");
+  laminarLayer.setVisible(view === "laminar");
+  cellLayer.setVisible(view === "cell" || view === "electricity");
   if (view === "cell" || view === "electricity") cellLayer.setMode(view);
   element("#overview-panel").hidden = view !== "overview";
   element("#laminar-panel").hidden = view !== "laminar";
@@ -406,10 +405,10 @@ function setupInterface(): void {
   bindRange("pulse-count", "pulse-count-val", "pulseCount", String);
   bindRange("learning-rate", "learning-rate-val", "learningRate", (value) => value.toFixed(3));
   bindRange("bloom-strength", "bloom-strength-val", "bloomStrength", (value) => value.toFixed(1), () => {
-    bloomPass.strength = state.bloomStrength;
+    renderPipeline.bloomPass.strength = state.bloomStrength;
   });
   bindRange("bloom-radius", "bloom-radius-val", "bloomRadius", (value) => value.toFixed(2), () => {
-    bloomPass.radius = state.bloomRadius;
+    renderPipeline.bloomPass.radius = state.bloomRadius;
   });
 
   const focusSelect = document.querySelector<HTMLSelectElement>("#circuit-focus");
@@ -480,7 +479,7 @@ function onResize(): void {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
+  renderPipeline.setSize(window.innerWidth, window.innerHeight);
   drawActivityTrace();
 }
 
@@ -496,7 +495,7 @@ async function init(): Promise<void> {
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x000000, 0);
+  renderer.setClearColor(VISUAL_COLORS.transparentBlack, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.info.autoReset = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -511,25 +510,26 @@ async function init(): Promise<void> {
   controls.maxDistance = 7;
   controls.target.set(0, -0.05, 0);
 
-  bloomPass = new UnrealBloomPass(
+  renderPipeline = new SelectiveBloomPipeline(
+    renderer,
+    scene,
+    camera,
     new THREE.Vector2(window.innerWidth, window.innerHeight),
     state.bloomStrength,
     state.bloomRadius,
-    0.12,
   );
-  composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
-  composer.addPass(bloomPass);
 
   brainData = generateBrainData();
+  const renderContext = { scene, camera, renderer };
+  const renderTopology = { brain: brainData };
   layers = new BrainRenderLayers(brainData);
-  scene.add(layers.group);
+  layers.mount(renderContext, renderTopology);
   laminarLayer = new LaminarRenderLayer();
-  laminarLayer.group.visible = false;
-  scene.add(laminarLayer.group);
+  laminarLayer.setVisible(false);
+  laminarLayer.mount(renderContext, renderTopology);
   cellLayer = new CellRenderLayer();
-  cellLayer.group.visible = false;
-  scene.add(cellLayer.group);
+  cellLayer.setVisible(false);
+  cellLayer.mount(renderContext, renderTopology);
 
   worker = new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = (event: MessageEvent<EngineEvent>) => {

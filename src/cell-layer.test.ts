@@ -4,7 +4,7 @@ import {
   mean,
   membraneActivation,
   voltsToMillivolts,
-} from "./cell-layer";
+} from "./render/cell-layer";
 
 describe("cell patch presentation", () => {
   it("converts SI engine values only at the presentation boundary", () => {
