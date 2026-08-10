@@ -5,10 +5,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { PNG } from "pngjs";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
+import { createBrainGifManifest } from "./brain_gif_manifest.js";
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(directory, "..");
 const outputPath = path.join(projectRoot, "assets", "brain.gif");
+const manifestPath = path.join(projectRoot, "assets", "brain-gif.json");
 const width = 760;
 const height = 430;
 const frameCount = 60;
@@ -60,7 +63,13 @@ async function generateGif() {
 
     for (let frame = 0; frame < frameCount; frame += 1) {
       const ratio = frame / frameCount;
-      const view = frame < 36 ? "overview" : "laminar";
+      const view = frame < 24
+        ? "overview"
+        : frame < 36
+          ? "laminar"
+          : frame < 48
+            ? "cell"
+            : "electricity";
       await page.evaluate(
         async ({ time, rotation, view }) => {
           window.__BRAIN_ENGINE__.setView(view);
@@ -81,8 +90,34 @@ async function generateGif() {
 
     encoder.finish();
     const gif = encoder.out.getData();
+    const diagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
+    const sourceCommit = process.env.GITHUB_SHA ?? execFileSync(
+      "git",
+      ["rev-parse", "HEAD"],
+      { cwd: projectRoot, encoding: "utf8" },
+    ).trim();
+    const manifest = createBrainGifManifest({
+      sourceCommit,
+      gifBytes: gif,
+      diagnostics,
+      capture: {
+        width,
+        height,
+        frameCount,
+        frameDelayMilliseconds: frameDelay,
+        loopDurationSeconds: loopDuration,
+        framesByView: {
+          overview: 24,
+          laminar: 12,
+          cell: 12,
+          electricity: 12,
+        },
+      },
+    });
     fs.writeFileSync(outputPath, gif);
+    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
     console.log(`saved ${outputPath} (${(gif.length / 1024 / 1024).toFixed(2)} MiB)`);
+    console.log(`stamped provenance ${manifest.sourceCommit.slice(0, 12)} · ${manifest.gifSha256.slice(0, 12)}`);
   } finally {
     await browser.close();
     await server.close();

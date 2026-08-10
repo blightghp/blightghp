@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "generate:brain-gif": "node scripts/gen_brain_gif.js",
+    "sync:brain-gif": "npm run build:wasm && npm run generate:brain-gif",
+    "verify:brain-gif": "node scripts/verify_brain_gif.js",
     "check:shadow-replay": "node scripts/shadow_replay.js",
     "test:wasm-browser": "node scripts/verify_wasm_worker.js",
     "audit:runtime": "node scripts/audit_runtime.js",

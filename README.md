@@ -3,16 +3,16 @@
 <samp>APRENDER RUST CONSTRUINDO UM CÉREBRO QUE POSSO MEDIR, TESTAR E QUESTIONAR.</samp>
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=fd3be0932f78" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular" />
+  <img src="assets/brain.gif?v=fd3be0932f78" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular elétrico" />
 </a>
 
-<sub>▲ A captura vem do simulador publicado. O SHA na URL identifica o código-fonte usado pelo workflow.</sub>
+<sub>▲ Captura do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI e aos três hashes do motor.</sub>
 
 </div>
 
 ---
 
-## BRAIN PRO [v. 0.7.0]
+## BRAIN PRO [v. 0.8 em construção · base 0.7 íntegra]
 
 Estou construindo o BRAIN PRO como um caderno de aprendizagem executável. Sou
 um programador aprendendo a usar a [Rust Programming Language](https://www.rust-lang.org/)
@@ -25,11 +25,12 @@ livro orienta perguntas e vocabulário; o código não é uma cópia digital do
 Kandel nem recebe validade biológica por associação. Cada aproximação precisa
 de equação, unidade, limite e teste próprios.
 
-Minha pergunta prática nesta versão é: **como descer do campo populacional para
-um patch de células com voltagem e correntes explícitas sem contar a mesma
-atividade duas vezes?** A resposta atual combina um patch AdEx determinístico em
-Rust, um mapa de resolução unilateral, WebAssembly dentro de um Web Worker e uma
-apresentação Three.js que apenas lê snapshots.
+Minha pergunta prática nesta fase é: **como ampliar a resolução — da rede à
+sinapse e da forma à química — sem desenhar um fenômeno que o motor não
+calcula?** A base 0.7 continua sendo um patch AdEx determinístico em Rust, com
+WebAssembly dentro de um Web Worker. A 0.8 começou pelo contrato: separou matéria
+de emissão na imagem e congelou recursos, unidades e conservação antes de criar
+dinâmica química.
 
 ### O que consigo explorar hoje
 
@@ -43,6 +44,10 @@ apresentação Three.js que apenas lê snapshots.
   **Eletricidade**;
 - execução Rust/Wasm em Worker, ABI v5 e 22 buffers transferíveis;
 - hashes separados para o baseline 0.5, circuito córtico-talâmico e patch celular;
+- pipeline visual com matéria, emissão e composição; bloom restrito ao que
+  realmente emite e proveniência declarada por objeto;
+- contrato 0.8-a para recurso vesicular `R`, utilização `u`, liberação `uR`,
+  cinco estoques em mol equivalente e carga transmembrana em coulombs;
 - replay sombra com três marcos exatos, fila genérica `(tick, sequence)` e
   divergência máxima zero;
 - cadência de snapshots em 60/30/15/10 Hz e perfil de CPU, GPU, memória e
@@ -63,6 +68,7 @@ relações entre estados; elas não são um atlas anatômico.
 pergunta de estudo
       ↓
 brain-engine (Rust: estado, equações, limites e hashes)
+      ├── chemical_contract (recursos, massa e carga; ainda sem dinâmica)
       ├── testes nativos e replay
       └── brain-wasm → Web Worker → snapshot ABI v5
                                       ↓
@@ -71,7 +77,7 @@ brain-engine (Rust: estado, equações, limites e hashes)
 
 | Parte | O que estou aprendendo e mantendo |
 | :-- | :-- |
-| `brain-engine` | tipos Rust, ownership, erros explícitos, integração numérica, determinismo e limites de recursos |
+| `brain-engine` | tipos Rust, ownership, erros explícitos, integração numérica, determinismo, recursos e invariantes de conservação |
 | `brain-wasm` | uma fronteira pequena com `wasm-bindgen`, sem duplicar equações no shell |
 | Worker | manter o thread de apresentação livre e limitar trabalho por comando |
 | TypeScript | protocolo, acessibilidade, DOM e visualização dos dados publicados |
@@ -96,9 +102,12 @@ memória de estudo em falsa proveniência Git.
 | 2026-07-26 | promovo Rust/Wasm como motor padrão na 0.5 e preservo o replay sombra |
 | 2026-07-26 | fecho a 0.6 com L1–L6, relé/TRN, ABI v4, aba Lâminas e auditoria de recursos |
 | 2026-08-02 | fecho a 0.7 com AdEx, quatro receptores, ResolutionMap, ABI v5 e as abas Célula/Eletricidade |
+| 2026-08-10 | abro a 0.8 com auditoria visual, passes matéria/emissão e o contrato de recursos, massa e carga antes da dinâmica química |
 
-O detalhamento está em [PLAN_0.7.md](PLAN_0.7.md), [ROADMAP.md](ROADMAP.md) e
-[AUDIT_0.7.md](AUDIT_0.7.md).
+O detalhamento da base está em [PLAN_0.7.md](PLAN_0.7.md) e
+[AUDIT_0.7.md](AUDIT_0.7.md). A sequência atual, o contrato visual e a auditoria
+de entrada estão em [ROADMAP_NEXT.md](ROADMAP_NEXT.md),
+[VISUAL_SPEC.md](VISUAL_SPEC.md) e [AUDIT_0.8_ENTRY.md](AUDIT_0.8_ENTRY.md).
 
 ### Executar e conferir
 
@@ -123,16 +132,18 @@ contraste e o perfil de execução. Para preservar esses artefatos em um diretó
 BRAIN_AUDIT_DIR=artifacts/visual-audit npm run audit:runtime
 ```
 
-Para regenerar a ponte e a captura:
+Para recompilar a ponte e gerar uma captura vinculada ao motor atual:
 
 ```bash
-npm run build:wasm
-npm run generate:brain-gif
+npm run sync:brain-gif
+npm run verify:brain-gif
 ```
 
-O `brain.gif` não muda instantaneamente no perfil: o workflow precisa capturar,
-validar, commitar e aguardar a invalidação de cache do GitHub. A sincronização é
-reproduzível e de consistência eventual.
+O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v5,
+registra os três hashes independentes e o SHA-256 do GIF em
+[`assets/brain-gif.json`](assets/brain-gif.json), carimba o README com o commit
+de origem e só então publica os artefatos. O GitHub ainda pode levar alguns
+minutos para invalidar o cache do perfil.
 
 ### Leituras que me acompanham
 
