@@ -84,7 +84,7 @@ publicado neste repositório.
 <div align="center">
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=f95b37f417b8" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular com correntes assinadas" />
+  <img src="assets/brain.gif?v=fe95c907d478" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular com correntes assinadas" />
 </a>
 
 <sub>▲ Captura do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI e aos três hashes do motor.</sub>

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "f95b37f417b8b883f3ce8ef2748060009ea65f21",
+  "sourceCommit": "fe95c907d478fd1479ca2aab70e6bc111b986089",
   "gifSha256": "72e4a78332e3356a52464c7ea560dda33cb661758810e16b6fa715284bd0506b",
   "engine": {
     "runtime": "rust-wasm",
