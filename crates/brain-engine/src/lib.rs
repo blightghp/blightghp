@@ -4,6 +4,7 @@ use core::fmt;
 
 mod cell_patch;
 pub mod chemical_contract;
+mod cleft_occupancy;
 mod clock;
 mod corticothalamic;
 mod field;
@@ -24,6 +25,12 @@ pub use cell_patch::{
 pub use chemical_contract::{
     ChemicalContractError, ConservationTolerance, DeterministicRelease, MembraneChargeTransfer,
     TransmitterMassLedger, UnitFraction, VesicularResourceContract,
+};
+pub use cleft_occupancy::{
+    ChemicalCleftSnapshot, ChemicalSynapse, ChemicalSynapseConfig, ChemicalSynapseError,
+    ClearanceTransition, ReceptorBindingConfig, ReceptorBindingTransition, ReceptorFamily,
+    ReleaseIntoCleft, TransmitterKind, CHEMICAL_CLEFT_SCHEMA_VERSION, RECEPTOR_FAMILY_COUNT,
+    RECEPTOR_FAMILY_ORDER, TRANSMITTER_COUNT, TRANSMITTER_ORDER,
 };
 pub use clock::{ClockError, ClockFrame, FixedStepClock, SimulationTick, MAX_SAFE_TICK};
 pub use corticothalamic::{

@@ -90,7 +90,7 @@ encontram na aba Sinapse.
 - [x] **0.8-b · Plasticidade de curto prazo:** Tsodyks–Markram determinístico,
   com ordem explícita entre evento pré-sináptico, atualização de condutância e
   depleção. Oráculo versionado e replay próprio.
-- [ ] **0.8-c · Fenda e ocupação:** concentração na fenda com limpeza rápida e
+- [x] **0.8-c · Fenda e ocupação:** concentração na fenda com limpeza rápida e
   ocupação por família de receptor em buffer separado da concentração e do
   efeito.
 - [ ] **0.8-d · Solver e rigidez:** separação de operadores com positividade

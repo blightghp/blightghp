@@ -111,7 +111,8 @@ sinapse e da forma à química — sem desenhar um fenômeno que o motor não
 calcula?** A base 0.7 continua sendo um patch AdEx determinístico em Rust, com
 WebAssembly dentro de um Web Worker. A 0.8 começou pelo contrato: separou matéria
 de emissão na imagem, congelou recursos, unidades e conservação, preservou o
-sinal das correntes e agora implementa a primeira dinâmica química auditável.
+sinal das correntes e agora mantém liberação, fenda e ocupação como estados
+químicos auditáveis.
 
 ### O que consigo explorar hoje
 
@@ -135,6 +136,8 @@ sinal das correntes e agora implementa a primeira dinâmica química auditável.
   cinco estoques em mol equivalente e carga transmembrana em coulombs;
 - dinâmica 0.8-b de Tsodyks–Markram determinística, com recuperação e decaimento
   exponenciais exatos, ordem de evento pública, hash próprio e replay bit a bit;
+- química local 0.8-c com glutamato/GABA em fendas separadas, limpeza exata,
+  ocupação seletiva de AMPA/NMDA/GABA-A/GABA-B e conservação por transmissor;
 - replay sombra com três marcos exatos, fila genérica `(tick, sequence)` e
   divergência máxima zero;
 - cadência de snapshots em 60/30/15/10 Hz e perfil de CPU, GPU, memória e
@@ -157,6 +160,7 @@ pergunta de estudo
 brain-engine (Rust: estado, equações, limites e hashes)
       ├── chemical_contract (recursos, massa e carga)
       ├── short_term_plasticity (R, u, g, ordem de evento e hash)
+      ├── cleft_occupancy (concentração, ocupação, ligação e remoção)
       ├── testes nativos e replay
       └── brain-wasm → Web Worker → snapshot ABI v5
                                       ↓
@@ -193,6 +197,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-10 | abro a 0.8 com auditoria visual, passes matéria/emissão e o contrato de recursos, massa e carga antes da dinâmica química |
 | 2026-08-10 | preservo o sinal das quatro correntes e fecho os gates visuais de invertibilidade, monocromia, proveniência e hardware |
 | 2026-08-10 | implemento Tsodyks–Markram determinístico com ordem de evento explícita, solução exponencial exata e oráculo versionado |
+| 2026-08-10 | separo concentração, ocupação, matéria ligada e remoção na fenda, com conservação individual de glutamato e GABA |
 
 O detalhamento da base está em [PLAN_0.7.md](PLAN_0.7.md) e
 [AUDIT_0.7.md](AUDIT_0.7.md). A sequência atual, o contrato visual e a auditoria

@@ -6,6 +6,9 @@ use core::fmt;
 pub struct UnitFraction(f64);
 
 impl UnitFraction {
+    pub const ZERO: Self = Self(0.0);
+    pub const ONE: Self = Self(1.0);
+
     /// Builds a finite fraction in the inclusive interval `[0, 1]`.
     ///
     /// # Errors

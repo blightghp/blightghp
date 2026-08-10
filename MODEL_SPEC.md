@@ -305,6 +305,46 @@ em `short_term_plasticity.rs`. O primeiro valida grandezas e calcula a liberaç�
 planejada sem estado. O segundo possui relógio absoluto, recuperação, decaimento,
 depleção, facilitação e hash próprio, ainda sem integrar a ABI v5.
 
+### Fenda e ocupação da 0.8-c
+
+A química local representa glutamato e GABA em compartimentos de fenda separados.
+Para cada transmissor `T`, concentração e matéria livre se relacionam pelo volume
+explícito da fenda:
+
+$$
+[T]=\frac{n_{cleft,T}}{V_{cleft}}.
+$$
+
+A limpeza de primeira ordem é uma operação atômica exata:
+
+$$
+n_{cleft,T}^{+}=n_{cleft,T}^{-}e^{-\Delta t/\tau_{clear,T}}, \qquad
+n_{recovered,T}^{+}=n_{recovered,T}^{-}+
+\left(n_{cleft,T}^{-}-n_{cleft,T}^{+}\right).
+$$
+
+Cada família `r ∈ {AMPA, NMDA, GABA-A, GABA-B}` declara transmissor, capacidade
+de sítios `N_r`, taxa de associação `k_{on,r}` em `m³·mol⁻¹·s⁻¹` e taxa de
+dissociação `k_{off,r}` em `s⁻¹`. Com a concentração congelada na entrada da
+operação,
+
+$$
+\lambda_r=k_{on,r}[T]+k_{off,r}, \qquad
+O_{\infty,r}=\frac{k_{on,r}[T]}{\lambda_r}, \qquad
+O_r^{+}=O_{\infty,r}+(O_r^{-}-O_{\infty,r})e^{-\lambda_r\Delta t}.
+$$
+
+O estoque ligado é `n_bound,r=N_rO_r`. Toda variação positiva sai da fenda
+correspondente; dissociação devolve matéria à mesma fenda. Uma operação que
+exigiria mais transmissor do que existe falha sem mutar o estado. Concentração
+por transmissor, ocupação por receptor e matéria removida são buffers distintos;
+efeito funcional ainda não existe nesse snapshot e não pode ser inferido deles.
+
+Essas são transições elementares positivas, não um solver composto. A 0.8-d
+definirá a ordem global, a separação de operadores, o tratamento de rigidez e o
+estudo de convergência. Os valores padrão atuais são didáticos e não constituem
+calibração para uma preparação biológica.
+
 ## Campo populacional
 
 ### Modelo adotado na 0.4

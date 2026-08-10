@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "model": "local-cleft-occupancy-atomic-operators",
+  "transmitterOrder": [
+    "glutamate",
+    "gaba"
+  ],
+  "receptorFamilyOrder": [
+    "ampa",
+    "nmda",
+    "gaba-a",
+    "gaba-b"
+  ],
+  "config": {
+    "cleftVolumeCubicMeters": 2e-20,
+    "clearanceTimeConstantsSeconds": [
+      0.0015,
+      0.003
+    ],
+    "receptorBindings": [
+      {
+        "family": "ampa",
+        "siteCapacityMoles": 1e-21,
+        "associationRateCubicMetersPerMoleSecond": 12.0,
+        "dissociationRatePerSecond": 180.0
+      },
+      {
+        "family": "nmda",
+        "siteCapacityMoles": 1e-21,
+        "associationRateCubicMetersPerMoleSecond": 5.0,
+        "dissociationRatePerSecond": 40.0
+      },
+      {
+        "family": "gaba-a",
+        "siteCapacityMoles": 1e-21,
+        "associationRateCubicMetersPerMoleSecond": 10.0,
+        "dissociationRatePerSecond": 90.0
+      },
+      {
+        "family": "gaba-b",
+        "siteCapacityMoles": 1e-21,
+        "associationRateCubicMetersPerMoleSecond": 1.0,
+        "dissociationRatePerSecond": 8.0
+      }
+    ]
+  },
+  "operations": [
+    {
+      "kind": "release",
+      "transmitter": "glutamate",
+      "releasedMoles": 4e-19
+    },
+    {
+      "kind": "bind",
+      "family": "ampa",
+      "durationSeconds": 0.0005
+    },
+    {
+      "kind": "bind",
+      "family": "nmda",
+      "durationSeconds": 0.0005
+    },
+    {
+      "kind": "clear",
+      "transmitter": "glutamate",
+      "durationSeconds": 0.001
+    },
+    {
+      "kind": "release",
+      "transmitter": "gaba",
+      "releasedMoles": 3e-19
+    },
+    {
+      "kind": "bind",
+      "family": "gaba-a",
+      "durationSeconds": 0.001
+    },
+    {
+      "kind": "bind",
+      "family": "gaba-b",
+      "durationSeconds": 0.001
+    },
+    {
+      "kind": "clear",
+      "transmitter": "gaba",
+      "durationSeconds": 0.002
+    },
+    {
+      "kind": "bind",
+      "family": "ampa",
+      "durationSeconds": 0.001
+    },
+    {
+      "kind": "clear",
+      "transmitter": "glutamate",
+      "durationSeconds": 0.003
+    }
+  ],
+  "checkpoints": [
+    {
+      "afterOperation": 1,
+      "totalReleasedMoles": [
+        4e-19,
+        0.0
+      ],
+      "cleftMoles": [
+        4e-19,
+        0.0
+      ],
+      "cleftConcentrationMolesPerCubicMeter": [
+        20.0,
+        0.0
+      ],
+      "receptorBoundMoles": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "receptorOccupancyFraction": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "clearedMoles": [
+        0.0,
+        0.0
+      ],
+      "stateHashHex": "d7422a8daca4d2d8"
+    },
+    {
+      "afterOperation": 4,
+      "totalReleasedMoles": [
+        4e-19,
+        0.0
+      ],
+      "cleftMoles": [
+        2.0528649015414687e-19,
+        0.0
+      ],
+      "cleftConcentrationMolesPerCubicMeter": [
+        10.264324507707345,
+        0.0
+      ],
+      "receptorBoundMoles": [
+        1.0823757373132164e-22,
+        4.8277384401288587e-23,
+        0.0,
+        0.0
+      ],
+      "receptorOccupancyFraction": [
+        0.10823757373132165,
+        0.04827738440128859,
+        0.0,
+        0.0
+      ],
+      "clearedMoles": [
+        1.9455699488772054e-19,
+        0.0
+      ],
+      "stateHashHex": "dbcc2f0b5ba8ca0f"
+    },
+    {
+      "afterOperation": 8,
+      "totalReleasedMoles": [
+        4e-19,
+        3e-19
+      ],
+      "cleftMoles": [
+        2.0528649015414687e-19,
+        1.5394905763336453e-19
+      ],
+      "cleftConcentrationMolesPerCubicMeter": [
+        10.264324507707345,
+        7.697452881668227
+      ],
+      "receptorBoundMoles": [
+        1.0823757373132164e-22,
+        4.8277384401288587e-23,
+        1.3335758683340408e-22,
+        1.4822272374301448e-23
+      ],
+      "receptorOccupancyFraction": [
+        0.10823757373132165,
+        0.04827738440128859,
+        0.1333575868334041,
+        0.014822272374301448
+      ],
+      "clearedMoles": [
+        1.9455699488772054e-19,
+        1.4590276250742777e-19
+      ],
+      "stateHashHex": "8fdf516769ff10b7"
+    },
+    {
+      "afterOperation": 10,
+      "totalReleasedMoles": [
+        4e-19,
+        3e-19
+      ],
+      "cleftMoles": [
+        2.777195648349716e-20,
+        1.5394905763336453e-19
+      ],
+      "cleftConcentrationMolesPerCubicMeter": [
+        1.3885978241748582,
+        7.697452881668227
+      ],
+      "receptorBoundMoles": [
+        1.8618329425689601e-22,
+        4.8277384401288587e-23,
+        1.3335758683340408e-22,
+        1.4822272374301448e-23
+      ],
+      "receptorOccupancyFraction": [
+        0.18618329425689603,
+        0.04827738440128859,
+        0.1333575868334041,
+        0.014822272374301448
+      ],
+      "clearedMoles": [
+        3.7199358283784466e-19,
+        1.4590276250742777e-19
+      ],
+      "stateHashHex": "9afe3b215725b0c6"
+    }
+  ]
+}

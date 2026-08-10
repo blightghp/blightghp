@@ -152,9 +152,10 @@ Snapshots usam buffers próprios. O Worker alterna dois ou três conjuntos de bu
 ### Fronteira química da 0.8
 
 `brain_engine::chemical_contract` é o contrato puro entre o patch 0.7 e a
-dinâmica sináptica. `brain_engine::short_term_plasticity` é o primeiro consumidor
-temporal desse contrato. Nenhum dos dois participa ainda do laço publicado nem
-altera a ABI v5 ou seus três hashes.
+dinâmica sináptica. `brain_engine::short_term_plasticity` possui o estado de
+liberação; `brain_engine::cleft_occupancy` possui fenda, ligação e remoção.
+Nenhum desses módulos participa ainda do laço publicado nem altera a ABI v5 ou
+seus três hashes.
 
 | Grandeza | Tipo/estrutura | Unidade | Dono |
 | :-- | :-- | :-- | :-- |
@@ -164,6 +165,11 @@ altera a ABI v5 ou seus três hashes.
 | estado temporal `R,u,g` | `ShortTermPlasticity` | fração, s, S | sinapse |
 | configuração temporal | `ShortTermPlasticityConfig` | fração, s, mol, S | preset |
 | evento auditável | `PresynapticReleaseEvent` | fração, mol, S | replay/instrumento |
+| transmissor local | `TransmitterKind` | glutamato ou GABA | fenda |
+| concentração na fenda | `ChemicalCleftSnapshot` | mol·m⁻³, por transmissor | sinapse química |
+| ocupação e matéria ligada | `ChemicalCleftSnapshot` | fração, mol, por receptor | sinapse química |
+| remoção acumulada | `ChemicalCleftSnapshot` | mol, por transmissor | recaptura/ledger |
+| operações atômicas | `ChemicalSynapse` | mol, m³, s | futuro solver 0.8-d |
 | estoques químicos | `TransmitterMassLedger` | mol equivalente | solver químico |
 | carga transmembrana | `MembraneChargeTransfer` | C | integrador celular |
 | tolerância de massa | `ConservationTolerance` | mol absoluto + fração relativa | experimento |
@@ -174,6 +180,14 @@ liberação pelo estado pré-evento, incremento da condutância, depleção e
 facilitação para o evento seguinte. Cada snapshot possui hash FNV-1a e versão de
 schema; o fixture `short-term-plasticity-v1.json` fixa o replay bit a bit. Massa
 química e carga elétrica não compartilham acumulador nem conversão implícita.
+
+A 0.8-c acrescenta dois buffers de concentração, quatro de ocupação, quatro de
+matéria ligada e dois de remoção. AMPA/NMDA só consomem glutamato; GABA-A/GABA-B
+só consomem GABA. Liberação é uma fonte de fronteira explícita. Limpeza transfere
+matéria livre ao estoque recuperado; ligação transfere entre fenda e estoque
+ligado. A conservação é verificada separadamente para cada transmissor. A ordem
+entre essas operações não está escondida no objeto: o solver 0.8-d será o dono
+da composição. O fixture `cleft-occupancy-v1.json` congela buffers e hash.
 
 ## Laço de simulação
 

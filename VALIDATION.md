@@ -78,6 +78,26 @@ O gerador auditável do oráculo é
 independente está em
 `crates/brain-engine/tests/short_term_plasticity_replay.rs`.
 
+### Fenda e ocupação da 0.8-c
+
+O gate químico local usa o oráculo
+`fixtures/replay/cleft-occupancy-v1.json` e mantém a ABI fora do escopo:
+
+| Teste | Critério |
+| :-- | :-- |
+| buffers | concentração por transmissor, ocupação por receptor, matéria ligada e remoção nunca compartilham o mesmo campo |
+| seletividade | AMPA/NMDA ligam somente glutamato; GABA-A/GABA-B ligam somente GABA |
+| limpeza | o decaimento coincide bit a bit com a solução exponencial e a diferença entra no estoque recuperado |
+| ligação | `O_r` permanece em `[0,1]`; ganho e perda de matéria ligada têm transferência oposta na fenda correta |
+| atomicidade | demanda de ligação acima da matéria disponível falha sem alterar operação, buffers ou hash |
+| conservação | fenda + ligado + removido reproduz a liberação acumulada separadamente para glutamato e GABA |
+| treino longo | 15.000 operações permanecem finitas, positivas, conservativas e idênticas em duas instâncias |
+| replay | dez operações reproduzem quatro checkpoints, todos os `f64` e hashes bit a bit |
+| separação de fases | nenhuma API da 0.8-c escolhe a ordem global do solver nem publica efeito funcional |
+
+O gerador está em `crates/brain-engine/examples/cleft_occupancy_fixture.rs` e o
+consumidor em `crates/brain-engine/tests/cleft_occupancy_replay.rs`.
+
 ### 3. Convergência numérica
 
 O passo temporal será escolhido por evidência. Para cada modelo, roda-se um circuito de referência com uma sequência de passos progressivamente menores. A comparação inclui:
