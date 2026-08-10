@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { CellRenderLayer } from "./cell-layer";
 import { LaminarRenderLayer } from "./laminar-layer";
 import {
+  auditVisualProvenance,
   declareVisual,
   visualPassOf,
   visualProvenanceOf,
@@ -51,5 +52,15 @@ describe("render presentation contract", () => {
     expect(projectionColorToken("reticular")).toBe(VISUAL_COLORS.inhibitory);
     expect(projectionColorToken("feedforward")).toBe(VISUAL_COLORS.excitatory);
     expect(projectionColorToken("thalamocortical")).toBe(VISUAL_COLORS.excitatory);
+  });
+
+  it("counts every rendered object's declared provenance", () => {
+    for (const layer of [new LaminarRenderLayer(), new CellRenderLayer()]) {
+      const report = auditVisualProvenance(layer.group);
+      expect(report.total).toBeGreaterThan(0);
+      expect(report.undeclared).toBe(0);
+      expect(report.state).toBeGreaterThan(0);
+      layer.dispose();
+    }
   });
 });

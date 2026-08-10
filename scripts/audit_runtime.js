@@ -1,9 +1,10 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "vite";
 import puppeteer from "puppeteer";
+import { PNG } from "pngjs";
 import { contrastRatio, parseCssColor } from "./audit_utils.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -11,6 +12,21 @@ const outputDirectory = process.env.BRAIN_AUDIT_DIR
   ? path.resolve(process.env.BRAIN_AUDIT_DIR)
   : path.join(os.tmpdir(), "brain-pro-visual-audit");
 await mkdir(outputDirectory, { recursive: true });
+
+async function saturatedPixelRatio(filename) {
+  const png = PNG.sync.read(await readFile(path.join(outputDirectory, filename)));
+  let saturated = 0;
+  for (let index = 0; index < png.data.length; index += 4) {
+    if (
+      png.data[index] >= 250 &&
+      png.data[index + 1] >= 250 &&
+      png.data[index + 2] >= 250
+    ) {
+      saturated += 1;
+    }
+  }
+  return saturated / (png.width * png.height);
+}
 
 const server = await createServer({
   root,
@@ -66,6 +82,54 @@ try {
     throw new Error(`navegação por teclado inválida: ${JSON.stringify(keyboard)}`);
   }
 
+  const visualGate = await page.evaluate(() => window.__BRAIN_ENGINE__.visualAudit());
+  if (
+    visualGate.provenance.total <= 0 ||
+    visualGate.provenance.undeclared !== 0 ||
+    visualGate.invertibility.samples < 20 ||
+    visualGate.invertibility.maximumError > visualGate.invertibility.tolerance ||
+    Object.values(visualGate.redundancy).some((encoding) => !encoding)
+  ) {
+    throw new Error(`gates de apresentação incompletos: ${JSON.stringify(visualGate)}`);
+  }
+
+  const colorCaptures = [
+    "overview-desktop.png",
+    "laminar-desktop.png",
+    "cell-desktop.png",
+    "electricity-desktop.png",
+  ];
+  const saturation = Object.fromEntries(
+    await Promise.all(
+      colorCaptures.map(async (filename) => [filename, await saturatedPixelRatio(filename)]),
+    ),
+  );
+  const saturatedCaptures = Object.entries(saturation).filter(([, ratio]) => ratio > 0.025);
+  if (saturatedCaptures.length > 0) {
+    throw new Error(`teto de bloom excedido: ${JSON.stringify(saturatedCaptures)}`);
+  }
+
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setColorMode("monochrome"));
+  const monochrome = {};
+  for (const view of ["overview", "laminar", "cell", "electricity"]) {
+    await page.evaluate((nextView) => window.__BRAIN_ENGINE__.setView(nextView), view);
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    const filename = `${view}-monochrome.png`;
+    await page.screenshot({ path: path.join(outputDirectory, filename) });
+    monochrome[view] = filename;
+  }
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
+  const monochromeGate = await page.evaluate(() => ({
+    report: window.__BRAIN_ENGINE__.visualAudit(),
+    canvasFilter: getComputedStyle(document.querySelector("#canvas-container canvas")).filter,
+  }));
+  if (
+    monochromeGate.report.colorMode !== "monochrome" ||
+    !monochromeGate.canvasFilter.includes("grayscale")
+  ) {
+    throw new Error(`modo sem cor inoperante: ${JSON.stringify(monochromeGate)}`);
+  }
+
   const colors = await page.evaluate(() => {
     const selectors = [
       ".brand",
@@ -98,7 +162,16 @@ try {
     profile.frameCpuMs.p95 <= 0 ||
     profile.gpu.drawCalls <= 0 ||
     profile.memory.snapshotBytes <= 0 ||
-    profile.memory.geometries <= 0
+    profile.memory.geometries <= 0 ||
+    profile.environment.browser.userAgent === "unknown" ||
+    profile.environment.hardware.logicalCores <= 0 ||
+    !profile.environment.hardware.webglRenderer ||
+    profile.environment.simulation.runtime !== "rust-wasm" ||
+    profile.environment.simulation.preset !== "interactive-default" ||
+    profile.environment.simulation.units <= 0 ||
+    profile.environment.simulation.synapses <= 0 ||
+    profile.environment.simulation.fieldVertices <= 0 ||
+    profile.environment.simulation.stepSeconds <= 0
   ) {
     throw new Error(`perfil incompleto: ${JSON.stringify(profile)}`);
   }
@@ -130,9 +203,21 @@ try {
       "cell-desktop.png",
       "electricity-desktop.png",
       "overview-mobile.png",
+      ...Object.values(monochrome),
     ],
     keyboard,
     contrast,
+    saturation,
+    visualGate,
+    monochromeGate,
+    auditHost: {
+      cpu: os.cpus()[0]?.model ?? "unknown",
+      logicalCores: os.cpus().length,
+      memoryBytes: os.totalmem(),
+      platform: os.platform(),
+      release: os.release(),
+      architecture: os.arch(),
+    },
     profile,
   };
   await writeFile(

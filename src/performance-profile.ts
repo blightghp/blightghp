@@ -50,6 +50,27 @@ interface RenderCounters {
   textures: number;
 }
 
+export interface RuntimeEnvironment {
+  browser: {
+    userAgent: string;
+    platform: string;
+  };
+  hardware: {
+    logicalCores: number;
+    deviceMemoryGiB?: number;
+    webglVendor: string;
+    webglRenderer: string;
+  };
+  simulation: {
+    runtime: string;
+    preset: string;
+    units: number;
+    synapses: number;
+    fieldVertices: number;
+    stepSeconds: number;
+  };
+}
+
 export interface RuntimeProfile {
   snapshotCadenceTicks: SnapshotCadence;
   sampleCount: number;
@@ -62,7 +83,21 @@ export interface RuntimeProfile {
     geometries: number;
     textures: number;
   };
+  environment: RuntimeEnvironment;
 }
+
+export const UNKNOWN_RUNTIME_ENVIRONMENT: RuntimeEnvironment = {
+  browser: { userAgent: "unknown", platform: "unknown" },
+  hardware: { logicalCores: 0, webglVendor: "unknown", webglRenderer: "unknown" },
+  simulation: {
+    runtime: "unknown",
+    preset: "unknown",
+    units: 0,
+    synapses: 0,
+    fieldVertices: 0,
+    stepSeconds: 0,
+  },
+};
 
 const WINDOW_SIZE = 240;
 
@@ -97,7 +132,10 @@ export class RuntimeProfiler {
     this.snapshotBytes = snapshotByteLength(snapshot);
   }
 
-  report(snapshotCadenceTicks: SnapshotCadence): RuntimeProfile {
+  report(
+    snapshotCadenceTicks: SnapshotCadence,
+    environment: RuntimeEnvironment = UNKNOWN_RUNTIME_ENVIRONMENT,
+  ): RuntimeProfile {
     return {
       snapshotCadenceTicks,
       sampleCount: Math.min(this.workerLatency.length, this.frameCpu.length),
@@ -110,6 +148,7 @@ export class RuntimeProfiler {
         geometries: this.counters.geometries,
         textures: this.counters.textures,
       },
+      environment,
     };
   }
 

@@ -20,6 +20,7 @@ import {
   REGION_COLOR_TOKENS,
   VISUAL_COLORS,
 } from "./visual-tokens";
+import { encodeStateColor } from "./visual-encoding";
 
 export interface PointVisual {
   nodeIndices: number[];
@@ -306,7 +307,7 @@ export class BrainRenderLayers implements RenderLayer {
             )
           : 0;
         const visibleActivity = Math.pow(composeNodeActivity(activity, wave), 1.7);
-        this.tempColor.copy(visual.baseColor).lerp(PALETTE.hot, visibleActivity * 0.95);
+        this.tempColor.copy(encodeStateColor(visual.baseColor, visibleActivity));
         colorAttribute.setXYZ(localIndex, this.tempColor.r, this.tempColor.g, this.tempColor.b);
       }
       colorAttribute.needsUpdate = true;

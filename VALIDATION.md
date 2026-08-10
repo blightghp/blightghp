@@ -143,7 +143,11 @@ O gate contínuo `scripts/audit_runtime.js` captura Visão Geral, Lâminas, Cél
 e Eletricidade em
 `1440×960`, repete a captura móvel em `390×844`, percorre as abas por teclado,
 mede os textos críticos contra o fundo mais claro do painel e exige razão mínima
-de 4,5:1. O mesmo gate rejeita overflow horizontal e perfil incompleto.
+de 4,5:1. O mesmo gate rejeita overflow horizontal, perfil incompleto, objeto
+renderizado sem proveniência, rampa material não invertível, saturação acima do
+teto e distinção que desapareça no modo monocromático. O relatório registra CPU,
+memória, navegador, plataforma WebGL, preset, unidades, sinapses, vértices, passo
+e cadência de snapshots; as quatro vistas também são capturadas sem cor.
 
 ## Pirâmide de testes no `src/`
 

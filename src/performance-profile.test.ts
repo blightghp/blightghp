@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseSnapshotCadence, RuntimeProfiler, shouldRequestSnapshot } from "./performance-profile";
+import {
+  parseSnapshotCadence,
+  RuntimeProfiler,
+  shouldRequestSnapshot,
+  type RuntimeEnvironment,
+} from "./performance-profile";
 
 describe("runtime performance profile", () => {
   it("accepts only bounded snapshot cadences", () => {
@@ -21,10 +26,28 @@ describe("runtime performance profile", () => {
     profiler.recordWorkerLatency(8);
     profiler.recordFrame(2, { calls: 21, triangles: 900, geometries: 12, textures: 2 });
     profiler.recordFrame(6, { calls: 23, triangles: 920, geometries: 12, textures: 2 }, 1024);
-    const report = profiler.report(2);
+    const environment: RuntimeEnvironment = {
+      browser: { userAgent: "test-browser", platform: "test-platform" },
+      hardware: {
+        logicalCores: 8,
+        deviceMemoryGiB: 16,
+        webglVendor: "test-vendor",
+        webglRenderer: "test-renderer",
+      },
+      simulation: {
+        runtime: "rust-wasm",
+        preset: "interactive-default",
+        units: 12,
+        synapses: 24,
+        fieldVertices: 6,
+        stepSeconds: 1 / 60,
+      },
+    };
+    const report = profiler.report(2, environment);
     expect(report.workerLatencyMs).toEqual({ mean: 6, p95: 8 });
     expect(report.frameCpuMs).toEqual({ mean: 4, p95: 6 });
     expect(report.gpu.drawCalls).toBe(23);
     expect(report.memory.jsHeapBytes).toBe(1024);
+    expect(report.environment).toEqual(environment);
   });
 });

@@ -442,6 +442,19 @@ interface RenderLayer {
 
 Pulsos visuais representam eventos reais. Interpolação pode suavizar posição e intensidade, mas não criar spikes entre snapshots. LOD reduz geometria e amostragem visual; não altera o motor.
 
+Na 0.8-v3, `CellRenderLayer` mantém a convenção publicada pelo motor
+`g·(E_rev − V)`: corrente positiva é despolarizante e corrente negativa é
+hiperpolarizante. O halo elétrico codifica direção tanto por matiz quanto pelo
+plano do toro. A condição de shunt é derivada da corrente GABA-A e do potencial
+dendrítico publicados, recuperando a condutância pela mesma equação; não existe
+estado químico inventado no renderer.
+
+Na 0.8-v4, `window.__BRAIN_ENGINE__.visualAudit()` expõe somente evidência de
+apresentação: contagem de proveniência, erro da rampa invertível e codificações
+redundantes. `profile()` acrescenta navegador, hardware WebGL, preset, contagens
+da topologia e passo fixo. Nenhum desses relatórios escreve no motor ou participa
+do hash da simulação.
+
 ## Histórico do `src/` e workspace 0.5
 
 ### Corte 0.3-a — relógio e contrato

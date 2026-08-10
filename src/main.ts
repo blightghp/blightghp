@@ -5,26 +5,30 @@ import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
 import {
   amperesToPicoamperes,
+  auditVisualProvenance,
   BrainRenderLayers,
   CellRenderLayer,
+  decodeStateColor,
+  encodeStateColor,
   LaminarRenderLayer,
   mean,
   parseLaminarLod,
   parseSimulationView,
+  parseVisualColorMode,
   receptorCurrentTotals,
   SelectiveBloomPipeline,
   VISUAL_COLORS,
   ACTIVITY_TRACE_STOPS,
   voltsToMillivolts,
 } from "./render";
-import type { SimulationView } from "./render";
+import type { SimulationView, VisualColorMode } from "./render";
 import { BayesianBelief, BayesianUpdate } from "./inference";
 import {
   parseSnapshotCadence,
   RuntimeProfiler,
   shouldRequestSnapshot,
 } from "./performance-profile";
-import type { RuntimeProfile } from "./performance-profile";
+import type { RuntimeEnvironment, RuntimeProfile } from "./performance-profile";
 import { SIMULATION_STEP_SECONDS } from "./protocol";
 import type {
   EngineCommand,
@@ -53,6 +57,13 @@ declare global {
         detail?: string;
       };
       profile: () => RuntimeProfile;
+      setColorMode: (mode: VisualColorMode) => void;
+      visualAudit: () => {
+        colorMode: VisualColorMode;
+        provenance: ReturnType<typeof auditVisualProvenance>;
+        invertibility: { samples: number; tolerance: number; maximumError: number };
+        redundancy: Record<SimulationView, string>;
+      };
     };
   }
 }
@@ -93,6 +104,9 @@ let metricAccumulator = 0;
 let currentFocusRegion: BrainRegion | "all" = "all";
 let activeView: SimulationView = "overview";
 let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
+let visualColorMode = parseVisualColorMode(
+  new URLSearchParams(window.location.search).get("colorMode"),
+);
 
 const pendingResponses: Array<(event: EngineEvent) => void> = [];
 const activitySamples = Array.from({ length: 96 }, () => 0);
@@ -167,10 +181,16 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
     : `${(snapshot.cellPatch.firstSpikeSeconds * 1_000).toFixed(1)} ms`;
   const currents = receptorCurrentTotals(snapshot);
   for (const [receptor, amperes] of Object.entries(currents)) {
+    const picoamperes = amperesToPicoamperes(amperes);
     element(`#${receptor}-current`).textContent =
-      `${amperesToPicoamperes(amperes).toFixed(1)} pA`;
+      `${picoamperes > 0 ? "+" : ""}${picoamperes.toFixed(1)} pA`;
     const meter = element<HTMLMeterElement>(`#${receptor}-meter`);
-    meter.value = Math.min(meter.max, amperesToPicoamperes(amperes));
+    meter.value = Math.max(meter.min, Math.min(meter.max, picoamperes));
+    meter.dataset.direction = picoamperes > 0.5
+      ? "inward"
+      : picoamperes < -0.5
+        ? "outward"
+        : "reversal";
   }
 
   const spikeElement = document.querySelector("#spike-count");
@@ -187,7 +207,7 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
     fpsElement.textContent = `${Math.round(1 / delta)} FPS`;
   }
 
-  const profile = runtimeProfiler.report(state.snapshotCadence);
+  const profile = runtimeProfiler.report(state.snapshotCadence, runtimeEnvironment());
   const latencyElement = document.querySelector("#worker-latency");
   if (latencyElement) latencyElement.textContent = `${profile.workerLatencyMs.p95.toFixed(1)} ms`;
   const drawElement = document.querySelector("#gpu-draw-calls");
@@ -196,6 +216,77 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
   if (memoryElement) memoryElement.textContent = `${(profile.memory.snapshotBytes / 1024).toFixed(1)} KiB`;
 
   drawActivityTrace();
+}
+
+function runtimeEnvironment(): RuntimeEnvironment {
+  const context = renderer.getContext();
+  const debugInfo = context.getExtension("WEBGL_debug_renderer_info") as {
+    UNMASKED_VENDOR_WEBGL: number;
+    UNMASKED_RENDERER_WEBGL: number;
+  } | null;
+  const navigatorWithHardware = navigator as Navigator & {
+    deviceMemory?: number;
+    userAgentData?: { platform?: string };
+  };
+  return {
+    browser: {
+      userAgent: navigator.userAgent,
+      platform: navigatorWithHardware.userAgentData?.platform ?? navigator.platform ?? "unknown",
+    },
+    hardware: {
+      logicalCores: navigator.hardwareConcurrency ?? 0,
+      deviceMemoryGiB: navigatorWithHardware.deviceMemory,
+      webglVendor: debugInfo
+        ? String(context.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL))
+        : String(context.getParameter(context.VENDOR)),
+      webglRenderer: debugInfo
+        ? String(context.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL))
+        : String(context.getParameter(context.RENDERER)),
+    },
+    simulation: {
+      runtime: latestSnapshot?.diagnostics.runtime ?? engineReady?.runtime ?? "uninitialized",
+      preset: "interactive-default",
+      units: brainData.nodes.length,
+      synapses: brainData.synapses.length,
+      fieldVertices: brainData.corticalField.nodeIndices.length,
+      stepSeconds: SIMULATION_STEP_SECONDS,
+    },
+  };
+}
+
+function setVisualColorMode(mode: VisualColorMode): void {
+  visualColorMode = parseVisualColorMode(mode);
+  document.body.dataset.colorMode = visualColorMode;
+  const toggle = document.querySelector<HTMLInputElement>("#color-mode-monochrome");
+  if (toggle) toggle.checked = visualColorMode === "monochrome";
+}
+
+function visualAuditReport() {
+  const bases = [
+    new THREE.Color(VISUAL_COLORS.network),
+    new THREE.Color(VISUAL_COLORS.excitatory),
+    new THREE.Color(VISUAL_COLORS.inhibitory),
+    new THREE.Color(VISUAL_COLORS.regionLeftHemi),
+  ];
+  const states = [0, 0.125, 0.5, 0.875, 1];
+  let maximumError = 0;
+  for (const base of bases) {
+    for (const stateValue of states) {
+      const recovered = decodeStateColor(encodeStateColor(base, stateValue), base);
+      maximumError = Math.max(maximumError, Math.abs(recovered - stateValue));
+    }
+  }
+  return {
+    colorMode: visualColorMode,
+    provenance: auditVisualProvenance(scene),
+    invertibility: { samples: bases.length * states.length, tolerance: 1e-6, maximumError },
+    redundancy: {
+      overview: "pulsos E/I usam diâmetros distintos e legenda textual",
+      laminar: "excitação é cilindro; inibição e TRN são toros",
+      cell: "somata E/I usam razões de aspecto opostas",
+      electricity: "entrada, saída e shunt ocupam planos de anel distintos",
+    },
+  };
 }
 
 function sendCommand(command: EngineCommand): Promise<EngineEvent> {
@@ -399,6 +490,11 @@ function setupInterface(): void {
     }
     state.snapshotCadence = cadence;
   });
+  const monochromeToggle = element<HTMLInputElement>("#color-mode-monochrome");
+  monochromeToggle.checked = visualColorMode === "monochrome";
+  monochromeToggle.addEventListener("change", () => {
+    setVisualColorMode(monochromeToggle.checked ? "monochrome" : "color");
+  });
 
   bindRange("rotation-speed", "rot-speed-val", "rotationSpeed", (value) => `${value.toFixed(1)}×`);
   bindRange("pulse-speed", "pulse-speed-val", "pulseSpeed", (value) => `${value.toFixed(1)}×`);
@@ -484,6 +580,7 @@ function onResize(): void {
 }
 
 async function init(): Promise<void> {
+  setVisualColorMode(visualColorMode);
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
   camera.position.set(0.18, 0.08, 4.82);
@@ -626,7 +723,14 @@ async function init(): Promise<void> {
       return event.accepted;
     },
     profile() {
-      return runtimeProfiler.report(state.snapshotCadence);
+      return runtimeProfiler.report(state.snapshotCadence, runtimeEnvironment());
+    },
+    setColorMode(mode) {
+      setVisualColorMode(mode);
+      if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+    },
+    visualAudit() {
+      return visualAuditReport();
     },
   };
 

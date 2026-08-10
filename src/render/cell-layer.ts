@@ -13,6 +13,14 @@ import type {
   RenderTopology,
 } from "./render-types";
 import { COLOR_TOKENS, VISUAL_COLORS } from "./visual-tokens";
+import {
+  cellCurrentState,
+  currentDirectionColor,
+  currentDirectionEuler,
+  currentMagnitudeScale,
+  encodeStateColor,
+  signedMean,
+} from "./visual-encoding";
 
 export type CellLayerMode = "cell" | "electricity";
 
@@ -51,17 +59,11 @@ export interface ReceptorCurrentTotals {
 }
 
 export function receptorCurrentTotals(snapshot: NeuralSnapshot): ReceptorCurrentTotals {
-  const absoluteMean = (values: Float32Array): number => {
-    if (values.length === 0) return 0;
-    let total = 0;
-    for (const value of values) total += Math.abs(value);
-    return total / values.length;
-  };
   return {
-    ampa: absoluteMean(snapshot.cellPatch.ampaAmperes),
-    nmda: absoluteMean(snapshot.cellPatch.nmdaAmperes),
-    gabaa: absoluteMean(snapshot.cellPatch.gabaaAmperes),
-    gabab: absoluteMean(snapshot.cellPatch.gababAmperes),
+    ampa: signedMean(snapshot.cellPatch.ampaAmperes),
+    nmda: signedMean(snapshot.cellPatch.nmdaAmperes),
+    gabaa: signedMean(snapshot.cellPatch.gabaaAmperes),
+    gabab: signedMean(snapshot.cellPatch.gababAmperes),
   };
 }
 
@@ -107,7 +109,7 @@ export class CellRenderLayer implements RenderLayer {
       new THREE.TorusGeometry(0.22, 0.018, 8, 28),
       new THREE.MeshBasicMaterial({
         transparent: true,
-        opacity: 0.58,
+        opacity: 0.38,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
@@ -180,7 +182,7 @@ export class CellRenderLayer implements RenderLayer {
   ): void {
     const count = Math.min(this.cellCount, snapshot.cellPatch.membraneVolts.length);
     const totals = receptorCurrentTotals(snapshot);
-    const totalCurrent = totals.ampa + totals.nmda + totals.gabaa + totals.gabab;
+    const totalCurrent = Math.abs(totals.ampa + totals.nmda + totals.gabaa + totals.gabab);
     for (let index = 0; index < count; index += 1) {
       const position = cellPosition(index);
       const voltage = interpolatePublishedValue(
@@ -191,34 +193,36 @@ export class CellRenderLayer implements RenderLayer {
       const activation = membraneActivation(voltage);
       const spiked = snapshot.cellPatch.spiked[index] === 1;
       const scale = spiked ? 1.55 : 0.88 + activation * 0.38;
+      const kindScale = snapshot.cellPatch.kinds[index] === 0
+        ? new THREE.Vector3(scale * 0.9, scale * 1.12, scale * 0.9)
+        : new THREE.Vector3(scale * 1.08, scale * 0.82, scale * 1.08);
       this.matrix.compose(
         position,
         new THREE.Quaternion(),
-        new THREE.Vector3(scale, scale, scale),
+        kindScale,
       );
       this.somata.setMatrixAt(index, this.matrix);
       const base = snapshot.cellPatch.kinds[index] === 0
         ? EXCITATORY_COLOR
         : INHIBITORY_COLOR;
-      this.color.copy(spiked ? SPIKE_COLOR : base).lerp(SPIKE_COLOR, activation * 0.34);
+      this.color.copy(
+        spiked ? SPIKE_COLOR : encodeStateColor(base, activation, 0.34),
+      );
       this.somata.setColorAt(index, this.color);
 
-      const cellCurrent = Math.abs(snapshot.cellPatch.ampaAmperes[index] ?? 0) +
-        Math.abs(snapshot.cellPatch.nmdaAmperes[index] ?? 0) +
-        Math.abs(snapshot.cellPatch.gabaaAmperes[index] ?? 0) +
-        Math.abs(snapshot.cellPatch.gababAmperes[index] ?? 0);
-      const currentScale = 0.78 + Math.min(1.1, cellCurrent * 1e10);
+      const current = cellCurrentState(snapshot, index);
+      const currentScale = current.direction === "inactive"
+        ? 0.0001
+        : currentMagnitudeScale(current.magnitudeAmperes);
       this.matrix.compose(
         position,
-        new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)),
+        new THREE.Quaternion().setFromEuler(currentDirectionEuler(current.direction)),
         new THREE.Vector3(currentScale, currentScale, currentScale),
       );
       this.electricHalos.setMatrixAt(index, this.matrix);
-      const excitation = Math.abs(snapshot.cellPatch.ampaAmperes[index] ?? 0) +
-        Math.abs(snapshot.cellPatch.nmdaAmperes[index] ?? 0);
       this.electricHalos.setColorAt(
         index,
-        excitation >= cellCurrent - excitation ? EXCITATORY_COLOR : INHIBITORY_COLOR,
+        currentDirectionColor(current.direction),
       );
     }
     this.somata.instanceMatrix.needsUpdate = true;

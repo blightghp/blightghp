@@ -30,6 +30,14 @@ export interface RenderLayer {
   dispose(): void;
 }
 
+export interface VisualProvenanceReport {
+  total: number;
+  state: number;
+  topology: number;
+  decoration: number;
+  undeclared: number;
+}
+
 const PASS_KEY = "visualPass";
 const PROVENANCE_KEY = "visualProvenance";
 
@@ -51,6 +59,24 @@ export function visualProvenanceOf(object: THREE.Object3D): VisualProvenance | u
   return value === "state" || value === "topology" || value === "decoration"
     ? value
     : undefined;
+}
+
+export function auditVisualProvenance(root: THREE.Object3D): VisualProvenanceReport {
+  const report: VisualProvenanceReport = {
+    total: 0,
+    state: 0,
+    topology: 0,
+    decoration: 0,
+    undeclared: 0,
+  };
+  root.traverse((object) => {
+    if (!("material" in object)) return;
+    report.total += 1;
+    const provenance = visualProvenanceOf(object);
+    if (provenance) report[provenance] += 1;
+    else report.undeclared += 1;
+  });
+  return report;
 }
 
 export function mountLayer(

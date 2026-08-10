@@ -109,10 +109,10 @@ encontram na aba Sinapse.
   transparência, aplicar bloom apenas ao alvo de emissão. É o que devolve
   legibilidade à atividade alta e o que torna possível qualquer película
   transparente adiante.
-- [ ] **0.8-v3 · Corrente com sinal:** substituir a média absoluta dos quatro
+- [x] **0.8-v3 · Corrente com sinal:** substituir a média absoluta dos quatro
   receptores por corrente com sinal e direção, tornando shunt e hiperpolarização
   visualmente distintos.
-- [ ] **0.8-v4 · Gates:** invertibilidade cor↔estado, modo sem cor, contador de
+- [x] **0.8-v4 · Gates:** invertibilidade cor↔estado, modo sem cor, contador de
   proveniência e baseline de desempenho em hardware real, com os campos que
   `VALIDATION.md:96` exige.
 - [ ] **0.8-v5 · Aba Sinapse:** fenda em escala µm, com vesícula, liberação,
