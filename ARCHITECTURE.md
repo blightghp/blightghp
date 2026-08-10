@@ -149,6 +149,25 @@ interface EngineSnapshot {
 
 Snapshots usam buffers próprios. O Worker alterna dois ou três conjuntos de buffers para que nunca recicle memória ainda utilizada pelo frame atual.
 
+### Fronteira química da 0.8
+
+`brain_engine::chemical_contract` é o contrato puro entre o patch 0.7 e a
+dinâmica sináptica futura. Ele não participa do laço e não altera snapshot ou
+hash nesta etapa.
+
+| Grandeza | Tipo/estrutura | Unidade | Dono futuro |
+| :-- | :-- | :-- | :-- |
+| recurso disponível `R` | `UnitFraction` | adimensional `[0,1]` | sinapse |
+| utilização `u` | `UnitFraction` | adimensional `[0,1]` | sinapse |
+| capacidade e liberação | `VesicularResourceContract` | mol | sinapse |
+| estoques químicos | `TransmitterMassLedger` | mol equivalente | solver químico |
+| carga transmembrana | `MembraneChargeTransfer` | C | integrador celular |
+| tolerância de massa | `ConservationTolerance` | mol absoluto + fração relativa | experimento |
+
+A estrutura calcula `uR` como quantidade determinística, sem mutar o recurso.
+O 0.8-b será o primeiro dono da transição temporal. Massa química e carga
+elétrica não compartilham um acumulador nem uma conversão implícita.
+
 ## Laço de simulação
 
 O frame deixa de chamar `simulation.step(delta)`. O relógio converte tempo real em um tick-alvo e envia esse alvo ao motor:

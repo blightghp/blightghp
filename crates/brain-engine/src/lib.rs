@@ -3,6 +3,7 @@
 use core::fmt;
 
 mod cell_patch;
+pub mod chemical_contract;
 mod clock;
 mod corticothalamic;
 mod field;
@@ -18,6 +19,10 @@ pub use cell_patch::{
     ResolutionMap, CELL_COUNT, CELL_PATCH_SCHEMA_VERSION, DEFAULT_CELL_STEP_SECONDS,
     EXCITATORY_CELL_COUNT, MAX_BOUNDARY_CURRENT_AMPERES, MAX_CELL_SUBSTEPS_PER_INTERVAL,
     MAX_PATCH_DRIVE_HZ,
+};
+pub use chemical_contract::{
+    ChemicalContractError, ConservationTolerance, DeterministicRelease, MembraneChargeTransfer,
+    TransmitterMassLedger, UnitFraction, VesicularResourceContract,
 };
 pub use clock::{ClockError, ClockFrame, FixedStepClock, SimulationTick, MAX_SAFE_TICK};
 pub use corticothalamic::{

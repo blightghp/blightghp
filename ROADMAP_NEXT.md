@@ -84,7 +84,7 @@ encontram na aba Sinapse.
 
 ### Trilho de motor
 
-- [ ] **0.8-a · Recursos e conservação:** contrato de recurso vesicular,
+- [x] **0.8-a · Recursos e conservação:** contrato de recurso vesicular,
   unidades, estoques e invariantes de massa e carga congelados antes de qualquer
   código de dinâmica.
 - [ ] **0.8-b · Plasticidade de curto prazo:** Tsodyks–Markram determinístico,

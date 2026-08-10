@@ -29,6 +29,9 @@ Aplicável a propriedades que precisam valer em toda execução:
 - pesos permanecem no intervalo do preset;
 - condutâncias são não negativas;
 - recursos sinápticos permanecem entre zero e um;
+- liberação determinística `uR` nunca excede o recurso disponível;
+- a soma dos cinco estoques de transmissor preserva mol equivalente dentro das tolerâncias declaradas;
+- toda carga que entra pela membrana sai do compartimento extracelular com mesmo módulo;
 - probabilidades permanecem normalizadas;
 - IDs e offsets de CSR ficam dentro dos buffers;
 - um patch não duplica a contribuição do campo na mesma máscara;
@@ -36,6 +39,23 @@ Aplicável a propriedades que precisam valer em toda execução:
 - o renderer não altera o hash do estado do motor.
 
 Testes de propriedade devem gerar redes pequenas e sementes variadas para exercitar esses limites.
+
+### Contrato químico antes da dinâmica
+
+O gate do 0.8-a é estrutural e roda sem solver:
+
+| Teste | Critério |
+| :-- | :-- |
+| intervalo | aceita `R,u = 0` e `1`; rejeita o primeiro `f64` acima de `1`, negativos, `NaN` e infinito |
+| significado de `uR` | o resultado é fração e mol liberados; nunca é consumido como probabilidade |
+| massa | transferir quantidade entre vesícula, fenda, ligado, recapturado e degradado não altera a soma |
+| dupla contagem | acrescentar a mesma massa em dois estoques falha no primeiro balanço |
+| carga | deltas intra e extracelular são finitos, opostos e expressos em C |
+| separação | nenhum teste ou API converte mol de transmissor diretamente em carga |
+
+As tolerâncias absoluta e relativa fazem parte do experimento e aparecem no
+relatório. Um clamp que esconda massa negativa ou ajuste o total depois do passo
+não satisfaz este gate.
 
 ### 3. Convergência numérica
 

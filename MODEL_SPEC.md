@@ -232,6 +232,55 @@ $$
 
 No evento pré-sináptico, calcula-se a fração liberada segundo a convenção escolhida, atualiza-se a condutância e só então se depletam os recursos. A variante estocástica posterior deverá declarar número de sítios ou vesículas e condicionar a depleção à liberação efetiva. `uR` não será usado ao mesmo tempo como quantidade liberada determinística e como probabilidade Bernoulli sem essa distinção.
 
+### Contrato de recursos e conservação da 0.8
+
+O corte 0.8-a congela grandezas e fronteiras antes de implementar a dinâmica.
+Na primeira variante, `R` e `u` são frações adimensionais no intervalo fechado
+`[0,1]`. `R` é a fração disponível do estoque vesicular e `u` é utilização;
+nenhuma das duas é contagem de moléculas. No evento determinístico,
+
+$$
+f_{rel}=uR, \qquad n_{rel}=n_{pool}f_{rel},
+$$
+
+onde `n_pool` e `n_rel` usam mol. `f_rel` é quantidade fracionária liberada,
+não probabilidade Bernoulli. A ordem de atualização de `u`, liberação,
+condutância e depleção será fixada e testada no 0.8-b; este corte não antecipa
+essa dinâmica.
+
+O balanço fechado acompanha equivalentes molares do mesmo transmissor em cinco
+estoques, todos não negativos:
+
+| Estoque | Campo | Unidade |
+| :-- | :-- | :-- |
+| vesicular disponível/reservado | `vesicular_moles` | mol |
+| fenda | `cleft_moles` | mol |
+| ligado a receptor | `receptor_bound_moles` | mol equivalente |
+| recapturado | `recovered_moles` | mol equivalente |
+| removido/degradado | `degraded_equivalent_moles` | mol equivalente |
+
+O sumidouro degradado permanece no ledger: limpeza pode tirar transmissor ativo
+da fenda, mas não pode apagar massa do balanço. Para um sistema fechado,
+
+$$
+n_0 = n_{ves}+n_{cleft}+n_{bound}+n_{recovered}+n_{degraded}
+$$
+
+dentro de tolerâncias absoluta e relativa declaradas pelo experimento. Fonte ou
+dreno externo exige um termo de fronteira explícito; não entra como correção
+oculta do estoque.
+
+Conservação de carga é um ledger separado. Pela convenção do motor, corrente
+positiva entra na célula. Para cada transferência de membrana integrada,
+`ΔQ_intra = ∫I dt` e `ΔQ_extra = −ΔQ_intra`, em coulombs, de modo que a soma
+seja zero dentro da tolerância declarada. O modelo não converte mol de
+neurotransmissor em coulombs: ligação química e fluxo iônico são balanços
+distintos e só se acoplam pela cinética de receptor explicitamente modelada.
+
+O código correspondente vive em `chemical_contract.rs`. Ele valida o contrato
+e calcula a liberação planejada sem possuir relógio, RNG, fila de eventos ou
+estado dinâmico.
+
 ## Campo populacional
 
 ### Modelo adotado na 0.4
