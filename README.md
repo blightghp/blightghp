@@ -3,7 +3,7 @@
 <samp>APRENDER RUST CONSTRUINDO UM CÉREBRO QUE POSSO MEDIR, TESTAR E QUESTIONAR.</samp>
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=fd3be0932f78" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular elétrico" />
+  <img src="assets/brain.gif?v=c9b699b1216f" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular elétrico" />
 </a>
 
 <sub>▲ Captura do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI e aos três hashes do motor.</sub>
