@@ -87,7 +87,7 @@ encontram na aba Sinapse.
 - [x] **0.8-a · Recursos e conservação:** contrato de recurso vesicular,
   unidades, estoques e invariantes de massa e carga congelados antes de qualquer
   código de dinâmica.
-- [ ] **0.8-b · Plasticidade de curto prazo:** Tsodyks–Markram determinístico,
+- [x] **0.8-b · Plasticidade de curto prazo:** Tsodyks–Markram determinístico,
   com ordem explícita entre evento pré-sináptico, atualização de condutância e
   depleção. Oráculo versionado e replay próprio.
 - [ ] **0.8-c · Fenda e ocupação:** concentração na fenda com limpeza rápida e

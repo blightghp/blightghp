@@ -11,6 +11,7 @@ mod input_queue;
 mod network;
 mod observables;
 mod random;
+mod short_term_plasticity;
 mod simulation;
 mod synaptic;
 
@@ -37,6 +38,11 @@ pub use input_queue::{DeterministicInputQueue, InputAddress, InputQueueError, Sc
 pub use network::{CsrError, SynapseCsr, SynapseEndpoint};
 pub use observables::{mean_absolute_weight, ObservableError, PopulationFiringRate};
 pub use random::{random_u32, random_unit};
+pub use short_term_plasticity::{
+    PresynapticReleaseEvent, ReleaseUpdatePhase, ShortTermPlasticity, ShortTermPlasticityConfig,
+    ShortTermPlasticityError, ShortTermPlasticitySnapshot, RELEASE_UPDATE_ORDER,
+    SHORT_TERM_PLASTICITY_SCHEMA_VERSION,
+};
 pub use simulation::{
     CorticothalamicSignal, NeuralSimulation, NeuralStimulus, SignalBatch, SimulationConfig,
     SimulationError, SimulationInput, SimulationSnapshot, SimulationSynapse, MAX_SCHEDULED_INPUTS,

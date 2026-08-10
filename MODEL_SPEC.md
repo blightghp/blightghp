@@ -223,14 +223,38 @@ aproximação didática não calibrada para uma preparação biológica específ
 
 ### Plasticidade de curto prazo
 
-A primeira implementação de Tsodyks–Markram será determinística. Entre eventos:
+A implementação 0.8-b de Tsodyks–Markram é determinística. Entre eventos, as
+três variáveis usam a solução exponencial exata:
 
 $$
 \frac{dR}{dt}=\frac{1-R}{\tau_D}, \qquad
-\frac{du}{dt}=\frac{U-u}{\tau_F}.
+\frac{du}{dt}=\frac{U-u}{\tau_F}, \qquad
+\frac{dg}{dt}=-\frac{g}{\tau_g}.
 $$
 
-No evento pré-sináptico, calcula-se a fração liberada segundo a convenção escolhida, atualiza-se a condutância e só então se depletam os recursos. A variante estocástica posterior deverá declarar número de sítios ou vesículas e condicionar a depleção à liberação efetiva. `uR` não será usado ao mesmo tempo como quantidade liberada determinística e como probabilidade Bernoulli sem essa distinção.
+Para um intervalo `Δt`, isso equivale a
+
+$$
+R^- = 1-(1-R)e^{-\Delta t/\tau_D}, \quad
+u^- = U+(u-U)e^{-\Delta t/\tau_F}, \quad
+g^- = ge^{-\Delta t/\tau_g}.
+$$
+
+No evento pré-sináptico, a ordem é parte do modelo e não detalhe de
+implementação:
+
+$$
+f_{rel}=u^-R^-, \quad
+g^+=g^-+q_gf_{rel}, \quad
+R^+=R^--f_{rel}, \quad
+u^+=u^-+U(1-u^-).
+$$
+
+Portanto, o primeiro evento usa `u=U`; a facilitação produzida nele só afeta o
+evento seguinte. Eventos com o mesmo instante são aceitos na ordem canônica do
+chamador. `f_rel` é quantidade fracionária determinística e nunca probabilidade
+Bernoulli. Uma variante estocástica posterior deverá declarar número de sítios
+ou vesículas e condicionar a depleção à liberação efetiva.
 
 ### Contrato de recursos e conservação da 0.8
 
@@ -244,9 +268,8 @@ f_{rel}=uR, \qquad n_{rel}=n_{pool}f_{rel},
 $$
 
 onde `n_pool` e `n_rel` usam mol. `f_rel` é quantidade fracionária liberada,
-não probabilidade Bernoulli. A ordem de atualização de `u`, liberação,
-condutância e depleção será fixada e testada no 0.8-b; este corte não antecipa
-essa dinâmica.
+não probabilidade Bernoulli. O 0.8-b consome esse contrato na ordem temporal
+definida acima, sem RNG e sem clamp corretivo.
 
 O balanço fechado acompanha equivalentes molares do mesmo transmissor em cinco
 estoques, todos não negativos:
@@ -277,9 +300,10 @@ seja zero dentro da tolerância declarada. O modelo não converte mol de
 neurotransmissor em coulombs: ligação química e fluxo iônico são balanços
 distintos e só se acoplam pela cinética de receptor explicitamente modelada.
 
-O código correspondente vive em `chemical_contract.rs`. Ele valida o contrato
-e calcula a liberação planejada sem possuir relógio, RNG, fila de eventos ou
-estado dinâmico.
+O contrato estático vive em `chemical_contract.rs`; a transição temporal vive
+em `short_term_plasticity.rs`. O primeiro valida grandezas e calcula a liberação
+planejada sem estado. O segundo possui relógio absoluto, recuperação, decaimento,
+depleção, facilitação e hash próprio, ainda sem integrar a ABI v5.
 
 ## Campo populacional
 

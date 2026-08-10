@@ -152,21 +152,28 @@ Snapshots usam buffers próprios. O Worker alterna dois ou três conjuntos de bu
 ### Fronteira química da 0.8
 
 `brain_engine::chemical_contract` é o contrato puro entre o patch 0.7 e a
-dinâmica sináptica futura. Ele não participa do laço e não altera snapshot ou
-hash nesta etapa.
+dinâmica sináptica. `brain_engine::short_term_plasticity` é o primeiro consumidor
+temporal desse contrato. Nenhum dos dois participa ainda do laço publicado nem
+altera a ABI v5 ou seus três hashes.
 
-| Grandeza | Tipo/estrutura | Unidade | Dono futuro |
+| Grandeza | Tipo/estrutura | Unidade | Dono |
 | :-- | :-- | :-- | :-- |
 | recurso disponível `R` | `UnitFraction` | adimensional `[0,1]` | sinapse |
 | utilização `u` | `UnitFraction` | adimensional `[0,1]` | sinapse |
 | capacidade e liberação | `VesicularResourceContract` | mol | sinapse |
+| estado temporal `R,u,g` | `ShortTermPlasticity` | fração, s, S | sinapse |
+| configuração temporal | `ShortTermPlasticityConfig` | fração, s, mol, S | preset |
+| evento auditável | `PresynapticReleaseEvent` | fração, mol, S | replay/instrumento |
 | estoques químicos | `TransmitterMassLedger` | mol equivalente | solver químico |
 | carga transmembrana | `MembraneChargeTransfer` | C | integrador celular |
 | tolerância de massa | `ConservationTolerance` | mol absoluto + fração relativa | experimento |
 
-A estrutura calcula `uR` como quantidade determinística, sem mutar o recurso.
-O 0.8-b será o primeiro dono da transição temporal. Massa química e carga
-elétrica não compartilham um acumulador nem uma conversão implícita.
+O contrato calcula `uR` sem mutar o recurso. A dinâmica 0.8-b avança entre
+instantes por exponenciais exatas e aplica quatro fases públicas e ordenadas:
+liberação pelo estado pré-evento, incremento da condutância, depleção e
+facilitação para o evento seguinte. Cada snapshot possui hash FNV-1a e versão de
+schema; o fixture `short-term-plasticity-v1.json` fixa o replay bit a bit. Massa
+química e carga elétrica não compartilham acumulador nem conversão implícita.
 
 ## Laço de simulação
 

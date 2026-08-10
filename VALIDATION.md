@@ -57,6 +57,27 @@ As tolerâncias absoluta e relativa fazem parte do experimento e aparecem no
 relatório. Um clamp que esconda massa negativa ou ajuste o total depois do passo
 não satisfaz este gate.
 
+### Dinâmica determinística da 0.8-b
+
+O gate temporal roda isolado da ABI e usa o oráculo versionado
+`fixtures/replay/short-term-plasticity-v1.json`:
+
+| Teste | Critério |
+| :-- | :-- |
+| ordem do evento | primeiro calcula `u⁻R⁻`, incrementa `g`, depleta `R` e só então facilita `u` para o próximo evento |
+| primeiro evento | começa em `R=1`, `u=U`, `g=0`; a facilitação não retroage sobre a própria liberação |
+| entre eventos | recuperação de `R`, retorno de `u` a `U` e decaimento de `g` coincidem bit a bit com as exponenciais declaradas |
+| resposta pareada | presets declarados podem produzir facilitação ou depressão sem trocar de equação |
+| positividade | 20.000 eventos mantêm `R,u ∈ [0,1]`, `g ≥ 0` e estado finito sem clamp corretivo |
+| determinismo | duas instâncias recebem os mesmos instantes e produzem eventos e hashes idênticos |
+| replay | sete eventos e um checkpoint de relaxação reproduzem todos os campos `f64` e hashes do fixture bit a bit |
+| compatibilidade | ABI v5 e os três hashes publicados permanecem inalterados até o corte 0.8-e |
+
+O gerador auditável do oráculo é
+`crates/brain-engine/examples/short_term_plasticity_fixture.rs`; o consumidor
+independente está em
+`crates/brain-engine/tests/short_term_plasticity_replay.rs`.
+
 ### 3. Convergência numérica
 
 O passo temporal será escolhido por evidência. Para cada modelo, roda-se um circuito de referência com uma sequência de passos progressivamente menores. A comparação inclui:

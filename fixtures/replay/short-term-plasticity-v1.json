@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "model": "tsodyks-markram-deterministic",
+  "updateOrder": [
+    "release-from-pre-event-state",
+    "conductance-increment",
+    "resource-depletion",
+    "facilitation-for-next-event"
+  ],
+  "config": {
+    "baselineUtilization": 0.18,
+    "depressionTimeConstantSeconds": 0.8,
+    "facilitationTimeConstantSeconds": 0.25,
+    "conductanceTimeConstantSeconds": 0.08,
+    "poolCapacityMoles": 2e-18,
+    "conductancePerReleasedFractionSiemens": 1.5e-9
+  },
+  "eventTimesSeconds": [
+    0.0,
+    0.01,
+    0.02,
+    0.05,
+    0.1,
+    0.25,
+    0.5
+  ],
+  "checkpoints": [
+    {
+      "eventIndex": 1,
+      "timeSeconds": 0.0,
+      "availableBefore": 1.0,
+      "utilizationBefore": 0.18,
+      "releasedFraction": 0.18,
+      "releasedMoles": 3.6e-19,
+      "conductanceBeforeSiemens": 0.0,
+      "conductanceIncrementSiemens": 2.7e-10,
+      "conductanceAfterIncrementSiemens": 2.7e-10,
+      "availableAfterDepletion": 0.8200000000000001,
+      "utilizationAfterFacilitation": 0.3276,
+      "stateHashHex": "7588a45bdebfdc60"
+    },
+    {
+      "eventIndex": 2,
+      "timeSeconds": 0.01,
+      "availableBefore": 0.8222359959111014,
+      "utilizationBefore": 0.32181252121888293,
+      "releasedFraction": 0.26460583888107064,
+      "releasedMoles": 5.292116777621413e-19,
+      "conductanceBeforeSiemens": 2.382741636978408e-10,
+      "conductanceIncrementSiemens": 3.9690875832160596e-10,
+      "conductanceAfterIncrementSiemens": 6.351829220194467e-10,
+      "availableAfterDepletion": 0.5576301570300308,
+      "utilizationAfterFacilitation": 0.443886267399484,
+      "stateHashHex": "6ae42df1a0da1248"
+    },
+    {
+      "eventIndex": 3,
+      "timeSeconds": 0.02,
+      "availableBefore": 0.5631253634748941,
+      "utilizationBefore": 0.4335391388547502,
+      "releasedFraction": 0.24413688514817378,
+      "releasedMoles": 4.882737702963476e-19,
+      "conductanceBeforeSiemens": 5.605469612567944e-10,
+      "conductanceIncrementSiemens": 3.662053277222607e-10,
+      "conductanceAfterIncrementSiemens": 9.267522889790551e-10,
+      "availableAfterDepletion": 0.3189884783267203,
+      "utilizationAfterFacilitation": 0.5355020938608952,
+      "stateHashHex": "dac41daead55e51f"
+    },
+    {
+      "eventIndex": 4,
+      "timeSeconds": 0.05,
+      "availableBefore": 0.3440535039207345,
+      "utilizationBefore": 0.49530207234096907,
+      "releasedFraction": 0.17041041348811153,
+      "releasedMoles": 3.408208269762231e-19,
+      "conductanceBeforeSiemens": 6.369469123102975e-10,
+      "conductanceIncrementSiemens": 2.556156202321673e-10,
+      "conductanceAfterIncrementSiemens": 8.925625325424648e-10,
+      "availableAfterDepletion": 0.173643090432623,
+      "utilizationAfterFacilitation": 0.5861476993195947,
+      "stateHashHex": "905102955750fd57"
+    },
+    {
+      "eventIndex": 5,
+      "timeSeconds": 0.1,
+      "availableBefore": 0.22370952460623184,
+      "utilizationBefore": 0.5125256117248215,
+      "releasedFraction": 0.11465686094747797,
+      "releasedMoles": 2.2931372189495597e-19,
+      "conductanceBeforeSiemens": 4.777542962112074e-10,
+      "conductanceIncrementSiemens": 1.7198529142121696e-10,
+      "conductanceAfterIncrementSiemens": 6.497395876324243e-10,
+      "availableAfterDepletion": 0.10905266365875387,
+      "utilizationAfterFacilitation": 0.6002710016143536,
+      "stateHashHex": "7d73df9d96d83351"
+    },
+    {
+      "eventIndex": 6,
+      "timeSeconds": 0.25,
+      "availableBefore": 0.2613787154078402,
+      "utilizationBefore": 0.41064961599884864,
+      "releasedFraction": 0.10733506911250192,
+      "releasedMoles": 2.1467013822500386e-19,
+      "conductanceBeforeSiemens": 9.964079291920793e-11,
+      "conductanceIncrementSiemens": 1.6100260366875288e-10,
+      "conductanceAfterIncrementSiemens": 2.606433965879608e-10,
+      "availableAfterDepletion": 0.1540436462953383,
+      "utilizationAfterFacilitation": 0.5167326851190559,
+      "stateHashHex": "1c2fdf87eb164c6c"
+    },
+    {
+      "eventIndex": 7,
+      "timeSeconds": 0.5,
+      "availableBefore": 0.3810851102229562,
+      "utilizationBefore": 0.30387703202575755,
+      "releasedFraction": 0.11580301224376062,
+      "releasedMoles": 2.3160602448752126e-19,
+      "conductanceBeforeSiemens": 1.145187161526469e-11,
+      "conductanceIncrementSiemens": 1.7370451836564094e-10,
+      "conductanceAfterIncrementSiemens": 1.8515638998090563e-10,
+      "availableAfterDepletion": 0.2652820979791956,
+      "utilizationAfterFacilitation": 0.4291791662611212,
+      "stateHashHex": "48b61d8b8c719f68"
+    }
+  ],
+  "settledCheckpoint": {
+    "timeSeconds": 1.0,
+    "eventIndex": 7,
+    "availableFraction": 0.6067338462058687,
+    "utilizationFraction": 0.21372273304261183,
+    "conductanceSiemens": 3.5743591888763006e-13,
+    "stateHashHex": "456dec329a2f53ef"
+  }
+}

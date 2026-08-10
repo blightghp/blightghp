@@ -59,7 +59,8 @@ diagnóstico, avaliação e intervenção na aprendizagem.
 <div align="center">
 
 [![Email](https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:ghpgois@gmail.com)
-[![Léxikognos](https://img.shields.io/badge/L%C3%A9xikognos-246BCE?style=flat-square&logo=google-scholar&logoColor=white)](http://lexikognos.com.br) *domínio offline*
+[![Lattes](https://img.shields.io/badge/Lattes-006699?style=flat-square&logo=google-scholar&logoColor=white)](http://lattes.cnpq.br/2562964290067145)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/gabriel-pinheiro-1a3a9a2a5/)
 [![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://instagram.com/ppgabrielpinheiro)
 
 <sub><code>fn perceive(signal: &Evidence) -&gt; Result&lt;Knowledge, Entropy&gt;</code></sub>
@@ -109,8 +110,8 @@ Minha pergunta prática nesta fase é: **como ampliar a resolução — da rede 
 sinapse e da forma à química — sem desenhar um fenômeno que o motor não
 calcula?** A base 0.7 continua sendo um patch AdEx determinístico em Rust, com
 WebAssembly dentro de um Web Worker. A 0.8 começou pelo contrato: separou matéria
-de emissão na imagem, congelou recursos, unidades e conservação e agora preserva
-o sinal das correntes antes de criar dinâmica química.
+de emissão na imagem, congelou recursos, unidades e conservação, preservou o
+sinal das correntes e agora implementa a primeira dinâmica química auditável.
 
 ### O que consigo explorar hoje
 
@@ -132,6 +133,8 @@ o sinal das correntes antes de criar dinâmica química.
   proveniência e baseline com navegador, hardware, preset e custo de cena;
 - contrato 0.8-a para recurso vesicular `R`, utilização `u`, liberação `uR`,
   cinco estoques em mol equivalente e carga transmembrana em coulombs;
+- dinâmica 0.8-b de Tsodyks–Markram determinística, com recuperação e decaimento
+  exponenciais exatos, ordem de evento pública, hash próprio e replay bit a bit;
 - replay sombra com três marcos exatos, fila genérica `(tick, sequence)` e
   divergência máxima zero;
 - cadência de snapshots em 60/30/15/10 Hz e perfil de CPU, GPU, memória e
@@ -152,7 +155,8 @@ relações entre estados; elas não são um atlas anatômico.
 pergunta de estudo
       ↓
 brain-engine (Rust: estado, equações, limites e hashes)
-      ├── chemical_contract (recursos, massa e carga; ainda sem dinâmica)
+      ├── chemical_contract (recursos, massa e carga)
+      ├── short_term_plasticity (R, u, g, ordem de evento e hash)
       ├── testes nativos e replay
       └── brain-wasm → Web Worker → snapshot ABI v5
                                       ↓
@@ -188,6 +192,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-02 | fecho a 0.7 com AdEx, quatro receptores, ResolutionMap, ABI v5 e as abas Célula/Eletricidade |
 | 2026-08-10 | abro a 0.8 com auditoria visual, passes matéria/emissão e o contrato de recursos, massa e carga antes da dinâmica química |
 | 2026-08-10 | preservo o sinal das quatro correntes e fecho os gates visuais de invertibilidade, monocromia, proveniência e hardware |
+| 2026-08-10 | implemento Tsodyks–Markram determinístico com ordem de evento explícita, solução exponencial exata e oráculo versionado |
 
 O detalhamento da base está em [PLAN_0.7.md](PLAN_0.7.md) e
 [AUDIT_0.7.md](AUDIT_0.7.md). A sequência atual, o contrato visual e a auditoria
