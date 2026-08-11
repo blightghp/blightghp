@@ -358,8 +358,11 @@ C_A^{h/2}C_G^{h/2}.
 $$
 
 Aqui `G` é glutamato e `A` é GABA. Cada operador elementar usa a solução
-exponencial da 0.8-c; não existe ramo de Euler explícito. O passo máximo é
-limitado também pela exposição rígida na entrada do subpasso:
+exponencial da 0.8-c, avaliada por `libm::exp` para que o replay químico seja
+idêntico entre os alvos nativos suportados; não existe ramo de Euler explícito.
+Essa escolha fica restrita à química nova e não altera as exponenciais nem os
+hashes legados da ABI v5. O passo máximo é limitado também pela exposição
+rígida na entrada do subpasso:
 
 $$
 \chi=h\max\left(\tau_{clear,T}^{-1},

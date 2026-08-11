@@ -199,7 +199,9 @@ passo é o menor entre o restante do intervalo, o teto do preset e o limite
 underflow ou erro químico descartam toda a tentativa. O hash do solver inclui
 schema, configuração numérica, tempo, contador e hash químico. O fixture
 `chemical-solver-v1.json` fixa a composição e o replay bit a bit. ABI v5, Worker
-e os três hashes publicados continuam intocados até a 0.8-e.
+e os três hashes publicados continuam intocados até a 0.8-e. As exponenciais
+do domínio químico usam `libm::exp`, eliminando diferenças de biblioteca
+matemática nativa entre Windows e Linux sem relaxar o oráculo.
 
 ## Laço de simulação
 

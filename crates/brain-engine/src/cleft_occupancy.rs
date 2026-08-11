@@ -368,7 +368,7 @@ impl ChemicalSynapse {
         let transmitter_index = transmitter.index();
         let cleft_before = self.cleft_moles[transmitter_index];
         let tau = self.config.clearance_time_constant(transmitter).get();
-        let cleft_after = cleft_before * (-duration.get() / tau).exp();
+        let cleft_after = cleft_before * libm::exp(-duration.get() / tau);
         let removed_moles = cleft_before - cleft_after;
         let cleared_after = self.cleared_moles[transmitter_index] + removed_moles;
         if !cleft_after.is_finite()
@@ -421,7 +421,7 @@ impl ChemicalSynapse {
         let steady_occupancy = association_rate / total_rate;
         let occupancy_before = self.receptor_occupancy[family_index];
         let occupancy_after_value = steady_occupancy
-            + (occupancy_before.get() - steady_occupancy) * (-total_rate * duration.get()).exp();
+            + (occupancy_before.get() - steady_occupancy) * libm::exp(-total_rate * duration.get());
         let occupancy_after = UnitFraction::try_new(occupancy_after_value)
             .map_err(|_| ChemicalSynapseError::NonFiniteState)?;
         let bound_before = self.receptor_bound_moles[family_index];
@@ -660,7 +660,7 @@ mod tests {
         let transition = synapse
             .clear_transmitter(TransmitterKind::Glutamate, seconds(0.0015))
             .unwrap();
-        let expected = 4.0e-19 * (-1.0_f64).exp();
+        let expected = 4.0e-19 * libm::exp(-1.0);
         assert_eq!(transition.cleft_moles_after.to_bits(), expected.to_bits());
         assert!(transition.removed_moles > 0.0);
         synapse.verify_mass_conserved(tolerance()).unwrap();

@@ -111,6 +111,7 @@ O gate composto usa `fixtures/replay/chemical-solver-v1.json`:
 | orçamento | exceder o máximo de subpassos rejeita o intervalo inteiro e preserva snapshot e hash anteriores |
 | conservação | treino longo com fontes alternadas mantém massa por transmissor e ocupação em `[0,1]` |
 | determinismo | duas instâncias produzem relatórios, buffers e hashes idênticos em 500 intervalos |
+| portabilidade | `libm::exp` reproduz os mesmos fixtures químicos em Windows e Linux |
 | convergência | erros de `1`, `0,5` e `0,25 ms` caem monotonicamente contra a referência de `0,03125 ms` |
 | replay | cinco operações reproduzem tempo, subpassos, exposição, todos os buffers e dois hashes bit a bit |
 | compatibilidade | solver, snapshot e hash químico permanecem fora da ABI v5 até a 0.8-e |

@@ -9,6 +9,9 @@ description = "Deterministic Rust learning engine for BRAIN PRO"
 [lints]
 workspace = true
 
+[dependencies]
+libm = "0.2"
+
 [dev-dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["float_roundtrip"] }
