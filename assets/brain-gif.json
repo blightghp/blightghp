@@ -1,13 +1,14 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "34eca2d5135618e73aa77e1ab592599bd7411eb4",
-  "gifSha256": "72e4a78332e3356a52464c7ea560dda33cb661758810e16b6fa715284bd0506b",
+  "sourceCommit": "3cfd95d92e3e1a62a8f5187429a963cff0d2d62e",
+  "gifSha256": "2e6d899088795f1d68b716e2722ba3ffa4e3fd5ce87bcea6bfd099a193a9f430",
   "engine": {
     "runtime": "rust-wasm",
-    "abiSchemaVersion": 5,
+    "abiSchemaVersion": 6,
     "stateHash": "3bd8cb857e7d93e3",
     "corticothalamicHash": "4834499f8d160a8d",
     "cellPatchHash": "3efee6ef25c69ae2",
+    "chemicalHash": "d8b99b220b1efdbc",
     "degraded": false
   },
   "capture": {
@@ -17,10 +18,11 @@
     "frameDelayMilliseconds": 120,
     "loopDurationSeconds": 7.2,
     "framesByView": {
-      "overview": 24,
-      "laminar": 12,
-      "cell": 12,
-      "electricity": 12
+      "overview": 18,
+      "laminar": 10,
+      "cell": 10,
+      "electricity": 10,
+      "synapse": 12
     }
   }
 }
