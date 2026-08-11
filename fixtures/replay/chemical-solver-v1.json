@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "method": "adaptive-palindromic-strang",
+  "subtransitionOrder": [
+    "clear-glutamate-half",
+    "clear-gaba-half",
+    "bind-ampa-half",
+    "bind-nmda-half",
+    "bind-gaba-a-half",
+    "bind-gaba-b-half",
+    "bind-gaba-b-half",
+    "bind-gaba-a-half",
+    "bind-nmda-half",
+    "bind-ampa-half",
+    "clear-gaba-half",
+    "clear-glutamate-half"
+  ],
+  "solverConfig": {
+    "maximumStepSeconds": 0.00025,
+    "maximumDimensionlessOperatorStep": 0.1,
+    "maximumSubstepsPerInterval": 4096
+  },
+  "chemicalConfig": {
+    "cleftVolumeCubicMeters": 2e-20,
+    "clearanceTimeConstantsSeconds": [
+      0.0015,
+      0.003
+    ],
+    "receptorBindings": [
+      {
+        "family": "ampa",
+        "siteCapacityMoles": 1e-21,
+        "associationRateCubicMetersPerMoleSecond": 12.0,
+        "dissociationRatePerSecond": 180.0
+      },
+      {
+        "family": "nmda",
+        "siteCapacityMoles": 1e-21,
+        "associationRateCubicMetersPerMoleSecond": 5.0,
+        "dissociationRatePerSecond": 40.0
+      },
+      {
+        "family": "gaba-a",
+        "siteCapacityMoles": 1e-21,
+        "associationRateCubicMetersPerMoleSecond": 10.0,
+        "dissociationRatePerSecond": 90.0
+      },
+      {
+        "family": "gaba-b",
+        "siteCapacityMoles": 1e-21,
+        "associationRateCubicMetersPerMoleSecond": 1.0,
+        "dissociationRatePerSecond": 8.0
+      }
+    ]
+  },
+  "operations": [
+    {
+      "kind": "release",
+      "transmitter": "glutamate",
+      "releasedMoles": 4e-19
+    },
+    {
+      "kind": "advance",
+      "durationSeconds": 0.001
+    },
+    {
+      "kind": "release",
+      "transmitter": "gaba",
+      "releasedMoles": 3e-19
+    },
+    {
+      "kind": "advance",
+      "durationSeconds": 0.002
+    },
+    {
+      "kind": "advance",
+      "durationSeconds": 0.005
+    }
+  ],
+  "checkpoints": [
+    {
+      "afterOperation": 1,
+      "timeSeconds": 0.0,
+      "stepIndex": 0,
+      "chemicalOperationIndex": 1,
+      "totalReleasedMoles": [4e-19, 0.0],
+      "cleftMoles": [4e-19, 0.0],
+      "cleftConcentrationMolesPerCubicMeter": [20.0, 0.0],
+      "receptorBoundMoles": [0.0, 0.0, 0.0, 0.0],
+      "receptorOccupancyFraction": [0.0, 0.0, 0.0, 0.0],
+      "clearedMoles": [0.0, 0.0],
+      "chemicalStateHashHex": "d7422a8daca4d2d8",
+      "solverStateHashHex": "609ba2be8a2c80d9",
+      "advance": null
+    },
+    {
+      "afterOperation": 2,
+      "timeSeconds": 0.001,
+      "stepIndex": 7,
+      "chemicalOperationIndex": 85,
+      "totalReleasedMoles": [4e-19, 0.0],
+      "cleftMoles": [2.0521845273016591e-19, 0.0],
+      "cleftConcentrationMolesPerCubicMeter": [10.260922636508296, 0.0],
+      "receptorBoundMoles": [1.4590977650650005e-22, 6.881716343793008e-23, 0.0, 0.0],
+      "receptorOccupancyFraction": [0.14590977650650006, 0.0688171634379301, 0.0, 0.0],
+      "clearedMoles": [1.9456682032988972e-19, 0.0],
+      "chemicalStateHashHex": "216e6546c50bf24a",
+      "solverStateHashHex": "c0bedf70df54c88e",
+      "advance": {
+        "substepsUsed": 7,
+        "maximumDimensionlessOperatorStepObserved": 0.1
+      }
+    },
+    {
+      "afterOperation": 3,
+      "timeSeconds": 0.001,
+      "stepIndex": 7,
+      "chemicalOperationIndex": 86,
+      "totalReleasedMoles": [4e-19, 3e-19],
+      "cleftMoles": [2.0521845273016591e-19, 3e-19],
+      "cleftConcentrationMolesPerCubicMeter": [10.260922636508296, 15.0],
+      "receptorBoundMoles": [1.4590977650650005e-22, 6.881716343793008e-23, 0.0, 0.0],
+      "receptorOccupancyFraction": [0.14590977650650006, 0.0688171634379301, 0.0, 0.0],
+      "clearedMoles": [1.9456682032988972e-19, 0.0],
+      "chemicalStateHashHex": "5ea0c91501bfff49",
+      "solverStateHashHex": "cb0a35a6c9187dae",
+      "advance": null
+    },
+    {
+      "afterOperation": 4,
+      "timeSeconds": 0.003,
+      "stepIndex": 21,
+      "chemicalOperationIndex": 254,
+      "totalReleasedMoles": [4e-19, 3e-19],
+      "cleftMoles": [5.40591078690875e-20, 1.5388762197597652e-19],
+      "cleftConcentrationMolesPerCubicMeter": [2.702955393454375, 7.694381098798827],
+      "receptorBoundMoles": [1.918957423323274e-22, 1.1250388907512729e-22, 1.786880202735777e-22, 2.1456383441915248e-23],
+      "receptorOccupancyFraction": [0.19189574233232742, 0.11250388907512729, 0.17868802027357772, 0.02145638344191525],
+      "clearedMoles": [3.456364924995052e-19, 1.4591223362030796e-19],
+      "chemicalStateHashHex": "8b06f5161dae3141",
+      "solverStateHashHex": "fcf17e2f809dea1d",
+      "advance": {
+        "substepsUsed": 14,
+        "maximumDimensionlessOperatorStepObserved": 0.1
+      }
+    },
+    {
+      "afterOperation": 5,
+      "timeSeconds": 0.008,
+      "stepIndex": 55,
+      "chemicalOperationIndex": 662,
+      "totalReleasedMoles": [4e-19, 3e-19],
+      "cleftMoles": [1.9599710250559142e-21, 2.905258988085816e-20],
+      "cleftConcentrationMolesPerCubicMeter": [0.09799855125279572, 1.4526294940429079],
+      "receptorBoundMoles": [9.869343479533186e-23, 1.0707027713957216e-22, 2.2469574147315986e-22, 3.831147205236039e-23],
+      "receptorOccupancyFraction": [0.09869343479533187, 0.10707027713957218, 0.22469574147315988, 0.03831147205236039],
+      "clearedMoles": [3.9783426526300945e-19, 2.706844029056164e-19],
+      "chemicalStateHashHex": "e890eb40ff33e376",
+      "solverStateHashHex": "ac0c2f3fb3020c0a",
+      "advance": {
+        "substepsUsed": 34,
+        "maximumDimensionlessOperatorStepObserved": 0.1
+      }
+    }
+  ]
+}

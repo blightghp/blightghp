@@ -297,6 +297,26 @@ impl ChemicalSynapse {
         self.cleft_moles[transmitter.index()] / self.config.cleft_volume_cubic_meters
     }
 
+    #[must_use]
+    pub fn maximum_operator_rate_per_second(&self) -> f64 {
+        let clearance_rate = TRANSMITTER_ORDER
+            .map(|transmitter| 1.0 / self.config.clearance_time_constant(transmitter).get())
+            .into_iter()
+            .fold(0.0_f64, f64::max);
+        RECEPTOR_FAMILY_ORDER
+            .map(|family| {
+                let binding = self.config.receptor_binding(family);
+                binding
+                    .association_rate_cubic_meters_per_mole_second()
+                    .mul_add(
+                        self.concentration_moles_per_cubic_meter(family.transmitter()),
+                        binding.dissociation_rate_per_second(),
+                    )
+            })
+            .into_iter()
+            .fold(clearance_rate, f64::max)
+    }
+
     /// Adds a finite, non-negative presynaptic release to the selected cleft.
     ///
     /// # Errors

@@ -169,7 +169,10 @@ seus três hashes.
 | concentração na fenda | `ChemicalCleftSnapshot` | mol·m⁻³, por transmissor | sinapse química |
 | ocupação e matéria ligada | `ChemicalCleftSnapshot` | fração, mol, por receptor | sinapse química |
 | remoção acumulada | `ChemicalCleftSnapshot` | mol, por transmissor | recaptura/ledger |
-| operações atômicas | `ChemicalSynapse` | mol, m³, s | futuro solver 0.8-d |
+| operações atômicas | `ChemicalSynapse` | mol, m³, s | solver químico |
+| composição e rigidez | `ChemicalSolver` | s, taxa·passo | motor 0.8-d |
+| envelope do solver | `ChemicalSolverConfig` | s, adimensional, contagem | preset |
+| diagnóstico de avanço | `ChemicalSolverAdvance` | s, subpassos, exposição | replay/instrumento |
 | estoques químicos | `TransmitterMassLedger` | mol equivalente | solver químico |
 | carga transmembrana | `MembraneChargeTransfer` | C | integrador celular |
 | tolerância de massa | `ConservationTolerance` | mol absoluto + fração relativa | experimento |
@@ -186,8 +189,17 @@ matéria ligada e dois de remoção. AMPA/NMDA só consomem glutamato; GABA-A/GA
 só consomem GABA. Liberação é uma fonte de fronteira explícita. Limpeza transfere
 matéria livre ao estoque recuperado; ligação transfere entre fenda e estoque
 ligado. A conservação é verificada separadamente para cada transmissor. A ordem
-entre essas operações não está escondida no objeto: o solver 0.8-d será o dono
-da composição. O fixture `cleft-occupancy-v1.json` congela buffers e hash.
+entre essas operações não está escondida no objeto: o solver 0.8-d é o dono da
+composição. O fixture `cleft-occupancy-v1.json` congela buffers e hash.
+
+O `ChemicalSolver` 0.8-d possui tempo e contador próprios, envolve
+`ChemicalSynapse` e executa 12 subtransições palindrômicas por passo aceito. O
+passo é o menor entre o restante do intervalo, o teto do preset e o limite
+`χ_max/taxa_max`. O avanço ocorre numa cópia candidata: estouro de orçamento,
+underflow ou erro químico descartam toda a tentativa. O hash do solver inclui
+schema, configuração numérica, tempo, contador e hash químico. O fixture
+`chemical-solver-v1.json` fixa a composição e o replay bit a bit. ABI v5, Worker
+e os três hashes publicados continuam intocados até a 0.8-e.
 
 ## Laço de simulação
 

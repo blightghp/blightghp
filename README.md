@@ -138,6 +138,8 @@ químicos auditáveis.
   exponenciais exatos, ordem de evento pública, hash próprio e replay bit a bit;
 - química local 0.8-c com glutamato/GABA em fendas separadas, limpeza exata,
   ocupação seletiva de AMPA/NMDA/GABA-A/GABA-B e conservação por transmissor;
+- solver 0.8-d com separação de Strang palindrômica, subpassos adaptativos por
+  rigidez, positividade estrutural, orçamento atômico e convergência medida;
 - replay sombra com três marcos exatos, fila genérica `(tick, sequence)` e
   divergência máxima zero;
 - cadência de snapshots em 60/30/15/10 Hz e perfil de CPU, GPU, memória e
@@ -161,6 +163,7 @@ brain-engine (Rust: estado, equações, limites e hashes)
       ├── chemical_contract (recursos, massa e carga)
       ├── short_term_plasticity (R, u, g, ordem de evento e hash)
       ├── cleft_occupancy (concentração, ocupação, ligação e remoção)
+      ├── chemical_solver (Strang, rigidez, orçamento e hash)
       ├── testes nativos e replay
       └── brain-wasm → Web Worker → snapshot ABI v5
                                       ↓
@@ -198,6 +201,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-10 | preservo o sinal das quatro correntes e fecho os gates visuais de invertibilidade, monocromia, proveniência e hardware |
 | 2026-08-10 | implemento Tsodyks–Markram determinístico com ordem de evento explícita, solução exponencial exata e oráculo versionado |
 | 2026-08-10 | separo concentração, ocupação, matéria ligada e remoção na fenda, com conservação individual de glutamato e GABA |
+| 2026-08-11 | componho a química por Strang palindrômico, com adaptação de rigidez, avanço atômico e estudo de convergência |
 
 O detalhamento da base está em [PLAN_0.7.md](PLAN_0.7.md) e
 [AUDIT_0.7.md](AUDIT_0.7.md). A sequência atual, o contrato visual e a auditoria

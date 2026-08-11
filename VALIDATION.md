@@ -98,6 +98,26 @@ O gate químico local usa o oráculo
 O gerador está em `crates/brain-engine/examples/cleft_occupancy_fixture.rs` e o
 consumidor em `crates/brain-engine/tests/cleft_occupancy_replay.rs`.
 
+### Solver e rigidez da 0.8-d
+
+O gate composto usa `fixtures/replay/chemical-solver-v1.json`:
+
+| Teste | Critério |
+| :-- | :-- |
+| ordem | cada subpasso executa as 12 transições da sequência Strang palindrômica declarada |
+| positividade | somente mapas exponenciais positivos são compostos; não existe fallback Euler explícito |
+| rigidez | `taxa_max × h` observado na entrada de cada subpasso nunca excede `χ_max` |
+| adaptação | uma liberação de glutamato força mais subpassos do que o teto temporal nominal quando a exposição exige |
+| orçamento | exceder o máximo de subpassos rejeita o intervalo inteiro e preserva snapshot e hash anteriores |
+| conservação | treino longo com fontes alternadas mantém massa por transmissor e ocupação em `[0,1]` |
+| determinismo | duas instâncias produzem relatórios, buffers e hashes idênticos em 500 intervalos |
+| convergência | erros de `1`, `0,5` e `0,25 ms` caem monotonicamente contra a referência de `0,03125 ms` |
+| replay | cinco operações reproduzem tempo, subpassos, exposição, todos os buffers e dois hashes bit a bit |
+| compatibilidade | solver, snapshot e hash químico permanecem fora da ABI v5 até a 0.8-e |
+
+O gerador é `crates/brain-engine/examples/chemical_solver_fixture.rs`; o replay
+independente está em `crates/brain-engine/tests/chemical_solver_replay.rs`.
+
 ### 3. Convergência numérica
 
 O passo temporal será escolhido por evidência. Para cada modelo, roda-se um circuito de referência com uma sequência de passos progressivamente menores. A comparação inclui:

@@ -341,9 +341,42 @@ por transmissor, ocupação por receptor e matéria removida são buffers distin
 efeito funcional ainda não existe nesse snapshot e não pode ser inferido deles.
 
 Essas são transições elementares positivas, não um solver composto. A 0.8-d
-definirá a ordem global, a separação de operadores, o tratamento de rigidez e o
-estudo de convergência. Os valores padrão atuais são didáticos e não constituem
-calibração para uma preparação biológica.
+abaixo define a ordem global, a separação de operadores, o tratamento de rigidez
+e o estudo de convergência. Os valores padrão atuais são didáticos e não
+constituem calibração para uma preparação biológica.
+
+### Solver químico e rigidez da 0.8-d
+
+O solver composto usa uma sequência de Strang palindrômica por subpasso. Se `C`
+denota limpeza e `B_r` a ligação de uma família receptora, a ordem é
+
+$$
+C_G^{h/2}C_A^{h/2}
+B_{AMPA}^{h/2}B_{NMDA}^{h/2}B_{GABA-A}^{h/2}B_{GABA-B}^{h/2}
+B_{GABA-B}^{h/2}B_{GABA-A}^{h/2}B_{NMDA}^{h/2}B_{AMPA}^{h/2}
+C_A^{h/2}C_G^{h/2}.
+$$
+
+Aqui `G` é glutamato e `A` é GABA. Cada operador elementar usa a solução
+exponencial da 0.8-c; não existe ramo de Euler explícito. O passo máximo é
+limitado também pela exposição rígida na entrada do subpasso:
+
+$$
+\chi=h\max\left(\tau_{clear,T}^{-1},
+k_{on,r}[T]+k_{off,r}\right)\leq\chi_{max}.
+$$
+
+O preset didático fixa `h_max=0,25 ms`, `χ_max=0,1` e no máximo 4.096 subpassos
+por intervalo solicitado. Se o limite exigir trabalho além desse envelope, o
+intervalo inteiro falha e nenhum estado parcial é publicado. Tempo, contador,
+estoques, ocupações e hashes são atualizados apenas depois de a cópia candidata
+terminar com sucesso.
+
+Refinar `h_max` de `1 ms` para `0,5 ms` e `0,25 ms` reduz monotonicamente o erro
+contra a referência de `0,03125 ms` no cenário conjunto de glutamato e GABA. O
+oráculo `chemical-solver-v1.json` congela método, ordem, parâmetros, número de
+subpassos, exposição máxima, buffers e hashes. O solver permanece fora da ABI
+v5; sua publicação é responsabilidade da 0.8-e.
 
 ## Campo populacional
 

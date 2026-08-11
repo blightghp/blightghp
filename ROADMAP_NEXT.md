@@ -93,7 +93,7 @@ encontram na aba Sinapse.
 - [x] **0.8-c · Fenda e ocupação:** concentração na fenda com limpeza rápida e
   ocupação por família de receptor em buffer separado da concentração e do
   efeito.
-- [ ] **0.8-d · Solver e rigidez:** separação de operadores com positividade
+- [x] **0.8-d · Solver e rigidez:** separação de operadores com positividade
   garantida; captação resolvida analiticamente no subpasso. Euler explícito não
   é aceito como recuo silencioso.
 - [ ] **0.8-e · ABI v6:** estados químicos no snapshot, hash próprio, e os
