@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "sourceAbiSchemaVersion": 5,
+  "capture": {
+    "frameCount": 60,
+    "frameDelayMilliseconds": 120,
+    "loopDurationSeconds": 7.2
+  },
+  "legacyHashes": {
+    "stateHash": "3bd8cb857e7d93e3",
+    "corticothalamicHash": "4834499f8d160a8d",
+    "cellPatchHash": "3efee6ef25c69ae2"
+  }
+}

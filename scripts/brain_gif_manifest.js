@@ -13,12 +13,12 @@ export function createBrainGifManifest({ sourceCommit, gifBytes, diagnostics, ca
   }
   if (
     diagnostics?.runtime !== "rust-wasm" ||
-    diagnostics.schemaVersion !== 5 ||
+    diagnostics.schemaVersion !== 6 ||
     diagnostics.degraded !== false
   ) {
-    throw new Error("GIF capture must use the Rust/Wasm ABI v5 runtime");
+    throw new Error("GIF capture must use the Rust/Wasm ABI v6 runtime");
   }
-  for (const key of ["stateHash", "corticothalamicHash", "cellPatchHash"]) {
+  for (const key of ["stateHash", "corticothalamicHash", "cellPatchHash", "chemicalHash"]) {
     if (!HASH_PATTERN.test(diagnostics[key] ?? "")) {
       throw new Error(`GIF capture is missing a valid ${key}`);
     }
@@ -35,6 +35,7 @@ export function createBrainGifManifest({ sourceCommit, gifBytes, diagnostics, ca
       stateHash: diagnostics.stateHash,
       corticothalamicHash: diagnostics.corticothalamicHash,
       cellPatchHash: diagnostics.cellPatchHash,
+      chemicalHash: diagnostics.chemicalHash,
       degraded: diagnostics.degraded,
     },
     capture,
@@ -54,14 +55,26 @@ export function verifyBrainGifManifest(manifest, gifBytes, expectedSourceCommit)
   }
   if (
     manifest.engine?.runtime !== "rust-wasm" ||
-    manifest.engine.abiSchemaVersion !== 5 ||
+    manifest.engine.abiSchemaVersion !== 6 ||
     manifest.engine.degraded !== false
   ) {
-    throw new Error("GIF manifest does not identify the Rust/Wasm ABI v5 runtime");
+    throw new Error("GIF manifest does not identify the Rust/Wasm ABI v6 runtime");
   }
-  for (const key of ["stateHash", "corticothalamicHash", "cellPatchHash"]) {
+  for (const key of ["stateHash", "corticothalamicHash", "cellPatchHash", "chemicalHash"]) {
     if (!HASH_PATTERN.test(manifest.engine[key] ?? "")) {
       throw new Error(`GIF manifest contains an invalid ${key}`);
+    }
+  }
+  return true;
+}
+
+export function verifyLegacyHashPreservation(engine, expected) {
+  for (const key of ["stateHash", "corticothalamicHash", "cellPatchHash"]) {
+    if (!HASH_PATTERN.test(expected?.[key] ?? "")) {
+      throw new Error(`legacy fixture contains an invalid ${key}`);
+    }
+    if (engine?.[key] !== expected[key]) {
+      throw new Error(`ABI v6 changed the legacy ${key}`);
     }
   }
   return true;

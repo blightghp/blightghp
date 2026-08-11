@@ -31,6 +31,7 @@ describe("laminar presentation contract", () => {
     expect(parseSimulationView("laminar")).toBe("laminar");
     expect(parseSimulationView("cell")).toBe("cell");
     expect(parseSimulationView("electricity")).toBe("electricity");
+    expect(parseSimulationView("synapse")).toBe("synapse");
     expect(parseSimulationView("layers")).toBeUndefined();
   });
 

@@ -29,6 +29,7 @@
       <button id="tab-laminar" type="button" role="tab" aria-selected="false" aria-controls="laminar-panel" data-view="laminar">LÂMINAS</button>
       <button id="tab-cell" type="button" role="tab" aria-selected="false" aria-controls="cell-panel" data-view="cell" tabindex="-1">CÉLULA</button>
       <button id="tab-electricity" type="button" role="tab" aria-selected="false" aria-controls="electricity-panel" data-view="electricity" tabindex="-1">ELETRICIDADE</button>
+      <button id="tab-synapse" type="button" role="tab" aria-selected="false" aria-controls="synapse-panel" data-view="synapse" tabindex="-1">SINAPSE</button>
     </nav>
 
     <aside class="glass-panel control-panel" id="overview-panel" role="tabpanel" aria-labelledby="tab-overview">
@@ -191,7 +192,7 @@
     </aside>
 
     <aside class="glass-panel control-panel electricity-panel" id="electricity-panel" role="tabpanel" aria-labelledby="tab-electricity" hidden>
-      <div class="eyebrow">CORRENTE COM SINAL · ABI V5</div>
+      <div class="eyebrow">CORRENTE COM SINAL · ABI V6</div>
       <h1>Correntes<br /><span>sinápticas.</span></h1>
       <p class="lede">AMPA e GABA-A mostram a resposta rápida; NMDA e GABA-B preservam componentes lentas. Os medidores mantêm o sinal: valores positivos entram na célula e negativos saem.</p>
 
@@ -222,6 +223,43 @@
       </section>
 
       <p class="model-caveat">O plano do halo codifica a direção sem depender da cor. Shunt é identificado quando a corrente GABA-A publicada implica condutância ativa junto ao potencial de reversão; o retorno microscópico ao campo permanece desativado.</p>
+    </aside>
+
+    <aside class="glass-panel control-panel synapse-panel" id="synapse-panel" role="tabpanel" aria-labelledby="tab-synapse" hidden>
+      <div class="eyebrow">MICRODOMÍNIO QUÍMICO · ABI V6</div>
+      <h1>Fenda<br /><span>em µm.</span></h1>
+      <p class="lede">Uma sinapse representativa liga reserva vesicular, liberação, concentração, ocupação e remoção. Toda mudança visual vem do snapshot Rust; a cena não inventa eventos químicos.</p>
+
+      <div class="metric-strip synapse-metrics">
+        <div><strong id="synapse-glutamate">0.00 mol/m³</strong><span>GLUTAMATO</span></div>
+        <div><strong id="synapse-gaba">0.00 mol/m³</strong><span>GABA</span></div>
+        <div><strong id="synapse-cleared">0.00 amol</strong><span>REMOÇÃO</span></div>
+      </div>
+
+      <section>
+        <div class="section-heading"><span>VESÍCULAS</span><span>RESERVA PUBLICADA</span></div>
+        <dl class="runtime-profile" aria-label="Reserva vesicular por transmissor">
+          <div><dt>Glutamato disponível</dt><dd id="vesicle-glutamate">100%</dd></div>
+          <div><dt>GABA disponível</dt><dd id="vesicle-gaba">100%</dd></div>
+        </dl>
+      </section>
+
+      <section>
+        <div class="section-heading"><span>RECEPTORES</span><span>OCUPAÇÃO</span></div>
+        <dl class="runtime-profile receptor-occupancy" aria-label="Ocupação publicada por família receptora">
+          <div><dt>AMPA</dt><dd id="synapse-ampa-occupancy">0.0%</dd></div>
+          <div><dt>NMDA</dt><dd id="synapse-nmda-occupancy">0.0%</dd></div>
+          <div><dt>GABA-A</dt><dd id="synapse-gabaa-occupancy">0.0%</dd></div>
+          <div><dt>GABA-B</dt><dd id="synapse-gabab-occupancy">0.0%</dd></div>
+        </dl>
+        <div class="signal-legend" aria-label="Legenda química">
+          <span><i class="glutamate"></i>glutamato</span>
+          <span><i class="inhibition"></i>GABA</span>
+          <span><i class="recapture"></i>recaptura</span>
+        </div>
+      </section>
+
+      <p class="model-caveat">Escala visual do microdomínio: ~1 µm. A espessura da fenda é ampliada para leitura; concentrações, matéria e ocupações mantêm as unidades e valores publicados pelo motor.</p>
     </aside>
 
     <section class="glass-panel inference-panel" id="bayesian-hud">

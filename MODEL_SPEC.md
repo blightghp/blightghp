@@ -303,7 +303,8 @@ distintos e só se acoplam pela cinética de receptor explicitamente modelada.
 O contrato estático vive em `chemical_contract.rs`; a transição temporal vive
 em `short_term_plasticity.rs`. O primeiro valida grandezas e calcula a liberação
 planejada sem estado. O segundo possui relógio absoluto, recuperação, decaimento,
-depleção, facilitação e hash próprio, ainda sem integrar a ABI v5.
+depleção, facilitação e hash próprio. A ABI v6 integra duas instâncias — uma por
+transmissor — ao microdomínio publicado descrito abaixo.
 
 ### Fenda e ocupação da 0.8-c
 
@@ -378,8 +379,28 @@ terminar com sucesso.
 Refinar `h_max` de `1 ms` para `0,5 ms` e `0,25 ms` reduz monotonicamente o erro
 contra a referência de `0,03125 ms` no cenário conjunto de glutamato e GABA. O
 oráculo `chemical-solver-v1.json` congela método, ordem, parâmetros, número de
-subpassos, exposição máxima, buffers e hashes. O solver permanece fora da ABI
-v5; sua publicação é responsabilidade da 0.8-e.
+subpassos, exposição máxima, buffers e hashes.
+
+### Trilha química publicada na ABI v6
+
+`ChemicalTrack` representa uma sinapse didática, não a soma populacional de
+fendas distintas. Em cada fronteira de tick, ele primeiro avança a limpeza e a
+ligação até o novo tempo. Depois publica as contagens de spikes E/I daquele tick
+e aplica no máximo um evento vesicular por transmissor quando a contagem é
+positiva. Assim, liberação no instante `t` altera imediatamente matéria livre e
+concentração; ocupação e remoção evoluem nos intervalos seguintes.
+
+O snapshot conserva ordens canônicas: `[glutamato, GABA]` para transmissores e
+`[AMPA, NMDA, GABA-A, GABA-B]` para receptores. Publica reserva e utilização
+vesicular, índice/tempo/quantidade do último evento, liberação acumulada, matéria
+e concentração na fenda, matéria ligada, ocupação e remoção acumulada. O quarto
+hash cobre todo esse bloco, os dois estados vesiculares e o hash do solver.
+
+O hash legado da rede, o hash córtico-talâmico e o hash do patch celular não
+recebem nenhum byte químico. Seus oráculos v1 continuam idênticos;
+`schemaVersion = 6` apenas acrescenta o bloco e o hash químico ao protocolo.
+O oráculo `chemical-track-v1.json` congela seis ticks, incluindo repouso,
+eventos E/I separados e coincidentes, e todos os campos publicados.
 
 ## Campo populacional
 

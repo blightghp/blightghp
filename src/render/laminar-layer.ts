@@ -16,7 +16,7 @@ import { projectionColorToken, VISUAL_COLORS } from "./visual-tokens";
 
 export const CORTICAL_LAYER_LABELS = ["L1", "L2", "L3", "L4", "L5", "L6"] as const;
 export type LaminarLod = "low" | "medium" | "high";
-export type SimulationView = "overview" | "laminar" | "cell" | "electricity";
+export type SimulationView = "overview" | "laminar" | "cell" | "electricity" | "synapse";
 
 export function parseLaminarLod(value: unknown): LaminarLod | undefined {
   return value === "low" || value === "medium" || value === "high"
@@ -28,7 +28,8 @@ export function parseSimulationView(value: unknown): SimulationView | undefined 
   return value === "overview" ||
     value === "laminar" ||
     value === "cell" ||
-    value === "electricity"
+    value === "electricity" ||
+    value === "synapse"
     ? value
     : undefined;
 }

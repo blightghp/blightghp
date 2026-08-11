@@ -87,7 +87,7 @@ publicado neste repositório.
   <img src="assets/brain.gif?v=34eca2d51356" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular com correntes assinadas" />
 </a>
 
-<sub>▲ Captura do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI e aos três hashes do motor.</sub>
+<sub>▲ Captura do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI e aos quatro hashes do motor.</sub>
 
 </div>
 
@@ -122,10 +122,11 @@ químicos auditáveis.
   relé talâmico, TRN e retorno corticotalâmico;
 - um patch com 12 células AdEx, dendrito passivo, adaptação e receptores AMPA,
   NMDA, GABA-A e GABA-B integrados a `83,3 µs`;
-- quatro vistas sincronizadas: **Visão Geral**, **Lâminas**, **Célula** e
-  **Eletricidade**;
-- execução Rust/Wasm em Worker, ABI v5 e 22 buffers transferíveis;
-- hashes separados para o baseline 0.5, circuito córtico-talâmico e patch celular;
+- cinco vistas sincronizadas: **Visão Geral**, **Lâminas**, **Célula**,
+  **Eletricidade** e **Sinapse**;
+- execução Rust/Wasm em Worker, ABI v6 e 34 buffers transferíveis;
+- quatro hashes separados: baseline 0.5, circuito córtico-talâmico, patch
+  celular e trilho químico;
 - pipeline visual com matéria, emissão e composição; bloom restrito ao que
   realmente emite e proveniência declarada por objeto;
 - corrente receptora média com sinal, halos orientados para entrada, saída e
@@ -140,6 +141,10 @@ químicos auditáveis.
   ocupação seletiva de AMPA/NMDA/GABA-A/GABA-B e conservação por transmissor;
 - solver 0.8-d com separação de Strang palindrômica, subpassos adaptativos por
   rigidez, positividade estrutural, orçamento atômico e convergência medida;
+- ABI v6 com reserva, evento, concentração, ligação, ocupação e remoção em
+  buffers próprios, sem alterar qualquer um dos três hashes anteriores;
+- aba Sinapse em escala de microdomínio, onde vesícula, fusão, nuvem,
+  receptores e recaptura só aparecem quando autorizados pelo snapshot Rust;
 - replay sombra com três marcos exatos, fila genérica `(tick, sequence)` e
   divergência máxima zero;
 - cadência de snapshots em 60/30/15/10 Hz e perfil de CPU, GPU, memória e
@@ -164,8 +169,9 @@ brain-engine (Rust: estado, equações, limites e hashes)
       ├── short_term_plasticity (R, u, g, ordem de evento e hash)
       ├── cleft_occupancy (concentração, ocupação, ligação e remoção)
       ├── chemical_solver (Strang, rigidez, orçamento e hash)
+      ├── chemical_track (microdomínio publicado e quarto hash)
       ├── testes nativos e replay
-      └── brain-wasm → Web Worker → snapshot ABI v5
+      └── brain-wasm → Web Worker → snapshot ABI v6
                                       ↓
                        TypeScript → DOM, teclado e Three.js
 ```
@@ -202,6 +208,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-10 | implemento Tsodyks–Markram determinístico com ordem de evento explícita, solução exponencial exata e oráculo versionado |
 | 2026-08-10 | separo concentração, ocupação, matéria ligada e remoção na fenda, com conservação individual de glutamato e GABA |
 | 2026-08-11 | componho a química por Strang palindrômico, com adaptação de rigidez, avanço atômico e estudo de convergência |
+| 2026-08-11 | publico a química na ABI v6 sem tocar nos hashes anteriores e fecho a 0.8 com a aba Sinapse presa ao estado do motor |
 
 O detalhamento da base está em [PLAN_0.7.md](PLAN_0.7.md) e
 [AUDIT_0.7.md](AUDIT_0.7.md). A sequência atual, o contrato visual e a auditoria
@@ -238,8 +245,8 @@ npm run sync:brain-gif
 npm run verify:brain-gif
 ```
 
-O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v5,
-registra os três hashes independentes e o SHA-256 do GIF em
+O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v6,
+registra os quatro hashes independentes e o SHA-256 do GIF em
 [`assets/brain-gif.json`](assets/brain-gif.json), carimba o README com o commit
 de origem e só então publica os artefatos. O GitHub ainda pode levar alguns
 minutos para invalidar o cache do perfil.

@@ -282,6 +282,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
     .unwrap();
     let mut previous_corticothalamic_hash = simulation.snapshot().corticothalamic.state_hash;
     let mut previous_cell_patch_hash = simulation.snapshot().cell_patch.state_hash;
+    let mut previous_chemical_hash = simulation.snapshot().chemical.state_hash;
 
     for (advance, expected) in simulation_fixture
         .advances
@@ -299,7 +300,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
             )
             .unwrap();
         assert_eq!(snapshot.tick, expected.tick);
-        assert_eq!(snapshot.schema_version, 5);
+        assert_eq!(snapshot.schema_version, 6);
         assert_eq!(snapshot.spikes, expected.spikes);
         assert!((snapshot.firing_rate - expected.firing_rate).abs() <= 1.0e-12);
         assert!((snapshot.mean_weight - expected.mean_weight).abs() <= 1.0e-12);
@@ -314,6 +315,17 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
         assert_f32_vectors_close(&snapshot.field.inhibitory, &expected.field_inhibitory);
         assert_eq!(snapshot.cell_patch.field_vertex, 0);
         assert_eq!(snapshot.cell_patch.blend.to_bits(), 1.0_f32.to_bits());
+        assert!(
+            (snapshot.chemical.time_seconds - snapshot.time_seconds).abs() <= 4.0e-15,
+            "chemical and macro clocks must remain within four femtoseconds"
+        );
+        assert!(snapshot
+            .chemical
+            .vesicle_available_fraction
+            .into_iter()
+            .chain(snapshot.chemical.vesicle_utilization_fraction)
+            .chain(snapshot.chemical.receptor_occupancy_fraction)
+            .all(|value| value.is_finite() && (0.0..=1.0).contains(&value)));
         assert!(
             (f64::from(snapshot.field.wave_activity[0])
                 - (snapshot.cell_patch.firing_rate_hz / 100.0).clamp(0.0, 1.0))
@@ -338,6 +350,8 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
         previous_corticothalamic_hash = snapshot.corticothalamic.state_hash;
         assert_ne!(snapshot.cell_patch.state_hash, previous_cell_patch_hash);
         previous_cell_patch_hash = snapshot.cell_patch.state_hash;
+        assert_ne!(snapshot.chemical.state_hash, previous_chemical_hash);
+        previous_chemical_hash = snapshot.chemical.state_hash;
     }
 }
 

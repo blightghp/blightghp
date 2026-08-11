@@ -3,5 +3,6 @@ export * from "./cell-layer";
 export * from "./laminar-layer";
 export * from "./render-types";
 export * from "./selective-bloom";
+export * from "./synapse-layer";
 export * from "./visual-tokens";
 export * from "./visual-encoding";

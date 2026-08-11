@@ -17,6 +17,7 @@ import {
   parseVisualColorMode,
   receptorCurrentTotals,
   SelectiveBloomPipeline,
+  SynapseRenderLayer,
   VISUAL_COLORS,
   ACTIVITY_TRACE_STOPS,
   voltsToMillivolts,
@@ -53,6 +54,7 @@ declare global {
         stateHash?: string;
         corticothalamicHash?: string;
         cellPatchHash?: string;
+        chemicalHash?: string;
         degraded: boolean;
         detail?: string;
       };
@@ -91,6 +93,7 @@ let renderPipeline: SelectiveBloomPipeline;
 let layers: BrainRenderLayers;
 let laminarLayer: LaminarRenderLayer;
 let cellLayer: CellRenderLayer;
+let synapseLayer: SynapseRenderLayer;
 let brainData: BrainData;
 let worker: Worker;
 let latestSnapshot: NeuralSnapshot | undefined;
@@ -192,6 +195,21 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
         ? "outward"
         : "reversal";
   }
+  element("#synapse-glutamate").textContent =
+    `${(snapshot.chemical.cleftConcentrationMolesPerCubicMeter[0] ?? 0).toFixed(2)} mol/m³`;
+  element("#synapse-gaba").textContent =
+    `${(snapshot.chemical.cleftConcentrationMolesPerCubicMeter[1] ?? 0).toFixed(2)} mol/m³`;
+  const clearedMoles = (snapshot.chemical.clearedMoles[0] ?? 0) +
+    (snapshot.chemical.clearedMoles[1] ?? 0);
+  element("#synapse-cleared").textContent = `${(clearedMoles * 1e18).toFixed(2)} amol`;
+  element("#vesicle-glutamate").textContent =
+    `${Math.round((snapshot.chemical.vesicleAvailableFraction[0] ?? 0) * 100)}%`;
+  element("#vesicle-gaba").textContent =
+    `${Math.round((snapshot.chemical.vesicleAvailableFraction[1] ?? 0) * 100)}%`;
+  for (const [index, receptor] of ["ampa", "nmda", "gabaa", "gabab"].entries()) {
+    element(`#synapse-${receptor}-occupancy`).textContent =
+      `${((snapshot.chemical.receptorOccupancyFraction[index] ?? 0) * 100).toFixed(1)}%`;
+  }
 
   const spikeElement = document.querySelector("#spike-count");
   if (spikeElement) spikeElement.textContent = `${snapshot.spikes} spk`;
@@ -267,6 +285,7 @@ function visualAuditReport() {
     new THREE.Color(VISUAL_COLORS.excitatory),
     new THREE.Color(VISUAL_COLORS.inhibitory),
     new THREE.Color(VISUAL_COLORS.regionLeftHemi),
+    new THREE.Color(VISUAL_COLORS.glutamate),
   ];
   const states = [0, 0.125, 0.5, 0.875, 1];
   let maximumError = 0;
@@ -285,6 +304,7 @@ function visualAuditReport() {
       laminar: "excitação é cilindro; inibição e TRN são toros",
       cell: "somata E/I usam razões de aspecto opostas",
       electricity: "entrada, saída e shunt ocupam planos de anel distintos",
+      synapse: "vesículas, transmissores, receptores e recaptura têm formas e posições distintas",
     },
   };
 }
@@ -338,6 +358,8 @@ function renderFrame(
     : -0.06 + Math.sin(time * 0.12) * 0.025;
   cellLayer.group.rotation.y = rotation * 0.42;
   cellLayer.group.rotation.x = -0.04 + Math.sin(time * 0.11) * 0.02;
+  synapseLayer.group.rotation.y = rotation * 0.34;
+  synapseLayer.group.rotation.x = -0.08;
 
   const alpha = Math.min(
     1,
@@ -349,6 +371,8 @@ function renderFrame(
     layers.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else if (activeView === "laminar") {
     laminarLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
+  } else if (activeView === "synapse") {
+    synapseLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else {
     cellLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   }
@@ -424,11 +448,13 @@ function setActiveView(view: SimulationView): void {
   layers.setVisible(view === "overview");
   laminarLayer.setVisible(view === "laminar");
   cellLayer.setVisible(view === "cell" || view === "electricity");
+  synapseLayer.setVisible(view === "synapse");
   if (view === "cell" || view === "electricity") cellLayer.setMode(view);
   element("#overview-panel").hidden = view !== "overview";
   element("#laminar-panel").hidden = view !== "laminar";
   element("#cell-panel").hidden = view !== "cell";
   element("#electricity-panel").hidden = view !== "electricity";
+  element("#synapse-panel").hidden = view !== "synapse";
   element("#bayesian-hud").hidden = view !== "overview";
   for (const button of document.querySelectorAll<HTMLButtonElement>("[role='tab']")) {
     const selected = button.dataset.view === view;
@@ -627,6 +653,9 @@ async function init(): Promise<void> {
   cellLayer = new CellRenderLayer();
   cellLayer.setVisible(false);
   cellLayer.mount(renderContext, renderTopology);
+  synapseLayer = new SynapseRenderLayer();
+  synapseLayer.setVisible(false);
+  synapseLayer.mount(renderContext, renderTopology);
 
   worker = new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = (event: MessageEvent<EngineEvent>) => {
@@ -672,6 +701,7 @@ async function init(): Promise<void> {
           learningRate: state.learningRate,
         });
         if (event.type === "snapshot") {
+          previousSnapshot = undefined;
           latestSnapshot = event.snapshot;
           renderFrame(latestSnapshot, 0);
         }
@@ -688,7 +718,10 @@ async function init(): Promise<void> {
         stimulus: { intensity: state.stimulusIntensity, confidence: currentInference.posterior },
         learningRate: state.learningRate,
       });
-      if (event.type === "snapshot") latestSnapshot = event.snapshot;
+      if (event.type === "snapshot") {
+        previousSnapshot = latestSnapshot;
+        latestSnapshot = event.snapshot;
+      }
       captureTime = time;
       if (latestSnapshot) renderFrame(latestSnapshot, time, rotation);
     },
@@ -706,6 +739,7 @@ async function init(): Promise<void> {
         corticothalamicHash:
           latestSnapshot?.diagnostics.corticothalamicHash,
         cellPatchHash: latestSnapshot?.diagnostics.cellPatchHash,
+        chemicalHash: latestSnapshot?.diagnostics.chemicalHash,
         degraded:
           latestSnapshot?.diagnostics.degraded ??
           engineReady?.degraded ??

@@ -96,7 +96,7 @@ encontram na aba Sinapse.
 - [x] **0.8-d · Solver e rigidez:** separação de operadores com positividade
   garantida; captação resolvida analiticamente no subpasso. Euler explícito não
   é aceito como recuo silencioso.
-- [ ] **0.8-e · ABI v6:** estados químicos no snapshot, hash próprio, e os
+- [x] **0.8-e · ABI v6:** estados químicos no snapshot, hash próprio, e os
   hashes anteriores preservados sem alteração.
 
 ### Trilho de apresentação
@@ -115,7 +115,7 @@ encontram na aba Sinapse.
 - [x] **0.8-v4 · Gates:** invertibilidade cor↔estado, modo sem cor, contador de
   proveniência e baseline de desempenho em hardware real, com os campos que
   `VALIDATION.md:96` exige.
-- [ ] **0.8-v5 · Aba Sinapse:** fenda em escala µm, com vesícula, liberação,
+- [x] **0.8-v5 · Aba Sinapse:** fenda em escala µm, com vesícula, liberação,
   nuvem de transmissor, ocupação e recaptura — cada etapa presa a um estado
   publicado pelo trilho de motor.
 

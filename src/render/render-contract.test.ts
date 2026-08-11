@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { CellRenderLayer } from "./cell-layer";
 import { LaminarRenderLayer } from "./laminar-layer";
+import { SynapseRenderLayer } from "./synapse-layer";
 import {
   auditVisualProvenance,
   declareVisual,
@@ -31,7 +32,11 @@ describe("render presentation contract", () => {
   });
 
   it("uses additive blending only for declared emission", () => {
-    for (const layer of [new LaminarRenderLayer(), new CellRenderLayer()]) {
+    for (const layer of [
+      new LaminarRenderLayer(),
+      new CellRenderLayer(),
+      new SynapseRenderLayer(),
+    ]) {
       const objects = renderedObjects(layer.group);
       expect(objects.length).toBeGreaterThan(0);
       for (const object of objects) {
@@ -55,7 +60,11 @@ describe("render presentation contract", () => {
   });
 
   it("counts every rendered object's declared provenance", () => {
-    for (const layer of [new LaminarRenderLayer(), new CellRenderLayer()]) {
+    for (const layer of [
+      new LaminarRenderLayer(),
+      new CellRenderLayer(),
+      new SynapseRenderLayer(),
+    ]) {
       const report = auditVisualProvenance(layer.group);
       expect(report.total).toBeGreaterThan(0);
       expect(report.undeclared).toBe(0);

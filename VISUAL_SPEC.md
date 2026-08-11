@@ -125,7 +125,7 @@ independência da câmera, e passa a cobrir também o recorte.
 
 ## 5. Escada de escalas e a vista de neurônio
 
-As quatro abas atuais viram degraus explícitos de uma escada, e o menu superior
+As cinco abas da 0.8 viram degraus explícitos de uma escada, e o menu superior
 passa a mostrar em qual degrau o leitor está e qual resolução é autoritativa
 naquele degrau.
 
@@ -232,6 +232,14 @@ Encenação, com cada etapa presa a um estado:
 
 Sem estado, sem animação. Um botão terminal que pulsa sem evento publicado é o
 mesmo erro que uma luz de nó pulsando sem spike.
+
+**Implementação 0.8-v5.** `SynapseRenderLayer` enquadra um microdomínio de
+aproximadamente `1 µm`; a espessura da fenda é exagerada e rotulada como tal.
+Reserva vesicular controla presença/escala das vesículas, o último evento e seu
+tempo controlam a fusão, concentração controla densidade da nuvem, ocupação
+controla os quatro anéis receptores e o delta da remoção entre snapshots
+controla os transportadores. Posições e membranas são topologia; nenhum objeto
+decorativo recebe animação de estado.
 
 ### 6.2 Transmissão de volume — o espraiamento (0.10)
 

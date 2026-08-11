@@ -72,6 +72,12 @@ try {
       document.querySelector("#tab-electricity")?.getAttribute("aria-selected") === "true",
   );
   await page.screenshot({ path: path.join(outputDirectory, "electricity-desktop.png") });
+  await page.keyboard.press("ArrowRight");
+  await page.waitForFunction(
+    () => document.activeElement?.id === "tab-synapse" &&
+      document.querySelector("#tab-synapse")?.getAttribute("aria-selected") === "true",
+  );
+  await page.screenshot({ path: path.join(outputDirectory, "synapse-desktop.png") });
   await page.keyboard.press("Home");
   const keyboard = await page.evaluate(() => ({
     focused: document.activeElement?.id,
@@ -98,6 +104,7 @@ try {
     "laminar-desktop.png",
     "cell-desktop.png",
     "electricity-desktop.png",
+    "synapse-desktop.png",
   ];
   const saturation = Object.fromEntries(
     await Promise.all(
@@ -111,7 +118,7 @@ try {
 
   await page.evaluate(() => window.__BRAIN_ENGINE__.setColorMode("monochrome"));
   const monochrome = {};
-  for (const view of ["overview", "laminar", "cell", "electricity"]) {
+  for (const view of ["overview", "laminar", "cell", "electricity", "synapse"]) {
     await page.evaluate((nextView) => window.__BRAIN_ENGINE__.setView(nextView), view);
     await new Promise((resolve) => setTimeout(resolve, 80));
     const filename = `${view}-monochrome.png`;
@@ -202,6 +209,7 @@ try {
       "laminar-desktop.png",
       "cell-desktop.png",
       "electricity-desktop.png",
+      "synapse-desktop.png",
       "overview-mobile.png",
       ...Object.values(monochrome),
     ],

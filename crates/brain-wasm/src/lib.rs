@@ -449,6 +449,84 @@ impl WasmNeuralEngine {
     pub fn cell_state_hash(&self) -> String {
         format!("{:016x}", self.snapshot.cell_patch.state_hash)
     }
+
+    #[must_use]
+    pub fn chemical_state_hash(&self) -> String {
+        format!("{:016x}", self.snapshot.chemical.state_hash)
+    }
+
+    #[must_use]
+    pub fn chemical_time_seconds(&self) -> f64 {
+        self.snapshot.chemical.time_seconds
+    }
+
+    #[must_use]
+    pub fn chemical_solver_step_index(&self) -> u64 {
+        self.snapshot.chemical.solver_step_index
+    }
+
+    #[must_use]
+    pub fn chemical_release_event_indices(&self) -> Vec<u32> {
+        self.snapshot.chemical.release_event_indices.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_presynaptic_spike_counts(&self) -> Vec<u32> {
+        self.snapshot.chemical.presynaptic_spike_counts.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_vesicle_available_fraction(&self) -> Vec<f64> {
+        self.snapshot.chemical.vesicle_available_fraction.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_vesicle_utilization_fraction(&self) -> Vec<f64> {
+        self.snapshot.chemical.vesicle_utilization_fraction.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_latest_release_moles(&self) -> Vec<f64> {
+        self.snapshot.chemical.latest_release_moles.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_latest_release_time_seconds(&self) -> Vec<f64> {
+        self.snapshot.chemical.latest_release_time_seconds.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_total_released_moles(&self) -> Vec<f64> {
+        self.snapshot.chemical.total_released_moles.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_cleft_moles(&self) -> Vec<f64> {
+        self.snapshot.chemical.cleft_moles.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_cleft_concentration(&self) -> Vec<f64> {
+        self.snapshot
+            .chemical
+            .cleft_concentration_moles_per_cubic_meter
+            .to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_receptor_bound_moles(&self) -> Vec<f64> {
+        self.snapshot.chemical.receptor_bound_moles.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_receptor_occupancy_fraction(&self) -> Vec<f64> {
+        self.snapshot.chemical.receptor_occupancy_fraction.to_vec()
+    }
+
+    #[must_use]
+    pub fn chemical_cleared_moles(&self) -> Vec<f64> {
+        self.snapshot.chemical.cleared_moles.to_vec()
+    }
 }
 
 fn js_error(error: impl core::fmt::Display) -> JsValue {

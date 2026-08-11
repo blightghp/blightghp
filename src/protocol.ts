@@ -1,5 +1,5 @@
 import type { BrainData } from "./brain";
-export const SIMULATION_PROTOCOL_VERSION = 5 as const;
+export const SIMULATION_PROTOCOL_VERSION = 6 as const;
 export const SIMULATION_STEP_SECONDS = 1 / 60;
 
 export type SimulationTick = number;
@@ -60,6 +60,26 @@ export interface CellPatchSnapshot {
   blend: number;
 }
 
+// Ordens fixas: transmissor [glutamato, GABA] e receptor
+// [AMPA, NMDA, GABA-A, GABA-B]. Cada buffer vem do trilho químico Rust; a
+// apresentação não sintetiza liberação, ocupação ou recaptura.
+export interface ChemicalSnapshot {
+  timeSeconds: number;
+  solverStepIndex: number;
+  releaseEventIndices: Uint32Array;
+  presynapticSpikeCounts: Uint32Array;
+  vesicleAvailableFraction: Float64Array;
+  vesicleUtilizationFraction: Float64Array;
+  latestReleaseMoles: Float64Array;
+  latestReleaseTimeSeconds: Float64Array;
+  totalReleasedMoles: Float64Array;
+  cleftMoles: Float64Array;
+  cleftConcentrationMolesPerCubicMeter: Float64Array;
+  receptorBoundMoles: Float64Array;
+  receptorOccupancyFraction: Float64Array;
+  clearedMoles: Float64Array;
+}
+
 export type EngineRuntime = "rust-wasm" | "diagnostic-fallback";
 
 export interface EngineDiagnostics {
@@ -67,6 +87,7 @@ export interface EngineDiagnostics {
   stateHash: string;
   corticothalamicHash: string;
   cellPatchHash: string;
+  chemicalHash: string;
   degraded: boolean;
   detail?: string;
 }
@@ -85,6 +106,7 @@ export interface NeuralSnapshot {
   field: FieldSnapshot;
   corticothalamic: CorticothalamicSnapshot;
   cellPatch: CellPatchSnapshot;
+  chemical: ChemicalSnapshot;
   diagnostics: EngineDiagnostics;
 }
 

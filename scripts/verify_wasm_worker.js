@@ -38,11 +38,12 @@ try {
   const diagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   if (
     diagnostics.runtime !== "rust-wasm" ||
-    diagnostics.schemaVersion !== 5 ||
+    diagnostics.schemaVersion !== 6 ||
     diagnostics.degraded ||
     !/^[0-9a-f]{16}$/.test(diagnostics.stateHash) ||
     !/^[0-9a-f]{16}$/.test(diagnostics.corticothalamicHash) ||
-    !/^[0-9a-f]{16}$/.test(diagnostics.cellPatchHash)
+    !/^[0-9a-f]{16}$/.test(diagnostics.cellPatchHash) ||
+    !/^[0-9a-f]{16}$/.test(diagnostics.chemicalHash)
   ) {
     throw new Error(`diagnóstico inesperado: ${JSON.stringify(diagnostics)}`);
   }
@@ -60,7 +61,11 @@ try {
     await window.__BRAIN_ENGINE__.setCaptureMode(false);
     return { accepted, after };
   });
-  if (replay.accepted !== 2 || replay.after.stateHash === diagnostics.stateHash) {
+  if (
+    replay.accepted !== 2 ||
+    replay.after.stateHash === diagnostics.stateHash ||
+    replay.after.chemicalHash === diagnostics.chemicalHash
+  ) {
     throw new Error(`fila de replay não avançou no navegador: ${JSON.stringify(replay)}`);
   }
   await page.click("#tab-laminar");
@@ -108,9 +113,27 @@ try {
   ) {
     throw new Error(`aba elétrica inválida: ${JSON.stringify(electricity)}`);
   }
+  await page.click("#tab-synapse");
+  await page.waitForFunction(
+    () => document.querySelector("#tab-synapse")?.getAttribute("aria-selected") === "true",
+  );
+  const synapse = await page.evaluate(() => ({
+    glutamate: document.querySelector("#synapse-glutamate")?.textContent,
+    gaba: document.querySelector("#synapse-gaba")?.textContent,
+    occupancy: document.querySelector("#synapse-ampa-occupancy")?.textContent,
+    hidden: document.querySelector("#synapse-panel")?.hidden,
+  }));
+  if (
+    synapse.hidden ||
+    !synapse.glutamate?.endsWith("mol/m³") ||
+    !synapse.gaba?.endsWith("mol/m³") ||
+    !synapse.occupancy?.endsWith("%")
+  ) {
+    throw new Error(`aba sináptica inválida: ${JSON.stringify(synapse)}`);
+  }
   console.log(
     `Worker Wasm verificado no navegador: schema ${diagnostics.schemaVersion}, ` +
-      `hash ${diagnostics.stateHash}, quatro abas operantes`,
+      `hash ${diagnostics.stateHash}, cinco abas operantes`,
   );
 } finally {
   await browser?.close();

@@ -398,6 +398,10 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .signal-legend .excitation { color: #43c8ff; background: currentColor; }
 .signal-legend .inhibition { color: #c779ff; background: currentColor; }
+.signal-legend .glutamate { color: #43e0b2; background: currentColor; }
+.signal-legend .recapture { color: #ffb45b; background: currentColor; }
+.synapse-metrics strong { font-size: 10px; }
+.receptor-occupancy dd { font-variant-numeric: tabular-nums; }
 
 .inference-panel {
   left: 28px;

@@ -166,6 +166,18 @@ export function snapshotTransferList(snapshot: NeuralSnapshot): ArrayBuffer[] {
     snapshot.cellPatch.gabaaAmperes.buffer,
     snapshot.cellPatch.gababAmperes.buffer,
     snapshot.cellPatch.spiked.buffer,
+    snapshot.chemical.releaseEventIndices.buffer,
+    snapshot.chemical.presynapticSpikeCounts.buffer,
+    snapshot.chemical.vesicleAvailableFraction.buffer,
+    snapshot.chemical.vesicleUtilizationFraction.buffer,
+    snapshot.chemical.latestReleaseMoles.buffer,
+    snapshot.chemical.latestReleaseTimeSeconds.buffer,
+    snapshot.chemical.totalReleasedMoles.buffer,
+    snapshot.chemical.cleftMoles.buffer,
+    snapshot.chemical.cleftConcentrationMolesPerCubicMeter.buffer,
+    snapshot.chemical.receptorBoundMoles.buffer,
+    snapshot.chemical.receptorOccupancyFraction.buffer,
+    snapshot.chemical.clearedMoles.buffer,
   ];
 }
 
@@ -312,11 +324,16 @@ export class WasmEngineHost {
   private snapshot(): NeuralSnapshot {
     const engine = this.requireEngine();
     const firstSpikeSeconds = engine.cell_first_spike_seconds();
+    const chemicalSolverStepIndex = engine.chemical_solver_step_index();
+    if (chemicalSolverStepIndex > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new Error("contador do solver químico excede a representação exata da ABI");
+    }
     const diagnostics: EngineDiagnostics = {
       runtime: "rust-wasm",
       stateHash: engine.state_hash(),
       corticothalamicHash: engine.corticothalamic_state_hash(),
       cellPatchHash: engine.cell_state_hash(),
+      chemicalHash: engine.chemical_state_hash(),
       degraded: false,
     };
     return {
@@ -365,6 +382,22 @@ export class WasmEngineHost {
         firstSpikeSeconds: firstSpikeSeconds < 0 ? undefined : firstSpikeSeconds,
         fieldVertex: engine.cell_field_vertex(),
         blend: engine.cell_blend(),
+      },
+      chemical: {
+        timeSeconds: engine.chemical_time_seconds(),
+        solverStepIndex: Number(chemicalSolverStepIndex),
+        releaseEventIndices: engine.chemical_release_event_indices(),
+        presynapticSpikeCounts: engine.chemical_presynaptic_spike_counts(),
+        vesicleAvailableFraction: engine.chemical_vesicle_available_fraction(),
+        vesicleUtilizationFraction: engine.chemical_vesicle_utilization_fraction(),
+        latestReleaseMoles: engine.chemical_latest_release_moles(),
+        latestReleaseTimeSeconds: engine.chemical_latest_release_time_seconds(),
+        totalReleasedMoles: engine.chemical_total_released_moles(),
+        cleftMoles: engine.chemical_cleft_moles(),
+        cleftConcentrationMolesPerCubicMeter: engine.chemical_cleft_concentration(),
+        receptorBoundMoles: engine.chemical_receptor_bound_moles(),
+        receptorOccupancyFraction: engine.chemical_receptor_occupancy_fraction(),
+        clearedMoles: engine.chemical_cleared_moles(),
       },
       diagnostics,
     };
@@ -438,11 +471,28 @@ export class DiagnosticFallbackHost {
           fieldVertex: 0,
           blend: 0,
         },
+        chemical: {
+          timeSeconds: this.tick * this.fixedStep,
+          solverStepIndex: 0,
+          releaseEventIndices: new Uint32Array(2),
+          presynapticSpikeCounts: new Uint32Array(2),
+          vesicleAvailableFraction: new Float64Array([1, 1]),
+          vesicleUtilizationFraction: new Float64Array([0.18, 0.14]),
+          latestReleaseMoles: new Float64Array(2),
+          latestReleaseTimeSeconds: new Float64Array([-1, -1]),
+          totalReleasedMoles: new Float64Array(2),
+          cleftMoles: new Float64Array(2),
+          cleftConcentrationMolesPerCubicMeter: new Float64Array(2),
+          receptorBoundMoles: new Float64Array(4),
+          receptorOccupancyFraction: new Float64Array(4),
+          clearedMoles: new Float64Array(2),
+        },
         diagnostics: {
           runtime: "diagnostic-fallback",
           stateHash: "unavailable",
           corticothalamicHash: "unavailable",
           cellPatchHash: "unavailable",
+          chemicalHash: "unavailable",
           degraded: true,
           detail: this.detail,
         },

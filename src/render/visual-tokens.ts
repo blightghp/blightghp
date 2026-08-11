@@ -22,6 +22,16 @@ export const VISUAL_COLORS = {
   regionRightHemi: 0x24a5ff,
   regionCerebellum: 0x21bfea,
   regionStem: 0x6f9cff,
+  glutamate: 0x43e0b2,
+  gaba: 0xc879ff,
+  ampa: 0x31c8ff,
+  nmda: 0x6aaeff,
+  gabaa: 0xc879ff,
+  gabab: 0x9f71e8,
+  recapture: 0xffb45b,
+  presynapticMembrane: 0x285a78,
+  postsynapticMembrane: 0x183d5c,
+  cleftBoundary: 0x4f8dbd,
 } as const;
 
 export const COLOR_TOKENS = {
@@ -35,6 +45,13 @@ export const COLOR_TOKENS = {
   pulseTrail: new THREE.Color(VISUAL_COLORS.pulseTrail),
   hot: new THREE.Color(VISUAL_COLORS.hot),
   white: new THREE.Color(VISUAL_COLORS.white),
+  glutamate: new THREE.Color(VISUAL_COLORS.glutamate),
+  gaba: new THREE.Color(VISUAL_COLORS.gaba),
+  ampa: new THREE.Color(VISUAL_COLORS.ampa),
+  nmda: new THREE.Color(VISUAL_COLORS.nmda),
+  gabaa: new THREE.Color(VISUAL_COLORS.gabaa),
+  gabab: new THREE.Color(VISUAL_COLORS.gabab),
+  recapture: new THREE.Color(VISUAL_COLORS.recapture),
 } as const;
 
 export const REGION_COLOR_TOKENS = {

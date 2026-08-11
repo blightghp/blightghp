@@ -153,9 +153,9 @@ Snapshots usam buffers próprios. O Worker alterna dois ou três conjuntos de bu
 
 `brain_engine::chemical_contract` é o contrato puro entre o patch 0.7 e a
 dinâmica sináptica. `brain_engine::short_term_plasticity` possui o estado de
-liberação; `brain_engine::cleft_occupancy` possui fenda, ligação e remoção.
-Nenhum desses módulos participa ainda do laço publicado nem altera a ABI v5 ou
-seus três hashes.
+liberação; `brain_engine::cleft_occupancy` possui fenda, ligação e remoção. A
+0.8-e os integra por `ChemicalTrack`, dono do microdomínio representativo e do
+quarto hash. Os três hashes anteriores continuam sem dependência química.
 
 | Grandeza | Tipo/estrutura | Unidade | Dono |
 | :-- | :-- | :-- | :-- |
@@ -173,6 +173,7 @@ seus três hashes.
 | composição e rigidez | `ChemicalSolver` | s, taxa·passo | motor 0.8-d |
 | envelope do solver | `ChemicalSolverConfig` | s, adimensional, contagem | preset |
 | diagnóstico de avanço | `ChemicalSolverAdvance` | s, subpassos, exposição | replay/instrumento |
+| trilha publicada | `ChemicalTrack` / `ChemicalSignal` | buffers SI + frações | ABI v6 |
 | estoques químicos | `TransmitterMassLedger` | mol equivalente | solver químico |
 | carga transmembrana | `MembraneChargeTransfer` | C | integrador celular |
 | tolerância de massa | `ConservationTolerance` | mol absoluto + fração relativa | experimento |
@@ -198,10 +199,19 @@ passo é o menor entre o restante do intervalo, o teto do preset e o limite
 `χ_max/taxa_max`. O avanço ocorre numa cópia candidata: estouro de orçamento,
 underflow ou erro químico descartam toda a tentativa. O hash do solver inclui
 schema, configuração numérica, tempo, contador e hash químico. O fixture
-`chemical-solver-v1.json` fixa a composição e o replay bit a bit. ABI v5, Worker
-e os três hashes publicados continuam intocados até a 0.8-e. As exponenciais
+`chemical-solver-v1.json` fixa a composição e o replay bit a bit. As exponenciais
 do domínio químico usam `libm::exp`, eliminando diferenças de biblioteca
 matemática nativa entre Windows e Linux sem relaxar o oráculo.
+
+`ChemicalTrack` avança numa cópia candidata e só publica o tick químico completo.
+Ele mantém duas reservas Tsodyks–Markram, uma fenda com dois transmissores e as
+quatro famílias receptoras. Uma contagem E/I positiva autoriza um único evento
+no microdomínio correspondente; a contagem também é publicada para que a
+proveniência não se perca. Última liberação e seu tempo permanecem no estado até
+o próximo evento, permitindo que a apresentação derive duração sem criar um
+relógio químico paralelo.
+O gerador `chemical_track_fixture.rs` e o replay `chemical_track_replay.rs`
+fecham a fronteira integrada bit a bit antes de `wasm-bindgen`.
 
 ## Laço de simulação
 
@@ -301,22 +311,24 @@ Essa disciplina evita depender da associatividade de ponto flutuante. Igualdade 
 
 O Worker entra antes do paralelismo. Seu objetivo inicial é isolar o laço fixo do frame.
 
-Na ABI v5, o snapshot preserva o bloco córtico-talâmico da v4 e acrescenta um
-bloco de patch celular. O bloco laminar mantém dois
+Na ABI v6, o snapshot preserva integralmente os blocos e hashes da v5 e
+acrescenta o microdomínio químico. O bloco laminar mantém dois
 `Float32Array` de seis posições para E/I, cinco escalares de relé/TRN/retorno e
 um hash próprio. O patch publica nove arrays de doze posições — tipo, soma,
 dendrito, adaptação, quatro correntes receptoras e eventos — além de taxa, razão
 E/I, primeiro spike, vértice, blend e hash. O hash legado da rede 0.5 não
 incorpora esses blocos; assim, o
 replay sombra continua verificando exatamente o baseline promovido enquanto o
-novo circuito e o patch ganham provas separadas de determinismo.
+novo circuito, o patch e a química ganham provas separadas de determinismo.
 
-Vinte e dois buffers são transferidos ao thread de apresentação. Antes da
+Trinta e quatro buffers são transferidos ao thread de apresentação: os 22 da v5
+e 12 buffers químicos para evento, reserva, concentração, ligação, ocupação e
+remoção. Antes da
 construção, o host limita nós, sinapses, vértices e arestas;
 o adaptador Rust repete as cotas. Cada comando avança no máximo 600 ticks para
 que uma única mensagem não monopolize o Worker. O fallback diagnóstico publica
-buffers laminares/celulares zerados e nunca substitui o circuito por equações
-TypeScript.
+buffers laminares/celulares/químicos inertes e nunca substitui o circuito por
+equações TypeScript.
 
 Mensagens de controle:
 
@@ -336,7 +348,7 @@ type EngineEvent =
 
 O perfil não atravessa a ABI científica: `RuntimeProfiler` mede no shell a
 latência de ida e volta do Worker, o custo de CPU do frame, contadores acumulados
-do renderer, heap quando disponível e bytes dos 22 buffers. A cadência
+do renderer, heap quando disponível e bytes dos 34 buffers. A cadência
 configurável decide quando pedir o próximo snapshot, sem mudar o tick do motor.
 
 Não haverá uma mensagem por spike. Eventos de alta frequência são compactados no snapshot em arrays de IDs, offsets temporais e amplitudes.

@@ -78,13 +78,16 @@ describe("diagnostic Wasm fallback", () => {
     }).snapshot;
     const buffers = snapshotTransferList(snapshot);
 
-    expect(buffers).toHaveLength(22);
+    expect(buffers).toHaveLength(34);
     expect(new Set(buffers).size).toBe(buffers.length);
     expect(buffers).toContain(snapshot.potentials.buffer);
     expect(buffers).toContain(snapshot.field.waveActivity.buffer);
     expect(buffers).toContain(snapshot.corticothalamic.excitatory.buffer);
     expect(buffers).toContain(snapshot.cellPatch.membraneVolts.buffer);
     expect(buffers).toContain(snapshot.cellPatch.gababAmperes.buffer);
+    expect(buffers).toContain(snapshot.chemical.latestReleaseMoles.buffer);
+    expect(buffers).toContain(snapshot.chemical.receptorOccupancyFraction.buffer);
+    expect(buffers).toContain(snapshot.chemical.clearedMoles.buffer);
   });
 
   it("bounds replay input batches and rejects ambiguous addresses", () => {

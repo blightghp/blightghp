@@ -3,14 +3,14 @@ use core::fmt;
 use crate::synaptic::decay_conductance;
 use crate::{
     mean_absolute_weight, random_unit, CellPatch, CellPatchConfig, CellPatchDrive,
-    CellPatchSnapshot, CorticothalamicConfig, CorticothalamicDrive, CorticothalamicEngine,
-    DeterministicInputQueue, FieldConfig, FieldSnapshot, FieldTopology, InputQueueError,
-    LaminarConfig, NeuronKind, PopulationField, PopulationFiringRate, ResolutionMap, Seconds,
-    SynapseCsr, SynapseEndpoint, AMPA_TIME_CONSTANT_SECONDS, GABAA_TIME_CONSTANT_SECONDS,
-    LAYER_COUNT, MAX_SAFE_TICK,
+    CellPatchSnapshot, ChemicalSignal, ChemicalTrack, ChemicalTrackError, CorticothalamicConfig,
+    CorticothalamicDrive, CorticothalamicEngine, DeterministicInputQueue, FieldConfig,
+    FieldSnapshot, FieldTopology, InputQueueError, LaminarConfig, NeuronKind, PopulationField,
+    PopulationFiringRate, ResolutionMap, Seconds, SynapseCsr, SynapseEndpoint,
+    AMPA_TIME_CONSTANT_SECONDS, GABAA_TIME_CONSTANT_SECONDS, LAYER_COUNT, MAX_SAFE_TICK,
 };
 
-pub const SIMULATION_SCHEMA_VERSION: u32 = 5;
+pub const SIMULATION_SCHEMA_VERSION: u32 = 6;
 const MIN_EXCITATORY_WEIGHT: f64 = 0.12;
 const MAX_EXCITATORY_WEIGHT: f64 = 0.92;
 const MAX_SIGNALS_IN_FLIGHT: usize = 900;
@@ -86,6 +86,7 @@ pub struct SimulationSnapshot {
     pub field: FieldSnapshot,
     pub corticothalamic: CorticothalamicSignal,
     pub cell_patch: CellPatchSnapshot,
+    pub chemical: ChemicalSignal,
     pub state_hash: u64,
 }
 
@@ -109,6 +110,7 @@ pub struct NeuralSimulation {
     population_field: PopulationField,
     corticothalamic: CorticothalamicEngine,
     cell_patch: CellPatch,
+    chemical_track: ChemicalTrack,
     potentials: Vec<f32>,
     activations: Vec<f32>,
     conductance_ampa: Vec<f32>,
@@ -220,6 +222,7 @@ impl NeuralSimulation {
             ResolutionMap::learning_patch(Some(0)).map_err(SimulationError::CellPatch)?;
         let cell_patch = CellPatch::new(config.seed, CellPatchConfig::default(), resolution)
             .map_err(SimulationError::CellPatch)?;
+        let chemical_track = ChemicalTrack::learning_preset();
         let thresholds = thresholds(config.seed, node_count);
         let firing_rate_observable = PopulationFiringRate::new(
             node_count_u32,
@@ -262,6 +265,7 @@ impl NeuralSimulation {
             population_field,
             corticothalamic,
             cell_patch,
+            chemical_track,
             potentials: vec![0.0; node_count],
             activations: vec![0.0; node_count],
             conductance_ampa: vec![0.0; node_count],
@@ -506,12 +510,29 @@ impl NeuralSimulation {
             })
             .map_err(SimulationError::Corticothalamic)?;
         self.advance_cell_patch(intensity, confidence)?;
+        self.advance_chemical_track()?;
 
         self.firing_rate = self.firing_rate_observable.sample(spikes);
         self.latest_spike_count = spikes;
         self.tick = next_tick;
         self.queue_cursor = (self.queue_cursor + 1) % self.pending.len();
         Ok(())
+    }
+
+    fn advance_chemical_track(&mut self) -> Result<(), SimulationError> {
+        let mut chemical_spikes = [0_u32; 2];
+        for (&spiked, &kind) in self.spiked.iter().zip(&self.neuron_kinds) {
+            if spiked != 0 {
+                let index = usize::from(kind == NeuronKind::Inhibitory);
+                chemical_spikes[index] = chemical_spikes[index]
+                    .checked_add(1)
+                    .ok_or(SimulationError::SpikeOverflow)?;
+            }
+        }
+        self.chemical_track
+            .advance_tick(self.fixed_step, chemical_spikes[0], chemical_spikes[1])
+            .map(|_| ())
+            .map_err(SimulationError::ChemicalTrack)
     }
 
     fn advance_cell_patch(
@@ -551,6 +572,7 @@ impl NeuralSimulation {
         self.population_field.reset();
         self.corticothalamic.reset();
         self.cell_patch.reset(seed);
+        self.chemical_track.reset();
         self.refractory.fill(0.0);
         self.pre_trace.fill(0.0);
         self.post_trace.fill(0.0);
@@ -579,6 +601,7 @@ impl NeuralSimulation {
         let raw_field = field.clone();
         let corticothalamic = corticothalamic_signal(self.corticothalamic.snapshot());
         let cell_patch = self.cell_patch.snapshot();
+        let chemical = self.chemical_track.snapshot();
         let state_hash = state_hash(
             self.tick,
             self.latest_spike_count,
@@ -610,6 +633,7 @@ impl NeuralSimulation {
             field,
             corticothalamic,
             cell_patch,
+            chemical,
             state_hash,
         }
     }
@@ -885,6 +909,7 @@ pub enum SimulationError {
     InvalidInput,
     InputQueue(InputQueueError),
     CellPatch(crate::CellPatchError),
+    ChemicalTrack(ChemicalTrackError),
     Field(crate::FieldError),
     Corticothalamic(crate::EngineError),
 }
@@ -904,6 +929,7 @@ impl fmt::Display for SimulationError {
             Self::InvalidInput => formatter.write_str("invalid scheduled simulation input"),
             Self::InputQueue(error) => write!(formatter, "input queue error: {error}"),
             Self::CellPatch(error) => write!(formatter, "cell patch error: {error}"),
+            Self::ChemicalTrack(error) => write!(formatter, "chemical track error: {error}"),
             Self::Field(error) => write!(formatter, "field error: {error}"),
             Self::Corticothalamic(error) => write!(formatter, "corticothalamic error: {error}"),
         }

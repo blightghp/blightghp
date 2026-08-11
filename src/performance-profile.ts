@@ -40,6 +40,18 @@ export function snapshotByteLength(snapshot: NeuralSnapshot): number {
     snapshot.cellPatch.gabaaAmperes,
     snapshot.cellPatch.gababAmperes,
     snapshot.cellPatch.spiked,
+    snapshot.chemical.releaseEventIndices,
+    snapshot.chemical.presynapticSpikeCounts,
+    snapshot.chemical.vesicleAvailableFraction,
+    snapshot.chemical.vesicleUtilizationFraction,
+    snapshot.chemical.latestReleaseMoles,
+    snapshot.chemical.latestReleaseTimeSeconds,
+    snapshot.chemical.totalReleasedMoles,
+    snapshot.chemical.cleftMoles,
+    snapshot.chemical.cleftConcentrationMolesPerCubicMeter,
+    snapshot.chemical.receptorBoundMoles,
+    snapshot.chemical.receptorOccupancyFraction,
+    snapshot.chemical.clearedMoles,
   ].reduce((sum, view) => sum + view.byteLength, 0);
 }
 

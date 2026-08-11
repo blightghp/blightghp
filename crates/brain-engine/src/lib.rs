@@ -5,6 +5,7 @@ use core::fmt;
 mod cell_patch;
 pub mod chemical_contract;
 mod chemical_solver;
+mod chemical_track;
 mod cleft_occupancy;
 mod clock;
 mod corticothalamic;
@@ -31,6 +32,9 @@ pub use chemical_solver::{
     ChemicalSolver, ChemicalSolverAdvance, ChemicalSolverConfig, ChemicalSolverError,
     ChemicalSolverSnapshot, ChemicalSubtransition, CHEMICAL_SOLVER_SCHEMA_VERSION,
     MAX_CHEMICAL_SOLVER_SUBSTEPS, STRANG_SUBTRANSITIONS_PER_STEP, STRANG_SUBTRANSITION_ORDER,
+};
+pub use chemical_track::{
+    ChemicalSignal, ChemicalTrack, ChemicalTrackError, CHEMICAL_TRACK_SCHEMA_VERSION,
 };
 pub use cleft_occupancy::{
     ChemicalCleftSnapshot, ChemicalSynapse, ChemicalSynapseConfig, ChemicalSynapseError,

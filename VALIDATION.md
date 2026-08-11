@@ -71,7 +71,7 @@ O gate temporal roda isolado da ABI e usa o oráculo versionado
 | positividade | 20.000 eventos mantêm `R,u ∈ [0,1]`, `g ≥ 0` e estado finito sem clamp corretivo |
 | determinismo | duas instâncias recebem os mesmos instantes e produzem eventos e hashes idênticos |
 | replay | sete eventos e um checkpoint de relaxação reproduzem todos os campos `f64` e hashes do fixture bit a bit |
-| compatibilidade | ABI v5 e os três hashes publicados permanecem inalterados até o corte 0.8-e |
+| compatibilidade | os oráculos e três hashes publicados pela ABI v5 permanecem inalterados após a promoção v6 |
 
 O gerador auditável do oráculo é
 `crates/brain-engine/examples/short_term_plasticity_fixture.rs`; o consumidor
@@ -114,7 +114,7 @@ O gate composto usa `fixtures/replay/chemical-solver-v1.json`:
 | portabilidade | `libm::exp` reproduz os mesmos fixtures químicos em Windows e Linux |
 | convergência | erros de `1`, `0,5` e `0,25 ms` caem monotonicamente contra a referência de `0,03125 ms` |
 | replay | cinco operações reproduzem tempo, subpassos, exposição, todos os buffers e dois hashes bit a bit |
-| compatibilidade | solver, snapshot e hash químico permanecem fora da ABI v5 até a 0.8-e |
+| compatibilidade | os fixtures do solver permanecem bit a bit idênticos quando o estado passa a ser publicado pela ABI v6 |
 
 O gerador é `crates/brain-engine/examples/chemical_solver_fixture.rs`; o replay
 independente está em `crates/brain-engine/tests/chemical_solver_replay.rs`.
@@ -201,15 +201,15 @@ O alvo visual é manter interação fluida em 60 Hz quando o hardware permitir. 
 
 Mudanças de shader podem usar tolerância perceptual. Mudanças de posição, contagem de objetos e associação entre estado e cor exigem também testes estruturais.
 
-O gate contínuo `scripts/audit_runtime.js` captura Visão Geral, Lâminas, Célula
-e Eletricidade em
+O gate contínuo `scripts/audit_runtime.js` captura Visão Geral, Lâminas, Célula,
+Eletricidade e Sinapse em
 `1440×960`, repete a captura móvel em `390×844`, percorre as abas por teclado,
 mede os textos críticos contra o fundo mais claro do painel e exige razão mínima
 de 4,5:1. O mesmo gate rejeita overflow horizontal, perfil incompleto, objeto
 renderizado sem proveniência, rampa material não invertível, saturação acima do
 teto e distinção que desapareça no modo monocromático. O relatório registra CPU,
 memória, navegador, plataforma WebGL, preset, unidades, sinapses, vértices, passo
-e cadência de snapshots; as quatro vistas também são capturadas sem cor.
+e cadência de snapshots; as cinco vistas também são capturadas sem cor.
 
 ## Pirâmide de testes no `src/`
 
@@ -291,6 +291,22 @@ um artefato versionado em cada linha:
 | acessibilidade visual | teclado percorre quatro tabs; cinco capturas, contraste e viewport móvel são auditados |
 | degradação | fallback celular é inerte e publica `cellPatchHash = unavailable` |
 
+### Extensão 0.8 · ABI v6 e aba Sinapse
+
+| Gate | Evidência executável |
+| :-- | :-- |
+| compatibilidade de hashes | `abi-v5-hash-preservation-v1.json`, `field-observables-v1.json`, `cell-patch-v1.json` e o replay sombra continuam exigindo os valores anteriores |
+| hash químico | `ChemicalSignal.state_hash` cobre solver, duas reservas vesiculares, contagens e último evento sem entrar nos três hashes legados |
+| replay integrado | `chemical-track-v1.json` reproduz seis ticks e todos os buffers/hash da trilha bit a bit |
+| ABI Rust/TypeScript | ambos usam `schemaVersion = 6`; 12 buffers químicos elevam o total a 34 |
+| unidades e ordens | transmissores seguem `[glutamato, GABA]`; receptores seguem `[AMPA, NMDA, GABA-A, GABA-B]`; matéria, concentração e tempo ficam em SI |
+| proveniência do evento | sem spike publicado não há novo índice ou liberação; uma contagem positiva autoriza no máximo um evento no microdomínio representativo |
+| apresentação | vesícula lê `R`; fusão lê último evento; nuvem lê concentração; receptores leem ocupação; recaptura lê delta da remoção publicada |
+| transferência | teste lista 34 `ArrayBuffer` distintos, incluindo evento, concentração, ocupação e remoção química |
+| navegador | Worker real publica quatro hashes válidos e as cinco abas exibem unidades esperadas |
+| acessibilidade visual | teclado percorre cinco tabs; Sinapse participa das capturas em cor, monocromia, saturação e proveniência |
+| degradação | fallback químico é inerte e publica `chemicalHash = unavailable` |
+
 Os contratos executáveis atuais são:
 
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
@@ -300,6 +316,13 @@ Os contratos executáveis atuais são:
   canônica esperada por `(tick, sequence)`;
 - `cell-patch-v1.json`: replay de 60 intervalos macro do patch, com quatro
   checkpoints exatos e gerador Rust versionado em `examples/`;
+- `short-term-plasticity-v1.json`, `cleft-occupancy-v1.json` e
+  `chemical-solver-v1.json`: trilha química congelada em três fronteiras
+  independentes antes de sua composição na ABI v6;
+- `chemical-track-v1.json`: composição integrada de vesículas, solver e buffers
+  públicos da ABI v6, com gerador e consumidor Rust independentes;
+- `abi-v5-hash-preservation-v1.json`: os três hashes da captura determinística
+  v5 que a captura v6 deve reproduzir antes de acrescentar o hash químico;
 - `scripts/shadow_replay.js`: recompõe o replay no Wasm e exige os hashes do
   oráculo congelado e o SHA-256 auditado do fixture;
 - testes Cargo: reproduzem o artefato, inclusive o replay neural completo, e

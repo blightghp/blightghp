@@ -263,6 +263,143 @@ export class WasmNeuralEngine {
         }
     }
     /**
+     * @returns {Float64Array}
+     */
+    chemical_cleared_moles() {
+        const ret = wasm.wasmneuralengine_chemical_cleared_moles(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    chemical_cleft_concentration() {
+        const ret = wasm.wasmneuralengine_chemical_cleft_concentration(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    chemical_cleft_moles() {
+        const ret = wasm.wasmneuralengine_chemical_cleft_moles(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    chemical_latest_release_moles() {
+        const ret = wasm.wasmneuralengine_chemical_latest_release_moles(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    chemical_latest_release_time_seconds() {
+        const ret = wasm.wasmneuralengine_chemical_latest_release_time_seconds(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
+     * @returns {Uint32Array}
+     */
+    chemical_presynaptic_spike_counts() {
+        const ret = wasm.wasmneuralengine_chemical_presynaptic_spike_counts(this.__wbg_ptr);
+        var v1 = getArrayU32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    chemical_receptor_bound_moles() {
+        const ret = wasm.wasmneuralengine_chemical_receptor_bound_moles(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    chemical_receptor_occupancy_fraction() {
+        const ret = wasm.wasmneuralengine_chemical_receptor_occupancy_fraction(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
+     * @returns {Uint32Array}
+     */
+    chemical_release_event_indices() {
+        const ret = wasm.wasmneuralengine_chemical_release_event_indices(this.__wbg_ptr);
+        var v1 = getArrayU32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {bigint}
+     */
+    chemical_solver_step_index() {
+        const ret = wasm.wasmneuralengine_chemical_solver_step_index(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
+    }
+    /**
+     * @returns {string}
+     */
+    chemical_state_hash() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.wasmneuralengine_chemical_state_hash(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * @returns {number}
+     */
+    chemical_time_seconds() {
+        const ret = wasm.wasmneuralengine_chemical_time_seconds(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    chemical_total_released_moles() {
+        const ret = wasm.wasmneuralengine_chemical_total_released_moles(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    chemical_vesicle_available_fraction() {
+        const ret = wasm.wasmneuralengine_chemical_vesicle_available_fraction(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    chemical_vesicle_utilization_fraction() {
+        const ret = wasm.wasmneuralengine_chemical_vesicle_utilization_fraction(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
      * @returns {string}
      */
     corticothalamic_state_hash() {
