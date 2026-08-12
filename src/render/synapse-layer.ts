@@ -151,7 +151,12 @@ export class SynapseRenderLayer implements RenderLayer {
     );
     this.vesicles.name = "vesicular-reserve";
     this.vesicles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    declareVisual(this.vesicles, "matter", "state");
+    declareVisual(this.vesicles, "matter", "state", {
+      field: "chemical.vesicleAvailableFraction",
+      unit: "fraction",
+      transform: "available fraction to visible vesicle count",
+      redundancy: ["size", "position", "label"],
+    });
     this.group.add(this.vesicles);
 
     for (let transmitter = 0; transmitter < TRANSMITTER_COUNT; transmitter += 1) {
@@ -168,7 +173,12 @@ export class SynapseRenderLayer implements RenderLayer {
       );
       cloud.name = transmitter === 0 ? "glutamate-cloud" : "gaba-cloud";
       cloud.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      declareVisual(cloud, "emission", "state");
+      declareVisual(cloud, "emission", "state", {
+        field: `chemical.cleftConcentrationMolesPerCubicMeter[${transmitter}]`,
+        unit: "mol/m³",
+        transform: "concentration to particle count/scale by transmitter",
+        redundancy: ["size", "position", "label"],
+      });
       this.transmitterClouds.push(cloud);
       this.group.add(cloud);
 
@@ -185,7 +195,12 @@ export class SynapseRenderLayer implements RenderLayer {
       releaseSite.name = transmitter === 0 ? "glutamate-release" : "gaba-release";
       releaseSite.position.set(transmitter === 0 ? -0.25 : 0.25, 0.35, 0);
       releaseSite.rotation.x = Math.PI / 2;
-      declareVisual(releaseSite, "emission", "state");
+      declareVisual(releaseSite, "emission", "state", {
+        field: `chemical.latestReleaseMoles[${transmitter}]`,
+        unit: "mol",
+        transform: "latest event amount to release-ring opacity/scale",
+        redundancy: ["position", "size", "label"],
+      });
       this.releaseSites.push(releaseSite);
       this.group.add(releaseSite);
 
@@ -202,7 +217,12 @@ export class SynapseRenderLayer implements RenderLayer {
       recapture.name = transmitter === 0 ? "glutamate-recapture" : "gaba-recapture";
       recapture.position.set(transmitter === 0 ? -0.78 : 0.78, -0.08, 0);
       recapture.rotation.y = Math.PI / 2;
-      declareVisual(recapture, "emission", "state");
+      declareVisual(recapture, "emission", "state", {
+        field: `chemical.clearedMoles[${transmitter}]`,
+        unit: "mol",
+        transform: "cleared delta to lateral recapture ring",
+        redundancy: ["position", "orientation", "label"],
+      });
       this.recaptureSites.push(recapture);
       this.group.add(recapture);
     }
@@ -219,7 +239,12 @@ export class SynapseRenderLayer implements RenderLayer {
     );
     this.receptorSites.name = "published-receptor-occupancy";
     this.receptorSites.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    declareVisual(this.receptorSites, "emission", "state");
+    declareVisual(this.receptorSites, "emission", "state", {
+      field: "chemical.receptorOccupancyFraction",
+      unit: "fraction",
+      transform: "receptor family and occupancy to position/scale",
+      redundancy: ["position", "size", "label"],
+    });
     this.group.add(this.receptorSites);
   }
 

@@ -102,7 +102,12 @@ export class CellRenderLayer implements RenderLayer {
     );
     this.somata.name = "adex-somata";
     this.somata.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    declareVisual(this.somata, "matter", "state");
+    declareVisual(this.somata, "matter", "state", {
+      field: "cellPatch.{kinds,membraneVolts,spiked}",
+      unit: "class/V/event",
+      transform: "class to aspect ratio; voltage/spike to scale and luminance",
+      redundancy: ["shape", "size", "label"],
+    });
     this.group.add(this.somata);
 
     this.electricHalos = new THREE.InstancedMesh(
@@ -117,7 +122,12 @@ export class CellRenderLayer implements RenderLayer {
     );
     this.electricHalos.name = "receptor-current-halos";
     this.electricHalos.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    declareVisual(this.electricHalos, "emission", "state");
+    declareVisual(this.electricHalos, "emission", "state", {
+      field: "cellPatch.{ampa,nmda,gabaa,gabab}Amperes",
+      unit: "A",
+      transform: "signed current to ring plane; magnitude to scale",
+      redundancy: ["orientation", "size", "label"],
+    });
     this.group.add(this.electricHalos);
 
     const dendritePositions = new Float32Array(cellCount * 3 * 2 * 3);
@@ -163,7 +173,12 @@ export class CellRenderLayer implements RenderLayer {
     );
     this.boundary.name = "field-boundary";
     this.boundary.rotation.x = Math.PI / 2;
-    declareVisual(this.boundary, "matter", "state");
+    declareVisual(this.boundary, "matter", "state", {
+      field: "cellPatch.blend",
+      unit: "fraction",
+      transform: "patch activity/current magnitude to boundary opacity",
+      redundancy: ["position", "label"],
+    });
     this.group.add(this.boundary);
     this.setMode("cell");
   }

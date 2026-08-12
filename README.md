@@ -93,7 +93,7 @@ publicado neste repositório.
 
 ---
 
-## BRAIN PRO [v. 0.8.0 · implementação concluída, promoção em auditoria]
+## BRAIN PRO [v. 0.8.0 · promovida]
 
 Estou construindo o BRAIN PRO como um caderno de aprendizagem executável. Sou
 um programador aprendendo a usar a [Rust Programming Language](https://www.rust-lang.org/)
@@ -109,11 +109,11 @@ de equação, unidade, limite e teste próprios.
 Minha pergunta prática nesta fase é: **como ampliar a resolução — da rede à
 sinapse e da forma à química — sem desenhar um fenômeno que o motor não
 calcula?** A 0.8 implementa, sobre a base 0.7, recursos, química local, solver,
-ABI v6 e leitura sináptica. A evidência executável da ABI v6 está versionada,
-mas ainda não classifico a 0.8 como promovida: falta fechar a prova
-pixel→estado, demonstrar redundância estrutural sem cor e registrar um baseline
-em GPU física. O estado e o próximo gate estão no
-[ROADMAP canônico](ROADMAP.md).
+ABI v6 e leitura sináptica. A 0.8 está promovida após provas executáveis da ABI,
+pixel→estado, redundância estrutural sem cor, baseline em GPU física e auditoria
+final sem achado alto aberto. O resultado, os limites aceitos e o próximo corte
+estão no [ROADMAP canônico](ROADMAP.md) e na
+[auditoria de promoção](AUDIT_0.8_PROMOTION.md).
 
 ### O que consigo explorar hoje
 
@@ -133,8 +133,9 @@ em GPU física. O estado e o próximo gate estão no
 - corrente receptora média com sinal, halos orientados para entrada, saída e
   shunt, além de forma redundante para leitura sem depender de matiz;
 - gates automáticos de ABI, lifecycle, rampa pura, saturação, modo
-  monocromático, proveniência e perfil de navegador/preset/custo; o artefato
-  schema 2 comprova ABI v6 em SwiftShader e não substitui baseline em GPU real;
+  monocromático, proveniência e perfil de navegador/preset/custo; artefatos
+  schema 2 cobrem SwiftShader e Intel UHD 770/ANGLE D3D11 dentro dos envelopes
+  registrados;
 - contrato 0.8-a para recurso vesicular `R`, utilização `u`, liberação `uR`,
   cinco estoques em mol equivalente e carga transmembrana em coulombs;
 - dinâmica 0.8-b de Tsodyks–Markram determinística, com recuperação e decaimento
@@ -212,6 +213,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-11 | componho a química por Strang palindrômico, com adaptação de rigidez, avanço atômico e estudo de convergência |
 | 2026-08-11 | publico a química na ABI v6 sem tocar nos hashes anteriores e concluo sua implementação com a aba Sinapse; a promoção permanece condicionada aos gates de fechamento |
 | 2026-08-12 | fecho R08-P2 com 34 buffers, quatro hashes, replay após reset, descarte/reinicialização e 11 capturas versionadas da ABI v6 |
+| 2026-08-12 | fecho R08-P3 com pixel→estado, 72 bindings redundantes, 11 capturas e baseline Intel/D3D11; R08-P4 promove a 0.8 sem achado alto aberto |
 
 O histórico da base está em
 [`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
@@ -222,7 +224,9 @@ O histórico da base está em
 [GRAPHICS_SPEC.md](GRAPHICS_SPEC.md) e [VALIDATION.md](VALIDATION.md). A
 [auditoria de entrada 0.8](AUDIT_0.8_ENTRY.md) permanece como evidência
 histórica dos achados; o fechamento executável da ABI está em
-[AUDIT_0.8_ABI_V6.md](AUDIT_0.8_ABI_V6.md).
+[AUDIT_0.8_ABI_V6.md](AUDIT_0.8_ABI_V6.md), a prova gráfica em
+[AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md) e o veredito final em
+[AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md).
 
 ### Executar e conferir
 
@@ -235,7 +239,7 @@ Para repetir os gates:
 
 ```bash
 npm run check
-npm run verify:runtime-audit
+npm run verify:promotion-0.8
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo check -p brain-wasm --target wasm32-unknown-unknown

@@ -43,7 +43,7 @@ Geometria 3D não altera esta classe.
 | MOD-060 | STP | depleção/facilitação determinística | `R,u`, S, mol | Tsodyks–Markram exponencial | FUNDAMENTADO EM REFERÊNCIA/DIDÁTICO | fixture bit a bit |
 | MOD-070 | fenda/ocupação | separar matéria, concentração e ligação | mol, mol·m⁻³, fração | mapas exponenciais atômicos | DIDÁTICO/EXPERIMENTAL | conservação/replay |
 | MOD-080 | solver químico | compor operadores positivos sob rigidez | tempo, exposição, estoques | Strang palindrômico adaptativo | NUMÉRICO VALIDADO NO REGIME TESTADO | convergência/replay |
-| MOD-081 | trilha química | publicar uma sinapse representativa | buffers químicos v6 | composição por tick | DIDÁTICO/EXPERIMENTAL | fixture integrada; promoção visual pendente |
+| MOD-081 | trilha química | publicar uma sinapse representativa | buffers químicos v6 | composição por tick | DIDÁTICO/EXPERIMENTAL | fixture integrada; visual promovido nos limites 0.8 |
 | MOD-090 | inferência Bayesiana de tarefa | atualizar crença escalar | probabilidades | Bayes discreto em TS | EXPERIMENTAL | testes unitários; sem replay/preset de tarefa |
 
 “Validado” na última coluna refere-se ao contrato numérico testado, não a

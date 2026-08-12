@@ -33,6 +33,7 @@ if (
   report.source?.productVersion !== packageManifest.version ||
   !commitPattern.test(report.source?.commit ?? "") ||
   report.source?.command !== "npm run audit:runtime" ||
+  !["swiftshader", "hardware"].includes(report.source?.requestedGraphicsBackend) ||
   report.abi?.schemaVersion !== 6 ||
   report.abi?.bufferCount !== 34 ||
   report.abi?.buffers?.length !== 34 ||
@@ -48,6 +49,12 @@ if (
   !report.views?.synapse?.gaba?.endsWith("mol/m³") ||
   !report.views?.synapse?.occupancy?.endsWith("%") ||
   report.profile?.environment?.simulation?.runtime !== "rust-wasm"
+  || report.renderedStateGate?.samples?.length !== 5
+  || report.renderedStateGate?.maximumError > report.renderedStateGate?.tolerance
+  || report.visualGate?.bindings?.totalStateObjects !==
+    report.visualGate?.bindings?.declaredBindings
+  || report.visualGate?.bindings?.missingBindings?.length !== 0
+  || report.visualGate?.bindings?.missingRedundancy?.length !== 0
 ) {
   throw new Error("artefato runtime-audit.json não comprova integralmente a ABI v6");
 }

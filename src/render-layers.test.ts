@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   composeNodeActivity,
   interpolatePublishedValue,
+  signalPulseDiameter,
 } from "./render/brain-layer";
 
 describe("render activity composition", () => {
@@ -18,5 +19,9 @@ describe("render activity composition", () => {
     expect(composeNodeActivity(0.8, 0.6)).toBe(0.8);
     expect(composeNodeActivity(0.2, 1)).toBe(0.7);
     expect(composeNodeActivity(0.8, 0.6)).toBeLessThan(0.8 + 0.6 * 0.7);
+  });
+
+  it("keeps excitatory and inhibitory pulses distinguishable without color", () => {
+    expect(signalPulseDiameter(false)).toBeGreaterThan(signalPulseDiameter(true));
   });
 });

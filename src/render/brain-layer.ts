@@ -69,6 +69,10 @@ export function composeNodeActivity(activation: number, fieldWave: number): numb
   return Math.max(activation, fieldWave * 0.7);
 }
 
+export function signalPulseDiameter(inhibitory: boolean): number {
+  return inhibitory ? 0.015 : 0.019;
+}
+
 function createPointTexture(): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = 32;
@@ -135,7 +139,12 @@ export class BrainRenderLayers implements RenderLayer {
         }),
       );
       this.pointVisuals.push({ nodeIndices, geometry, baseColor: REGION_COLORS[region].clone() });
-      declareVisual(points, "emission", "state");
+      declareVisual(points, "emission", "state", {
+        field: `activations[region=${region}]`,
+        unit: "normalized activity",
+        transform: "base-to-white color ramp and point opacity",
+        redundancy: ["position", "size"],
+      });
       this.addRegionObject(region, points);
       this.createShell(region, pointsForRegion);
     }
@@ -179,7 +188,12 @@ export class BrainRenderLayers implements RenderLayer {
           depthWrite: true,
         }),
       );
-      declareVisual(lines, "matter", "state");
+      declareVisual(lines, "matter", "state", {
+        field: "weights[synapse]",
+        unit: "model weight",
+        transform: "absolute weight to line opacity",
+        redundancy: ["position"],
+      });
       this.connectionVisuals.push({ records, regions, lines, geometry, baseColor });
       this.group.add(lines);
     }
@@ -197,7 +211,12 @@ export class BrainRenderLayers implements RenderLayer {
       MAX_VISIBLE_SIGNALS * TRAIL_LENGTH,
     );
     this.pulseMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    declareVisual(this.pulseMesh, "emission", "state");
+    declareVisual(this.pulseMesh, "emission", "state", {
+      field: "signals.{progress,strength,inhibitory}",
+      unit: "fraction/model strength/class",
+      transform: "path position, scale, diameter class and color token",
+      redundancy: ["position", "size", "label"],
+    });
     this.group.add(this.pulseMesh);
   }
 
@@ -248,7 +267,12 @@ export class BrainRenderLayers implements RenderLayer {
     });
     const shell = new THREE.Mesh(geometry, material);
     shell.renderOrder = -1;
-    declareVisual(shell, "matter", "state");
+    declareVisual(shell, "matter", "state", {
+      field: `mean(activations[region=${region}])`,
+      unit: "normalized activity",
+      transform: "regional mean to shell opacity",
+      redundancy: ["position", "shape"],
+    });
     this.shellVisuals.push({ region, material });
     this.addRegionObject(region, shell);
   }
@@ -419,7 +443,7 @@ export class BrainRenderLayers implements RenderLayer {
 
         this.tempPosition.lerpVectors(fromPos, toPos, trailProgress);
         const scaleFactor = (1 - trailIndex / TRAIL_LENGTH) * (0.8 + pulseStrength * 0.4);
-        const size = isInhibitory ? 0.015 * scaleFactor : 0.019 * scaleFactor;
+        const size = signalPulseDiameter(isInhibitory) * scaleFactor;
         this.tempScale.set(size, size, size);
         this.tempMatrix.compose(this.tempPosition, this.tempQuaternion.identity(), this.tempScale);
         this.pulseMesh.setMatrixAt(instanceIndex, this.tempMatrix);

@@ -6,6 +6,7 @@ import { FixedStepClock } from "./clock";
 import {
   amperesToPicoamperes,
   auditVisualProvenance,
+  auditVisualBindings,
   BrainRenderLayers,
   CellRenderLayer,
   decodeStateColor,
@@ -16,6 +17,7 @@ import {
   parseSimulationView,
   parseVisualColorMode,
   receptorCurrentTotals,
+  auditRenderedStatePixels,
   SelectiveBloomPipeline,
   SynapseRenderLayer,
   VISUAL_COLORS,
@@ -73,9 +75,11 @@ declare global {
       visualAudit: () => {
         colorMode: VisualColorMode;
         provenance: ReturnType<typeof auditVisualProvenance>;
+        bindings: ReturnType<typeof auditVisualBindings>;
         invertibility: { samples: number; tolerance: number; maximumError: number };
         redundancy: Record<SimulationView, string>;
       };
+      renderedStateAudit: () => ReturnType<typeof auditRenderedStatePixels>;
       createAuditWorker: () => Worker;
       createAuditTopology: () => BrainData;
     };
@@ -310,6 +314,7 @@ function visualAuditReport() {
   return {
     colorMode: visualColorMode,
     provenance: auditVisualProvenance(scene),
+    bindings: auditVisualBindings(scene),
     invertibility: { samples: bases.length * states.length, tolerance: 1e-6, maximumError },
     redundancy: {
       overview: "pulsos E/I usam diâmetros distintos e legenda textual",
@@ -799,6 +804,9 @@ async function init(): Promise<void> {
     },
     visualAudit() {
       return visualAuditReport();
+    },
+    renderedStateAudit() {
+      return auditRenderedStatePixels(renderer);
     },
     createAuditWorker() {
       return new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });

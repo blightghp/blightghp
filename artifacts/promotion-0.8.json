@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "productVersion": "0.8.0",
+  "promotedAt": "2026-08-12T14:12:49.6637857Z",
+  "candidateCommit": "d9e915fed6c5350c991c41e10131319605e29dbd",
+  "protocolVersion": 6,
+  "snapshotBuffers": 34,
+  "hashDomains": 4,
+  "gates": [
+    { "id": "R08-P1", "status": "passed" },
+    { "id": "R08-P2", "status": "passed" },
+    { "id": "R08-P3", "status": "passed" },
+    { "id": "R08-P4", "status": "passed" }
+  ],
+  "testMatrix": [
+    { "command": "npm run check", "status": "passed" },
+    { "command": "npm audit --omit=dev", "status": "passed" },
+    { "command": "npm run verify:brain-gif", "status": "passed" },
+    { "command": "cargo fmt --all -- --check", "status": "passed" },
+    { "command": "cargo test --workspace --all-targets", "status": "passed" },
+    {
+      "command": "cargo clippy --workspace --all-targets -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "command": "cargo check -p brain-wasm --target wasm32-unknown-unknown",
+      "status": "passed"
+    },
+    {
+      "command": "wasm-bindgen temporário + hashes de bindings + shadow replay",
+      "status": "passed"
+    }
+  ],
+  "evidence": [
+    "AUDIT_0.8_ENTRY.md",
+    "AUDIT_0.8_ABI_V6.md",
+    "AUDIT_0.8_GRAPHICS.md",
+    "artifacts/visual-audit/runtime-audit.json",
+    "artifacts/hardware-audit/runtime-audit.json"
+  ],
+  "openHighFindings": [],
+  "acceptedNonHighFindings": [
+    {
+      "id": "P5",
+      "severity": "medium",
+      "owner": "motor de experimentos",
+      "scheduledPhase": "R09-A",
+      "rationale": "a fronteira de inferência é o primeiro corte funcional da 0.9"
+    },
+    {
+      "id": "R4",
+      "severity": "medium",
+      "owner": "interface gráfica",
+      "scheduledPhase": "R09-C",
+      "rationale": "a legenda existe; o glifo será substituído pela Prancha Elétrica"
+    },
+    {
+      "id": "R5",
+      "severity": "medium",
+      "owner": "interface gráfica",
+      "scheduledPhase": "R09-C",
+      "rationale": "a Prancha Elétrica separará as duas vistas hoje compartilhadas"
+    },
+    {
+      "id": "R6",
+      "severity": "low",
+      "owner": "desempenho gráfico",
+      "scheduledPhase": "R09-C",
+      "rationale": "o baseline físico atende ao envelope observado; otimização acompanha a nova prancha"
+    },
+    {
+      "id": "R7",
+      "severity": "low",
+      "owner": "desempenho gráfico",
+      "scheduledPhase": "R09-C",
+      "rationale": "o custo está medido e a reciclagem será tratada com a nova camada"
+    },
+    {
+      "id": "M1",
+      "severity": "scope",
+      "owner": "eventos do motor",
+      "scheduledPhase": "R09-B",
+      "rationale": "carimbos por spike são pré-requisito explícito da visualização axonal 0.9"
+    },
+    {
+      "id": "M2",
+      "severity": "scope",
+      "owner": "modelo celular",
+      "scheduledPhase": "R09-E",
+      "rationale": "multicompartimentos pertencem ao contrato científico da 0.9"
+    }
+  ],
+  "rollback": {
+    "baseline": "0.7",
+    "condition": "qualquer divergência entre versão, ABI, auditoria física e matriz de testes reabre R08-P4"
+  }
+}

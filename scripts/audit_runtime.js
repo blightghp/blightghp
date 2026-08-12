@@ -15,6 +15,9 @@ const outputDirectory = process.env.BRAIN_AUDIT_DIR
   ? path.resolve(process.env.BRAIN_AUDIT_DIR)
   : path.join(os.tmpdir(), "brain-pro-visual-audit");
 await mkdir(outputDirectory, { recursive: true });
+const requestedGraphicsBackend = process.env.BRAIN_GRAPHICS_BACKEND === "hardware"
+  ? "hardware"
+  : "swiftshader";
 
 async function saturatedPixelRatio(filename) {
   const png = PNG.sync.read(await readFile(path.join(outputDirectory, filename)));
@@ -42,7 +45,16 @@ try {
   await server.listen();
   browser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-angle=swiftshader"],
+    executablePath: process.env.BRAIN_BROWSER_EXECUTABLE || undefined,
+    args: requestedGraphicsBackend === "hardware"
+      ? [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--enable-gpu",
+          "--use-angle=d3d11",
+          "--disable-software-rasterizer",
+        ]
+      : ["--no-sandbox", "--disable-setuid-sandbox", "--use-angle=swiftshader"],
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 960, deviceScaleFactor: 1 });
@@ -92,14 +104,21 @@ try {
   }
 
   const visualGate = await page.evaluate(() => window.__BRAIN_ENGINE__.visualAudit());
+  const renderedStateGate = await page.evaluate(() => window.__BRAIN_ENGINE__.renderedStateAudit());
   if (
     visualGate.provenance.total <= 0 ||
     visualGate.provenance.undeclared !== 0 ||
+    visualGate.bindings.totalStateObjects !== visualGate.bindings.declaredBindings ||
+    visualGate.bindings.missingBindings.length !== 0 ||
+    visualGate.bindings.missingRedundancy.length !== 0 ||
     visualGate.invertibility.samples < 20 ||
     visualGate.invertibility.maximumError > visualGate.invertibility.tolerance ||
     Object.values(visualGate.redundancy).some((encoding) => !encoding)
   ) {
     throw new Error(`gates de apresentação incompletos: ${JSON.stringify(visualGate)}`);
+  }
+  if (renderedStateGate.maximumError > renderedStateGate.tolerance) {
+    throw new Error(`pixel→estado excedeu a tolerância: ${JSON.stringify(renderedStateGate)}`);
   }
 
   const colorCaptures = [
@@ -211,6 +230,15 @@ try {
   ) {
     throw new Error(`perfil incompleto: ${JSON.stringify(profile)}`);
   }
+  const softwareRenderer = /swiftshader|llvmpipe|software/i.test(
+    profile.environment.hardware.webglRenderer,
+  );
+  if (requestedGraphicsBackend === "hardware" && softwareRenderer) {
+    throw new Error(
+      `GPU física solicitada, mas renderer de software foi selecionado: ` +
+      profile.environment.hardware.webglRenderer,
+    );
+  }
 
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
   await page.screenshot({ path: path.join(outputDirectory, "overview-mobile.png") });
@@ -236,6 +264,7 @@ try {
       commit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
       productVersion: packageManifest.version,
       command: "npm run audit:runtime",
+      requestedGraphicsBackend,
     },
     viewports: ["1440x960", "390x844"],
     captures: [
@@ -252,6 +281,7 @@ try {
     contrast,
     saturation,
     visualGate,
+    renderedStateGate,
     monochromeGate,
     abi: {
       ...abi,

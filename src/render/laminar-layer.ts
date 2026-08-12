@@ -143,7 +143,12 @@ export class LaminarRenderLayer implements RenderLayer {
       );
       excitatory.position.y = layerY(index);
       excitatory.name = `${CORTICAL_LAYER_LABELS[index]}-excitatory`;
-      declareVisual(excitatory, "matter", "state");
+      declareVisual(excitatory, "matter", "state", {
+        field: `corticothalamic.excitatory[${index}]`,
+        unit: "normalized activity",
+        transform: "activity to opacity on cylinder",
+        redundancy: ["shape", "position", "label"],
+      });
       this.excitatoryMeshes.push(excitatory);
       this.group.add(excitatory);
 
@@ -160,7 +165,12 @@ export class LaminarRenderLayer implements RenderLayer {
       inhibitory.position.y = layerY(index);
       inhibitory.rotation.x = Math.PI / 2;
       inhibitory.name = `${CORTICAL_LAYER_LABELS[index]}-inhibitory`;
-      declareVisual(inhibitory, "matter", "state");
+      declareVisual(inhibitory, "matter", "state", {
+        field: `corticothalamic.inhibitory[${index}]`,
+        unit: "normalized activity",
+        transform: "activity to opacity on torus",
+        redundancy: ["shape", "position", "label"],
+      });
       this.inhibitoryMeshes.push(inhibitory);
       this.group.add(inhibitory);
     }
@@ -186,7 +196,12 @@ export class LaminarRenderLayer implements RenderLayer {
       line.userData.kind = projection.kind;
       line.userData.source = projection.source;
       line.userData.target = projection.target;
-      declareVisual(line, "matter", "state");
+      declareVisual(line, "matter", "state", {
+        field: `projection.${projection.source}->${projection.target}`,
+        unit: "declared pathway activity",
+        transform: "source/target curve and kind token",
+        redundancy: ["position", "label"],
+      });
       this.projectionLines.push(line);
       this.projectionCurves.push(curve);
       this.group.add(line);
@@ -202,7 +217,12 @@ export class LaminarRenderLayer implements RenderLayer {
         }),
       );
       pulse.name = `axonal-pulse-${this.projectionPulses.length}`;
-      declareVisual(pulse, "emission", "state");
+      declareVisual(pulse, "emission", "state", {
+        field: `projection.${projection.source}->${projection.target}.phase`,
+        unit: "cycle fraction",
+        transform: "phase to curve position and scale",
+        redundancy: ["position", "size"],
+      });
       this.projectionPulses.push(pulse);
       this.group.add(pulse);
     }
@@ -219,7 +239,12 @@ export class LaminarRenderLayer implements RenderLayer {
     );
     this.relayMesh.position.copy(projectionPoint(6));
     this.relayMesh.name = "thalamic-relay";
-    declareVisual(this.relayMesh, "matter", "state");
+    declareVisual(this.relayMesh, "matter", "state", {
+      field: "corticothalamic.relay",
+      unit: "normalized activity",
+      transform: "activity to icosahedron opacity/scale",
+      redundancy: ["shape", "position", "label"],
+    });
     this.group.add(this.relayMesh);
 
     this.trnMesh = new THREE.Mesh(
@@ -235,7 +260,12 @@ export class LaminarRenderLayer implements RenderLayer {
     this.trnMesh.position.copy(projectionPoint(7));
     this.trnMesh.rotation.x = Math.PI / 2;
     this.trnMesh.name = "thalamic-reticular-nucleus";
-    declareVisual(this.trnMesh, "matter", "state");
+    declareVisual(this.trnMesh, "matter", "state", {
+      field: "corticothalamic.trn",
+      unit: "normalized activity",
+      transform: "activity to torus opacity/scale",
+      redundancy: ["shape", "position", "label"],
+    });
     this.group.add(this.trnMesh);
     this.setLod(this.lod);
   }
