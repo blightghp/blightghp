@@ -60,6 +60,7 @@ declare global {
     __BRAIN_ENGINE__?: {
       capture: (time: number, rotation: number) => Promise<void>;
       setCaptureMode: (enabled: boolean) => Promise<void>;
+      setCameraRotation: (rotation: number) => void;
       setView: (view: SimulationView) => void;
       schedule: (inputs: ScheduledEngineInput[]) => Promise<number>;
       diagnostics: () => {
@@ -818,6 +819,12 @@ async function init(): Promise<void> {
       }
       captureTime = time;
       if (latestSnapshot) renderFrame(latestSnapshot, time, rotation);
+    },
+    setCameraRotation(rotation) {
+      if (!Number.isFinite(rotation)) throw new Error("rotação de câmera inválida");
+      if (latestSnapshot) {
+        renderFrame(latestSnapshot, simulationClock.renderTimeSeconds, rotation);
+      }
     },
     diagnostics() {
       return {

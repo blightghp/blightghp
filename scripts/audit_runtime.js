@@ -194,7 +194,7 @@ try {
   const hashesBeforeElectricalControls = await page.evaluate(
     () => window.__BRAIN_ENGINE__.diagnostics(),
   );
-  await page.evaluate(() => window.__BRAIN_ENGINE__.capture(0, 1.23));
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setCameraRotation(1.23));
   await page.select("#electrical-detail", "events");
   await page.select("#electrical-detail", "summary");
   await page.select("#electrical-detail", "cellular");
