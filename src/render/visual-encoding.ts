@@ -69,10 +69,9 @@ export function cellCurrentState(snapshot: NeuralSnapshot, index: number): CellC
   const nmda = snapshot.cellPatch.nmdaAmperes[index] ?? 0;
   const gabaa = snapshot.cellPatch.gabaaAmperes[index] ?? 0;
   const gabab = snapshot.cellPatch.gababAmperes[index] ?? 0;
-  const values = [ampa, nmda, gabaa, gabab];
   return classifyCellCurrent(
-    values.reduce((sum, value) => sum + value, 0),
-    values.reduce((sum, value) => sum + Math.abs(value), 0),
+    ampa + nmda + gabaa + gabab,
+    Math.abs(ampa) + Math.abs(nmda) + Math.abs(gabaa) + Math.abs(gabab),
     snapshot.cellPatch.dendriteVolts[index] ?? GABAA_REVERSAL_VOLTS,
     gabaa,
   );
@@ -86,9 +85,16 @@ export function currentDirectionColor(direction: CurrentDirection): THREE.Color 
 }
 
 export function currentDirectionEuler(direction: CurrentDirection): THREE.Euler {
-  if (direction === "depolarizing") return new THREE.Euler(0, 0, 0);
-  if (direction === "hyperpolarizing") return new THREE.Euler(0, Math.PI / 2, 0);
-  return new THREE.Euler(Math.PI / 2, 0, 0);
+  return setCurrentDirectionEuler(new THREE.Euler(), direction);
+}
+
+export function setCurrentDirectionEuler(
+  target: THREE.Euler,
+  direction: CurrentDirection,
+): THREE.Euler {
+  if (direction === "depolarizing") return target.set(0, 0, 0);
+  if (direction === "hyperpolarizing") return target.set(0, Math.PI / 2, 0);
+  return target.set(Math.PI / 2, 0, 0);
 }
 
 export function currentMagnitudeScale(amperes: number): number {

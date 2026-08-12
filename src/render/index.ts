@@ -1,5 +1,6 @@
 export * from "./brain-layer";
 export * from "./cell-layer";
+export * from "./electrical-board-layer";
 export * from "./laminar-layer";
 export * from "./render-types";
 export * from "./rendered-state-probe";

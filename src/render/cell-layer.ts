@@ -16,9 +16,8 @@ import { COLOR_TOKENS, VISUAL_COLORS } from "./visual-tokens";
 import {
   cellCurrentState,
   currentDirectionColor,
-  currentDirectionEuler,
   currentMagnitudeScale,
-  encodeStateColor,
+  setCurrentDirectionEuler,
   signedMean,
 } from "./visual-encoding";
 
@@ -74,10 +73,10 @@ export function receptorCurrentTotals(snapshot: NeuralSnapshot): ReceptorCurrent
   };
 }
 
-function cellPosition(index: number): THREE.Vector3 {
+function setCellPosition(target: THREE.Vector3, index: number): THREE.Vector3 {
   const row = Math.floor(index / 4);
   const column = index % 4;
-  return new THREE.Vector3(
+  return target.set(
     (column - 1.5) * 0.58 + (row % 2) * 0.1,
     0.78 - row * 0.72,
     (column % 2) * 0.2 - 0.1,
@@ -92,6 +91,10 @@ export class CellRenderLayer implements RenderLayer {
   private readonly boundary: THREE.Mesh;
   private readonly matrix = new THREE.Matrix4();
   private readonly color = new THREE.Color();
+  private readonly position = new THREE.Vector3();
+  private readonly scale = new THREE.Vector3();
+  private readonly quaternion = new THREE.Quaternion();
+  private readonly euler = new THREE.Euler();
   private readonly stampedSpikes: Uint8Array;
   private mode: CellLayerMode = "cell";
 
@@ -140,9 +143,10 @@ export class CellRenderLayer implements RenderLayer {
     this.group.add(this.electricHalos);
 
     const dendritePositions = new Float32Array(cellCount * 3 * 2 * 3);
+    const position = new THREE.Vector3();
     let offset = 0;
     for (let index = 0; index < cellCount; index += 1) {
-      const position = cellPosition(index);
+      setCellPosition(position, index);
       for (const direction of [-1, 0, 1]) {
         dendritePositions.set([position.x, position.y, position.z], offset);
         offset += 3;
@@ -209,7 +213,7 @@ export class CellRenderLayer implements RenderLayer {
     const totals = receptorCurrentTotals(snapshot);
     const totalCurrent = Math.abs(totals.ampa + totals.nmda + totals.gabaa + totals.gabab);
     for (let index = 0; index < count; index += 1) {
-      const position = cellPosition(index);
+      setCellPosition(this.position, index);
       const voltage = interpolatePublishedValue(
         snapshot.cellPatch.membraneVolts[index] ?? RESTING_VOLTS,
         previous?.cellPatch.membraneVolts[index],
@@ -218,21 +222,22 @@ export class CellRenderLayer implements RenderLayer {
       const activation = membraneActivation(voltage);
       const spiked = this.stampedSpikes[index] === 1;
       const scale = spiked ? 1.55 : 0.88 + activation * 0.38;
-      const kindScale = snapshot.cellPatch.kinds[index] === 0
-        ? new THREE.Vector3(scale * 0.9, scale * 1.12, scale * 0.9)
-        : new THREE.Vector3(scale * 1.08, scale * 0.82, scale * 1.08);
+      if (snapshot.cellPatch.kinds[index] === 0) {
+        this.scale.set(scale * 0.9, scale * 1.12, scale * 0.9);
+      } else {
+        this.scale.set(scale * 1.08, scale * 0.82, scale * 1.08);
+      }
       this.matrix.compose(
-        position,
-        new THREE.Quaternion(),
-        kindScale,
+        this.position,
+        this.quaternion.identity(),
+        this.scale,
       );
       this.somata.setMatrixAt(index, this.matrix);
       const base = snapshot.cellPatch.kinds[index] === 0
         ? EXCITATORY_COLOR
         : INHIBITORY_COLOR;
-      this.color.copy(
-        spiked ? SPIKE_COLOR : encodeStateColor(base, activation, 0.34),
-      );
+      this.color.copy(spiked ? SPIKE_COLOR : base);
+      if (!spiked) this.color.lerp(COLOR_TOKENS.white, activation * 0.34);
       this.somata.setColorAt(index, this.color);
 
       const current = cellCurrentState(snapshot, index);
@@ -240,9 +245,9 @@ export class CellRenderLayer implements RenderLayer {
         ? 0.0001
         : currentMagnitudeScale(current.magnitudeAmperes);
       this.matrix.compose(
-        position,
-        new THREE.Quaternion().setFromEuler(currentDirectionEuler(current.direction)),
-        new THREE.Vector3(currentScale, currentScale, currentScale),
+        this.position,
+        this.quaternion.setFromEuler(setCurrentDirectionEuler(this.euler, current.direction)),
+        this.scale.setScalar(currentScale),
       );
       this.electricHalos.setMatrixAt(index, this.matrix);
       this.electricHalos.setColorAt(

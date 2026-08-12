@@ -166,6 +166,8 @@ a:focus-visible {
 .cell-panel .lede, .electricity-panel .lede { max-width: 255px; }
 .cell-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .cell-metrics strong { white-space: nowrap; }
+.electrical-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.electrical-metrics strong { font-size: 9px; white-space: nowrap; }
 
 .model-copy {
   margin: 0;
@@ -222,6 +224,44 @@ a:focus-visible {
 .current-direction-key .inward::first-letter { color: #43c8ff; }
 .current-direction-key .outward::first-letter { color: #c879ff; }
 .current-direction-key .shunt::first-letter { color: #ffb45b; }
+
+.electrical-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  color: #7895b0;
+  font-size: 8px;
+}
+
+.electrical-table caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.electrical-table th,
+.electrical-table td {
+  padding: 6px 3px;
+  border-bottom: 1px solid rgba(91, 158, 228, .1);
+  text-align: left;
+  vertical-align: top;
+}
+
+.electrical-table th { width: 29%; color: #9cb2c8; font-weight: 500; }
+.electrical-table td:nth-child(2) {
+  width: 27%;
+  color: #8edfff;
+  font: 500 8px "JetBrains Mono", monospace;
+  white-space: nowrap;
+}
+.electrical-table td:last-child { width: 44%; overflow-wrap: anywhere; }
+.electrical-table code { color: #5e7e9c; font-size: 7px; }
 
 .layer-key {
   display: grid;
