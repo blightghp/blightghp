@@ -409,13 +409,13 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 
 | ID | Fontes em conflito | Evidência mais forte | Decisão/ação |
 | :-- | :-- | :-- | :-- |
-| C-01 | headers 0.7 × manifests/código 0.8 | manifests + ABI/código | docs passam a declarar produto 0.8.0 e promoção pendente |
+| C-01 | headers 0.7 × manifests/código 0.8 | manifests + ABI/código | docs declaram produto 0.8.0 promovido em R08-P4 |
 | C-02 | roadmap 0.7 × proposta 0.8 × código concluído | código/testes | um roadmap canônico; ambos arquivados |
-| C-03 | “0.8 fechada” × gates de promoção incompletos | auditorias P2/P3/P4 | P2 concluída não equivale à promoção geral |
+| C-03 | “0.8 fechada” × gates de promoção incompletos | auditorias P2/P3/P4 | promoção ocorreu somente após os quatro gates |
 | C-04 | 22 buffers/ABI v5 × ABI v6 atual | protocolo/transfer list | estado atual é 34; 22 permanece só como história |
 | C-05 | `main.ts` concentrava render × `src/render` existente | árvore atual | descrição atualizada; `main.ts` ainda concentra composição/UI |
-| C-06 | “gate de invertibilidade pixel” × teste analítico | script/testes | classificar como parcial até amostrar render target/pixels conhecidos |
-| C-07 | “modo sem cor comprova redundância” × filtro grayscale | código auditável | capturas ajudam, mas prova estrutural automática ainda falta |
+| C-06 | “gate de invertibilidade pixel” × teste analítico | script/testes | R08-P3 amostra render target e pixels conhecidos em dois backends |
+| C-07 | “modo sem cor comprova redundância” × filtro grayscale | código auditável | R08-P3 exige bindings e pistas geométricas concretas além da captura |
 | C-08 | TS só apresenta × posterior alimenta drive | `main.ts`/`inference.ts` | experimento permanece explícito e R09-A resolve ownership |
 | C-09 | Tauri roda núcleo nativo × host atual só informa schema | `src-tauri/src/lib.rs` | execução nativa é alvo, não capacidade atual |
 | C-10 | VISUAL_SPEC ativo × GRAPHICS_SPEC requerido | conjunto canônico | conteúdo incorporado e proposta arquivada |
@@ -428,7 +428,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | P2 programa visual ausente | FECHADO documentalmente | GRAPHICS_SPEC/roadmap; futuras features ainda planejadas |
 | P3 arquitetura desatualizada | FECHADO por esta revisão | este documento |
 | P4 `src/render`/interface | FECHADO | diretório, `RenderLayer` e testes existem |
-| P5 inferência fora do contrato | ABERTO | `posterior` ainda alimenta `confidence`; R09-A |
+| P5 inferência fora do contrato | ACEITO PARA R09-A | `posterior` ainda alimenta `confidence`; primeiro corte da 0.9 |
 | E1 perfil sem ambiente | FECHADO em R08-P2 | artefato schema 2 registra host, navegador, preset e contagens |
 | E2 hardware real | FECHADO em R08-P3 | Intel UHD 770/ANGLE D3D11 versionada com ambiente e custos |
 | E3 redundância sem cor | FECHADO em R08-P3 | 72 bindings + testes das geometrias/posições/orientações concretas |
@@ -436,12 +436,12 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | R1 tokens dispersos | FECHADO | `visual-tokens.ts` |
 | R2 bloom global/aditivo | FECHADO | `SelectiveBloomPipeline` + contrato de materiais |
 | R3 corrente sem sinal | FECHADO | `signedMean`, direção e testes |
-| R4 fronteira ilegível | PARCIAL | legenda textual existe; glifo continua um toro agregado |
-| R5 Célula/Eletricidade duplicadas | ABERTO | compartilham `CellRenderLayer`; R09-C cria prancha própria |
-| R6 alocações por frame | ABERTO | arrays/vetores/quaternions ainda surgem no caminho quente |
-| R7 limpeza/visibilidade por frame | ABERTO | 900 matrizes são limpas; visibilidade roda em frames da visão geral |
-| M1 tempo por spike | ABERTO | só flag por tick/primeiro spike; R09-B |
-| M2 dendrito único | ABERTO | contrato atual é um compartimento; R09-E |
+| R4 fronteira ilegível | ACEITO PARA R09-C | legenda textual existe; a Prancha Elétrica substituirá o toro agregado |
+| R5 Célula/Eletricidade duplicadas | ACEITO PARA R09-C | compartilham `CellRenderLayer`; R09-C cria prancha própria |
+| R6 alocações por frame | ACEITO PARA R09-C | dívida baixa medida no baseline físico; otimização acompanha a nova camada |
+| R7 limpeza/visibilidade por frame | ACEITO PARA R09-C | custo medido; reciclagem acompanha a nova camada |
+| M1 tempo por spike | ACEITO PARA R09-B | só flag por tick/primeiro spike; eventos são pré-requisito da 0.9 |
+| M2 dendrito único | ACEITO PARA R09-E | contrato atual é um compartimento; multicompartimentos pertencem à 0.9 |
 | M3 química inexistente | FECHADO no microdomínio local | química v6 existe; transmissão de volume continua futura |
 
 ## Dependência entre fases
@@ -450,7 +450,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 flowchart LR
     P1["R08-P1 docs"] --> P2["R08-P2 ABI evidence"]
     P1 --> P3["R08-P3 graphics gates"]
-    P2 --> P4["R08-P4 promotion"]
+    P2 --> P4["R08-P4 promoted"]
     P3 --> P4
     P4 --> A["R09-A experiments"]
     P4 --> B["R09-B events"]

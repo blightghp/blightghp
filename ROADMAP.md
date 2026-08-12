@@ -4,9 +4,9 @@
 
 **Produto declarado nos manifests:** `0.8.0`
 
-**Estado de promoção:** 0.8 implementada, mas ainda não promovida
+**Estado de promoção:** 0.8 promovida em 12 de agosto de 2026
 
-**Próximo gate:** `R08-P4` · auditoria final de promoção
+**Próximo gate:** `R09-A` · fronteira de experimentos
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -68,7 +68,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | patch AdEx e quatro correntes | IMPLEMENTADO E VALIDADO | `cell_patch` | replay/convergência 0.7 | um dendrito passivo, sem morfologia |
 | recursos e STP | IMPLEMENTADO E VALIDADO NO CONTRATO | `chemical_contract`, `short_term_plasticity` | testes e fixture v1 | preset didático não calibrado |
 | fenda, ocupação e solver | IMPLEMENTADO E VALIDADO NO REGIME TESTADO | `cleft_occupancy`, `chemical_solver` | replays e convergência | microdomínio representativo, não população de fendas |
-| ABI v6 e aba Sinapse | IMPLEMENTADO E VALIDADO NO NAVEGADOR | `brain-wasm`, Worker, `SynapseRenderLayer` | [auditoria ABI v6](AUDIT_0.8_ABI_V6.md) | promoção geral ainda depende de P3/P4 |
+| ABI v6 e aba Sinapse | IMPLEMENTADO, VALIDADO E PROMOVIDO | `brain-wasm`, Worker, `SynapseRenderLayer` | [auditoria de promoção](AUDIT_0.8_PROMOTION.md) | validade restrita ao contrato 0.8 declarado |
 | passes matéria/emissão e tokens | IMPLEMENTADO E VALIDADO EM P3 | `src/render` | [auditoria gráfica](AUDIT_0.8_GRAPHICS.md) | validade restrita aos backends/envelopes registrados |
 | inferência Bayesiana do painel | EXPERIMENTAL/CONTRADITÓRIO | `inference.ts`, `main.ts` | dois testes unitários | posterior TypeScript alimenta `confidence` sem contrato de experimento |
 | neurônio resolvido, cortes, vascular, atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
@@ -81,12 +81,12 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | 0.5 | Rust/Wasm torna-se motor padrão | promovida | `AUDIT_0.5_PROMOTION.md` | `MIGRATION-0.5.md` |
 | 0.6 | L1–L6, relé/TRN e ABI v4 | promovida | auditorias 0.6 | `PLAN-0.6.md` |
 | 0.7 | patch AdEx, quatro receptores e ABI v5 | promovida | auditorias 0.7 | `PLAN-0.7.md` |
-| 0.8 | recursos, química local, solver, ABI v6 e Sinapse | implementada | código, fixtures e testes | proposta 0.8 legada |
+| 0.8 | recursos, química local, solver, ABI v6 e Sinapse | promovida | [auditoria final](AUDIT_0.8_PROMOTION.md) | proposta 0.8 legada |
 
-A 0.8 ainda não é marcada como promovida porque falta a auditoria final P4. A
-evidência da ABI v6 foi fechada em [R08-P2](AUDIT_0.8_ABI_V6.md), e pixel→estado,
-redundância sem cor e custo em GPU física foram fechados em
-[R08-P3](AUDIT_0.8_GRAPHICS.md).
+A 0.8 foi promovida após a evidência da ABI v6 em
+[R08-P2](AUDIT_0.8_ABI_V6.md), o fechamento de pixel→estado, redundância sem cor
+e custo em GPU física em [R08-P3](AUDIT_0.8_GRAPHICS.md), e a concordância final
+registrada em [R08-P4](AUDIT_0.8_PROMOTION.md).
 
 ## Modelo obrigatório de corte
 
@@ -111,8 +111,8 @@ Worker → frontend → renderer → auditoria → documentação → promoção
 
 ## R08-PROMOTION · fechar a versão 0.8
 
-**Estado:** P1–P3 concluídas; P4 é o próximo corte. Nenhuma nova fisiologia entra
-antes deste gate.
+**Estado:** P1–P4 concluídas; 0.8 promovida. A próxima fisiologia começa em
+R09-A sob os contratos abaixo.
 
 ### R08-P1 · fonte documental única
 
@@ -163,6 +163,9 @@ antes deste gate.
 | complexidade/confiança | alta / média |
 
 ### R08-P4 · promoção
+
+**Estado:** concluída; evidência em
+[AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md).
 
 | Campo | Contrato |
 | :-- | :-- |

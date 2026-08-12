@@ -1,6 +1,6 @@
 # Estratégia canônica de validação · BRAIN PRO
 
-**Revisão:** 1 · produto observado 0.8.0 · promoção 0.8 pendente
+**Revisão:** 2 · produto observado 0.8.0 · promoção 0.8 concluída
 
 Quatro perguntas permanecem separadas: o cálculo é reproduzível, respeita
 limites, converge e produz o fenômeno definido pelo experimento? Uma única
@@ -14,9 +14,10 @@ artefato de promoção.
 | :-- | :-- | :-- | :-- |
 | 0.4–0.7 | fixtures, Cargo/Vitest e auditorias | auditorias de promoção | promovido nos limites declarados |
 | química nativa 0.8-a..d | testes unitários, replays e convergência | fixtures v1 | implementado e validado no contrato/regime testado |
-| trilha/ABI v6 | fixture integrada, testes host/Worker/scripts | auditoria P2 + `runtime-audit.json` schema 2 | validado no navegador; promoção geral pendente |
+| trilha/ABI v6 | fixture integrada, testes host/Worker/scripts | auditoria P2 + `runtime-audit.json` schema 2 | validado no navegador e promovido em P4 |
 | gráficos 0.8 | bindings estruturais, pixel renderizado, saturação e capturas | headless + baseline físico versionados | validado em P3 |
 | hardware real | perfil completo e rejeição de software renderer | Intel UHD 770/ANGLE D3D11 | baseline versionado; não é promessa universal |
+| promoção 0.8 | gate agregado de versão, ABI, evidência e achados | `promotion-0.8.json` schema 1 | P1–P4 concluídas; nenhum achado alto aberto |
 
 O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
@@ -473,6 +474,7 @@ npm run test:wasm-browser
 npm run audit:runtime
 npm run verify:runtime-audit
 npm run verify:hardware-audit
+npm run verify:promotion-0.8
 ```
 
 `npm run check` inclui build, navegador, verificação do artefato versionado e
@@ -480,9 +482,9 @@ uma auditoria temporária. Defina `BRAIN_AUDIT_DIR` para escolher onde uma nova
 captura será escrita; a atualização versionada exige revisão visual e commit
 separado da implementação testada.
 
-## Gate de promoção 0.8
+## Gate de promoção 0.8 · concluído
 
-A 0.8 só pode ser promovida quando:
+A 0.8 foi promovida porque:
 
 1. todos os replays nativos químicos e a compatibilidade v5 passarem;
 2. bindings gerados, ABI 6, 34 buffers e quatro hashes passarem no Worker real;
@@ -493,7 +495,10 @@ A 0.8 só pode ser promovida quando:
 7. achados P/R/M estiverem fechados ou aceitos com owner/fase;
 8. auditoria de promoção registrar comandos e resultados reais.
 
-Até lá, a formulação correta é “0.8 implementada; promoção pendente”.
+O fechamento executável e os limites aceitos estão em
+[AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md) e
+[`artifacts/promotion-0.8.json`](artifacts/promotion-0.8.json). Alterar versão,
+ABI, evidência física ou um achado aceito reabre este gate.
 
 ### C# e aceleradores externos
 

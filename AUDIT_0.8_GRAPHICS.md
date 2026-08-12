@@ -4,7 +4,8 @@
 
 **Produto:** 0.8.0
 
-**Veredito:** R08-P3 concluída; resta a auditoria final R08-P4
+**Veredito deste corte:** R08-P3 concluída; R08-P4 foi posteriormente concluída
+em [AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md)
 
 ## Escopo
 
@@ -64,4 +65,4 @@ principal observado.
   e desempenho, não achados altos nem quebra dos gates de P3;
 - expansão anatômica ou novos modelos permanecem fora de escopo.
 
-Com P1, P2 e P3 concluídas, a candidata pode seguir para R08-P4.
+Com P1, P2 e P3 concluídas, a candidata seguiu para R08-P4 e foi promovida.

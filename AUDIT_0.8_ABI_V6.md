@@ -6,7 +6,8 @@
 
 **Implementação auditada:** `eaaeb6e8d461ebda62658da09f0d55517cb55c45`
 
-**Veredito:** R08-P2 concluída; a promoção 0.8 permanece pendente de P3 e P4
+**Veredito deste corte:** R08-P2 concluída; P3 e P4 foram posteriormente
+concluídas em [AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md)
 
 ## Escopo e decisão
 
@@ -70,5 +71,6 @@ não comprova sozinho que toda distinção semântica sobrevive sem cor.
   automatizada ainda é incompleta;
 - P2 não promove a versão inteira.
 
-Esses limites são o escopo explícito de R08-P3. Até P3 e P4 fecharem, a frase
-correta continua sendo: **0.8 implementada; promoção pendente**.
+Esses limites eram o escopo explícito de R08-P3. Neste corte isolado, a frase
+correta era **0.8 implementada; promoção pendente**; o estado vigente está na
+[auditoria final](AUDIT_0.8_PROMOTION.md).
