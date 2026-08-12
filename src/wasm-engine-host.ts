@@ -206,8 +206,7 @@ export class WasmEngineHost {
       !Number.isFinite(command.stimulus.confidence) ||
       command.stimulus.intensity < 0 ||
       command.stimulus.intensity > 1 ||
-      command.stimulus.confidence < 0 ||
-      command.stimulus.confidence > 1 ||
+      command.stimulus.confidence !== 0 ||
       !Number.isFinite(learningRate) ||
       learningRate < 0 ||
       learningRate > 0.02

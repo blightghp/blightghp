@@ -25,7 +25,7 @@ describe("diagnostic Wasm fallback", () => {
     const event = fallback.advance({
       type: "advance",
       targetTick: 12,
-      stimulus: { intensity: 1, confidence: 1 },
+      stimulus: { intensity: 1, confidence: 0 },
     });
 
     expect(ready.runtime).toBe("diagnostic-fallback");

@@ -4,9 +4,12 @@ export const SIMULATION_STEP_SECONDS = 1 / 60;
 
 export type SimulationTick = number;
 
-export interface NeuralStimulus {
+// Interactive advances carry only direct intensity. The literal zero makes the
+// task-model boundary explicit: contextual replay inputs remain available only
+// through the separately addressed schedule command.
+export interface DirectNeuralStimulus {
   intensity: number;
-  confidence: number;
+  confidence: 0;
 }
 
 export interface NeuralSignal {
@@ -122,7 +125,7 @@ export interface EngineInitializeCommand {
 export interface EngineAdvanceCommand {
   type: "advance";
   targetTick: SimulationTick;
-  stimulus: NeuralStimulus;
+  stimulus: DirectNeuralStimulus;
   learningRate?: number;
 }
 
