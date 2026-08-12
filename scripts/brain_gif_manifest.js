@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 const COMMIT_PATTERN = /^[0-9a-f]{40}$/i;
 const HASH_PATTERN = /^[0-9a-f]{16}$/i;
+const MINIMUM_PROFILE_ABI_SCHEMA_VERSION = 6;
 
 export function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -13,15 +14,22 @@ export function createBrainGifManifest({ sourceCommit, gifBytes, diagnostics, ca
   }
   if (
     diagnostics?.runtime !== "rust-wasm" ||
-    diagnostics.schemaVersion !== 6 ||
+    !Number.isSafeInteger(diagnostics.schemaVersion) ||
+    diagnostics.schemaVersion < MINIMUM_PROFILE_ABI_SCHEMA_VERSION ||
     diagnostics.degraded !== false
   ) {
-    throw new Error("GIF capture must use the Rust/Wasm ABI v6 runtime");
+    throw new Error("GIF capture must use a supported Rust/Wasm ABI runtime");
   }
   for (const key of ["stateHash", "corticothalamicHash", "cellPatchHash", "chemicalHash"]) {
     if (!HASH_PATTERN.test(diagnostics[key] ?? "")) {
       throw new Error(`GIF capture is missing a valid ${key}`);
     }
+  }
+  if (
+    diagnostics.schemaVersion >= 7 &&
+    !HASH_PATTERN.test(diagnostics.cellSpikeEventHash ?? "")
+  ) {
+    throw new Error("GIF capture is missing a valid cellSpikeEventHash");
   }
   if (!gifBytes?.length) throw new Error("GIF bytes must not be empty");
 
@@ -36,6 +44,9 @@ export function createBrainGifManifest({ sourceCommit, gifBytes, diagnostics, ca
       corticothalamicHash: diagnostics.corticothalamicHash,
       cellPatchHash: diagnostics.cellPatchHash,
       chemicalHash: diagnostics.chemicalHash,
+      ...(diagnostics.schemaVersion >= 7
+        ? { cellSpikeEventHash: diagnostics.cellSpikeEventHash }
+        : {}),
       degraded: diagnostics.degraded,
     },
     capture,
@@ -55,15 +66,22 @@ export function verifyBrainGifManifest(manifest, gifBytes, expectedSourceCommit)
   }
   if (
     manifest.engine?.runtime !== "rust-wasm" ||
-    manifest.engine.abiSchemaVersion !== 6 ||
+    !Number.isSafeInteger(manifest.engine.abiSchemaVersion) ||
+    manifest.engine.abiSchemaVersion < MINIMUM_PROFILE_ABI_SCHEMA_VERSION ||
     manifest.engine.degraded !== false
   ) {
-    throw new Error("GIF manifest does not identify the Rust/Wasm ABI v6 runtime");
+    throw new Error("GIF manifest does not identify a supported Rust/Wasm ABI runtime");
   }
   for (const key of ["stateHash", "corticothalamicHash", "cellPatchHash", "chemicalHash"]) {
     if (!HASH_PATTERN.test(manifest.engine[key] ?? "")) {
       throw new Error(`GIF manifest contains an invalid ${key}`);
     }
+  }
+  if (
+    manifest.engine.abiSchemaVersion >= 7 &&
+    !HASH_PATTERN.test(manifest.engine.cellSpikeEventHash ?? "")
+  ) {
+    throw new Error("GIF manifest contains an invalid cellSpikeEventHash");
   }
   return true;
 }
@@ -74,7 +92,7 @@ export function verifyLegacyHashPreservation(engine, expected) {
       throw new Error(`legacy fixture contains an invalid ${key}`);
     }
     if (engine?.[key] !== expected[key]) {
-      throw new Error(`ABI v6 changed the legacy ${key}`);
+      throw new Error(`the frozen scenario changed the legacy ${key}`);
     }
   }
   return true;

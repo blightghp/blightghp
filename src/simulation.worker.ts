@@ -5,6 +5,7 @@ import {
   snapshotTransferList,
   WasmEngineHost,
 } from "./wasm-engine-host";
+import { PendingCommandGate } from "./worker-backpressure";
 
 interface WorkerGlobal {
   onmessage: ((event: MessageEvent<EngineCommand>) => void) | null;
@@ -17,6 +18,7 @@ const fallback = new DiagnosticFallbackHost();
 let active: WasmEngineHost | DiagnosticFallbackHost = wasm;
 let initialization: Extract<EngineCommand, { type: "initialize" }> | undefined;
 let commandQueue = Promise.resolve();
+const pendingCommands = new PendingCommandGate();
 
 function publish(event: EngineEvent): void {
   if (event.type === "snapshot") {
@@ -26,10 +28,10 @@ function publish(event: EngineEvent): void {
   }
 }
 
-function fault(error: unknown): void {
+function fault(error: unknown, code = "engine-command-failed"): void {
   publish({
     type: "fault",
-    code: "engine-command-failed",
+    code,
     message: error instanceof Error ? error.message : String(error),
   });
 }
@@ -83,5 +85,12 @@ async function handle(command: EngineCommand): Promise<void> {
 }
 
 workerScope.onmessage = (event) => {
-  commandQueue = commandQueue.then(() => handle(event.data)).catch(fault);
+  if (!pendingCommands.tryEnter()) {
+    fault(new Error("fila do Worker excedeu 64 comandos pendentes"), "worker-backpressure");
+    return;
+  }
+  commandQueue = commandQueue
+    .then(() => handle(event.data))
+    .catch(fault)
+    .finally(() => pendingCommands.leave());
 };

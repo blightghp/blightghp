@@ -300,7 +300,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
             )
             .unwrap();
         assert_eq!(snapshot.tick, expected.tick);
-        assert_eq!(snapshot.schema_version, 6);
+        assert_eq!(snapshot.schema_version, 7);
         assert_eq!(snapshot.spikes, expected.spikes);
         assert!((snapshot.firing_rate - expected.firing_rate).abs() <= 1.0e-12);
         assert!((snapshot.mean_weight - expected.mean_weight).abs() <= 1.0e-12);

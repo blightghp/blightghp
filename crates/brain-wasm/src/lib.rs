@@ -421,6 +421,36 @@ impl WasmNeuralEngine {
     }
 
     #[must_use]
+    pub fn cell_spike_event_schema_version(&self) -> u32 {
+        self.snapshot.cell_spike_events.schema_version
+    }
+
+    #[must_use]
+    pub fn cell_spike_event_start_tick(&self) -> u32 {
+        u32::try_from(self.snapshot.cell_spike_events.start_tick).unwrap_or(u32::MAX)
+    }
+
+    #[must_use]
+    pub fn cell_spike_event_end_tick(&self) -> u32 {
+        u32::try_from(self.snapshot.cell_spike_events.end_tick).unwrap_or(u32::MAX)
+    }
+
+    #[must_use]
+    pub fn cell_spike_event_cell_ids(&self) -> Vec<u32> {
+        self.snapshot.cell_spike_events.cell_ids.clone()
+    }
+
+    #[must_use]
+    pub fn cell_spike_event_time_offsets_seconds(&self) -> Vec<f64> {
+        self.snapshot.cell_spike_events.time_offsets_seconds.clone()
+    }
+
+    #[must_use]
+    pub fn cell_spike_event_hash(&self) -> String {
+        format!("{:016x}", self.snapshot.cell_spike_events.state_hash)
+    }
+
+    #[must_use]
     pub fn cell_firing_rate_hz(&self) -> f64 {
         self.snapshot.cell_patch.firing_rate_hz
     }

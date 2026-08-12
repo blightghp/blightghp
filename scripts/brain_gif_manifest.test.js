@@ -34,6 +34,19 @@ describe("brain GIF provenance manifest", () => {
       cellPatchHash: diagnostics.cellPatchHash,
       chemicalHash: diagnostics.chemicalHash,
     });
+    const nextAbi = createBrainGifManifest({
+      sourceCommit,
+      gifBytes,
+      diagnostics: {
+        ...diagnostics,
+        schemaVersion: 7,
+        cellSpikeEventHash: "4123456789abcdef",
+      },
+      capture: { frameCount: 60 },
+    });
+    expect(verifyBrainGifManifest(nextAbi, gifBytes, sourceCommit)).toBe(true);
+    expect(nextAbi.engine.abiSchemaVersion).toBe(7);
+    expect(nextAbi.engine.cellSpikeEventHash).toBe("4123456789abcdef");
   });
 
   it("rejects stale bytes, stale commits and degraded runtimes", () => {

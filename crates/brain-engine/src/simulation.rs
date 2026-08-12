@@ -7,10 +7,11 @@ use crate::{
     CorticothalamicDrive, CorticothalamicEngine, DeterministicInputQueue, FieldConfig,
     FieldSnapshot, FieldTopology, InputQueueError, LaminarConfig, NeuronKind, PopulationField,
     PopulationFiringRate, ResolutionMap, Seconds, SynapseCsr, SynapseEndpoint,
-    AMPA_TIME_CONSTANT_SECONDS, GABAA_TIME_CONSTANT_SECONDS, LAYER_COUNT, MAX_SAFE_TICK,
+    AMPA_TIME_CONSTANT_SECONDS, CELL_SPIKE_EVENT_SCHEMA_VERSION, GABAA_TIME_CONSTANT_SECONDS,
+    LAYER_COUNT, MAX_SAFE_TICK,
 };
 
-pub const SIMULATION_SCHEMA_VERSION: u32 = 6;
+pub const SIMULATION_SCHEMA_VERSION: u32 = 7;
 const MIN_EXCITATORY_WEIGHT: f64 = 0.12;
 const MAX_EXCITATORY_WEIGHT: f64 = 0.92;
 const MAX_SIGNALS_IN_FLIGHT: usize = 900;
@@ -18,6 +19,7 @@ const FIRING_RATE_WINDOW_SECONDS: f64 = 0.2;
 const RANDOM_STREAM_CELL_THRESHOLD: u32 = 0;
 const RANDOM_STREAM_CELL_REFRACTORY: u32 = 1;
 pub const MAX_SCHEDULED_INPUTS: usize = 4_096;
+pub const MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT: usize = 4_096;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SimulationSynapse {
@@ -72,6 +74,16 @@ pub struct CorticothalamicSignal {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct CellSpikeEventBatch {
+    pub schema_version: u32,
+    pub start_tick: u64,
+    pub end_tick: u64,
+    pub cell_ids: Vec<u32>,
+    pub time_offsets_seconds: Vec<f64>,
+    pub state_hash: u64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct SimulationSnapshot {
     pub schema_version: u32,
     pub tick: u64,
@@ -86,6 +98,7 @@ pub struct SimulationSnapshot {
     pub field: FieldSnapshot,
     pub corticothalamic: CorticothalamicSignal,
     pub cell_patch: CellPatchSnapshot,
+    pub cell_spike_events: CellSpikeEventBatch,
     pub chemical: ChemicalSignal,
     pub state_hash: u64,
 }
@@ -135,6 +148,9 @@ pub struct NeuralSimulation {
     learning_rate: f64,
     scheduled_inputs: DeterministicInputQueue<SimulationInput>,
     active_stimulus: NeuralStimulus,
+    cell_spike_event_start_tick: u64,
+    cell_spike_event_cell_ids: Vec<u32>,
+    cell_spike_event_time_offsets_seconds: Vec<f64>,
 }
 
 impl NeuralSimulation {
@@ -293,6 +309,9 @@ impl NeuralSimulation {
                 intensity: 0.0,
                 confidence: 0.0,
             },
+            cell_spike_event_start_tick: 0,
+            cell_spike_event_cell_ids: Vec::new(),
+            cell_spike_event_time_offsets_seconds: Vec::new(),
         })
     }
 
@@ -377,6 +396,19 @@ impl NeuralSimulation {
         target_tick: u64,
         default_stimulus: Option<NeuralStimulus>,
     ) -> Result<SimulationSnapshot, SimulationError> {
+        self.advance_with_event_limit(
+            target_tick,
+            default_stimulus,
+            MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT,
+        )
+    }
+
+    fn advance_with_event_limit(
+        &mut self,
+        target_tick: u64,
+        default_stimulus: Option<NeuralStimulus>,
+        cell_spike_event_limit: usize,
+    ) -> Result<SimulationSnapshot, SimulationError> {
         if default_stimulus.is_some_and(|stimulus| {
             !stimulus.intensity.is_finite()
                 || !stimulus.confidence.is_finite()
@@ -391,6 +423,18 @@ impl NeuralSimulation {
         if target_tick > MAX_SAFE_TICK {
             return Err(SimulationError::TickOverflow);
         }
+        self.transact(|candidate| {
+            candidate.advance_candidate(target_tick, default_stimulus, cell_spike_event_limit)
+        })
+    }
+
+    fn advance_candidate(
+        &mut self,
+        target_tick: u64,
+        default_stimulus: Option<NeuralStimulus>,
+        cell_spike_event_limit: usize,
+    ) -> Result<SimulationSnapshot, SimulationError> {
+        self.begin_cell_spike_event_batch();
         while self.tick < target_tick {
             if let Some(stimulus) = default_stimulus {
                 self.active_stimulus = stimulus;
@@ -402,7 +446,7 @@ impl NeuralSimulation {
                     SimulationInput::Plasticity(rate) => self.learning_rate = rate,
                 }
             }
-            self.step(self.active_stimulus)?;
+            self.step_accumulating_events(self.active_stimulus, cell_spike_event_limit)?;
         }
         Ok(self.snapshot())
     }
@@ -413,6 +457,27 @@ impl NeuralSimulation {
     ///
     /// Returns [`SimulationError`] on tick overflow or field failure.
     pub fn step(&mut self, stimulus: NeuralStimulus) -> Result<(), SimulationError> {
+        self.transact(|candidate| {
+            candidate.begin_cell_spike_event_batch();
+            candidate.step_accumulating_events(stimulus, MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT)
+        })
+    }
+
+    fn transact<T>(
+        &mut self,
+        operation: impl FnOnce(&mut Self) -> Result<T, SimulationError>,
+    ) -> Result<T, SimulationError> {
+        let mut candidate = self.clone();
+        let output = operation(&mut candidate)?;
+        *self = candidate;
+        Ok(output)
+    }
+
+    fn step_accumulating_events(
+        &mut self,
+        stimulus: NeuralStimulus,
+        cell_spike_event_limit: usize,
+    ) -> Result<(), SimulationError> {
         let dt = self.fixed_step.get();
         let intensity = stimulus.intensity.clamp(0.0, 1.0);
         let confidence = stimulus.confidence.clamp(0.0, 1.0);
@@ -509,7 +574,7 @@ impl NeuralSimulation {
                 contextual: confidence,
             })
             .map_err(SimulationError::Corticothalamic)?;
-        self.advance_cell_patch(intensity, confidence)?;
+        self.advance_cell_patch(intensity, confidence, cell_spike_event_limit)?;
         self.advance_chemical_track()?;
 
         self.firing_rate = self.firing_rate_observable.sample(spikes);
@@ -539,6 +604,7 @@ impl NeuralSimulation {
         &mut self,
         stimulus_intensity: f64,
         stimulus_confidence: f64,
+        cell_spike_event_limit: usize,
     ) -> Result<(), SimulationError> {
         let boundary_activity = self
             .population_field
@@ -547,7 +613,8 @@ impl NeuralSimulation {
             .first()
             .copied()
             .map_or(0.0, f64::from);
-        self.cell_patch
+        let snapshot = self
+            .cell_patch
             .advance_interval(
                 self.fixed_step,
                 CellPatchDrive {
@@ -556,8 +623,29 @@ impl NeuralSimulation {
                     boundary_current_amperes: 40.0e-12 + boundary_activity * 260.0e-12,
                 },
             )
-            .map(|_| ())
-            .map_err(SimulationError::CellPatch)
+            .map_err(SimulationError::CellPatch)?;
+        let macro_offset = tick_to_f64(
+            self.tick
+                .checked_sub(self.cell_spike_event_start_tick)
+                .ok_or(SimulationError::TickRegression)?,
+        ) * self.fixed_step.get();
+        if self.cell_spike_event_cell_ids.len() + snapshot.spike_events.len()
+            > cell_spike_event_limit
+        {
+            return Err(SimulationError::CellSpikeEventLimitExceeded);
+        }
+        for event in snapshot.spike_events {
+            self.cell_spike_event_cell_ids.push(event.cell_id);
+            self.cell_spike_event_time_offsets_seconds
+                .push(macro_offset + event.time_offset_seconds);
+        }
+        Ok(())
+    }
+
+    fn begin_cell_spike_event_batch(&mut self) {
+        self.cell_spike_event_start_tick = self.tick;
+        self.cell_spike_event_cell_ids.clear();
+        self.cell_spike_event_time_offsets_seconds.clear();
     }
 
     pub fn reset(&mut self, seed: Option<u32>) {
@@ -592,6 +680,7 @@ impl NeuralSimulation {
             intensity: 0.0,
             confidence: 0.0,
         };
+        self.begin_cell_spike_event_batch();
     }
 
     #[must_use]
@@ -602,6 +691,12 @@ impl NeuralSimulation {
         let corticothalamic = corticothalamic_signal(self.corticothalamic.snapshot());
         let cell_patch = self.cell_patch.snapshot();
         let chemical = self.chemical_track.snapshot();
+        let cell_spike_events = cell_spike_event_batch(
+            self.cell_spike_event_start_tick,
+            self.tick,
+            &self.cell_spike_event_cell_ids,
+            &self.cell_spike_event_time_offsets_seconds,
+        );
         let state_hash = state_hash(
             self.tick,
             self.latest_spike_count,
@@ -633,6 +728,7 @@ impl NeuralSimulation {
             field,
             corticothalamic,
             cell_patch,
+            cell_spike_events,
             chemical,
             state_hash,
         }
@@ -831,6 +927,44 @@ fn state_hash(
     hash
 }
 
+fn cell_spike_event_batch(
+    start_tick: u64,
+    end_tick: u64,
+    cell_ids: &[u32],
+    time_offsets_seconds: &[f64],
+) -> CellSpikeEventBatch {
+    debug_assert_eq!(cell_ids.len(), time_offsets_seconds.len());
+    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+    for byte in CELL_SPIKE_EVENT_SCHEMA_VERSION
+        .to_le_bytes()
+        .into_iter()
+        .chain(start_tick.to_le_bytes())
+        .chain(end_tick.to_le_bytes())
+        .chain(
+            u32::try_from(cell_ids.len())
+                .unwrap_or(u32::MAX)
+                .to_le_bytes(),
+        )
+        .chain(cell_ids.iter().flat_map(|value| value.to_le_bytes()))
+        .chain(
+            time_offsets_seconds
+                .iter()
+                .flat_map(|value| value.to_bits().to_le_bytes()),
+        )
+    {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    CellSpikeEventBatch {
+        schema_version: CELL_SPIKE_EVENT_SCHEMA_VERSION,
+        start_tick,
+        end_tick,
+        cell_ids: cell_ids.to_vec(),
+        time_offsets_seconds: time_offsets_seconds.to_vec(),
+        state_hash: hash,
+    }
+}
+
 fn corticothalamic_signal(snapshot: crate::CorticothalamicSnapshot) -> CorticothalamicSignal {
     let excitatory = snapshot.laminar.excitatory.map(quantize_f32);
     let inhibitory = snapshot.laminar.inhibitory.map(quantize_f32);
@@ -903,6 +1037,7 @@ pub enum SimulationError {
     DelayOverflow,
     NodeOverflow,
     SpikeOverflow,
+    CellSpikeEventLimitExceeded,
     TickOverflow,
     TickRegression,
     InvalidCsr,
@@ -923,6 +1058,9 @@ impl fmt::Display for SimulationError {
             Self::DelayOverflow => formatter.write_str("synapse delay exceeds u16"),
             Self::NodeOverflow => formatter.write_str("node index overflow"),
             Self::SpikeOverflow => formatter.write_str("spike count overflow"),
+            Self::CellSpikeEventLimitExceeded => {
+                formatter.write_str("cell spike event snapshot limit exceeded")
+            }
             Self::TickOverflow => formatter.write_str("simulation tick overflow"),
             Self::TickRegression => formatter.write_str("target tick cannot move backwards"),
             Self::InvalidCsr => formatter.write_str("invalid synapse CSR"),
@@ -937,3 +1075,68 @@ impl fmt::Display for SimulationError {
 }
 
 impl std::error::Error for SimulationError {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn minimal_simulation() -> NeuralSimulation {
+        NeuralSimulation::new(SimulationConfig {
+            seed: 91,
+            fixed_step: Seconds::try_new(1.0 / 60.0).unwrap(),
+            neuron_kinds: vec![NeuronKind::Excitatory],
+            synapses: Vec::new(),
+            cortical_nodes: vec![0],
+            node_z: vec![0.0],
+            field_topology: FieldTopology {
+                node_indices: vec![0],
+                vertex_by_node: vec![0],
+                row_offsets: vec![0, 0],
+                neighbors: Vec::new(),
+                edge_lengths: Vec::new(),
+            },
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn cell_spike_event_hash_is_ordered_and_domain_specific() {
+        let left = cell_spike_event_batch(10, 12, &[2, 5, 1], &[0.0, 0.0, 0.02]);
+        let right = cell_spike_event_batch(10, 12, &[2, 5, 1], &[0.0, 0.0, 0.02]);
+        let reordered = cell_spike_event_batch(10, 12, &[5, 2, 1], &[0.0, 0.0, 0.02]);
+        assert_eq!(left, right);
+        assert_eq!(left.state_hash, 0xfbda_a0df_afe7_2301);
+        assert_ne!(left.state_hash, reordered.state_hash);
+        assert_eq!(left.schema_version, CELL_SPIKE_EVENT_SCHEMA_VERSION);
+        assert_eq!(left.cell_ids.len(), left.time_offsets_seconds.len());
+    }
+
+    #[test]
+    fn empty_cell_spike_batch_still_binds_its_interval() {
+        let first = cell_spike_event_batch(0, 1, &[], &[]);
+        let second = cell_spike_event_batch(1, 2, &[], &[]);
+        assert_ne!(first.state_hash, second.state_hash);
+    }
+
+    #[test]
+    fn event_limit_failure_rolls_back_the_complete_advance() {
+        let mut simulation = minimal_simulation();
+        let before = simulation.snapshot();
+        let result = simulation.transact(|candidate| {
+            candidate.begin_cell_spike_event_batch();
+            candidate.step_accumulating_events(
+                NeuralStimulus {
+                    intensity: 1.0,
+                    confidence: 0.0,
+                },
+                MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT,
+            )?;
+            Err::<(), _>(SimulationError::CellSpikeEventLimitExceeded)
+        });
+        assert!(
+            matches!(result, Err(SimulationError::CellSpikeEventLimitExceeded)),
+            "unexpected result: {result:?}"
+        );
+        assert_eq!(simulation.snapshot(), before);
+    }
+}

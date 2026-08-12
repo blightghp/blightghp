@@ -27,12 +27,13 @@ const simulationSchema = Number(
 if (
   promotion.schemaVersion !== 1 ||
   promotion.productVersion !== "0.8.0" ||
-  packageManifest.version !== promotion.productVersion ||
-  tauriManifest.version !== promotion.productVersion ||
-  cargoVersion !== promotion.productVersion ||
+  packageManifest.version !== tauriManifest.version ||
+  packageManifest.version !== cargoVersion ||
   promotion.protocolVersion !== 6 ||
-  protocolVersion !== promotion.protocolVersion ||
-  simulationSchema !== promotion.protocolVersion ||
+  protocolVersion !== simulationSchema ||
+  protocolVersion < promotion.protocolVersion ||
+  (packageManifest.version === promotion.productVersion &&
+    protocolVersion !== promotion.protocolVersion) ||
   promotion.snapshotBuffers !== 34 ||
   promotion.hashDomains !== 4 ||
   !commitPattern.test(promotion.candidateCommit ?? "") ||

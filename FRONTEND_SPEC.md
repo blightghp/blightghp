@@ -1,6 +1,6 @@
 # Especificação da aplicação e UX · BRAIN PRO
 
-**Revisão:** 1 · produto observado 0.8.0
+**Revisão:** 2 · produto observado 0.9.0
 
 Este documento regula o shell TypeScript, DOM, fluxos, acessibilidade e consumo
 do Worker. Não regula equações nem materiais 3D.
@@ -74,8 +74,9 @@ científico; uma futura persistência pode armazená-los independentemente.
 ## Relação com o Worker
 
 Frontend envia apenas comandos tipados e recebe eventos fechados. O cliente
-deve manter no máximo uma requisição de avanço ativa, observar fila/cancelamento
-quando disponíveis e rejeitar schema incompatível antes de montar métricas.
+mantém no máximo uma requisição de avanço ativa; o Worker rejeita a primeira
+mensagem acima de 64 pendentes. Cancelamento ainda é futuro. Schema incompatível
+é rejeitado antes de montar métricas.
 
 `window.__BRAIN_ENGINE__` é hook de auditoria/captura, não API pública estável.
 Ele expõe captura, modo, vista, agenda, diagnóstico, perfil, cor e auditoria
@@ -87,8 +88,8 @@ visual. Novas funções exigem teste e não podem furar a validação do protoco
 | :-- | :-- | :-- | :-- |
 | Visão Geral | rede, campo, sinais e hashes | orientação macro e saúde | topologia procedural, não atlas |
 | Lâminas | L1–L6, relé, TRN, rebote | circuito didático | massa neural fenomenológica |
-| Célula | patch e contorno | 12 células e compartimentos | um dendrito passivo |
-| Eletricidade | mesmo patch + correntes | sinal/direção/receptores | não é ainda Prancha Elétrica própria |
+| Célula | patch, contorno e eventos carimbados | 12 células e compartimentos | um dendrito passivo |
+| Eletricidade | mesmo patch, eventos e correntes | sinal/direção/receptores | não é ainda Prancha Elétrica própria |
 | Sinapse | química v6 | vesícula, fenda, ocupação/remoção | microdomínio representativo |
 
 ## Modos de uso alvo

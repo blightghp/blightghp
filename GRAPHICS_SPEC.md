@@ -1,6 +1,6 @@
 # Especificação gráfica e de proveniência · BRAIN PRO
 
-**Revisão:** 1 · baseline Three.js/WebGL · produto 0.8.0
+**Revisão:** 2 · baseline Three.js/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
 preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).

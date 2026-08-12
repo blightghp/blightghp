@@ -46,6 +46,13 @@ export function membraneActivation(volts: number): number {
   );
 }
 
+export function markStampedSpikeCells(target: Uint8Array, cellIds: Uint32Array): void {
+  target.fill(0);
+  for (const cellId of cellIds) {
+    if (cellId < target.length) target[cellId] = 1;
+  }
+}
+
 export function mean(values: Float32Array): number {
   if (values.length === 0) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -85,9 +92,11 @@ export class CellRenderLayer implements RenderLayer {
   private readonly boundary: THREE.Mesh;
   private readonly matrix = new THREE.Matrix4();
   private readonly color = new THREE.Color();
+  private readonly stampedSpikes: Uint8Array;
   private mode: CellLayerMode = "cell";
 
   constructor(private readonly cellCount = 12) {
+    this.stampedSpikes = new Uint8Array(cellCount);
     this.group.name = "cell-patch-resolution-map";
 
     this.somata = new THREE.InstancedMesh(
@@ -103,7 +112,7 @@ export class CellRenderLayer implements RenderLayer {
     this.somata.name = "adex-somata";
     this.somata.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     declareVisual(this.somata, "matter", "state", {
-      field: "cellPatch.{kinds,membraneVolts,spiked}",
+      field: "cellPatch.{kinds,membraneVolts} + cellSpikeEvents.cellIds",
       unit: "class/V/event",
       transform: "class to aspect ratio; voltage/spike to scale and luminance",
       redundancy: ["shape", "size", "label"],
@@ -196,6 +205,7 @@ export class CellRenderLayer implements RenderLayer {
     alpha: number,
   ): void {
     const count = Math.min(this.cellCount, snapshot.cellPatch.membraneVolts.length);
+    markStampedSpikeCells(this.stampedSpikes, snapshot.cellSpikeEvents.cellIds);
     const totals = receptorCurrentTotals(snapshot);
     const totalCurrent = Math.abs(totals.ampa + totals.nmda + totals.gabaa + totals.gabab);
     for (let index = 0; index < count; index += 1) {
@@ -206,7 +216,7 @@ export class CellRenderLayer implements RenderLayer {
         alpha,
       );
       const activation = membraneActivation(voltage);
-      const spiked = snapshot.cellPatch.spiked[index] === 1;
+      const spiked = this.stampedSpikes[index] === 1;
       const scale = spiked ? 1.55 : 0.88 + activation * 0.38;
       const kindScale = snapshot.cellPatch.kinds[index] === 0
         ? new THREE.Vector3(scale * 0.9, scale * 1.12, scale * 0.9)

@@ -33,6 +33,11 @@ export function snapshotBufferEntries(snapshot: NeuralSnapshot): SnapshotBufferE
     { name: "cellPatch.gabaaAmperes", view: snapshot.cellPatch.gabaaAmperes },
     { name: "cellPatch.gababAmperes", view: snapshot.cellPatch.gababAmperes },
     { name: "cellPatch.spiked", view: snapshot.cellPatch.spiked },
+    { name: "cellSpikeEvents.cellIds", view: snapshot.cellSpikeEvents.cellIds },
+    {
+      name: "cellSpikeEvents.timeOffsetsSeconds",
+      view: snapshot.cellSpikeEvents.timeOffsetsSeconds,
+    },
     { name: "chemical.releaseEventIndices", view: snapshot.chemical.releaseEventIndices },
     { name: "chemical.presynapticSpikeCounts", view: snapshot.chemical.presynapticSpikeCounts },
     {

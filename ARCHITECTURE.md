@@ -2,7 +2,7 @@
 
 **Documento:** revisão 1 · 12 de agosto de 2026
 
-**Produto observado:** 0.8.0
+**Produto observado:** 0.9.0
 
 **Escopo:** estado atual (`as is`) e direção incremental (`to be`)
 
@@ -25,7 +25,7 @@ como planejada e nunca é descrita como implementada.
 | ARC-008 | C# não é adotado | aceita | biblioteca .NET indispensável ou benchmark reproduzível de caso nativo |
 | ARC-009 | snapshot é imutável para UI/renderer | aceita | não há gatilho previsto |
 | ARC-010 | câmera/LOD/cor/corte nunca escolhem equação | aceita | não há gatilho previsto |
-| ARC-011 | quatro hashes têm domínios independentes | aceita | mudança de schema deliberada e migração de replay |
+| ARC-011 | cinco hashes têm domínios independentes | aceita | mudança de schema deliberada e migração de replay |
 | ARC-012 | objetos gráficos declaram proveniência | aceita | não há gatilho previsto |
 | ARC-013 | fallback é diagnóstico e inerte | aceita | substituição por falha explícita, nunca por motor TS |
 | ARC-014 | modelos de tarefa atravessam adaptadores explícitos | aceita em R09-A | mudar schema/identidade do experimento |
@@ -117,6 +117,7 @@ todas as sinapses da rede.
 | campo | `PopulationField` | E, I, `waveActivity` por vértice | u.a. | incluído no hash da rede |
 | córtico-talâmico | `CorticothalamicEngine` | L1–L6 E/I e cinco escalares | adimensional | `corticothalamicHash` |
 | patch | `CellPatch` | 9 arrays + escalares | V, A, Hz, s, frações | `cellPatchHash` |
+| eventos celulares | `CellPatch`/`NeuralSimulation` | IDs + offsets em lote | ID, s | `cellSpikeEventHash` |
 | química | `ChemicalTrack` | 12 arrays + escalares | mol, mol·m⁻³, s, frações | `chemicalHash` |
 | UI | `main.ts`/DOM | seleção, aba, controles, câmera | apresentação | nenhum |
 | renderer | cada `RenderLayer` | matrizes, cores, geometria | apresentação | nenhum hash científico |
@@ -126,7 +127,7 @@ quantizados para `f32` nos snapshots quando o contrato assim define; a química
 v6 cruza a ABI em `Float64Array`. UI pode converter V→mV e A→pA somente na
 apresentação.
 
-Snapshots são novas views/cópias publicadas. A transfer list destaca 34
+Snapshots são novas views/cópias publicadas. A transfer list destaca 36
 `ArrayBuffer`s ao enviá-los para a thread principal. O renderer trata todos
 como somente leitura. Pooling de snapshots ainda não está implementado.
 
@@ -136,14 +137,14 @@ como somente leitura. Pooling de snapshots ainda não está implementado.
 
 | Eixo | Valor | Política |
 | :-- | :-- | :-- |
-| produto | 0.8.0 | distribuição; não determina compatibilidade de wire |
-| protocolo Worker | 6 | formas de comandos/eventos; atualmente usa a constante da simulação |
-| ABI Wasm | 6 | métodos/buffers expostos por `brain-wasm` |
-| snapshot | 6 | layout/semântica de `NeuralSnapshot` |
+| produto | 0.9.0 | desenvolvimento; não determina compatibilidade de wire |
+| protocolo Worker | 7 | formas de comandos/eventos; atualmente usa a constante da simulação |
+| ABI Wasm | 7 | métodos/buffers expostos por `brain-wasm` |
+| snapshot | 7 | layout/semântica de `NeuralSnapshot` |
 | engine/Tauri | 1 | metadado do crate, fora da ABI web |
 | subsistemas/fixtures | 1/v1 | evolução independente por modelo/oráculo |
 
-ABI, protocolo e snapshot valem 6 e são verificados por igualdade, mas são
+ABI, protocolo e snapshot valem 7 e são verificados por igualdade, mas são
 conceitos diferentes. Futuras revisões devem registrar qual eixo mudou; a
 igualdade numérica atual não os transforma em uma única “versão do projeto”.
 
@@ -156,11 +157,10 @@ igualdade numérica atual não os transforma em uma única “versão do projeto
 - `dispose`: libera a instância;
 - eventos: `ready`, `scheduled`, `snapshot`, `fault`.
 
-O Worker encadeia mensagens numa Promise, preservando ordem. Ainda não possui
-cancelamento, timeout ou limite explícito para o número de mensagens JS
-aguardando. O motor limita 4.096 entradas agendadas e 600 ticks por comando;
-isso não equivale a backpressure completo. R09-B deve fechar essa lacuna antes
-de aumentar o volume de eventos.
+O Worker encadeia mensagens numa Promise, preservando ordem, e rejeita com
+`worker-backpressure` a primeira mensagem acima de 64 pendentes. Ainda não
+possui cancelamento ou timeout. O motor limita 4.096 entradas agendadas, 600
+ticks por comando e 4.096 eventos celulares por snapshot.
 
 ### Cotas atuais
 
@@ -173,6 +173,9 @@ de aumentar o volume de eventos.
 | ticks por comando | 600 |
 | entradas por mensagem | 256 |
 | entradas agendadas | 4.096 |
+| eventos celulares por snapshot | 4.096 |
+| bytes por evento celular | 12 |
+| mensagens Worker pendentes | 64 |
 
 TypeScript valida antes da construção; `brain-wasm` repete as cotas essenciais.
 Cada ampliação exige benchmark e teste do primeiro valor acima do teto.
@@ -193,7 +196,7 @@ sequenceDiagram
     W->>H: valida cotas e carrega módulo
     H->>A: new WasmNeuralEngine(arrays)
     A->>E: NeuralSimulation::new
-    H->>H: schema ABI == 6
+    H->>H: schema ABI == 7
     H-->>DOM: ready(runtime, schema, degraded=false)
     Note over W,H: se Wasm falhar, fallback publica zeros e degraded=true
 ```
@@ -211,8 +214,8 @@ sequenceDiagram
     C-->>RAF: targetTick e renderTime
     RAF->>W: advance(targetTick, entradas)
     W->>E: agenda em ordem e avança ticks fixos
-    E-->>W: snapshot imutável + hashes
-    W-->>RAF: postMessage(snapshot, 34 buffers)
+    E-->>W: snapshot imutável + cinco hashes
+    W-->>RAF: postMessage(snapshot, 36 buffers)
     RAF->>R: interpola apenas valores publicados
     R->>R: matéria → emissão/bloom → composição
 ```
@@ -398,7 +401,7 @@ consentida ou lotes longos. Não será criada para “escalar” a aplicação l
 ## Observabilidade e falhas
 
 `RuntimeProfiler` observa latência, frame, GPU, heap e bytes. `diagnostics`
-publica runtime, degradação e quatro hashes. O fallback avança o tick e publica
+publica runtime, degradação e cinco hashes. O fallback avança o tick e publica
 zeros apenas para manter o shell inspecionável; a UI deve indicar claramente que
 nenhuma equação científica está rodando.
 
@@ -412,7 +415,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | C-01 | headers 0.7 × manifests/código 0.8 | manifests + ABI/código | docs declaram produto 0.8.0 promovido em R08-P4 |
 | C-02 | roadmap 0.7 × proposta 0.8 × código concluído | código/testes | um roadmap canônico; ambos arquivados |
 | C-03 | “0.8 fechada” × gates de promoção incompletos | auditorias P2/P3/P4 | promoção ocorreu somente após os quatro gates |
-| C-04 | 22 buffers/ABI v5 × ABI v6 atual | protocolo/transfer list | estado atual é 34; 22 permanece só como história |
+| C-04 | 22 buffers/ABI v5 × ABI v6/v7 | protocolo/transfer list | estado atual é 36; 22 e 34 permanecem como história |
 | C-05 | `main.ts` concentrava render × `src/render` existente | árvore atual | descrição atualizada; `main.ts` ainda concentra composição/UI |
 | C-06 | “gate de invertibilidade pixel” × teste analítico | script/testes | R08-P3 amostra render target e pixels conhecidos em dois backends |
 | C-07 | “modo sem cor comprova redundância” × filtro grayscale | código auditável | R08-P3 exige bindings e pistas geométricas concretas além da captura |
@@ -440,7 +443,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | R5 Célula/Eletricidade duplicadas | ACEITO PARA R09-C | compartilham `CellRenderLayer`; R09-C cria prancha própria |
 | R6 alocações por frame | ACEITO PARA R09-C | dívida baixa medida no baseline físico; otimização acompanha a nova camada |
 | R7 limpeza/visibilidade por frame | ACEITO PARA R09-C | custo medido; reciclagem acompanha a nova camada |
-| M1 tempo por spike | ACEITO PARA R09-B | só flag por tick/primeiro spike; eventos são pré-requisito da 0.9 |
+| M1 tempo por spike | FECHADO EM R09-B | IDs/offsets schema 1, ordem canônica, hash, teto e replay publicados na ABI v7 |
 | M2 dendrito único | ACEITO PARA R09-E | contrato atual é um compartimento; multicompartimentos pertencem à 0.9 |
 | M3 química inexistente | FECHADO no microdomínio local | química v6 existe; transmissão de volume continua futura |
 

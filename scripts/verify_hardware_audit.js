@@ -44,7 +44,11 @@ if (
   throw new Error("baseline versionado não comprova integralmente R08-P3");
 }
 
-assertWorkerLifecycleEvidence(report.abi.lifecycle);
+assertWorkerLifecycleEvidence(report.abi.lifecycle, {
+  schemaVersion: 6,
+  bufferCount: 34,
+  hashCount: 4,
+});
 
 for (const filename of captures) {
   if (!report.captures.includes(filename)) throw new Error(`captura ausente: ${filename}`);

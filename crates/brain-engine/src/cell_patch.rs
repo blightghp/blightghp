@@ -3,10 +3,12 @@ use core::fmt;
 use crate::{random_unit, Seconds};
 
 pub const CELL_PATCH_SCHEMA_VERSION: u32 = 1;
+pub const CELL_SPIKE_EVENT_SCHEMA_VERSION: u32 = 1;
 pub const CELL_COUNT: usize = 12;
 pub const EXCITATORY_CELL_COUNT: usize = 8;
 pub const DEFAULT_CELL_STEP_SECONDS: f64 = 1.0 / 12_000.0;
 pub const MAX_CELL_SUBSTEPS_PER_INTERVAL: usize = 4_096;
+pub const MAX_CELL_SPIKE_EVENTS_PER_INTERVAL: usize = 4_096;
 pub const MAX_PATCH_DRIVE_HZ: f64 = 500.0;
 pub const MAX_BOUNDARY_CURRENT_AMPERES: f64 = 1.0e-9;
 
@@ -140,6 +142,12 @@ impl ResolutionMap {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct CellSpikeEvent {
+    pub cell_id: u32,
+    pub time_offset_seconds: f64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct CellPatchSnapshot {
     pub schema_version: u32,
     pub tick: u64,
@@ -153,6 +161,7 @@ pub struct CellPatchSnapshot {
     pub gabaa_amperes: Vec<f32>,
     pub gabab_amperes: Vec<f32>,
     pub spiked: Vec<u8>,
+    pub spike_events: Vec<CellSpikeEvent>,
     pub firing_rate_hz: f64,
     pub excitatory_inhibitory_ratio: f64,
     pub first_spike_seconds: Option<f64>,
@@ -183,6 +192,8 @@ pub struct CellPatch {
     interval_spikes: u32,
     firing_rate_hz: f64,
     first_spike_seconds: Option<f64>,
+    interval_start_tick: u64,
+    interval_spike_events: Vec<CellSpikeEvent>,
 }
 
 impl CellPatch {
@@ -228,6 +239,8 @@ impl CellPatch {
             interval_spikes: 0,
             firing_rate_hz: 0.0,
             first_spike_seconds: None,
+            interval_start_tick: 0,
+            interval_spike_events: Vec::new(),
         })
     }
 
@@ -241,6 +254,15 @@ impl CellPatch {
         &mut self,
         duration: Seconds,
         drive: CellPatchDrive,
+    ) -> Result<CellPatchSnapshot, CellPatchError> {
+        self.advance_interval_with_event_limit(duration, drive, MAX_CELL_SPIKE_EVENTS_PER_INTERVAL)
+    }
+
+    fn advance_interval_with_event_limit(
+        &mut self,
+        duration: Seconds,
+        drive: CellPatchDrive,
+        spike_event_limit: usize,
     ) -> Result<CellPatchSnapshot, CellPatchError> {
         let drive = drive.validate()?;
         let exact_steps = duration.get() / self.config.dt.get();
@@ -257,9 +279,25 @@ impl CellPatch {
         if steps > MAX_CELL_SUBSTEPS_PER_INTERVAL {
             return Err(CellPatchError::WorkLimitExceeded);
         }
+        let mut candidate = self.clone();
+        let snapshot =
+            candidate.advance_interval_candidate(duration, drive, steps, spike_event_limit)?;
+        *self = candidate;
+        Ok(snapshot)
+    }
+
+    fn advance_interval_candidate(
+        &mut self,
+        duration: Seconds,
+        drive: CellPatchDrive,
+        steps: usize,
+        spike_event_limit: usize,
+    ) -> Result<CellPatchSnapshot, CellPatchError> {
         self.interval_spikes = 0;
+        self.interval_start_tick = self.tick;
+        self.interval_spike_events.clear();
         for _ in 0..steps {
-            self.step(drive)?;
+            self.step(drive, spike_event_limit)?;
         }
         self.firing_rate_hz = f64::from(self.interval_spikes) / (12.0 * duration.get());
         Ok(self.snapshot())
@@ -285,6 +323,8 @@ impl CellPatch {
         self.interval_spikes = 0;
         self.firing_rate_hz = 0.0;
         self.first_spike_seconds = None;
+        self.interval_start_tick = 0;
+        self.interval_spike_events.clear();
     }
 
     #[must_use]
@@ -334,6 +374,7 @@ impl CellPatch {
             gabaa_amperes: self.gabaa_amperes.map(quantize_f32).to_vec(),
             gabab_amperes: self.gabab_amperes.map(quantize_f32).to_vec(),
             spiked: self.spiked.to_vec(),
+            spike_events: self.interval_spike_events.clone(),
             firing_rate_hz: self.firing_rate_hz,
             excitatory_inhibitory_ratio: ratio,
             first_spike_seconds: self.first_spike_seconds,
@@ -343,7 +384,11 @@ impl CellPatch {
         }
     }
 
-    fn step(&mut self, drive: CellPatchDrive) -> Result<(), CellPatchError> {
+    fn step(
+        &mut self,
+        drive: CellPatchDrive,
+        spike_event_limit: usize,
+    ) -> Result<(), CellPatchError> {
         let dt = self.config.dt.get();
         let next_tick = self
             .tick
@@ -373,7 +418,7 @@ impl CellPatch {
 
         for cell in 0..CELL_COUNT {
             self.update_currents(cell);
-            self.integrate_cell(cell, drive.boundary_current_amperes, dt)?;
+            self.integrate_cell(cell, drive.boundary_current_amperes, dt, spike_event_limit)?;
         }
         self.propagate_spikes();
         self.tick = next_tick;
@@ -395,6 +440,7 @@ impl CellPatch {
         cell: usize,
         boundary_current: f64,
         dt: f64,
+        spike_event_limit: usize,
     ) -> Result<(), CellPatchError> {
         let excitatory = self.kinds[cell] == PatchCellKind::Excitatory;
         let capacitance = if excitatory { 200.0e-12 } else { 100.0e-12 };
@@ -437,6 +483,17 @@ impl CellPatch {
                 .interval_spikes
                 .checked_add(1)
                 .ok_or(CellPatchError::SpikeOverflow)?;
+            if self.interval_spike_events.len() >= spike_event_limit {
+                return Err(CellPatchError::SpikeEventLimitExceeded);
+            }
+            self.interval_spike_events.push(CellSpikeEvent {
+                cell_id: u32::try_from(cell).map_err(|_| CellPatchError::CellOverflow)?,
+                time_offset_seconds: tick_to_f64(
+                    self.tick
+                        .checked_sub(self.interval_start_tick)
+                        .ok_or(CellPatchError::TickOverflow)?,
+                ) * dt,
+            });
             if self.first_spike_seconds.is_none() {
                 self.first_spike_seconds = Some(tick_to_f64(self.tick) * dt);
             }
@@ -545,6 +602,7 @@ pub enum CellPatchError {
     CellOverflow,
     TickOverflow,
     SpikeOverflow,
+    SpikeEventLimitExceeded,
     NonFiniteState,
 }
 
@@ -561,6 +619,9 @@ impl fmt::Display for CellPatchError {
             Self::CellOverflow => formatter.write_str("cell index overflow"),
             Self::TickOverflow => formatter.write_str("cell patch tick overflow"),
             Self::SpikeOverflow => formatter.write_str("cell patch spike count overflow"),
+            Self::SpikeEventLimitExceeded => {
+                formatter.write_str("cell patch spike event limit exceeded")
+            }
             Self::NonFiniteState => formatter.write_str("cell patch produced non-finite state"),
         }
     }
@@ -627,6 +688,23 @@ mod tests {
             assert!(left.ampa_amperes.iter().all(|value| *value >= 0.0));
             assert!(left.gabab_amperes.iter().all(|value| *value <= 0.0));
         }
+    }
+
+    #[test]
+    fn event_limit_failure_rolls_back_the_complete_interval() {
+        let mut engine = patch(DEFAULT_CELL_STEP_SECONDS, 91);
+        let before = engine.snapshot();
+        let duration = Seconds::try_new(0.2).unwrap();
+        let drive = CellPatchDrive {
+            excitatory_rate_hz: 500.0,
+            inhibitory_rate_hz: 0.0,
+            boundary_current_amperes: 1.0e-9,
+        };
+        assert_eq!(
+            engine.advance_interval_with_event_limit(duration, drive, 0),
+            Err(CellPatchError::SpikeEventLimitExceeded)
+        );
+        assert_eq!(engine.snapshot(), before);
     }
 
     #[test]
