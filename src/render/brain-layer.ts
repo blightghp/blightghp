@@ -69,6 +69,10 @@ export function composeNodeActivity(activation: number, fieldWave: number): numb
   return Math.max(activation, fieldWave * 0.7);
 }
 
+export function signalPulseDiameter(inhibitory: boolean): number {
+  return inhibitory ? 0.015 : 0.019;
+}
+
 function createPointTexture(): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = 32;
@@ -439,7 +443,7 @@ export class BrainRenderLayers implements RenderLayer {
 
         this.tempPosition.lerpVectors(fromPos, toPos, trailProgress);
         const scaleFactor = (1 - trailIndex / TRAIL_LENGTH) * (0.8 + pulseStrength * 0.4);
-        const size = isInhibitory ? 0.015 * scaleFactor : 0.019 * scaleFactor;
+        const size = signalPulseDiameter(isInhibitory) * scaleFactor;
         this.tempScale.set(size, size, size);
         this.tempMatrix.compose(this.tempPosition, this.tempQuaternion.identity(), this.tempScale);
         this.pulseMesh.setMatrixAt(instanceIndex, this.tempMatrix);

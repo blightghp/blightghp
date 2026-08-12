@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
+import { generateBrainData } from "../brain";
+import { DiagnosticFallbackHost } from "../wasm-engine-host";
 import { CellRenderLayer } from "./cell-layer";
 import { LaminarRenderLayer } from "./laminar-layer";
 import { SynapseRenderLayer } from "./synapse-layer";
@@ -96,5 +98,71 @@ describe("render presentation contract", () => {
       }
       layer.dispose();
     }
+  });
+
+  it("verifies the declared non-color cues against concrete scene geometry", () => {
+    const laminar = new LaminarRenderLayer();
+    expect(laminar.group.getObjectByName("L1-excitatory")).toHaveProperty(
+      "geometry.type",
+      "CylinderGeometry",
+    );
+    expect(laminar.group.getObjectByName("L1-inhibitory")).toHaveProperty(
+      "geometry.type",
+      "TorusGeometry",
+    );
+    expect(laminar.group.getObjectByName("thalamic-relay")).toHaveProperty(
+      "geometry.type",
+      "IcosahedronGeometry",
+    );
+    expect(laminar.group.getObjectByName("thalamic-reticular-nucleus")).toHaveProperty(
+      "geometry.type",
+      "TorusGeometry",
+    );
+
+    const synapse = new SynapseRenderLayer();
+    const glutamate = synapse.group.getObjectByName("glutamate-cloud") as THREE.InstancedMesh;
+    const gaba = synapse.group.getObjectByName("gaba-cloud") as THREE.InstancedMesh;
+    const glutamateGeometry = glutamate.geometry as THREE.SphereGeometry;
+    const gabaGeometry = gaba.geometry as THREE.SphereGeometry;
+    expect(glutamateGeometry.parameters.radius).not.toBe(gabaGeometry.parameters.radius);
+    expect(synapse.group.getObjectByName("glutamate-release")?.position.x).toBeLessThan(0);
+    expect(synapse.group.getObjectByName("gaba-release")?.position.x).toBeGreaterThan(0);
+    expect(synapse.group.getObjectByName("glutamate-recapture")?.position.x).toBeLessThan(0);
+    expect(synapse.group.getObjectByName("gaba-recapture")?.position.x).toBeGreaterThan(0);
+
+    const cell = new CellRenderLayer();
+    const topology = generateBrainData({
+      seed: 7,
+      surfaceNodesPerHemisphere: 20,
+      innerNodesPerHemisphere: 3,
+    });
+    const fallback = new DiagnosticFallbackHost();
+    fallback.initialize({ type: "initialize", topology }, "geometry-test");
+    const snapshot = fallback.advance({
+      type: "advance",
+      targetTick: 1,
+      stimulus: { intensity: 0, confidence: 0 },
+    }).snapshot;
+    cell.update({ current: snapshot, alpha: 1 });
+    const somata = cell.group.getObjectByName("adex-somata") as THREE.InstancedMesh;
+    const excitatoryScale = new THREE.Vector3();
+    const inhibitoryScale = new THREE.Vector3();
+    somata.getMatrixAt(0, new THREE.Matrix4()).decompose(
+      new THREE.Vector3(),
+      new THREE.Quaternion(),
+      excitatoryScale,
+    );
+    somata.getMatrixAt(8, new THREE.Matrix4()).decompose(
+      new THREE.Vector3(),
+      new THREE.Quaternion(),
+      inhibitoryScale,
+    );
+    expect(excitatoryScale.y / excitatoryScale.x).toBeGreaterThan(1);
+    expect(inhibitoryScale.y / inhibitoryScale.x).toBeLessThan(1);
+
+    laminar.dispose();
+    synapse.dispose();
+    cell.dispose();
+    fallback.dispose();
   });
 });
