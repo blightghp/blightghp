@@ -25,6 +25,12 @@ fidelidade entre estado calculado e estado mostrado.
 | AST-002 | estrutura entra por função, orientação decorativa ou proveniência topológica declarada. |
 | VAS-001 | fluxo/perfusão/oxigenação só animam com estado/modelo correspondente. |
 | ELE-001 | Prancha Elétrica mostra grandezas com unidade e origem operacional. |
+| ELE-002 | Prancha Elétrica possui scene graph próprio e não reutiliza a cena Célula. |
+| ELE-003 | corrente preserva sinal e direção com orientação, tamanho, posição e rótulo redundantes. |
+| ELE-004 | condutância efetiva só é derivada de corrente, potencial dendrítico e reversão declarados. |
+| ELE-005 | nível agregado/celular/eventos muda apenas detalhe visual e observáveis. |
+| ELE-006 | custo máximo é 11 draws e marcadores só atualizam quando muda o hash de eventos. |
+| GFX-040 | prancha separa STATE, TOPOLOGY e DECORATION e mantém fallback textual. |
 | PERF-010 | todo shader/pass/asset tem orçamento e fallback. |
 
 ## Proveniência por objeto
@@ -59,7 +65,8 @@ prova que o campo declarado pintou o pixel correto.
 | :-- | :-- | :-- | :-- |
 | `BrainRenderLayers` | pontos, cascas convexas, conexões e pulsos | rede/campo/topologia procedural | aloca array interpolado e limpa 900 instâncias por frame |
 | `LaminarRenderLayer` | L1–L6 E/I, vias, relé e TRN | snapshot corticotalâmico | coluna didática, não anatomia |
-| `CellRenderLayer` | 12 somas, dendritos, halos e contorno | patch | Célula/Eletricidade compartilham cena; dendrito único |
+| `CellRenderLayer` | 12 somas, dendritos, halos e contorno | patch | vista Célula; dendrito único |
+| `ElectricalBoardLayer` | 12 nós, barras V, anéis S, vias e eventos | patch + topologia macro rotulada | esquema próprio; 6/10/11 draws conforme detalhe |
 | `SynapseRenderLayer` | membranas, vesículas, nuvens, receptores e recaptura | química v6 | microdomínio representativo; escalas exageradas |
 
 `visual-tokens.ts` centraliza identidades. `visual-encoding.ts` conserva sinal
@@ -244,14 +251,22 @@ escalas anatômica/microscópica.
 
 ## Prancha Elétrica
 
-A futura vista tem scene graph próprio e pode alternar esquema abstrato,
-overlay anatômico, circuito laminar, celular, sináptico e observáveis.
+A vista implementada em R09-C tem scene graph próprio e alterna três conjuntos
+de apresentação: agregado, celular e eventos. Ela não reutiliza geometrias do
+`CellRenderLayer`.
 
-Mostra nós, vias, direção, atrasos, ganho, excitação, inibição, shunt,
-feedforward, feedback, recorrência, relé, TRN, V, A, S, Hz, taxa, ocupação e
-carga apenas quando definidos. Probe/timeline/comparação têm equivalente
-tabular. “Intensidade cerebral” e “poder de processamento” são proibidos sem
-definição operacional.
+Mostra nós, vias, direção, atraso/ganho macro rotulados, excitação, inibição,
+shunt, V, A e S efetiva. A condutância usa `Σ Iᵣ/(Eᵣ−Vd)` sobre os quatro
+receptores publicados; não é um buffer novo nem uma condutância oculta. Eventos
+usam somente IDs/offsets/hash carimbados em R09-B. Probe, timeline, comparação,
+feedforward, feedback, recorrência, relé, TRN, Hz, ocupação e carga continuam
+futuros nesta vista. “Intensidade cerebral” e “poder de processamento” são
+proibidos sem definição operacional.
+
+O orçamento fechado é 6 draws no agregado, 10 no celular e 11 com marcadores
+de evento. As 96 leituras escalares por snapshot usam buffers já transferidos;
+objetos temporários não são alocados no loop e os marcadores só são atualizados
+quando `cellSpikeEventHash` muda.
 
 ## Vocabulário visual
 

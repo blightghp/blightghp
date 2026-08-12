@@ -6,9 +6,9 @@
 
 **Estado de promoção:** 0.8 promovida em 12 de agosto de 2026
 
-**Estado de desenvolvimento:** 0.9 em construção; R09-A e R09-B concluídas
+**Estado de desenvolvimento:** 0.9 em construção; R09-A, R09-B e R09-C concluídas
 
-**Próximo gate:** `R09-C` · Prancha Elétrica
+**Próximo gate:** `R09-D` · seleção e vista Neurônio
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -74,6 +74,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | passes matéria/emissão e tokens | IMPLEMENTADO E VALIDADO EM P3 | `src/render` | [auditoria gráfica](AUDIT_0.8_GRAPHICS.md) | validade restrita aos backends/envelopes registrados |
 | inferência Bayesiana de tarefa | EXPERIMENTAL E ISOLADA | `experiment.ts`, `inference.ts` | schema 1, fixture, controle nulo e replay | posterior é apenas apresentada; estímulo interativo exige contexto nulo |
 | eventos celulares carimbados | IMPLEMENTADO E VALIDADO EM R09-B | `cell_patch`, `simulation`, ABI/Worker | fixture, hash próprio, browser e lifecycle | lote limitado a 4.096; cenário padrão pode legitimamente produzir lote vazio |
+| Prancha Elétrica | IMPLEMENTADA E VALIDADA EM R09-C | `ElectricalBoardLayer`, DOM e auditoria | testes estruturais, orçamento e navegador | esquema do patch; atraso/ganho macro aparecem separados e não são atribuídos às células |
 | neurônio resolvido, cortes, vascular, atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
 
 ## Histórico verificável
@@ -219,12 +220,20 @@ direção, atrasos, voltagem, corrente, condutância, excitação, inibição e 
 com unidades e origem. “Nível de processamento” significa somente escala visual,
 conjunto de observáveis ou preset científico explicitamente selecionado.
 
-- **Estado:** planejada; **IDs:** ELE-001..006, UI-020, GFX-040, QA-092.
+- **Estado:** implementada e validada em 12 de agosto de 2026; **IDs:**
+  ELE-001..006, UI-020, GFX-040, QA-092; **evidência:**
+  [auditoria R09-C](AUDIT_0.9_R09_C.md).
 - **Fora de escopo:** alterar `dt`, solver, topologia ou compartimentos por zoom.
 - **Aceite:** cada número aponta para snapshot/observável; câmera e modo não
   mudam hashes; teclado, equivalente textual e movimento reduzido.
 - **Orçamento:** teto de draws e atualização por evento declarado antes do merge.
 - **Rollback:** vista textual tabular. **Complexidade/confiança:** alta / média.
+
+O corte fechou com scene graph próprio, 12 nós, quatro vias receptoras,
+voltagem, corrente, condutância efetiva derivada, shunt e lote carimbado. O modo
+padrão custa 10 draws; o modo de eventos, 11. A prancha reutiliza objetos e
+matrizes, só reconstrói marcadores quando o hash do lote muda e mantém tabela
+textual operacional como fallback.
 
 ### R09-D · seleção e vista Neurônio
 
