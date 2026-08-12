@@ -1,20 +1,33 @@
 import { z } from "zod";
 
-export const brainSettingsSchema = z.object({
+export const presentationPreferencesSchema = z.object({
   rotationSpeed: z.number().min(0).max(3).default(0.55),
-  pulseSpeed: z.number().min(0.1).max(3).default(1),
   pulseCount: z.number().int().min(10).max(300).default(140),
-  stimulusIntensity: z.number().min(0).max(1).default(0.5),
-  learningRate: z.number().min(0).max(0.02).default(0.004),
   bloomStrength: z.number().min(0).max(4).default(1.15),
   bloomRadius: z.number().min(0).max(2).default(0.45),
-  snapshotCadence: z.union([z.literal(1), z.literal(2), z.literal(4), z.literal(6)]).default(1),
   showLeftHemi: z.boolean().default(true),
   showRightHemi: z.boolean().default(true),
   showCerebellum: z.boolean().default(true),
   showStem: z.boolean().default(true),
 });
 
+export const runControlsSchema = z.object({
+  pulseSpeed: z.number().min(0.1).max(3).default(1),
+  snapshotCadence: z.union([z.literal(1), z.literal(2), z.literal(4), z.literal(6)]).default(1),
+});
+
+export const scientificPresetSelectionSchema = z.object({
+  stimulusIntensity: z.number().min(0).max(1).default(0.5),
+  learningRate: z.number().min(0).max(0.02).default(0.004),
+});
+
+export const brainSettingsSchema = presentationPreferencesSchema
+  .merge(runControlsSchema)
+  .merge(scientificPresetSelectionSchema);
+
+export type PresentationPreferences = z.infer<typeof presentationPreferencesSchema>;
+export type RunControls = z.infer<typeof runControlsSchema>;
+export type ScientificPresetSelection = z.infer<typeof scientificPresetSelectionSchema>;
 export type BrainSettings = z.infer<typeof brainSettingsSchema>;
 
 export function getInitialBrainSettings(): BrainSettings {
