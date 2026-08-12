@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "a6d8d35a167a6aec1ab56856f13e39e12753289a",
-  "gifSha256": "2e6d899088795f1d68b716e2722ba3ffa4e3fd5ce87bcea6bfd099a193a9f430",
+  "sourceCommit": "a31dec912ec56aa7787953c764fd573bcc1976a1",
+  "gifSha256": "612f88a3fd69d303fbcab9e3f6eeb3b73a4bc21c6f8b72149efc0ee1979a0767",
   "engine": {
     "runtime": "rust-wasm",
     "abiSchemaVersion": 6,
-    "stateHash": "3bd8cb857e7d93e3",
-    "corticothalamicHash": "4834499f8d160a8d",
-    "cellPatchHash": "3efee6ef25c69ae2",
+    "stateHash": "38d641be36542890",
+    "corticothalamicHash": "0f7dbb43bc25d70a",
+    "cellPatchHash": "4b1fe3ecb374fc17",
     "chemicalHash": "d8b99b220b1efdbc",
     "degraded": false
   },
