@@ -1,190 +1,319 @@
-# Roadmap · BRAIN PRO [v. 0.7.0]
+# Roadmap canônico · BRAIN PRO
 
-O experimento evolui em dois eixos inseparáveis: desce da atividade global até a sinapse e sobe da excitabilidade até a cognição e o comportamento. Cada entrega fecha uma escala antes de acrescentar outra e combina avanço do motor, ganho gráfico e evidência de validação.
+**Estado documental:** vigente desde 12 de agosto de 2026
 
-O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É representar o mesmo fenômeno em resoluções compatíveis, com uma regra explícita para trocar ou acoplar uma resolução à outra.
+**Produto declarado nos manifests:** `0.8.0`
 
-## Princípios
+**Estado de promoção:** 0.8 implementada, mas ainda não promovida
 
-1. Métricas, rótulos, luzes e animações devem nascer de estados calculados pelo motor.
-2. A simulação avança por ticks fixos; a renderização apenas interpola snapshots publicados.
-3. A mesma semente e o mesmo registro ordenado de entradas devem produzir o mesmo resultado na mesma plataforma numérica.
-4. Reduções, eventos e consumo de números aleatórios possuem ordem canônica, inclusive quando o trabalho é distribuído.
-5. Campo e spikes descrevem a mesma atividade em resoluções diferentes, mas não são somados como fontes independentes na mesma região.
-6. O núcleo é indiferente ao conteúdo do estímulo. Experimentos pessoais, como sequências simbólicas, entram por adaptadores de entrada.
-7. Uma aproximação científica deve declarar unidade, escala, hipótese e limite. Código preditivo é um modelo de tarefa, não uma lei universal do motor.
-8. Realismo gráfico não pode ocultar perda de legibilidade, desempenho ou validade científica.
-9. Web, captura automatizada e aplicativo desktop devem reproduzir a mesma experiência observável.
-10. A partir da 0.5, Rust é a única fonte de verdade para estado, integração,
-    aleatoriedade, redução e observáveis científicos.
-11. WebAssembly é uma fronteira de execução, não um segundo modelo: o mesmo
-    crate deve rodar nativamente e no navegador.
-12. TypeScript coordena DOM, acessibilidade e apresentação; não integra
-    equações do cérebro.
-13. C# só entra como serviço nativo/offline depois de benchmark reproduzível;
-    ele não é requisito de segurança nem parte do payload web padrão.
+**Próximo gate:** `R08-PROMOTION`
 
-## Sequência de versões
+Este é o único roadmap ativo. Planos anteriores permanecem em
+[`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
+Matemática, implementação, aplicação, gráficos e validação pertencem às
+respectivas especificações; este arquivo ordena cortes e aponta para seus
+contratos, sem duplicá-los.
 
-| Versão | Motor | Realismo gráfico | Evidência de conclusão |
+## Visão do produto
+
+O BRAIN PRO é um simulador local-first, determinístico, educacional e
+experimental. Ele conecta modelos neurais e bioquímicos explicitamente
+limitados a uma apresentação 3D auditável. Não é instrumento clínico,
+diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
+
+## Princípios de programa
+
+1. Rust é a única fonte de verdade para equações, estado científico, RNG,
+   eventos, solvers, hashes e replay.
+2. Wasm e Worker são fronteiras de execução; não são motores alternativos.
+3. TypeScript possui protocolo, aplicação, acessibilidade e apresentação. Um
+   experimento TypeScript pode codificar entradas, mas não integrar uma segunda
+   fisiologia.
+4. Renderer, câmera, LOD, corte, raio-X, cor e FPS não alteram `dt`, parâmetros,
+   topologia ou estado científico.
+5. Todo objeto visual declara `STATE`, `TOPOLOGY` ou `DECORATION` e, quando
+   `STATE`, aponta para um campo publicado.
+6. Cada aproximação declara unidade, hipótese, regime, limitação e classe
+   epistemológica.
+7. Um corte só é promovido quando código, contrato, teste, custo e evidência
+   reproduzível concordam.
+8. A evolução é local-first e offline-capable. Backend, C#, WebGPU e threads
+   entram somente por requisito e medição.
+9. Acessibilidade e degradação gráfica preservam informação, não apenas layout.
+10. A equipe pequena é um requisito arquitetural: uma fonte por assunto, poucos
+    contratos e rollback explícito.
+
+## Estado real em 12 de agosto de 2026
+
+| Eixo | Valor verdadeiro | Evidência | Observação |
 | :-- | :-- | :-- | :-- |
-| **0.2 · Excitabilidade** | LIF fenomenológico, atrasos, sinapses direcionadas, excitação, inibição, STDP e inferência Bayesiana escalar | Atividade por unidade, pulsos ligados a eventos, envoltórios anatômicos e traçado de disparos | Determinismo serial, pesos limitados, inferência normalizada e invariantes do grafo |
-| **0.3 · Fundação** | Relógio desacoplado do frame, ticks inteiros, RNG indexado, CSR, redução ordenada, Worker serial e transição validada para AMPA/GABA-A | Feixes direcionais, instrumentos com unidade, foco progressivo, LOD e interpolação entre snapshots | Vetores exatos do RNG, replay de entradas, convergência temporal, paridade antes/depois do Worker e orçamento medido |
-| **0.4 · Superfície** | Domínio cortical procedural, campo populacional E/I, atrasos de condução e primeiro acoplamento campo/spikes | Atividade sobre o envelope cortical, zoom orbital e foco regional | Convergência da discretização, conservação na projeção, regressão estrutural e ausência de atividade gráfica inventada |
-| **0.5 · Corredor Rust/Wasm** | Crate matemático puro, contrato laminar inicial, ABI Wasm estreita, Worker e paridade contra o motor TypeScript | Shell atual consumindo snapshots Rust sem alterar a experiência | Testes nativos e Wasm, replay cruzado, convergência, orçamento de memória e remoção progressiva do integrador TypeScript |
-| **0.6 · Lâmina e tálamo** | Seis lâminas, populações E/I, projeções feedforward/feedback e circuito tálamo–núcleo reticular apenas quando exigido | Aba Lâminas, coluna explodida e traçado das projeções | Conectividade permitida por camada, ritmos sustentados pelo circuito e custo por LOD |
-| **0.7 · Célula e eletricidade** | Patches AdEx, canais/receptores AMPA/NMDA/GABA-A/GABA-B e, quando necessário, compartimentos dendríticos | Abas Célula e Eletricidade, membrana, dendrito e correntes separadas | Convergência de eventos/correntes, balanço E/I, unidades SI e ensembles de sementes |
-| **0.8 · Sinapse e bioquímica** | Plasticidade, vesículas, ligação receptor-ligante, cascatas selecionadas e reação–difusão local | Abas Sinapse e Bioquímica com recursos, concentração e ocupação | Conservação de massa/carga, positividade, solver para rigidez, calibração e sensibilidade |
-| **0.9 · Sistemas e comportamento** | Memória de trabalho, tarefas preditivas, hipocampo, núcleos da base e leitura motora somente em tarefas explícitas | Abas Sistemas, Experimentos e Comportamento | Desempenho estatístico, controles nulos, retenção/decisão reproduzíveis e hipóteses documentadas |
-| **1.0 · Atlas experimental** | Presets, replay, importação, API estável e modelos multiescala validados | Visão Geral, Superfície, Lâminas, Célula, Sinapse, Bioquímica, Sistemas, Experimentos e Validação | Pacotes reproduzíveis, acessibilidade, testes end-to-end, proveniência e nenhuma alegação além da evidência |
+| produto npm/Cargo/Tauri | `0.8.0` | manifests | versão de distribuição |
+| protocolo Worker | `6` | `src/protocol.ts` | hoje acoplado ao schema da ABI |
+| ABI Wasm | `6` | `SIMULATION_SCHEMA_VERSION` | rejeição por igualdade no host |
+| snapshot | `6` | `NeuralSnapshot.schemaVersion` | 34 buffers transferíveis |
+| schema do host Tauri | `1` | `ENGINE_SCHEMA_VERSION` | não é a ABI da simulação |
+| modelos | schemas `1` por subsistema | constantes Rust | patch, STP, fenda, solver e trilha química |
+| fixtures | `v1` por artefato | `fixtures/` | não implica produto 1.0 |
+| hashes | quatro domínios | snapshot/fixtures | rede, corticotalâmico, célula e química |
+| auditoria visual versionada | schema `1`, captura 0.7 | `runtime-audit.json` | está defasada da aba Sinapse/ABI v6 |
 
-## Versão atual: 0.7.0 · Célula e eletricidade
+### Matriz resumida de capacidades
 
-### Gate auditado da 0.4 · Superfície
+| Capacidade | Estado | Proprietário | Evidência | Limite atual |
+| :-- | :-- | :-- | :-- | :-- |
+| relógio, RNG, CSR, fila e replay | IMPLEMENTADO E VALIDADO | `brain-engine` | fixtures discretos/entrada | RNG repete após `2^32` ticks |
+| campo E/I e acoplamento unilateral | IMPLEMENTADO E VALIDADO | `field`, `simulation` | fixture campo/observáveis | grafo procedural, retorno micro→macro desligado |
+| coluna L1–L6, relé e TRN | IMPLEMENTADO E VALIDADO | `lib`, `corticothalamic` | testes e auditoria 0.6 | fenomenológico, sem canais tipo T |
+| patch AdEx e quatro correntes | IMPLEMENTADO E VALIDADO | `cell_patch` | replay/convergência 0.7 | um dendrito passivo, sem morfologia |
+| recursos e STP | IMPLEMENTADO E VALIDADO NO CONTRATO | `chemical_contract`, `short_term_plasticity` | testes e fixture v1 | preset didático não calibrado |
+| fenda, ocupação e solver | IMPLEMENTADO E VALIDADO NO REGIME TESTADO | `cleft_occupancy`, `chemical_solver` | replays e convergência | microdomínio representativo, não população de fendas |
+| ABI v6 e aba Sinapse | IMPLEMENTADO, MAS SEM EVIDÊNCIA DE PROMOÇÃO SUFICIENTE | `brain-wasm`, Worker, `SynapseRenderLayer` | testes de código; artefato visual antigo | falta recaptura de evidência versionada |
+| passes matéria/emissão e tokens | IMPLEMENTADO, MAS SEM EVIDÊNCIA DE PROMOÇÃO SUFICIENTE | `src/render` | testes estruturais | gate de invertibilidade ainda é analítico, não pixel→estado |
+| inferência Bayesiana do painel | EXPERIMENTAL/CONTRADITÓRIO | `inference.ts`, `main.ts` | dois testes unitários | posterior TypeScript alimenta `confidence` sem contrato de experimento |
+| neurônio resolvido, cortes, vascular, atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
 
-- [x] **0.4-a · Domínio cortical:** grafo k-NN simétrico, separado dos nós internos,
-  com CSR, comprimentos de aresta e projeção estável nó→vértice.
-- [x] **0.4-b · Campo E/I atrasado:** histórico circular, atraso derivado de
-  comprimento/velocidade, populações separadas e limites finitos.
-- [x] **0.4-c · Acoplamento:** cada spike cortical é agregado uma vez; a
-  realimentação E−I usa a mesma projeção e não alcança cerebelo/tronco.
-- [x] **0.4-d · Apresentação fiel:** snapshots independentes no protocolo v2,
-  interpolação limitada aos estados publicados e composição sem dupla contagem.
-- [x] **0.4-e · Evidência:** testes de topologia, atraso efetivo, conservação da
-  projeção, invariantes, convergência temporal, reset/reseed e regressão
-  estrutural do renderer.
+## Histórico verificável
 
-O relatório de promoção e as limitações aceitas estão em
-[AUDIT_0.4.md](AUDIT_0.4.md). A 0.5 preserva esse baseline como oráculo de
-migração; ela não deve reinterpretar o grafo k-NN atual como anatomia parcelada.
+| Fase | Resultado | Estado | Evidência principal | Documento histórico |
+| :-- | :-- | :-- | :-- | :-- |
+| 0.2–0.4 | excitabilidade, Worker, campo e superfície | promovida | `AUDIT_0.4.md` | roadmap 0.7 legado |
+| 0.5 | Rust/Wasm torna-se motor padrão | promovida | `AUDIT_0.5_PROMOTION.md` | `MIGRATION-0.5.md` |
+| 0.6 | L1–L6, relé/TRN e ABI v4 | promovida | auditorias 0.6 | `PLAN-0.6.md` |
+| 0.7 | patch AdEx, quatro receptores e ABI v5 | promovida | auditorias 0.7 | `PLAN-0.7.md` |
+| 0.8 | recursos, química local, solver, ABI v6 e Sinapse | implementada | código, fixtures e testes | proposta 0.8 legada |
 
-### Cortes da 0.5
+A 0.8 não é marcada como promovida porque não existe auditoria de fechamento
+equivalente às versões anteriores e o artefato visual versionado ainda contém
+somente as cinco capturas da 0.7. Checkboxes do plano legado não substituem essa
+evidência.
 
-- [x] **0.5-a · Workspace Rust:** `brain-engine` sem DOM/Tauri e
-  `brain-wasm` como adaptador `wasm-bindgen`, compiláveis nativamente e para
-  `wasm32-unknown-unknown`.
-- [x] **0.5-b · Contrato laminar mínimo:** seis IDs estáveis, matrizes
-  alvo×origem, passo fixo, relaxação exponencial e estados E/I limitados.
-- [x] **0.5-c · Paridade:** portar relógio, RNG, CSR, campo 0.4 e observáveis,
-  fixando vetores TS↔Rust antes de trocar o engine padrão.
-  - [x] **0.5-c1 · Discretos:** tipos de tick/segundo, relógio, RNG endereçado e
-    CSR canônico em Rust, aprovados pelo mesmo fixture JSON consumido no Vitest.
-  - [x] **0.5-c2 · Campo e observáveis:** portar o campo E/I 0.4, agregação de
-    spikes e instrumentos, com convergência e envelopes cruzados.
-  - [x] **0.5-c3 · Replay sombra:** executar cenários curtos nos dois motores e
-    registrar divergência, custo e hashes antes da promoção.
-- [x] **0.5-d · Worker Wasm:** carregar o módulo dentro do Worker, transferir
-  snapshots compactos e manter o thread de apresentação livre.
-- [x] **0.5-e · Promoção:** tornar Rust/Wasm o padrão, conservar fallback
-  diagnóstico temporário e remover as equações duplicadas em TypeScript.
-- [x] **0.5-f · Perfil vivo:** workflow reproduzível para capturar o simulador,
-  atualizar `brain.gif` e carimbar a URL no README com o SHA de origem.
+## Modelo obrigatório de corte
 
-O plano detalhado, incluindo limites do GitHub Pages e a política para C#, está
-em [MIGRATION_0.5.md](MIGRATION_0.5.md). O veredito, a evidência executada e os
-limites operacionais estão em [AUDIT_0.5_ENTRY.md](AUDIT_0.5_ENTRY.md).
+Cada item abaixo herda este contrato. Uma futura PR deve preencher todos os
+campos e apontar para IDs das especificações.
 
-### Fundação entregue
+| Campo | Obrigação |
+| :-- | :-- |
+| identidade | ID estável, nome e estado (`planejada`, `experimental`, `implementada`, `validada`, `promovida` ou `bloqueada`) |
+| problema e valor | pergunta concreta e benefício observável para o usuário |
+| pressupostos | hipóteses, pré-requisitos e dependências |
+| fronteira | escopo, fora de escopo e decisão arquitetural |
+| ciência | matemática, unidade, estado novo, proprietário e classe epistemológica |
+| camadas | mudanças previstas em Rust, ABI, Worker, UI, renderer, assets e persistência |
+| qualidade | segurança, acessibilidade, observabilidade e arquivos prováveis |
+| prova | testes, critérios mensuráveis, orçamento, artefatos e definição de pronto |
+| risco | risco, mitigação, rollback, complexidade e confiança |
 
-- [x] relógio de passo fixo e tempo do motor representado por tick inteiro;
-- [x] RNG endereçado por semente, fluxo, entidade, tick e ordinal;
-- [x] sinapses direcionadas em CSR e redução serial ordenada;
-- [x] campo E/I atrasado e observáveis essenciais com fixture TS↔Rust;
-- [x] laço determinístico isolado em Worker e snapshots com cópias próprias;
-- [x] cinéticas AMPA/GABA-A separadas e inferência legada fora das equações do motor.
+Ordem padrão quando o corte atravessa camadas: contrato matemático → tipos Rust
+→ solver → testes nativos → fixture/replay → snapshot/hash → ABI → protocolo →
+Worker → frontend → renderer → auditoria → documentação → promoção.
 
-### Gráficos
+## R08-PROMOTION · fechar a versão 0.8
 
-- [x] interpolação entre snapshots sem avanço da simulação no frame;
-- [x] tecido, conectividade, unidades e eventos com buffers de render próprios;
-- [x] foco regional e zoom orbital sem alterar o motor;
-- [x] HUD com taxa em Hz/nó e estados adimensionais identificados como `u.a.`.
+**Estado:** em preparação. Nenhuma nova fisiologia entra antes deste gate.
 
-### Backlog transversal da migração
+### R08-P1 · fonte documental única
 
-Estes itens não mudam o contrato superficial promovido e podem entrar na trilha
-de qualidade da 0.5, antes de qualquer demonstração científica nova:
+| Campo | Contrato |
+| :-- | :-- |
+| problema/valor | eliminar versões 0.7 ativas e roadmaps concorrentes |
+| dependências | código 0.8 existente e auditorias históricas |
+| escopo | consolidar `ROADMAP`, `ARCHITECTURE`, `MODEL`, `ENGINE`, `FRONTEND`, `GRAPHICS`, `VALIDATION` e legacy |
+| fora de escopo | alterar código, fixtures, assets ou claims científicos |
+| camadas/arquivos | somente Markdown; nenhum estado/ABI novo |
+| qualidade | links locais, headings, IDs e versões coerentes |
+| aceite/evidência | um roadmap ativo; links sem alvo ausente; diff somente textual |
+| orçamento/risco/rollback | sem custo runtime; risco de perda histórica mitigado por `docs/legacy`; rollback pelo commit |
+| complexidade/confiança | média / alta |
 
-- [x] fila genérica Rust de entradas por `(tick, sequence)` e artefato de replay;
-- [x] cadência configurável de snapshots e perfil de CPU/GPU/memória/latência;
-- [x] estudo de convergência específico das correntes AMPA/GABA-A;
-- [x] curvas axonais e ciclos de vida independentes para todas as camadas;
-- [x] capturas visuais automatizadas e auditoria contínua de teclado/contraste.
+### R08-P2 · evidência executável da ABI v6
 
-O fechamento executável, os limites e a revisão de qualidade desses itens estão
-em [AUDIT_MIGRATION_BACKLOG.md](AUDIT_MIGRATION_BACKLOG.md). As extensões mantêm
-o schema ABI 4 e os hashes promovidos da 0.6.
+| Campo | Contrato |
+| :-- | :-- |
+| problema/valor | provar que os 34 buffers e quatro hashes funcionam no navegador publicado |
+| ciência | nenhuma equação nova; preservar fixtures/hashes v5 |
+| camadas | CI, Worker e auditoria; sem mudar semântica do snapshot |
+| testes | Cargo, Clippy, Wasm, Vitest, Worker real, reset/dispose e replay químico |
+| aceite | auditoria de fechamento registra comandos, ambiente, ABI 6, quatro hashes e aba Sinapse |
+| orçamento | snapshot, latência p95 e memória observados; sem meta inventada |
+| risco/mitigação | bindings ou artefatos defasados; regenerar somente em PR própria e comparar semanticamente |
+| rollback | voltar à ABI v5 apenas com feature flag e preservação de fixture; nunca remover química silenciosamente |
+| complexidade/confiança | média / alta |
 
-### Cortes da 0.6
+### R08-P3 · fechar os gates gráficos reais
 
-- [x] **0.6-a · Contrato laminar:** seis camadas estáveis, populações E/I e
-  classificação explícita das projeções recorrentes, feedforward e feedback.
-- [x] **0.6-b · Tálamo e TRN:** relé excitatório, núcleo reticular inibitório,
-  retorno corticotalâmico e ritmo fenomenológico sustentado pelo circuito.
-- [x] **0.6-c · Motor e Worker:** estado corticotalâmico no snapshot Rust,
-  ABI Wasm e protocolo transferível sem equações no shell.
-- [x] **0.6-d · Leitura visual:** aba Lâminas, coluna explodida, vias destacadas
-  e LOD com custo e acessibilidade verificados.
-- [x] **0.6-e · Identidade e promoção:** BRAIN PRO, diário de aprendizagem,
-  cronologia desde 2025, Kandel, referências, SIGNALS e auditoria de fechamento.
+| Campo | Contrato |
+| :-- | :-- |
+| problema/valor | converter alegações de cor/proveniência em prova renderizada |
+| escopo | pixel→estado em alvos conhecidos, redundância estrutural, saturação e baseline em hardware real |
+| fora de escopo | redesenho anatômico |
+| camadas | `src/render`, auditoria runtime e artefatos; motor imutável |
+| acessibilidade | monocromia deve preservar forma/padrão/rótulo, não apenas aplicar `grayscale` |
+| aceite | erro pixel→estado dentro da tolerância declarada; zero objetos sem proveniência; capturas ABI v6; relatório em GPU real |
+| orçamento | CPU/GPU/draw calls/triângulos/bytes por vista registrados antes/depois |
+| risco/rollback | tolerância frágil entre GPUs; usar teste estrutural obrigatório e pixel test com envelope por backend |
+| complexidade/confiança | alta / média |
 
-### Cortes da 0.7
+### R08-P4 · promoção
 
-- [x] **0.7-a · Patch AdEx em SI:** doze células E/I, adaptação, dendrito passivo,
-  passo microscópico e limites de trabalho explícitos.
-- [x] **0.7-b · Eletricidade:** condutâncias e correntes separadas para AMPA,
-  NMDA com bloqueio por Mg²⁺, GABA-A e GABA-B.
-- [x] **0.7-c · Troca de resolução:** `ResolutionMap` conservativo, contorno
-  campo→patch, substituição no blend e retorno microscópico desativado.
-- [x] **0.7-d · Worker e leitura visual:** ABI v5, 22 buffers, hash celular e
-  abas Célula/Eletricidade sem equações no TypeScript.
-- [x] **0.7-e · Evidência e promoção:** convergência de evento, ensemble de oito
-  sementes, replay versionado, Cargo/Clippy/Vitest, navegador e auditoria visual.
+| Campo | Contrato |
+| :-- | :-- |
+| problema/valor | transformar implementação em baseline verificável |
+| dependências | P1–P3 completos |
+| escopo | criar auditoria de promoção 0.8 e atualizar estado público |
+| aceite | código, contrato, teste, custo e evidência concordam; nenhum achado alto aberto |
+| rollback | manter 0.7 como baseline promovido se qualquer gate falhar |
+| complexidade/confiança | baixa / alta após P1–P3 |
 
-O plano e o veredito estão em [PLAN_0.7.md](PLAN_0.7.md) e
-[AUDIT_0.7.md](AUDIT_0.7.md).
+## 0.9 · neurônio resolvido e Prancha Elétrica
 
-### Preparação para a 0.8
+### R09-A · fronteira de experimentos
 
-- [x] correntes receptoras possuem IDs, unidades e buffers independentes;
-- [x] replay do patch e hash próprio permitem detectar regressão bioelétrica;
-- [x] ABI v5 reserva a fronteira célula/sinapse sem colocar química no shell;
-- [x] limitações de acoplamento e calibração estão documentadas;
-- [ ] definir o contrato de recursos vesiculares e os invariantes de massa/carga;
-- [ ] escolher um cenário mínimo de plasticidade de curto prazo e seu oráculo;
-- [ ] promover solver de reação–difusão somente após estudo de rigidez e
-  positividade; nenhuma dinâmica 0.8 foi antecipada nesta release.
+Resolve a posterior Bayesiana que hoje é calculada em TypeScript e enviada como
+`confidence`. O corte define `ExperimentEncoder`/`ExperimentDecoder`, classifica
+o cálculo como modelo de tarefa e escolhe: portar a dinâmica científica ao Rust
+ou retirar sua influência do drive. Não cria “cognição” genérica.
 
-## Trilhas que atravessam as versões
+- **Estado:** planejada; **IDs:** ARC-014, UI-012, MOD-090, QA-090.
+- **Arquivos prováveis:** `inference.ts`, `main.ts`, protocolo, módulo Rust de
+  experimento e testes.
+- **Aceite:** nenhuma posterior não versionada atravessa o protocolo; controle
+  nulo e replay da tarefa; UI explica hipótese e limite.
+- **Desempenho/segurança:** custo fora do laço gráfico; payload validado e
+  limitado. **Rollback:** remover o painel do drive e manter estímulo direto.
+- **Complexidade/confiança:** média / alta.
 
-### Anatomia
+### R09-B · eventos celulares carimbados
 
-A anatomia entra quando existe função para sustentá-la. Tálamo e núcleo reticular acompanham os circuitos tálamo-corticais; hipocampo acompanha memória episódica ou espacial; núcleos da base acompanham seleção de ação. A árvore anatômica completa permanece como vocabulário de expansão, não como obrigação de representar cada estrutura sem comportamento associado.
+Publica IDs e offsets de tempo de spikes em lote compacto. Rust possui o evento;
+ABI/Worker apenas o transportam; renderer nunca infere um spike entre snapshots.
 
-### Neuroquímica
+- **Estado:** planejada; **IDs:** ENG-018, ABI-012, GFX-031, QA-091.
+- **Aceite:** ordem canônica, replay, limite de eventos, hash próprio ou regra
+  explícita de compatibilidade, reset/dispose e teste de backpressure.
+- **Orçamento:** bytes/evento e teto por snapshot medidos. **Rollback:** manter
+  flag por tick e desabilitar propagação visual.
+- **Complexidade/confiança:** média / alta.
 
-A progressão parte de receptores ionotrópicos rápidos, passa por receptores lentos e plasticidade de curto prazo e só então alcança neuromodulação. ACh, DA, NE e 5-HT não serão dials globais universais: cada efeito deve declarar origem, projeção, família de receptor, localização, cinética e consequência no circuito. Concentração, ocupação de receptor e efeito funcional permanecem grandezas distintas.
+### R09-C · Prancha Elétrica
 
-### Topologia e dinâmica coletiva
+Cria uma vista esquemática, não uma segunda cena celular. Mostra nós, vias,
+direção, atrasos, voltagem, corrente, condutância, excitação, inibição e shunt
+com unidades e origem. “Nível de processamento” significa somente escala visual,
+conjunto de observáveis ou preset científico explicitamente selecionado.
 
-- Métricas de grafo — modularidade, participação, small-world e rich-club — ficam no domínio da ciência de redes.
-- Dimensionalidade e variedade neural entram como instrumentos medidos, sem codificar que atenção necessariamente reduz dimensão.
-- Singularidades de fase só entram depois de existir um campo de fase contínuo, estreito em banda e validado.
-- Homologia persistente opera em circuitos selecionados ou janelas reduzidas, fora do laço de frame.
-- Criticalidade permanece hipótese exploratória. Leis de potência e razão de ramificação não são critérios isolados de aceite.
+- **Estado:** planejada; **IDs:** ELE-001..006, UI-020, GFX-040, QA-092.
+- **Fora de escopo:** alterar `dt`, solver, topologia ou compartimentos por zoom.
+- **Aceite:** cada número aponta para snapshot/observável; câmera e modo não
+  mudam hashes; teclado, equivalente textual e movimento reduzido.
+- **Orçamento:** teto de draws e atualização por evento declarado antes do merge.
+- **Rollback:** vista textual tabular. **Complexidade/confiança:** alta / média.
 
-### Estados globais
+### R09-D · seleção e vista Neurônio
 
-Sono e vigília não serão tratados como simples variação de ganho. A exploração desses regimes depende de circuito tálamo-cortical, modulação por receptor, múltiplas escalas de tempo e critérios próprios de validação; por isso permanece uma trilha de pesquisa posterior à fundação fisiológica.
+Seleciona uma das 12 células por clique e teclado e apresenta soma, dendrito
+único, adaptação e correntes publicadas. A geometria inicial é ilustrativa e o
+dendrito inteiro usa um único valor; nenhum gradiente é inventado.
 
-## Limites assumidos
+- **Estado:** planejada; **IDs:** UI-021, GFX-050, AST-010, QA-093.
+- **Aceite:** seleção não muta motor; `Tab`/`Enter`/`Escape`; hash de geometria
+  determinístico; evento visual somente após R09-B.
+- **Rollback:** voltar ao patch de 12 células. **Complexidade/confiança:** média / alta.
 
-- As regiões atuais são volumes procedurais gerais, não um atlas parcelado.
-- Os 1.890 nós atuais são unidades abstratas; quando surgirem patches microscópicos, eles não serão reinterpretados como neurônios individuais de todo o encéfalo.
-- `ConvexGeometry` fornece envoltórios visuais e não constitui uma variedade cortical adequada para geodésicas ou Laplace–Beltrami.
-- AdEx é um modelo pontual com limiar e reset; não reproduz a forma completa do potencial de ação nem dendritos multicompartimentais.
-- Potencial de membrana, potencial extracelular, taxa de disparo e sinal hemodinâmico são observáveis diferentes.
-- O LFP inicial será identificado como pseudo-LFP e derivado de uma aproximação documentada de correntes sinápticas.
-- Neurônios multicompartimentais, atlas externos e tractografia detalhada não fazem parte do caminho crítico até a 1.0.
+### R09-E · dendrito multicompartimental
 
-As equações e convenções ficam em [MODEL_SPEC.md](MODEL_SPEC.md), a tradução para o código em [ARCHITECTURE.md](ARCHITECTURE.md) e os critérios de evidência em [VALIDATION.md](VALIDATION.md).
+Somente após pergunta científica e convergência de cabo, acrescenta estados
+proximal/distal ao Rust, novo preset/schema e gradiente autorizado.
+
+- **Estado:** planejada; **IDs:** MOD-100, ENG-025, ABI-020, QA-100.
+- **Aceite:** unidades/condições de contorno, referência refinada, invariantes,
+  sensibilidade, replay e orçamento de 12 células.
+- **Risco:** escopo numérico alto. **Rollback:** preset pontual permanece
+  suportado e a UI rotula compartimento único. **Complexidade/confiança:** alta / média.
+
+### R09-F · películas e planos de corte
+
+Implementa isolamento, opacidade, raio-X e corte coronal/sagital/axial/oblíquo
+com tampa e sonda. Camadas sem fonte são `DECORATION`; a sonda só mostra campos
+publicados.
+
+- **Estado:** planejada; **IDs:** GFX-060..068, AST-020, UI-024, QA-101.
+- **Assets:** nenhum atlas é incluído neste corte.
+- **Aceite:** hash invariante a câmera/corte/LOD, operação por teclado/touch,
+  legenda de unidade e custo de clipping medido.
+- **Rollback:** desabilitar clipping e manter isolamento. **Complexidade/confiança:** alta / média.
+
+## 0.10 · anatomia com proveniência e transmissão de volume
+
+| Corte | Estado | Contrato e dependências | Aceite principal | Risco/rollback |
+| :-- | :-- | :-- | :-- | :-- |
+| R10-A · catálogo anatômico | planejada | IDs semânticos, hierarquia, busca, lado, fonte, licença e transformação; depende de GRAPHICS/REFERENCES | cada objeto possui proveniência e nível de evidência | asset/licença; rejeitar importação e manter procedural |
+| R10-B · vascular topológico | planejada | artérias/veias/capilares somente como topologia educacional | isolamento, direção e orçamento; sem fluxo inventado | aparência clínica; rotular `TOPOLOGY/ILUSTRATIVO` |
+| R10-C · núcleos funcionais | pesquisa | origem/alvo/receptor antes de qualquer pluma | circuito, controle nulo e observável publicados | excesso de escopo; não renderizar fonte ausente |
+| R10-D · reação–difusão | pesquisa | contrato matemático, domínio com unidade, IMEX/implícito, positividade e massa | solução simples, convergência e custo | rigidez; manter apenas química local |
+| R10-E · mapas químicos | planejada após C/D | concentração, ocupação e efeito em camadas separadas | nenhuma camada deriva as outras no renderer | custo volumétrico; fallback 2D/superfície |
+
+Cada corte herda o modelo obrigatório: Rust possui novo estado; ABI incrementa
+somente se o wire mudar; Worker limita memória e cancelamento; UI fornece busca,
+legenda e equivalentes textuais; renderer respeita proveniência; assets exigem
+licença/hash; persistência versiona IDs; segurança rejeita arquivos malformados;
+observabilidade mede CPU/GPU/memória; complexidade é alta e confiança baixa até
+existirem dados/fontes concretos.
+
+## 0.11 · experimentos, comparação e observáveis
+
+| Corte | Valor | Dependências | Evidência/aceite | Fora de escopo |
+| :-- | :-- | :-- | :-- | :-- |
+| R11-A · timeline/replay | play, pause, step, bookmarks e scrub por checkpoints | ABI/replay versionados | retorno determinístico e limites de interpolação visíveis | editar o passado do motor sem reset |
+| R11-B · comparação | seed/preset/controle lado a lado | dois runners isolados e orçamento | câmeras/timeline sincronizadas, diff numérico com unidade | misturar estados entre execuções |
+| R11-C · catálogo de experimentos | hipótese, controle, duração, observáveis e relatório | R09-A | reprodução por seed/hash/versão | afirmar causalidade sem controle |
+| R11-D · observáveis | pseudo-LFP, espectro, sincronização e dimensionalidade | contratos em MODEL/VALIDATION | unidade, janela, cadência, custo e teste sintético | rodar análises pesadas por frame |
+| R11-E · persistência local | preferências, presets, replays e anotações | schemas/migração | import/export validado, cotas e recuperação | backend obrigatório |
+
+Persistência começa em IndexedDB e filesystem Tauri controlado. Dados pessoais,
+contas, colaboração ou telemetria exigem plano separado de privacidade e
+autorização. Complexidade média/alta; rollback é exportação e armazenamento
+somente em memória.
+
+## 1.0 · estabilização experimental
+
+Entra somente depois de 0.8 promovida e dos cortes escolhidos de 0.9–0.11.
+Entrega presets versionados, API/replay estáveis, documentação de limites,
+acessibilidade ponta a ponta, matriz de ambientes, pacote web/Tauri reproduzível
+e proveniência de assets. Atlas, PWA, mobile dedicado, VR/AR, WebGPU compute,
+backend e C# não são requisitos automáticos da 1.0.
+
+Critério de pronto: zero requisito crítico sem teste; migração documentada para
+schemas; baseline em hardware integrado e intermediário; importações abusivas
+limitadas; release assinável; nenhuma alegação além do regime validado.
+
+## Riscos transversais
+
+| ID | Risco | Probabilidade/impacto | Indicador | Mitigação/dono | Fase | Residual |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| RSK-01 | documentação divergir do código | alta/alta | versão ou campo sem contrato | links por símbolo/IDs; arquitetura | todas | médio |
+| RSK-02 | segunda ciência em TS/C#/GPU | média/alta | equação fora de Rust | revisão de dependência; engine | todas | baixo |
+| RSK-03 | quebra de determinismo | média/alta | hash/replay divergente | ordem canônica e fixtures; engine | toda ABI | médio |
+| RSK-04 | ABI crescer sem controle | alta/média | bytes/cópias/fila | orçamento e compatibilidade; boundary | 0.9+ | médio |
+| RSK-05 | realismo parecer validação | alta/alta | asset sem classe/fonte | proveniência e legenda; graphics | 0.9+ | médio |
+| RSK-06 | saturação/inacessibilidade | média/alta | estado não recuperável sem cor | gates estruturais/pixel; UX | promoção+ | baixo |
+| RSK-07 | asset sem licença/transformação | média/alta | manifesto incompleto | pipeline de assets; graphics | 0.10 | baixo |
+| RSK-08 | backend prematuro/dados pessoais | baixa/alta | conta/telemetria sem requisito | local-first e privacy gate; security | 0.11+ | baixo |
+| RSK-09 | hardware avançado obrigatório | média/alta | queda sem fallback | WebGL baseline/LOD; performance | todas | médio |
+| RSK-10 | escopo incompatível com equipe pequena | alta/alta | fases longas e paralelas | cortes revisáveis e WIP limitado; programa | todas | médio |
+
+## Definição global de pronto
+
+Uma fase só muda para **promovida** quando:
+
+- contrato científico e proprietário do estado estão identificados;
+- código, ABI, frontend e renderer respeitam as fronteiras;
+- testes, fixture/replay e evidência de ambiente aplicáveis existem;
+- desempenho, acessibilidade, segurança e rollback foram avaliados;
+- hashes anteriores só mudam por decisão explícita;
+- documentação canônica e índice legacy estão coerentes;
+- não há efeito visual sem `STATE`, `TOPOLOGY` ou `DECORATION` declarado.
+
+Veja [ARCHITECTURE.md](ARCHITECTURE.md), [MODEL_SPEC.md](MODEL_SPEC.md),
+[ENGINE_SPEC.md](ENGINE_SPEC.md), [FRONTEND_SPEC.md](FRONTEND_SPEC.md),
+[GRAPHICS_SPEC.md](GRAPHICS_SPEC.md) e [VALIDATION.md](VALIDATION.md).

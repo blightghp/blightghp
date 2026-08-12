@@ -1,17 +1,63 @@
-# Caderno matemático · BRAIN PRO [v. 0.7.0]
+# Especificação matemática e epistemológica · BRAIN PRO
 
-Aqui anoto o que cada estado e equação significa enquanto aprendo a implementá-los
-em Rust. Não escrevo como se toda a fisiologia já existisse: cada seção declara
-quando passa a valer, o que consigo testar e quais simplificações permanecem.
+**Revisão:** 1 · produto observado 0.8.0 · modelos com schema próprio
+
+Esta é a fonte canônica das perguntas, variáveis, equações, métodos, hipóteses e
+limites do motor. Ela não transforma a fisiologia em algo que o código ainda não
+calcula: cada modelo declara estado, unidade, regime, prova e classificação.
 
 ## Convenções
 
 - O tempo interno usa segundos; a interface pode apresentá-lo em milissegundos.
-- Potenciais elétricos usam volts no núcleo futuro e milivolts apenas na apresentação.
+- Potenciais elétricos usam volts no núcleo e milivolts apenas na apresentação.
 - Condutâncias, correntes e concentrações devem declarar a unidade no tipo de configuração ou no nome do campo.
 - Índices de unidade, sinapse, vértice e região não são intercambiáveis.
 - O tempo do motor é um tick inteiro. O valor físico é `tick * dt`.
 - Posições atuais estão em coordenadas procedurais sem unidade anatômica. Velocidade de condução física só será introduzida quando a geometria tiver escala declarada.
+
+## Classificação epistemológica
+
+| Classe | Significado |
+| :-- | :-- |
+| ILUSTRATIVO | organiza uma explicação; não pretende reproduzir dinâmica medida |
+| PROCEDURAL | produzido por regra determinística sem proveniência anatômica/experimental |
+| FENOMENOLÓGICO | reproduz comportamento qualitativo no regime declarado |
+| DIDÁTICO | prioriza legibilidade e contrato pequeno para aprendizagem |
+| FUNDAMENTADO EM REFERÊNCIA | forma/equação apoiada por fonte, sem calibração local suficiente |
+| CALIBRADO | parâmetros ajustados a dados e protocolo declarados |
+| VALIDADO NO REGIME DECLARADO | erro, invariantes e comparação externa sustentam o uso delimitado |
+| EXPERIMENTAL | implementação ou hipótese ainda sem promoção |
+
+Geometria 3D não altera esta classe.
+
+## Registro dos modelos atuais
+
+| ID | Modelo/objeto | Pergunta e resolução | Estado/unidade | Método | Classe e regime | Estado de prova |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| MOD-001 | rede abstrata | propagação/eventos em unidades direcionadas | proxies/u.a., pesos | tick serial, atrasos e traços | DIDÁTICO/FENOMENOLÓGICO | replay 0.5 preservado |
+| MOD-010 | campo E/I | atividade populacional sobre grafo procedural | E/I/u.a. por vértice | kernel atrasado explícito + decaimento exato | PROCEDURAL/DIDÁTICO | fixture e convergência |
+| MOD-020 | coluna L1–L6 | vias e relaxação populacional | E/I adimensional | relaxação exponencial | DIDÁTICO/FENOMENOLÓGICO | invariantes/testes |
+| MOD-030 | relé–TRN | efeito de atraso/feedback no ritmo | relé/TRN/rebote `[0,1]` | relaxação + linhas de atraso | FENOMENOLÓGICO | controle de laço/testes |
+| MOD-040 | patch AdEx | excitabilidade/correntes de 12 células | V, A, Hz, s | AdEx híbrido, 83,3 µs | FUNDAMENTADO EM REFERÊNCIA/DIDÁTICO | replay, convergência, ensemble |
+| MOD-050 | receptores | correntes AMPA/NMDA/GABA-A/GABA-B | S/A/V | decaimentos exatos + força motriz | FUNDAMENTADO EM REFERÊNCIA | convergência parcial e replay |
+| MOD-060 | STP | depleção/facilitação determinística | `R,u`, S, mol | Tsodyks–Markram exponencial | FUNDAMENTADO EM REFERÊNCIA/DIDÁTICO | fixture bit a bit |
+| MOD-070 | fenda/ocupação | separar matéria, concentração e ligação | mol, mol·m⁻³, fração | mapas exponenciais atômicos | DIDÁTICO/EXPERIMENTAL | conservação/replay |
+| MOD-080 | solver químico | compor operadores positivos sob rigidez | tempo, exposição, estoques | Strang palindrômico adaptativo | NUMÉRICO VALIDADO NO REGIME TESTADO | convergência/replay |
+| MOD-081 | trilha química | publicar uma sinapse representativa | buffers químicos v6 | composição por tick | DIDÁTICO/EXPERIMENTAL | fixture integrada; promoção visual pendente |
+| MOD-090 | inferência Bayesiana de tarefa | atualizar crença escalar | probabilidades | Bayes discreto em TS | EXPERIMENTAL | testes unitários; sem replay/preset de tarefa |
+
+“Validado” na última coluna refere-se ao contrato numérico testado, não a
+validade fisiológica externa.
+
+## Contrato obrigatório por modelo
+
+Todo novo modelo ou revisão preenche: pergunta científica; objeto e resolução;
+variáveis/tipos/unidades/domínios; condições iniciais e de contorno; equação
+contínua; eventos e ordem; método, passo e tolerâncias; invariantes, conservação
+e positividade; parâmetros/procedência/calibração; sensibilidade/convergência;
+observáveis e estado publicado; relação multiescala; regime, limitações e falhas
+esperadas; classificação epistemológica; testes analítico, numérico e
+estatístico aplicáveis; visualização autorizada.
 
 ## Política matemática a partir da 0.5
 
@@ -103,15 +149,16 @@ portanto, não representa um spindle biológico.
 
 ### Solvers previstos por domínio
 
-| Domínio | Formulação inicial | Método candidato | Gate |
+| Domínio | Formulação atual/alvo | Método | Gate/estado |
 | :-- | :-- | :-- | :-- |
-| campo cortical | kernel atrasado / futura PDE na superfície | histórico discreto; depois FEM/cotangente e IMEX | convergência espacial, fase e velocidade |
-| população laminar | Wilson–Cowan E/I | relaxação exponencial / IMEX | estabilidade, conectividade e ritmos |
-| célula pontual | AdEx híbrido | exponencial + localização de evento | tempo de spike e corrente |
-| receptores | ODE de estados e força motriz | atualização exata de decaimentos ou Rush–Larsen | pico e integral de corrente |
-| bioquímica | ação de massa e reação–difusão | Rosenbrock/BDF ou splitting validado | positividade e conservação |
-| liberação estocástica | processo de saltos | Gillespie ou tau-leaping com erro declarado | distribuições e recursos limitados |
-| acoplamento multiescala | restrição/prolongamento | operadores conservativos | não duplicação e fluxo de contorno |
+| campo cortical | kernel atrasado; futura PDE na superfície | histórico discreto; futuro FEM/cotangente e IMEX | atual com convergência; troca reabre prova |
+| população laminar | E/I saturante | relaxação exponencial | implementado; estabilidade/conectividade |
+| célula pontual | AdEx híbrido | subpasso fixo + evento/reset | implementado; tempo de spike/corrente |
+| receptores | condutância e força motriz | decaimentos exatos | implementado; pico/integral/paridade |
+| química local | ação de massa compartimental | mapas exatos + splitting Strang adaptativo | implementado no regime didático; massa/positividade/convergência |
+| reação–difusão de volume | futura | implícito/IMEX após contrato espacial | pesquisa; solução simples e massa |
+| liberação estocástica | futura | Gillespie/tau-leaping com erro declarado | pesquisa; distribuições e recursos |
+| acoplamento multiescala | restrição/prolongamento | operadores conservativos | unilateral implementado; bilateral bloqueado |
 
 ## Escalas do estado
 
@@ -501,5 +548,40 @@ O primeiro LFP será um pseudo-LFP. Modelos pontuais não oferecem a geometria d
 - Não afirma que uma casca convexa seja uma superfície cortical anatômica.
 - Não afirma que atenção, sono ou memória tenham um único modulador ou mecanismo.
 - Não afirma que atividade visualmente coerente seja evidência fisiológica suficiente.
+
+## Procedimento para introduzir novos cálculos
+
+1. formular a pergunta e a classificação epistemológica;
+2. definir objeto, resolução, estado, tipos e unidades;
+3. declarar equações, domínio, condições iniciais/contorno e eventos;
+4. ordenar eventos e escolher método numérico;
+5. fixar passo/tolerância, erro aceitável e regime de estabilidade;
+6. declarar invariantes, conservação, positividade e atomicidade;
+7. registrar parâmetros, fonte, calibração e sensibilidade;
+8. definir entrada, observáveis e estado publicado;
+9. decidir hash, replay e fixture antes da ABI;
+10. criar testes analíticos/refinados/estatísticos aplicáveis;
+11. medir custo e limites de recursos;
+12. autorizar somente a visualização sustentada pelo estado;
+13. definir promoção e rollback.
+
+## Domínios futuros avaliados
+
+| Domínio | Classificação de programa | Condição mínima |
+| :-- | :-- | :-- |
+| neurônio multicompartimental/propagação dendrítica | necessário para gradiente na vista Neurônio; pré-1.0 se essa vista for promovida | pergunta, cabo, contorno, convergência e ABI |
+| timestamp/condução axonal | pré-1.0 para propagação visual causal | evento compacto, unidade, limite e replay |
+| canais iônicos detalhados | pesquisa/pós-1.0 | pergunta que AdEx não resolve + fonte/calibração |
+| plasticidade de longo prazo | pós-1.0/pesquisa | escala temporal, estabilidade e controle nulo |
+| transmissão de volume/neuromodulação | pesquisa 0.10+ | fontes funcionais, domínio com unidade e solver positivo |
+| astrócitos/clearance iônico/BBB | adiado/pesquisa | pergunta e dados específicos; não decorar química |
+| neurovascular/hemodinâmica | pós-1.0/pesquisa | estado vascular, acoplamento e observável separados |
+| fluxo de LCR | fora do escopo atual | requisito educacional e modelo validável |
+| memória de trabalho/hipocampo/basal/ação | pesquisa 0.11+ | tarefa explícita, controles e métricas estatísticas |
+| pseudo-LFP/espectro/sincronização | pós-promoção 0.8 | unidade, janela, kernel e sinal sintético |
+| dimensionalidade/topologia de dados | pesquisa/offline | janela/amostragem e custo fora do frame |
+
+Itens não listados como necessários não viram obrigação pela simples
+disponibilidade de tecnologia.
 
 As decisões de implementação estão em [ARCHITECTURE.md](ARCHITECTURE.md) e a forma de testá-las em [VALIDATION.md](VALIDATION.md).

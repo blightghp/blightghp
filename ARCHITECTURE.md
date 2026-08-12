@@ -1,596 +1,468 @@
-# Arquitetura de aprendizagem · BRAIN PRO [v. 0.7.0]
+# Arquitetura canônica · BRAIN PRO
 
-Uso este documento para aprender a decompor um sistema Rust sem esconder as
-decisões que ainda estou amadurecendo. Ele registra a evolução desde o motor
-TypeScript da 0.2 até o núcleo Rust/Wasm e a leitura laminar da 0.6. Um módulo só
-é separado quando consigo explicar seu estado, ciclo de vida, fronteira ou teste.
+**Documento:** revisão 1 · 12 de agosto de 2026
 
-## Baseline histórico e estado promovido
+**Produto observado:** 0.8.0
 
-O baseline promovido da 0.4 tinha quatro peças centrais:
+**Escopo:** estado atual (`as is`) e direção incremental (`to be`)
 
-- `brain.ts` gera geometria, regiões, tipos de unidade e conexões;
-- `simulation.ts` guardava o estado mutável e executava integração, atrasos e STDP;
-- `inference.ts` implementa o experimento Bayesiano escalar atual;
-- `main.ts` inicializa a aplicação e ainda concentra relógio, cena, renderização, HUD, captura e controles.
+Este documento descreve o código executável. Quando houver divergência, a
+precedência é: código → testes/fixtures/protocolo → manifests → auditorias com
+evidência → documentação canônica → legacy. A direção futura aparece marcada
+como planejada e nunca é descrita como implementada.
 
-Esse baseline foi usado como oráculo no replay sombra e removido depois da
-promoção. `crates/brain-engine` possui a matemática e `crates/brain-wasm`
-contém somente a ABI para o navegador. `src/` contém shell, topologia visual,
-protocolo e Worker, sem um integrador científico alternativo.
+## Decisões vigentes
 
-## Regras de dependência
+| ID | Decisão | Estado | Gatilho de revisão |
+| :-- | :-- | :-- | :-- |
+| ARC-001 | `brain-engine` Rust é a única fonte científica | aceita | somente evidência extraordinária de requisito impossível no núcleo atual |
+| ARC-002 | `brain-wasm` é adaptador, não segundo modelo | aceita | nunca por desempenho gráfico |
+| ARC-003 | Worker serial isola o laço do frame | aceita | benchmark + redução determinística + ambiente isolado |
+| ARC-004 | TypeScript modular/DOM direto permanece | aceita | estado/composição/testabilidade justificarem migração mensurável |
+| ARC-005 | Three.js/WebGL é o baseline | aceita | feature WebGPU com paridade, fallback e ganho medido |
+| ARC-006 | Tauri reutiliza a experiência web e o crate Rust | aceita | execução nativa científica concreta exigir runner dedicado |
+| ARC-007 | produto é local-first/offline-capable | aceita | colaboração, contas ou lotes remotos com requisito aprovado |
+| ARC-008 | C# não é adotado | aceita | biblioteca .NET indispensável ou benchmark reproduzível de caso nativo |
+| ARC-009 | snapshot é imutável para UI/renderer | aceita | não há gatilho previsto |
+| ARC-010 | câmera/LOD/cor/corte nunca escolhem equação | aceita | não há gatilho previsto |
+| ARC-011 | quatro hashes têm domínios independentes | aceita | mudança de schema deliberada e migração de replay |
+| ARC-012 | objetos gráficos declaram proveniência | aceita | não há gatilho previsto |
+| ARC-013 | fallback é diagnóstico e inerte | aceita | substituição por falha explícita, nunca por motor TS |
+| ARC-014 | modelos de tarefa atravessam adaptadores explícitos | proposta | fechamento de `inference.ts` em R09-A |
+
+## Contexto do sistema
 
 ```mermaid
 flowchart LR
-    UI["Interface e captura"] --> IN["Entrada genérica"]
-    PERSONAL["Experimento simbólico"] --> IN
-    IN --> CLOCK["Relógio e protocolo"]
-    CLOCK --> CORE["Núcleo determinístico"]
-    TOPO["Topologia e resolução"] --> CORE
-    CORE --> SNAP["Snapshots imutáveis"]
-    SNAP --> OBS["Observáveis"]
-    SNAP --> RENDER["Camadas de render"]
-    OBS --> HUD["Instrumentos"]
-    RENDER --> FRAME["Frame interpolado"]
+    USER["Aprendiz ou pesquisador"] --> APP["BRAIN PRO"]
+    APP --> LOCAL["Navegador ou WebView Tauri"]
+    APP --> FILES["Replays e preferências locais (planejado)"]
+    CI["CI e auditorias"] --> APP
+    APP -. "backend somente se aprovado" .-> REMOTE["Serviço opcional"]
 ```
 
-As dependências seguem oito regras:
+O sistema principal não depende de backend. GitHub Pages publica o mesmo shell
+que Tauri hospeda. A rede não é requisito do motor.
 
-1. O núcleo não importa Three.js, DOM, Tauri nem o conteúdo de um experimento.
-2. O renderer nunca escreve no estado da simulação.
-3. Observáveis leem snapshots ou acumuladores publicados; não alcançam buffers privados do núcleo.
-4. Entradas pessoais são convertidas para eventos genéricos antes de cruzarem o protocolo.
-5. O relógio de parede decide quantos ticks pedir, mas nunca vira argumento livre de uma equação.
-6. `brain-engine` não importa DOM, Web APIs, Tauri, Three.js nem sistema de arquivos.
-7. `brain-wasm` adapta erros e buffers, mas não contém equações alternativas.
-8. TypeScript não muta estado científico e será removido do laço quente depois da paridade.
+## Containers atuais
 
-## Arquitetura 0.6 · Rust nativo, Wasm e estado laminar
+```mermaid
+flowchart TB
+    subgraph PRESENTATION["Thread de apresentação"]
+      MAIN["main.ts · composição"]
+      UI["DOM, controles e acessibilidade"]
+      GFX["src/render · Three.js/WebGL"]
+      PROF["perfil e auditoria"]
+    end
+    subgraph WORKER["Web Worker"]
+      QUEUE["fila serial de comandos"]
+      HOST["WasmEngineHost"]
+      FALLBACK["DiagnosticFallbackHost inerte"]
+    end
+    subgraph WASM["WebAssembly"]
+      ABI["brain-wasm · wasm-bindgen"]
+      CORE["brain-engine · Rust puro"]
+    end
+    MAIN --> QUEUE --> HOST --> ABI --> CORE
+    CORE --> ABI --> HOST -->|"snapshot + transfer list"| MAIN
+    HOST -. "falha de inicialização" .-> FALLBACK
+    MAIN --> UI
+    MAIN --> GFX
+    MAIN --> PROF
+```
+
+## Componentes atuais e propriedade
+
+| Sistema | Módulos reais | Responsabilidade | Não pode fazer |
+| :-- | :-- | :-- | :-- |
+| motor científico | `crates/brain-engine/src/*.rs` | estado, equações, solvers, eventos, RNG, hashes, observáveis | DOM, Three.js, rede, filesystem, Tauri |
+| fronteira Wasm | `crates/brain-wasm/src/lib.rs` | construir motor, adaptar erros, expor buffers/métodos | equações alternativas |
+| host/Worker | `simulation.worker.ts`, `wasm-engine-host.ts`, `protocol.ts` | ordenar comandos, validar cotas, mover snapshots, degradação | criar atividade ou reinterpretar unidade |
+| aplicação | `main.ts`, `schema.ts`, `clock.ts`, `performance-profile.ts` | bootstrap, estado de UI, cadência, controles, métricas | mutar buffers científicos |
+| tarefa experimental | `inference.ts` | posterior Bayesiana escalar | permanece experimental porque alimenta `confidence` sem adaptador versionado |
+| gráficos | `src/render/*` | scene graph, materiais, passes, tokens, LOD e proveniência | eventos/valores inexistentes no snapshot |
+| topologia visual | `brain.ts` | geometria e conectividade procedural serializada ao motor | afirmar anatomia parcelada |
+| desktop | `src-tauri` | janela, CSP, comando de metadados e opener | segundo motor |
+| validação | Cargo/Vitest/scripts/fixtures | provar contratos e capturar evidência | promover por nome de teste apenas |
+
+### Componentes do motor
 
 ```mermaid
 flowchart LR
-    PRESET["Preset + eventos"] --> RUST["brain-engine<br/>Rust puro"]
-    RUST --> NATIVE["Tauri / testes / lotes"]
-    RUST --> ABI["brain-wasm<br/>wasm-bindgen"]
-    ABI --> WORKER["Web Worker"]
-    WORKER --> SNAP["Snapshot versionado<br/>buffers tipados"]
-    SNAP --> SHELL["Shell TypeScript"]
-    SHELL --> VIEW["Three.js + abas + HUD"]
+    SIM["simulation"] --> CLOCK["clock"]
+    SIM --> RNG["random"]
+    SIM --> NET["network / CSR"]
+    SIM --> FIELD["field"]
+    SIM --> LAM["laminar + corticothalamic"]
+    SIM --> CELL["cell_patch"]
+    SIM --> TRACK["chemical_track"]
+    TRACK --> STP["short_term_plasticity"]
+    TRACK --> SOLVER["chemical_solver"]
+    SOLVER --> CLEFT["cleft_occupancy"]
+    STP --> CONTRACT["chemical_contract"]
+    CLEFT --> CONTRACT
+    SIM --> OBS["observables"]
+    SIM --> INPUT["input_queue"]
 ```
 
-O mesmo `brain-engine` compila para o host nativo e para
-`wasm32-unknown-unknown`. Essa paridade de código-fonte evita manter uma versão
-“web” simplificada e outra “científica” nativa.
+`NeuralSimulation` compõe os subsistemas, mas cada bloco conserva estado e hash
+próprios. `ChemicalTrack` é um microdomínio representativo; não é uma coleção de
+todas as sinapses da rede.
 
-O contrato laminar usa IDs estáveis L1–L6 e uma matriz `[alvo][origem]`.
-Classificação e ganho canônico são funções separadas: a primeira decide se a
-via pertence ao modelo; a segunda fornece somente o preset didático atual.
-Assim, trocar um número não cria silenciosamente uma nova hipótese anatômica.
+## Estado, unidades e ownership
 
-### Fronteiras
+| Bloco | Dono | Publicação | Unidade/classe | Hash |
+| :-- | :-- | :-- | :-- | :-- |
+| rede abstrata | `NeuralSimulation` | potenciais, ativações, pesos, sinais | proxies/u.a. e metadados | `stateHash` |
+| campo | `PopulationField` | E, I, `waveActivity` por vértice | u.a. | incluído no hash da rede |
+| córtico-talâmico | `CorticothalamicEngine` | L1–L6 E/I e cinco escalares | adimensional | `corticothalamicHash` |
+| patch | `CellPatch` | 9 arrays + escalares | V, A, Hz, s, frações | `cellPatchHash` |
+| química | `ChemicalTrack` | 12 arrays + escalares | mol, mol·m⁻³, s, frações | `chemicalHash` |
+| UI | `main.ts`/DOM | seleção, aba, controles, câmera | apresentação | nenhum |
+| renderer | cada `RenderLayer` | matrizes, cores, geometria | apresentação | nenhum hash científico |
 
-| Fronteira | Formato | Regra |
+Estado interno científico usa `f64` por padrão. Rede, campo, coluna e patch são
+quantizados para `f32` nos snapshots quando o contrato assim define; a química
+v6 cruza a ABI em `Float64Array`. UI pode converter V→mV e A→pA somente na
+apresentação.
+
+Snapshots são novas views/cópias publicadas. A transfer list destaca 34
+`ArrayBuffer`s ao enviá-los para a thread principal. O renderer trata todos
+como somente leitura. Pooling de snapshots ainda não está implementado.
+
+## Fronteira de execução atual
+
+### Versões distintas
+
+| Eixo | Valor | Política |
 | :-- | :-- | :-- |
-| UI → Worker | comandos versionados | entradas carregam tick e sequência |
-| Worker → Wasm | chamadas estreitas e views de memória | sem objeto DOM ou callback de frame |
-| engine → snapshot | buffers contíguos + metadados | buffers do núcleo nunca são expostos como mutáveis |
-| snapshot → renderer | cópia/transferência ou página de leitura | câmera e LOD não afetam o motor |
-| engine → nativo | API Rust | mesma configuração, replay e hashes do Wasm |
+| produto | 0.8.0 | distribuição; não determina compatibilidade de wire |
+| protocolo Worker | 6 | formas de comandos/eventos; atualmente usa a constante da simulação |
+| ABI Wasm | 6 | métodos/buffers expostos por `brain-wasm` |
+| snapshot | 6 | layout/semântica de `NeuralSnapshot` |
+| engine/Tauri | 1 | metadado do crate, fora da ABI web |
+| subsistemas/fixtures | 1/v1 | evolução independente por modelo/oráculo |
 
-O módulo começa serial dentro de um Worker. Threads Wasm e memória
-compartilhada só entram atrás de detecção de `crossOriginIsolated`, benchmark e
-fusão determinística. O GitHub Pages continua suportado pelo caminho serial.
+ABI, protocolo e snapshot valem 6 e são verificados por igualdade, mas são
+conceitos diferentes. Futuras revisões devem registrar qual eixo mudou; a
+igualdade numérica atual não os transforma em uma única “versão do projeto”.
 
-### Política de linguagem
+### Comandos e eventos
 
-- **Rust:** modelos, solvers, topologia, RNG, eventos, observáveis, replay e
-  validação numérica.
-- **TypeScript:** bootstrap do Wasm, protocolo Worker, DOM, acessibilidade e
-  renderização até uma migração gráfica ter benefício comprovado.
-- **C#:** serviço opcional nativo/offline; nunca integra o laço web e nunca é
-  descrito como mecanismo de segurança do cliente.
-- **WGSL/WebGPU:** candidato futuro para kernels gráficos ou numéricos
-  massivamente paralelos; não substitui validação nem vira requisito da 0.5.
+- `initialize`: topologia procedural, seed e passo opcional;
+- `schedule`: até 256 entradas, endereçadas por `(tick, sequence)`;
+- `advance`: tick alvo, estímulo e plasticidade;
+- `reset`: reseed opcional;
+- `dispose`: libera a instância;
+- eventos: `ready`, `scheduled`, `snapshot`, `fault`.
 
-## Estado e tipos
+O Worker encadeia mensagens numa Promise, preservando ordem. Ainda não possui
+cancelamento, timeout ou limite explícito para o número de mensagens JS
+aguardando. O motor limita 4.096 entradas agendadas e 600 ticks por comando;
+isso não equivale a backpressure completo. R09-B deve fechar essa lacuna antes
+de aumentar o volume de eventos.
 
-Os tipos abaixo descrevem o wire protocol legado. Na 0.5, seus equivalentes
-canônicos vivem em Rust e as declarações TypeScript da ABI devem ser geradas ou
-testadas contra a mesma `schemaVersion`.
+### Cotas atuais
 
-```ts
-type Tick = number;
-type EntityId = number;
-type SynapseId = number;
-type FieldVertexId = number;
+| Recurso | Limite |
+| :-- | --: |
+| nós | 20.000 |
+| sinapses | 250.000 |
+| vértices do campo | 50.000 |
+| arestas do campo | 1.000.000 |
+| ticks por comando | 600 |
+| entradas por mensagem | 256 |
+| entradas agendadas | 4.096 |
 
-interface SimulationConfig {
-  seed: number;
-  dtSeconds: number;
-  snapshotEveryTicks: number;
-  model: "lif" | "conductance" | "hybrid";
-}
+TypeScript valida antes da construção; `brain-wasm` repete as cotas essenciais.
+Cada ampliação exige benchmark e teste do primeiro valor acima do teto.
 
-interface ScheduledDrive {
-  tick: Tick;
-  sequence: number;
-  target: EntityId;
-  amplitude: number;
-  channel: "external" | "task" | "boundary";
-}
+## Fluxos atuais
 
-interface EngineSnapshot {
-  schemaVersion: number;
-  tick: Tick;
-  previousTick: Tick;
-  stateHash: number;
-  potentials: Float32Array;
-  activity: Float32Array;
-  field?: FieldSnapshot;
-  events: EventSnapshot;
-  observables: ObservableSnapshot;
-}
+### Inicialização
+
+```mermaid
+sequenceDiagram
+    participant DOM as main.ts
+    participant W as Worker
+    participant H as WasmEngineHost
+    participant A as brain-wasm
+    participant E as brain-engine
+    DOM->>DOM: gera BrainData e monta RenderLayers
+    DOM->>W: initialize(topologia, seed, dt)
+    W->>H: valida cotas e carrega módulo
+    H->>A: new WasmNeuralEngine(arrays)
+    A->>E: NeuralSimulation::new
+    H->>H: schema ABI == 6
+    H-->>DOM: ready(runtime, schema, degraded=false)
+    Note over W,H: se Wasm falhar, fallback publica zeros e degraded=true
 ```
 
-`Tick`, IDs e índices permanecem inteiros. Valores com unidades diferentes não compartilham um campo chamado apenas `value`; configurações futuras usarão nomes como `dtSeconds`, `membraneVolts` e `conductanceSiemens` quando a unidade não estiver determinada pelo tipo do bloco.
+### Avanço e frame
 
-### Donos dos buffers
+```mermaid
+sequenceDiagram
+    participant RAF as requestAnimationFrame
+    participant C as FixedStepClock
+    participant W as Worker
+    participant E as brain-engine
+    participant R as Renderer
+    RAF->>C: observe(tempo de parede, velocidade)
+    C-->>RAF: targetTick e renderTime
+    RAF->>W: advance(targetTick, entradas)
+    W->>E: agenda em ordem e avança ticks fixos
+    E-->>W: snapshot imutável + hashes
+    W-->>RAF: postMessage(snapshot, 34 buffers)
+    RAF->>R: interpola apenas valores publicados
+    R->>R: matéria → emissão/bloom → composição
+```
 
-| Estado | Dono | Pode ser transferido? | Pode ser alterado pelo renderer? |
+O relógio de parede decide quantos ticks solicitar. `pulseSpeed` muda a relação
+entre parede e alvo; não altera `SIMULATION_STEP_SECONDS`. A cadência 1/2/4/6
+reduz publicações, não passos científicos.
+
+### Persistência e replay alvo
+
+```mermaid
+flowchart LR
+    PRESET["preset versionado"] --> RUN["runner brain-engine"]
+    LOG["entradas ordenadas"] --> RUN
+    RUN --> CHECK["checkpoints + hashes"]
+    CHECK --> STORE["IndexedDB ou filesystem Tauri"]
+    STORE --> VALIDATE["validar schema, cotas e origem"]
+    VALIDATE --> RUN
+```
+
+Persistência ainda não existe. Quando entrar, câmera e preferências terão
+schema separado de presets/replays científicos.
+
+## Arquitetura da apresentação
+
+`main.ts` compõe quatro implementações de `RenderLayer`: cérebro, lâminas,
+célula/eletricidade e sinapse. `SelectiveBloomPipeline` separa emissão do
+restante e compõe o resultado. `visual-tokens.ts` centraliza identidades;
+`visual-encoding.ts` transforma grandezas publicadas em cor/forma/direção.
+
+Proveniência atual é declarada por objeto como domínio visual (`matter` ou
+`emission`) e origem (`state`, `topology`, `decoration`). Todo efeito de estado
+deve apontar para snapshot, embora esse apontamento ainda não seja um campo
+estruturado por objeto; GRAPHICS-010 torna o vínculo obrigatório.
+
+## Introdução de uma nova grandeza
+
+```mermaid
+sequenceDiagram
+    participant M as MODEL_SPEC
+    participant E as brain-engine
+    participant T as testes/fixture
+    participant A as ABI/protocolo
+    participant U as frontend
+    participant G as renderer
+    participant Q as VALIDATION
+    M->>M: pergunta, unidade, equação, método, limite
+    M->>E: estado e proprietário
+    E->>T: invariantes, convergência e replay
+    T->>A: autoriza snapshot/hash/versionamento
+    A->>U: campo validado e metadado
+    U->>G: estado somente leitura
+    G->>Q: visual STATE + equivalente textual
+    Q->>Q: custo, acessibilidade e promoção
+```
+
+Renderer não pode antecipar essa sequência, exceto decoração inerte claramente
+rotulada.
+
+## Arquitetura-alvo incremental
+
+```mermaid
+flowchart LR
+    MODEL["Contratos de modelo"] --> CORE["brain-engine"]
+    CORE --> RUNNERS["runner web, Tauri e headless"]
+    CORE --> ABI["ABI versionada + feature negotiation"]
+    ABI --> WORKER["Worker com backpressure/cancelamento"]
+    WORKER --> APP["estado de aplicação explícito"]
+    APP --> VIEWS["vistas guiada, explorador e laboratório"]
+    APP --> GRAPH["scene graph/proveniência/assets"]
+    CORE --> OBS["observáveis versionados"]
+    OBS --> APP
+```
+
+Mudanças alvo:
+
+- separar estado de aplicação do bootstrap monolítico sem escolher framework por
+  preferência;
+- introduzir adaptadores de experimento e remover a posterior implícita do
+  comando genérico;
+- adicionar backpressure, cancelamento e diagnóstico de fila;
+- gerar/testar metadados de ABI e unidades a partir de contrato único;
+- oferecer runner Rust headless/Tauri sem duplicar o motor;
+- registrar assets, transformações e proveniência gráfica;
+- persistir replays e preferências em schemas separados.
+
+## Avaliação de tecnologias
+
+| Alternativa | Requisito resolvido | Web/Pages | Duplicação/risco numérico | Cópias/latência | Operação/manutenção | Decisão |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| Rust/Wasm atual | simulação interativa local | plena | uma fonte | fronteira já medida | menor custo cognitivo | manter |
+| Rust nativo no Tauri | lotes/arquivos/CPU nativa | desktop | reutiliza crate | sem Wasm; IPC a projetar | natural ao workspace | preferir quando necessário |
+| backend Rust | lotes remotos | web depende de rede | reutiliza crate | rede/serialização | autenticação, filas e custo | adiar até requisito |
+| C# serviço local | biblioteca .NET indispensável | não no Pages | risco se reimplementar | processo/IPC | segundo runtime/distribuição | não adotar agora |
+| C# backend remoto | integração institucional | opcional | alto se duplicar | rede | maior superfície/CI | não adotar agora |
+| C# desktop | novo shell | não | risco alto | interop | descarta Tauri/TS | rejeitado sem caso concreto |
+| Wasm threads/SAB | throughput paralelo | exige COOP/COEP | redução determinística difícil | reduz tempo, aumenta complexidade | fallback serial obrigatório | pesquisar após benchmark |
+| WebGPU/WGSL | partículas, volume, kernels paralelos | suporte variável | referência CPU obrigatória | reduz CPU/cópias em casos | dois backends | gráficos futuros, ciência só com paridade |
+| TypeScript + DOM | UI atual | plena | não integra ciência | custo aceitável | já dominado | manter |
+| framework UI | composição futura complexa | plena | neutro | bundle/migração | reescrita relevante | somente após métrica de complexidade |
+
+## Pipeline gráfico alvo
+
+```mermaid
+flowchart LR
+    SNAP["snapshot"] --> MAP["mapeamento estado→visual"]
+    TOPO["topologia/assets"] --> SCENE["scene graph"]
+    MAP --> SCENE
+    SCENE --> MAT["matéria/depth"]
+    SCENE --> EMI["emissão seletiva"]
+    MAT --> COMP["composição"]
+    EMI --> BLOOM["bloom limitado"] --> COMP
+    COMP --> HUD["labels, sonda e equivalentes textuais"]
+```
+
+WebGL permanece baseline. WebGPU pode acelerar partículas/volume/culling com
+fallback e paridade visual; não muda `dt` nem move ciência para shader sem
+referência CPU e testes.
+
+## Implantação
+
+### Web
+
+```mermaid
+flowchart LR
+    GIT["push/PR"] --> CI["Node + Rust + Wasm"]
+    CI --> DIST["Vite dist"]
+    DIST --> PAGES["GitHub Pages"]
+    PAGES --> BROWSER["Browser · Worker · Wasm · WebGL"]
+```
+
+### Tauri
+
+```mermaid
+flowchart LR
+    WEB["Vite frontend"] --> WEBVIEW["Tauri WebView"]
+    HOST["src-tauri Rust"] --> WEBVIEW
+    CORE["brain-engine"] --> HOST
+    WEBVIEW -->|"IPC mínimo"| HOST
+```
+
+Hoje Tauri expõe apenas `neural_runtime_info` e `opener:default`. A execução
+científica nativa completa é alvo, não estado atual.
+
+### Backend opcional
+
+```mermaid
+flowchart LR
+    LOCAL["app local"] -->|"opt-in, API versionada"| AUTH["autenticação"]
+    AUTH --> QUEUE["fila/lotes"]
+    QUEUE --> RUST["runner brain-engine"]
+    RUST --> STORE["artefatos/replays"]
+    LOCAL -. "funciona sem serviço" .-> OFFLINE["modo offline"]
+```
+
+Essa caixa só entra para colaboração, armazenamento, catálogo, telemetria
+consentida ou lotes longos. Não será criada para “escalar” a aplicação local.
+
+## Concorrência, memória e desempenho
+
+- laço científico serial e determinístico;
+- Worker evita bloquear apresentação, mas não é paralelismo do solver;
+- reduções futuras usam partições fixas e fusão por ID;
+- snapshots usam typed arrays transferidos; pooling/SharedArrayBuffer é futuro;
+- frame interpola snapshots e pode degradar LOD, sombras, volumetria, partículas
+  e cadência;
+- nenhuma degradação altera equações, passo ou preset silenciosamente;
+- métricas mínimas: tick p50/p95/p99, alocações, bytes/snapshot, fila, latência,
+  frame CPU/GPU, draw calls, memória e custo por camada.
+
+## Segurança, privacidade e supply chain
+
+- CSP Tauri restringe origens; IPC permanece mínimo;
+- inputs e topologias têm cotas em TS e Rust/Wasm;
+- importações futuras validam schema, tamanho, IDs, strings e caminhos;
+- labels/metadados nunca entram como HTML não sanitizado;
+- sem código remoto, secrets no cliente ou telemetria implícita;
+- dependências e Actions devem ser auditadas/pinadas; SBOM e licença entram no
+  gate de release;
+- dados pessoais só entram após modelo de ameaça, consentimento, retenção,
+  exportação e exclusão.
+
+## Observabilidade e falhas
+
+`RuntimeProfiler` observa latência, frame, GPU, heap e bytes. `diagnostics`
+publica runtime, degradação e quatro hashes. O fallback avança o tick e publica
+zeros apenas para manter o shell inspecionável; a UI deve indicar claramente que
+nenhuma equação científica está rodando.
+
+Faltam: tamanho da fila de mensagens, cancelamento, timeout, código de fault por
+categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
+
+## Contradições resolvidas
+
+| ID | Fontes em conflito | Evidência mais forte | Decisão/ação |
 | :-- | :-- | :-- | :-- |
-| potenciais, adaptação e refratariedade | núcleo | não diretamente | não |
-| condutâncias e recursos sinápticos | núcleo | não diretamente | não |
-| filas de eventos | núcleo | não | não |
-| campo E/I | núcleo do campo | somente em snapshot | não |
-| snapshot publicado | protocolo | sim | não |
-| buffers interpolados de posição/cor | camada de render | não precisa | sim |
-| histórico de instrumentos | observáveis/UI | somente sua própria cópia | não se aplica |
-
-Snapshots usam buffers próprios. O Worker alterna dois ou três conjuntos de buffers para que nunca recicle memória ainda utilizada pelo frame atual.
-
-### Fronteira química da 0.8
-
-`brain_engine::chemical_contract` é o contrato puro entre o patch 0.7 e a
-dinâmica sináptica. `brain_engine::short_term_plasticity` possui o estado de
-liberação; `brain_engine::cleft_occupancy` possui fenda, ligação e remoção. A
-0.8-e os integra por `ChemicalTrack`, dono do microdomínio representativo e do
-quarto hash. Os três hashes anteriores continuam sem dependência química.
-
-| Grandeza | Tipo/estrutura | Unidade | Dono |
-| :-- | :-- | :-- | :-- |
-| recurso disponível `R` | `UnitFraction` | adimensional `[0,1]` | sinapse |
-| utilização `u` | `UnitFraction` | adimensional `[0,1]` | sinapse |
-| capacidade e liberação | `VesicularResourceContract` | mol | sinapse |
-| estado temporal `R,u,g` | `ShortTermPlasticity` | fração, s, S | sinapse |
-| configuração temporal | `ShortTermPlasticityConfig` | fração, s, mol, S | preset |
-| evento auditável | `PresynapticReleaseEvent` | fração, mol, S | replay/instrumento |
-| transmissor local | `TransmitterKind` | glutamato ou GABA | fenda |
-| concentração na fenda | `ChemicalCleftSnapshot` | mol·m⁻³, por transmissor | sinapse química |
-| ocupação e matéria ligada | `ChemicalCleftSnapshot` | fração, mol, por receptor | sinapse química |
-| remoção acumulada | `ChemicalCleftSnapshot` | mol, por transmissor | recaptura/ledger |
-| operações atômicas | `ChemicalSynapse` | mol, m³, s | solver químico |
-| composição e rigidez | `ChemicalSolver` | s, taxa·passo | motor 0.8-d |
-| envelope do solver | `ChemicalSolverConfig` | s, adimensional, contagem | preset |
-| diagnóstico de avanço | `ChemicalSolverAdvance` | s, subpassos, exposição | replay/instrumento |
-| trilha publicada | `ChemicalTrack` / `ChemicalSignal` | buffers SI + frações | ABI v6 |
-| estoques químicos | `TransmitterMassLedger` | mol equivalente | solver químico |
-| carga transmembrana | `MembraneChargeTransfer` | C | integrador celular |
-| tolerância de massa | `ConservationTolerance` | mol absoluto + fração relativa | experimento |
-
-O contrato calcula `uR` sem mutar o recurso. A dinâmica 0.8-b avança entre
-instantes por exponenciais exatas e aplica quatro fases públicas e ordenadas:
-liberação pelo estado pré-evento, incremento da condutância, depleção e
-facilitação para o evento seguinte. Cada snapshot possui hash FNV-1a e versão de
-schema; o fixture `short-term-plasticity-v1.json` fixa o replay bit a bit. Massa
-química e carga elétrica não compartilham acumulador nem conversão implícita.
-
-A 0.8-c acrescenta dois buffers de concentração, quatro de ocupação, quatro de
-matéria ligada e dois de remoção. AMPA/NMDA só consomem glutamato; GABA-A/GABA-B
-só consomem GABA. Liberação é uma fonte de fronteira explícita. Limpeza transfere
-matéria livre ao estoque recuperado; ligação transfere entre fenda e estoque
-ligado. A conservação é verificada separadamente para cada transmissor. A ordem
-entre essas operações não está escondida no objeto: o solver 0.8-d é o dono da
-composição. O fixture `cleft-occupancy-v1.json` congela buffers e hash.
-
-O `ChemicalSolver` 0.8-d possui tempo e contador próprios, envolve
-`ChemicalSynapse` e executa 12 subtransições palindrômicas por passo aceito. O
-passo é o menor entre o restante do intervalo, o teto do preset e o limite
-`χ_max/taxa_max`. O avanço ocorre numa cópia candidata: estouro de orçamento,
-underflow ou erro químico descartam toda a tentativa. O hash do solver inclui
-schema, configuração numérica, tempo, contador e hash químico. O fixture
-`chemical-solver-v1.json` fixa a composição e o replay bit a bit. As exponenciais
-do domínio químico usam `libm::exp`, eliminando diferenças de biblioteca
-matemática nativa entre Windows e Linux sem relaxar o oráculo.
-
-`ChemicalTrack` avança numa cópia candidata e só publica o tick químico completo.
-Ele mantém duas reservas Tsodyks–Markram, uma fenda com dois transmissores e as
-quatro famílias receptoras. Uma contagem E/I positiva autoriza um único evento
-no microdomínio correspondente; a contagem também é publicada para que a
-proveniência não se perca. Última liberação e seu tempo permanecem no estado até
-o próximo evento, permitindo que a apresentação derive duração sem criar um
-relógio químico paralelo.
-O gerador `chemical_track_fixture.rs` e o replay `chemical_track_replay.rs`
-fecham a fronteira integrada bit a bit antes de `wasm-bindgen`.
-
-## Laço de simulação
-
-O frame deixa de chamar `simulation.step(delta)`. O relógio converte tempo real em um tick-alvo e envia esse alvo ao motor:
-
-```ts
-function onFrame(nowMs: number): void {
-  const targetTick = clock.observe(nowMs, speed);
-  engine.advanceTo(targetTick);
-
-  const view = snapshots.interpolate(clock.renderTick());
-  renderLayers.update(view);
-  instruments.update(view.observables);
-  composer.render();
-}
-```
-
-No Worker, o núcleo só conhece passos inteiros:
-
-```ts
-function advanceTo(targetTick: Tick): void {
-  while (state.tick < targetTick) {
-    applyInputsFor(state.tick);
-    decayContinuousState();
-    deliverEventsInCanonicalOrder();
-    integrateUnits();
-    registerSpikes();
-    updatePlasticity();
-    publishIfDue();
-    state.tick += 1;
-  }
-}
-```
-
-O relógio possui três políticas explícitas:
-
-- em interação, limita o atraso acumulado e registra quando precisou descartar tempo de parede;
-- em captura, nunca descarta ticks e só renderiza depois de atingir o tempo solicitado;
-- em replay, ignora o relógio de parede e consome o registro de entradas até o tick final.
-
-A velocidade da interface altera a relação entre tempo real e tick-alvo. Ela não altera `dt` nem as constantes fisiológicas.
-
-## Determinismo
-
-### Entradas
-
-Toda entrada recebe `tick` e `sequence`. A ordenação é `(tick, sequence)`. Controles contínuos são amostrados e registrados como eventos; o núcleo não consulta diretamente o estado atual do DOM.
-
-Na implementação 0.6, `DeterministicInputQueue<T>` usa um `BTreeMap` com chave
-`InputAddress`, rejeita endereços duplicados ou passados e limita a fila a 4.096
-entradas. O adaptador Wasm expõe estímulo e plasticidade como payloads tipados;
-o host converte também o comando interativo compatível nas sequências reservadas
-0 e 1. Replays explícitos começam em 2, têm no máximo 256 entradas por mensagem
-e compartilham a cota total de 4.096.
-
-O replay guarda:
-
-- versão do protocolo;
-- configuração validada;
-- semente;
-- hash da topologia;
-- eventos em ordem;
-- versão do preset do modelo.
-
-### Números aleatórios
-
-O RNG é baseado em contador:
-
-```text
-random(seed, stream, entityId, tick, eventOrdinal) -> uint32
-```
-
-O endereço, e não a ordem da chamada, escolhe a amostra. Fluxos distintos
-separam topologia, ruído de canal, liberação sináptica e experimentos. A
-implementação Rust usa as mesmas operações `u32` com overflow modular do
-TypeScript e ambos consomem `fixtures/parity/discrete-v1.json`.
-
-O contrato legado reduz `tick` aos 32 bits baixos antes da avalanche. Isso
-repete o endereço depois de `2^32` ticks; a 60 Hz, após mais de dois anos
-contínuos. Qualquer ampliação desse endereço exige nova versão de fixture,
-protocolo e replay — nunca uma mudança silenciosa.
-
-### Arestas e reduções
-
-A topologia atribui um ID estável a cada sinapse. O CSR de saída é ordenado por `(origem, destino, id)` e o índice de entrada por `(destino, origem, id)`. A implementação Rust rejeita endpoints fora do buffer e produz exatamente os mesmos offsets e IDs do fixture TypeScript.
-
-Na primeira implementação, o laço quente permanece serial. Se houver paralelismo posterior:
-
-- cada sinapse atualiza apenas seu próprio estado;
-- cada alvo pertence a uma partição fixa e soma seu CSR de entrada em ordem canônica;
-- métricas globais usam blocos fixos e fundem os parciais pela ordem do ID do bloco;
-- estruturas como `Promise.race`, atomics de soma e iteração sobre resultados na ordem de chegada não entram no caminho determinístico.
-
-Essa disciplina evita depender da associatividade de ponto flutuante. Igualdade bit a bit é exigida no mesmo runtime e na mesma arquitetura numérica; paridade TypeScript/Rust terá contrato explícito de exatidão ou tolerância por grandeza.
-
-## Protocolo do Worker
-
-O Worker entra antes do paralelismo. Seu objetivo inicial é isolar o laço fixo do frame.
-
-Na ABI v6, o snapshot preserva integralmente os blocos e hashes da v5 e
-acrescenta o microdomínio químico. O bloco laminar mantém dois
-`Float32Array` de seis posições para E/I, cinco escalares de relé/TRN/retorno e
-um hash próprio. O patch publica nove arrays de doze posições — tipo, soma,
-dendrito, adaptação, quatro correntes receptoras e eventos — além de taxa, razão
-E/I, primeiro spike, vértice, blend e hash. O hash legado da rede 0.5 não
-incorpora esses blocos; assim, o
-replay sombra continua verificando exatamente o baseline promovido enquanto o
-novo circuito, o patch e a química ganham provas separadas de determinismo.
-
-Trinta e quatro buffers são transferidos ao thread de apresentação: os 22 da v5
-e 12 buffers químicos para evento, reserva, concentração, ligação, ocupação e
-remoção. Antes da
-construção, o host limita nós, sinapses, vértices e arestas;
-o adaptador Rust repete as cotas. Cada comando avança no máximo 600 ticks para
-que uma única mensagem não monopolize o Worker. O fallback diagnóstico publica
-buffers laminares/celulares/químicos inertes e nunca substitui o circuito por
-equações TypeScript.
-
-Mensagens de controle:
-
-```ts
-type EngineCommand =
-  | { type: "initialize"; config: SimulationConfig; topology: SerializedTopology }
-  | { type: "schedule"; inputs: ScheduledDrive[] }
-  | { type: "advance"; targetTick: Tick }
-  | { type: "reset"; seed: number }
-  | { type: "dispose" };
-
-type EngineEvent =
-  | { type: "ready"; tick: Tick }
-  | { type: "snapshot"; snapshot: EngineSnapshot }
-  | { type: "fault"; code: string; tick: Tick };
-```
-
-O perfil não atravessa a ABI científica: `RuntimeProfiler` mede no shell a
-latência de ida e volta do Worker, o custo de CPU do frame, contadores acumulados
-do renderer, heap quando disponível e bytes dos 34 buffers. A cadência
-configurável decide quando pedir o próximo snapshot, sem mudar o tick do motor.
-
-Não haverá uma mensagem por spike. Eventos de alta frequência são compactados no snapshot em arrays de IDs, offsets temporais e amplitudes.
-
-## Campo e patches microscópicos
-
-O acoplamento será introduzido em três passos.
-
-### 0.3 — campo derivado
-
-O estado atual de spikes é agregado por região ou por vértice apenas para instrumentos e visualização. Não existe um segundo integrador.
-
-### 0.4 — campo macroscópico
-
-O campo E/I é o estado macroscópico cortical fora de patches. `BrainData`
-publica `corticalField`, um grafo CSR simétrico sobre os pontos corticais
-externos, com comprimentos de aresta e uma projeção `vertexByNode`. Pontos
-corticais internos são associados ao vértice externo mais próximo; cerebelo e
-tronco ficam fora do domínio.
-
-`PopulationField` possui os buffers E/I, o histórico circular consumido pelos
-atrasos de condução e a composição `waveActivity`. O snapshot do protocolo v3
-leva arrays por vértice e `nodeIndices`; o renderer usa a projeção da topologia
-e combina campo e spikes pelo envelope máximo. Ele não soma as duas resoluções
-como fontes independentes.
-
-O domínio atual é uma aproximação k-NN procedural. Não é uma malha triangular
-anatômica, e seus comprimentos euclidianos não são descritos como geodésicas.
-
-### 0.5-c2 — espelho Rust validado
-
-`brain-engine::PopulationField` reproduz o contrato 0.4 sem importar tipos web:
-CSR de vértices, projeção nó→vértice, pesos de kernel normalizados, atraso
-`u16`, histórico circular, buffers E/I e `wave_activity`. Parâmetros e
-integração permanecem em `f64`; toda escrita de estado publicado é quantizada
-explicitamente em `f32`, como ocorre nos `Float32Array` do oráculo.
-
-`fixtures/parity/field-observables-v1.json` contém topologia mínima, sequência
-de spikes, snapshots e observáveis. O gerador executa o TypeScript 0.4; os
-testes Cargo consomem o mesmo artefato. A validação da topologia ocorre na
-construção, não no laço quente.
-
-### 0.7 — patch resolvido
-
-Um `ResolutionMap` define:
-
-```ts
-interface ResolutionMap {
-  patchId: number;
-  fieldVertices: Uint32Array;
-  cells: Uint32Array;
-  cellToFieldWeights: Float32Array;
-  boundaryWeights: Float32Array;
-  blendByVertex: Float32Array;
-}
-```
-
-O preset `learning_patch` mapeia doze células para o primeiro vértice com pesos
-`1/12`, peso de contorno 1 e blend 1. A validação rejeita comprimentos divergentes,
-IDs fora da sequência, números não finitos e pesos não conservativos. O campo
-alimenta uma corrente de contorno limitada; a atividade agregada dos spikes
-substitui o campo dentro da máscara `blendByVertex`. O retorno microscópico para
-o campo permanece desativado na 0.7 e só poderá entrar em janelas explícitas,
-depois de testes de conservação e estabilidade.
-
-Assim, a troca de resolução acompanha o zoom sem fazer a dinâmica depender da câmera. A câmera escolhe o que mostrar, nunca qual equação executar.
-
-## Núcleo genérico e entrada pessoal
-
-O motor recebe drives agendados e expõe canais de leitura. Ele não conhece letras, palavras, gramática ou o significado de uma hipótese.
-
-```ts
-interface ExperimentEncoder<Action> {
-  reset(seed: number): void;
-  encode(action: Action, at: Tick): ScheduledDrive[];
-}
-
-interface ExperimentDecoder<Result> {
-  read(snapshot: EngineSnapshot): Result;
-}
-```
-
-O experimento Bayesiano atual continua isolado em `inference.ts` até ser substituído por esse contrato. Na 0.9, uma entrada pessoal poderá morar em `experiments/symbolic-sequence.ts`: ela codifica tokens em drives genéricos e interpreta canais de saída, sem importar nem modificar internamente `simulation.ts`.
-
-Presets guardam parâmetros; adaptadores guardam significado. Essa separação permite executar tarefas perceptivas ou simbólicas sobre o mesmo núcleo e comparar resultados sem ramificações pessoais dentro do motor.
-
-## Observáveis
-
-Os observáveis têm duas classes:
-
-- **online:** baratos, atualizados em blocos durante a simulação, como taxa, corrente média e dispersão;
-- **analíticos:** executados em snapshots selecionados ou offline, como homologia persistente, ajuste de avalanches e dimensionalidade em janelas longas.
-
-Cada observável declara:
-
-```ts
-interface ObservableDefinition {
-  id: string;
-  unit: string;
-  windowSeconds: number;
-  source: "state" | "events" | "currents" | "field";
-  cadenceTicks: number;
-  approximation?: string;
-}
-```
-
-O HUD recebe valor e metadados juntos. Um rótulo não pode reutilizar “intensidade” ou “volume” para grandezas fisicamente diferentes.
-
-Na 0.5-c2, `mean_absolute_weight` e `PopulationFiringRate` já existem no
-`brain-engine` e reproduzem o fixture do oráculo. Eles ainda não alimentam o
-HUD: essa troca pertence ao replay sombra e ao Worker, para não promover uma
-implementação apenas porque os valores unitários coincidem.
-
-## Camadas de render
-
-As camadas consomem a mesma visão interpolada:
-
-```ts
-interface RenderLayer {
-  mount(context: RenderContext, topology: RenderTopology): void;
-  update(view: InterpolatedSnapshot): void;
-  setDetail(level: number): void;
-  setVisible(visible: boolean): void;
-  dispose(): void;
-}
-```
-
-| Ordem | Camada | Fonte permitida |
+| C-01 | headers 0.7 × manifests/código 0.8 | manifests + ABI/código | docs passam a declarar produto 0.8.0 e promoção pendente |
+| C-02 | roadmap 0.7 × proposta 0.8 × código concluído | código/testes | um roadmap canônico; ambos arquivados |
+| C-03 | “0.8 fechada” no README × ausência de auditoria 0.8 | artefato visual versionado | implementação não equivale a promoção |
+| C-04 | 22 buffers/ABI v5 × ABI v6 atual | protocolo/transfer list | estado atual é 34; 22 permanece só como história |
+| C-05 | `main.ts` concentrava render × `src/render` existente | árvore atual | descrição atualizada; `main.ts` ainda concentra composição/UI |
+| C-06 | “gate de invertibilidade pixel” × teste analítico | script/testes | classificar como parcial até amostrar render target/pixels conhecidos |
+| C-07 | “modo sem cor comprova redundância” × filtro grayscale | código auditável | capturas ajudam, mas prova estrutural automática ainda falta |
+| C-08 | TS só apresenta × posterior alimenta drive | `main.ts`/`inference.ts` | experimento permanece explícito e R09-A resolve ownership |
+| C-09 | Tauri roda núcleo nativo × host atual só informa schema | `src-tauri/src/lib.rs` | execução nativa é alvo, não capacidade atual |
+| C-10 | VISUAL_SPEC ativo × GRAPHICS_SPEC requerido | conjunto canônico | conteúdo incorporado e proposta arquivada |
+
+## Achados da auditoria 0.8 reavaliados
+
+| Achado | Veredito atual | Evidência/pendência |
 | :-- | :-- | :-- |
-| 1 | tecido e superfície | topologia, materiais e atividade composta |
-| 2 | campo macroscópico | snapshot do campo |
-| 3 | conectividade | topologia, pesos e atrasos publicados |
-| 4 | unidades e microcircuito | snapshot do patch selecionado |
-| 5 | eventos | spikes e chegadas sinápticas compactadas |
-| 6 | seleção e orientação | estado da interface |
-| 7 | instrumentos | observáveis com unidade |
-| 8 | pós-processamento | exposição, bloom e preferências visuais |
+| P1 plano 0.8 | FECHADO, substituído | proposta teve cortes; agora ROADMAP canônico |
+| P2 programa visual ausente | FECHADO documentalmente | GRAPHICS_SPEC/roadmap; futuras features ainda planejadas |
+| P3 arquitetura desatualizada | FECHADO por esta revisão | este documento |
+| P4 `src/render`/interface | FECHADO | diretório, `RenderLayer` e testes existem |
+| P5 inferência fora do contrato | ABERTO | `posterior` ainda alimenta `confidence`; R09-A |
+| E1 perfil sem ambiente | PARCIAL | script atual coleta; artefato versionado ainda antigo |
+| E2 hardware real | ABERTO | somente evidência headless versionada |
+| E3 redundância sem cor | PARCIAL | formas/testes/capturas existem; gate automático é declarativo |
+| E4 estado→pixel | PARCIAL | rampa pura e saturação existem; pixel conhecido não volta ao estado |
+| R1 tokens dispersos | FECHADO | `visual-tokens.ts` |
+| R2 bloom global/aditivo | FECHADO | `SelectiveBloomPipeline` + contrato de materiais |
+| R3 corrente sem sinal | FECHADO | `signedMean`, direção e testes |
+| R4 fronteira ilegível | PARCIAL | legenda textual existe; glifo continua um toro agregado |
+| R5 Célula/Eletricidade duplicadas | ABERTO | compartilham `CellRenderLayer`; R09-C cria prancha própria |
+| R6 alocações por frame | ABERTO | arrays/vetores/quaternions ainda surgem no caminho quente |
+| R7 limpeza/visibilidade por frame | ABERTO | 900 matrizes são limpas; visibilidade roda em frames da visão geral |
+| M1 tempo por spike | ABERTO | só flag por tick/primeiro spike; R09-B |
+| M2 dendrito único | ABERTO | contrato atual é um compartimento; R09-E |
+| M3 química inexistente | FECHADO no microdomínio local | química v6 existe; transmissão de volume continua futura |
 
-Pulsos visuais representam eventos reais. Interpolação pode suavizar posição e intensidade, mas não criar spikes entre snapshots. LOD reduz geometria e amostragem visual; não altera o motor.
+## Dependência entre fases
 
-Na 0.8-v3, `CellRenderLayer` mantém a convenção publicada pelo motor
-`g·(E_rev − V)`: corrente positiva é despolarizante e corrente negativa é
-hiperpolarizante. O halo elétrico codifica direção tanto por matiz quanto pelo
-plano do toro. A condição de shunt é derivada da corrente GABA-A e do potencial
-dendrítico publicados, recuperando a condutância pela mesma equação; não existe
-estado químico inventado no renderer.
-
-Na 0.8-v4, `window.__BRAIN_ENGINE__.visualAudit()` expõe somente evidência de
-apresentação: contagem de proveniência, erro da rampa invertível e codificações
-redundantes. `profile()` acrescenta navegador, hardware WebGL, preset, contagens
-da topologia e passo fixo. Nenhum desses relatórios escreve no motor ou participa
-do hash da simulação.
-
-## Histórico do `src/` e workspace 0.5
-
-### Corte 0.3-a — relógio e contrato
-
-```text
-src/
-├── main.ts
-├── clock.ts
-├── protocol.ts
-├── simulation.ts
-├── brain.ts
-├── inference.ts
-└── schema.ts
+```mermaid
+flowchart LR
+    P1["R08-P1 docs"] --> P2["R08-P2 ABI evidence"]
+    P1 --> P3["R08-P3 graphics gates"]
+    P2 --> P4["R08-P4 promotion"]
+    P3 --> P4
+    P4 --> A["R09-A experiments"]
+    P4 --> B["R09-B events"]
+    B --> C["R09-C Electrical Board"]
+    B --> D["R09-D Neuron"]
+    D --> E["R09-E multicompartment"]
+    D --> F["R09-F cuts/layers"]
+    F --> ATLAS["R10 anatomy"]
+    A --> EXP["R11 experiments"]
 ```
 
-Historicamente, `simulation.ts` era o núcleo. `clock.ts` recebeu o acumulador e
-`protocol.ts` passou a conter comandos, snapshots e entradas.
-
-### Corte 0.3-b — memória e isolamento
-
-```text
-src/
-├── main.ts
-├── simulation.worker.ts
-├── simulation.ts
-├── network.ts
-├── random.ts
-├── observables.ts
-└── ...arquivos existentes
-```
-
-Nesse corte histórico, `network.ts` serializava a topologia, `random.ts`
-implementava o RNG endereçado e `observables.ts` mantinha métricas online.
-
-### Corte 0.3-c — renderização com donos claros
-
-O diretório `render/` só nasce quando ao menos três camadas forem extraídas de `main.ts`:
-
-```text
-src/render/
-├── brain-layer.ts
-├── connection-layer.ts
-├── event-layer.ts
-└── render-types.ts
-```
-
-O `main.ts` permanece como composição: cria dependências, liga controles e inicia frame/Worker. Não será substituído por uma classe central que volte a possuir tudo.
-
-### 0.4 em diante
-
-`field.ts` apareceu com o primeiro estado populacional real e foi removido após
-a promoção de sua implementação Rust. Um diretório `models/` só se justifica
-quando LIF, campo e AdEx coexistirem no motor.
-
-### Workspace a partir da 0.5
-
-```text
-.
-├── Cargo.toml                  # workspace e políticas comuns
-├── crates/
-│   ├── brain-engine/           # Rust puro, nativo + Wasm
-│   └── brain-wasm/             # ABI wasm-bindgen
-├── src/                        # shell TS, Worker, protocolo e ABI gerada
-├── src-tauri/                  # host desktop
-└── scripts/                    # captura e artefatos reproduzíveis
-```
-
-`src-tauri` já consome o schema de `brain-engine`; a execução científica nativa
-completa entra quando o desktop precisar operar sem o shell web. O `Cargo.lock`
-único fica na raiz do workspace.
-
-## Sequência concluída da migração 0.5
-
-1. [x] Manter os vetores e replays da 0.4 congelados como oráculo.
-2. [x] Fixar tipos Rust de camada, tick, unidade, configuração, erro e snapshot.
-3. [x] Portar relógio e RNG com igualdade exata.
-4. [x] Portar CSR/topologia e comparar IDs, offsets e hashes.
-5. [x] Portar campo e sinapses por blocos com convergência por grandeza.
-6. [x] Gerar bindings Wasm e carregar o engine no Worker.
-7. [x] Rodar TS e Rust em replay sombra, sem renderizar duas atividades.
-8. [x] Promover Rust/Wasm após paridade, custo e teste em navegador.
-9. [x] Remover equações TypeScript e conservar somente o shell/protocolo.
-
-Cada corte deve ser reversível e publicar qual parte ainda depende do oráculo.
-Uma nova função fisiológica não entra enquanto o mesmo subsistema estiver
-duplicado e sem paridade.
-
-## Comentários e documentação
-
-Comentários de código explicam unidade, invariante, escolha numérica ou motivo não evidente. Eles não narram a edição, repetem a linha seguinte nem registram ferramentas usadas para produzir o arquivo. Decisões mais longas pertencem a estes documentos ou a um registro técnico próprio.
-
-Arquivos gerados, licenças, atribuições e referências científicas preservam seus avisos originais. A revisão editorial remove metalinguagem do processo sem fabricar autoria ou apagar procedência.
+As regras executáveis do motor estão em [ENGINE_SPEC.md](ENGINE_SPEC.md), a
+semântica matemática em [MODEL_SPEC.md](MODEL_SPEC.md), a aplicação em
+[FRONTEND_SPEC.md](FRONTEND_SPEC.md), os gráficos em
+[GRAPHICS_SPEC.md](GRAPHICS_SPEC.md) e os gates em [VALIDATION.md](VALIDATION.md).
