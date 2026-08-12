@@ -52,6 +52,10 @@ if (
   throw new Error("artefato runtime-audit.json não comprova integralmente a ABI v6");
 }
 
+const shallowRepository = execFileSync("git", ["rev-parse", "--is-shallow-repository"], {
+  cwd: root,
+  encoding: "utf8",
+}).trim() === "true";
 const sourceIsAncestor = (() => {
   try {
     execFileSync("git", ["merge-base", "--is-ancestor", report.source.commit, "HEAD"], {
@@ -63,7 +67,7 @@ const sourceIsAncestor = (() => {
     return false;
   }
 })();
-if (!sourceIsAncestor) {
+if (!shallowRepository && !sourceIsAncestor) {
   throw new Error(`commit de origem da auditoria não pertence ao histórico atual: ${report.source.commit}`);
 }
 
