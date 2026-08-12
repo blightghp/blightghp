@@ -109,9 +109,10 @@ de equação, unidade, limite e teste próprios.
 Minha pergunta prática nesta fase é: **como ampliar a resolução — da rede à
 sinapse e da forma à química — sem desenhar um fenômeno que o motor não
 calcula?** A 0.8 implementa, sobre a base 0.7, recursos, química local, solver,
-ABI v6 e leitura sináptica. Ainda não a classifico como promovida: falta repetir
-e versionar os gates de navegador/visual da ABI v6, fechar a prova pixel→estado
-e registrar um baseline em hardware real. O estado e o próximo gate estão no
+ABI v6 e leitura sináptica. A evidência executável da ABI v6 está versionada,
+mas ainda não classifico a 0.8 como promovida: falta fechar a prova
+pixel→estado, demonstrar redundância estrutural sem cor e registrar um baseline
+em GPU física. O estado e o próximo gate estão no
 [ROADMAP canônico](ROADMAP.md).
 
 ### O que consigo explorar hoje
@@ -131,9 +132,9 @@ e registrar um baseline em hardware real. O estado e o próximo gate estão no
   realmente emite e proveniência declarada por objeto;
 - corrente receptora média com sinal, halos orientados para entrada, saída e
   shunt, além de forma redundante para leitura sem depender de matiz;
-- gates automáticos de rampa pura invertível, saturação, modo monocromático,
-  proveniência e perfil de navegador/preset/custo; o artefato versionado ainda
-  precisa ser recapturado para a ABI v6 e não substitui baseline em GPU real;
+- gates automáticos de ABI, lifecycle, rampa pura, saturação, modo
+  monocromático, proveniência e perfil de navegador/preset/custo; o artefato
+  schema 2 comprova ABI v6 em SwiftShader e não substitui baseline em GPU real;
 - contrato 0.8-a para recurso vesicular `R`, utilização `u`, liberação `uR`,
   cinco estoques em mol equivalente e carga transmembrana em coulombs;
 - dinâmica 0.8-b de Tsodyks–Markram determinística, com recuperação e decaimento
@@ -205,11 +206,12 @@ memória de estudo em falsa proveniência Git.
 | 2026-07-26 | fecho a 0.6 com L1–L6, relé/TRN, ABI v4, aba Lâminas e auditoria de recursos |
 | 2026-08-02 | fecho a 0.7 com AdEx, quatro receptores, ResolutionMap, ABI v5 e as abas Célula/Eletricidade |
 | 2026-08-10 | abro a 0.8 com auditoria visual, passes matéria/emissão e o contrato de recursos, massa e carga antes da dinâmica química |
-| 2026-08-10 | preservo o sinal das quatro correntes e fecho os gates visuais de invertibilidade, monocromia, proveniência e hardware |
+| 2026-08-10 | preservo o sinal das quatro correntes e estruturo os gates visuais de invertibilidade, monocromia, proveniência e perfil de ambiente |
 | 2026-08-10 | implemento Tsodyks–Markram determinístico com ordem de evento explícita, solução exponencial exata e oráculo versionado |
 | 2026-08-10 | separo concentração, ocupação, matéria ligada e remoção na fenda, com conservação individual de glutamato e GABA |
 | 2026-08-11 | componho a química por Strang palindrômico, com adaptação de rigidez, avanço atômico e estudo de convergência |
 | 2026-08-11 | publico a química na ABI v6 sem tocar nos hashes anteriores e concluo sua implementação com a aba Sinapse; a promoção permanece condicionada aos gates de fechamento |
+| 2026-08-12 | fecho R08-P2 com 34 buffers, quatro hashes, replay após reset, descarte/reinicialização e 11 capturas versionadas da ABI v6 |
 
 O histórico da base está em
 [`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
@@ -219,7 +221,8 @@ O histórico da base está em
 [ENGINE_SPEC.md](ENGINE_SPEC.md), [FRONTEND_SPEC.md](FRONTEND_SPEC.md),
 [GRAPHICS_SPEC.md](GRAPHICS_SPEC.md) e [VALIDATION.md](VALIDATION.md). A
 [auditoria de entrada 0.8](AUDIT_0.8_ENTRY.md) permanece como evidência
-histórica dos achados.
+histórica dos achados; o fechamento executável da ABI está em
+[AUDIT_0.8_ABI_V6.md](AUDIT_0.8_ABI_V6.md).
 
 ### Executar e conferir
 
@@ -232,6 +235,7 @@ Para repetir os gates:
 
 ```bash
 npm run check
+npm run verify:runtime-audit
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo check -p brain-wasm --target wasm32-unknown-unknown

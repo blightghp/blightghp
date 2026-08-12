@@ -2,6 +2,7 @@ import { createServer } from "vite";
 import puppeteer from "puppeteer";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { auditWorkerLifecycle } from "./worker_lifecycle_audit.js";
 
 const server = await createServer({
   root: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
@@ -36,6 +37,7 @@ try {
     { timeout: 30_000 },
   );
   const diagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
+  const abi = await page.evaluate(() => window.__BRAIN_ENGINE__.abiEvidence());
   if (
     diagnostics.runtime !== "rust-wasm" ||
     diagnostics.schemaVersion !== 6 ||
@@ -46,6 +48,14 @@ try {
     !/^[0-9a-f]{16}$/.test(diagnostics.chemicalHash)
   ) {
     throw new Error(`diagnóstico inesperado: ${JSON.stringify(diagnostics)}`);
+  }
+  if (
+    abi.schemaVersion !== 6 ||
+    abi.buffers.length !== 34 ||
+    new Set(abi.buffers.map(({ name }) => name)).size !== 34 ||
+    Object.values(abi.hashes).some((hash) => !/^[0-9a-f]{16}$/.test(hash))
+  ) {
+    throw new Error(`layout ABI inesperado: ${JSON.stringify(abi)}`);
   }
   if (faults.length > 0) {
     throw new Error(`erros no navegador: ${faults.join(" | ")}`);
@@ -131,9 +141,11 @@ try {
   ) {
     throw new Error(`aba sináptica inválida: ${JSON.stringify(synapse)}`);
   }
+  const lifecycle = await auditWorkerLifecycle(page);
   console.log(
     `Worker Wasm verificado no navegador: schema ${diagnostics.schemaVersion}, ` +
-      `hash ${diagnostics.stateHash}, cinco abas operantes`,
+      `${abi.buffers.length} buffers, quatro hashes, reset/dispose/reinit e cinco abas operantes ` +
+      `(replay ${lifecycle.hashes.chemical})`,
   );
 } finally {
   await browser?.close();

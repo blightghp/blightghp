@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,6 +7,8 @@ import { createServer } from "vite";
 import puppeteer from "puppeteer";
 import { PNG } from "pngjs";
 import { contrastRatio, parseCssColor } from "./audit_utils.js";
+import { auditWorkerLifecycle } from "./worker_lifecycle_audit.js";
+import packageManifest from "../package.json" with { type: "json" };
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDirectory = process.env.BRAIN_AUDIT_DIR
@@ -137,6 +140,27 @@ try {
     throw new Error(`modo sem cor inoperante: ${JSON.stringify(monochromeGate)}`);
   }
 
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("synapse"));
+  const views = await page.evaluate(() => ({
+    tabCount: document.querySelectorAll(".view-tabs button[role='tab']").length,
+    synapse: {
+      selected: document.querySelector("#tab-synapse")?.getAttribute("aria-selected") === "true",
+      glutamate: document.querySelector("#synapse-glutamate")?.textContent,
+      gaba: document.querySelector("#synapse-gaba")?.textContent,
+      occupancy: document.querySelector("#synapse-ampa-occupancy")?.textContent,
+    },
+  }));
+  if (
+    views.tabCount !== 5 ||
+    !views.synapse.selected ||
+    !views.synapse.glutamate?.endsWith("mol/m³") ||
+    !views.synapse.gaba?.endsWith("mol/m³") ||
+    !views.synapse.occupancy?.endsWith("%")
+  ) {
+    throw new Error(`evidência da aba Sinapse incompleta: ${JSON.stringify(views)}`);
+  }
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
+
   const colors = await page.evaluate(() => {
     const selectors = [
       ".brand",
@@ -161,7 +185,12 @@ try {
     throw new Error(`contraste abaixo de 4.5:1: ${JSON.stringify(failures)}`);
   }
 
-  const profile = await page.evaluate(() => window.__BRAIN_ENGINE__.profile());
+  const runtimeEvidence = await page.evaluate(() => ({
+    profile: window.__BRAIN_ENGINE__.profile(),
+    abi: window.__BRAIN_ENGINE__.abiEvidence(),
+  }));
+  const { profile, abi } = runtimeEvidence;
+  const lifecycle = await auditWorkerLifecycle(page);
   if (
     profile.snapshotCadenceTicks !== 2 ||
     profile.sampleCount < 5 ||
@@ -201,8 +230,13 @@ try {
   }
 
   const report = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     capturedAt: new Date().toISOString(),
+    source: {
+      commit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
+      productVersion: packageManifest.version,
+      command: "npm run audit:runtime",
+    },
     viewports: ["1440x960", "390x844"],
     captures: [
       "overview-desktop.png",
@@ -214,10 +248,17 @@ try {
       ...Object.values(monochrome),
     ],
     keyboard,
+    views,
     contrast,
     saturation,
     visualGate,
     monochromeGate,
+    abi: {
+      ...abi,
+      bufferCount: abi.buffers.length,
+      snapshotBytes: abi.buffers.reduce((total, buffer) => total + buffer.byteLength, 0),
+      lifecycle,
+    },
     auditHost: {
       cpu: os.cpus()[0]?.model ?? "unknown",
       logicalCores: os.cpus().length,

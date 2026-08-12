@@ -39,6 +39,7 @@ import type {
   SimulationTick,
 } from "./protocol";
 import { BrainSettings, getInitialBrainSettings } from "./schema";
+import { snapshotBufferEntries } from "./snapshot-layout";
 
 declare global {
   interface Window {
@@ -58,6 +59,15 @@ declare global {
         degraded: boolean;
         detail?: string;
       };
+      abiEvidence: () => {
+        schemaVersion: number;
+        buffers: Array<{ name: string; byteLength: number }>;
+        hashes: Record<string, string | undefined>;
+      };
+      snapshotBufferLayout: (snapshot: NeuralSnapshot) => Array<{
+        name: string;
+        byteLength: number;
+      }>;
       profile: () => RuntimeProfile;
       setColorMode: (mode: VisualColorMode) => void;
       visualAudit: () => {
@@ -66,6 +76,8 @@ declare global {
         invertibility: { samples: number; tolerance: number; maximumError: number };
         redundancy: Record<SimulationView, string>;
       };
+      createAuditWorker: () => Worker;
+      createAuditTopology: () => BrainData;
     };
   }
 }
@@ -749,6 +761,28 @@ async function init(): Promise<void> {
           engineReady?.detail,
       };
     },
+    abiEvidence() {
+      if (!latestSnapshot) throw new Error("snapshot indisponível para auditoria da ABI");
+      return {
+        schemaVersion: latestSnapshot.schemaVersion,
+        buffers: snapshotBufferEntries(latestSnapshot).map(({ name, view }) => ({
+          name,
+          byteLength: view.byteLength,
+        })),
+        hashes: {
+          network: latestSnapshot.diagnostics.stateHash,
+          corticothalamic: latestSnapshot.diagnostics.corticothalamicHash,
+          cell: latestSnapshot.diagnostics.cellPatchHash,
+          chemical: latestSnapshot.diagnostics.chemicalHash,
+        },
+      };
+    },
+    snapshotBufferLayout(snapshot) {
+      return snapshotBufferEntries(snapshot).map(({ name, view }) => ({
+        name,
+        byteLength: view.byteLength,
+      }));
+    },
     async schedule(inputs) {
       const event = await sendCommand({ type: "schedule", inputs });
       if (event.type !== "scheduled") {
@@ -765,6 +799,16 @@ async function init(): Promise<void> {
     },
     visualAudit() {
       return visualAuditReport();
+    },
+    createAuditWorker() {
+      return new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });
+    },
+    createAuditTopology() {
+      return generateBrainData({
+        seed: 0x51a7c0de,
+        surfaceNodesPerHemisphere: 48,
+        innerNodesPerHemisphere: 8,
+      });
     },
   };
 

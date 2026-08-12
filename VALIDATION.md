@@ -14,13 +14,15 @@ artefato de promoção.
 | :-- | :-- | :-- | :-- |
 | 0.4–0.7 | fixtures, Cargo/Vitest e auditorias | auditorias de promoção | promovido nos limites declarados |
 | química nativa 0.8-a..d | testes unitários, replays e convergência | fixtures v1 | implementado e validado no contrato/regime testado |
-| trilha/ABI v6 | fixture integrada, testes host/Worker/scripts | não há auditoria de promoção 0.8 | implementado, promoção pendente |
-| gráficos 0.8 | testes estruturais, rampa pura, saturação e script atual | `runtime-audit.json` ainda é captura 0.7 | implementação parcial, evidência defasada |
+| trilha/ABI v6 | fixture integrada, testes host/Worker/scripts | auditoria P2 + `runtime-audit.json` schema 2 | validado no navegador; promoção geral pendente |
+| gráficos 0.8 | testes estruturais, rampa pura, saturação e script atual | 11 capturas atuais, incluindo Sinapse e monocromia | evidência atual, mas P3 permanece aberto |
 | hardware real | campos de perfil existem no código | nenhum baseline versionado em GPU física | aberto |
 
-O artefato `artifacts/visual-audit/runtime-audit.json` não deve ser usado como
-prova de ABI v6: ele foi capturado em 2 de agosto de 2026, lista cinco arquivos
-sem Sinapse e não contém o ambiente ampliado esperado pelo script atual.
+O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
+vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
+reset/replay exato, descarte, reinicialização, cinco abas, 11 capturas e o
+ambiente de execução. Seu renderer é SwiftShader; por isso ele fecha P2, mas não
+é evidência de desempenho em GPU física nem fecha P3.
 
 ## IDs de qualidade
 
@@ -246,7 +248,8 @@ Limites que o nome do gate não pode ocultar:
   estado conhecido;
 - “redundância” recebe descrições textuais e confirma filtro `grayscale`; ainda
   não prova automaticamente que cada distinção sobrevive sem cor;
-- a saturação lê PNGs, mas o artefato versionado não foi recapturado após ABI v6;
+- a saturação lê os PNGs ABI v6 versionados, mas ainda não vincula pixels a
+  estados-alvo conhecidos;
 - SwiftShader/headless é ambiente funcional, não baseline de GPU física.
 
 R08-P3 fecha esses quatro pontos com teste estrutural obrigatório, alvos
@@ -344,8 +347,8 @@ um artefato versionado em cada linha:
 | proveniência do evento | sem spike publicado não há novo índice ou liberação; uma contagem positiva autoriza no máximo um evento no microdomínio representativo |
 | apresentação | vesícula lê `R`; fusão lê último evento; nuvem lê concentração; receptores leem ocupação; recaptura lê delta da remoção publicada |
 | transferência | teste lista 34 `ArrayBuffer` distintos, incluindo evento, concentração, ocupação e remoção química |
-| navegador | o script exige Worker real, quatro hashes e cinco abas; precisa ser executado/registrado no fechamento 0.8 |
-| acessibilidade visual | o script atual cobre cinco tabs e Sinapse; o artefato versionado ainda não demonstra isso |
+| navegador | o script exige Worker real, quatro hashes, 34 buffers, reset/dispose/reinit e cinco abas; evidência P2 versionada |
+| acessibilidade visual | cinco tabs, Sinapse, viewport móvel e 11 capturas estão no artefato schema 2; prova estrutural sem cor permanece em P3 |
 | degradação | fallback químico é inerte e publica `chemicalHash = unavailable` |
 
 Os contratos executáveis atuais são:
@@ -469,12 +472,13 @@ npm run build
 npm run check:shadow-replay
 npm run test:wasm-browser
 npm run audit:runtime
+npm run verify:runtime-audit
 ```
 
-`npm run check` inclui build, navegador e auditoria, e esta última escreve
-capturas no diretório padrão. Em uma revisão documental que proíbe modificar
-artefatos, execute apenas os gates não mutantes ou redirecione a auditoria para
-diretório temporário explicitamente aprovado.
+`npm run check` inclui build, navegador, verificação do artefato versionado e
+uma auditoria temporária. Defina `BRAIN_AUDIT_DIR` para escolher onde uma nova
+captura será escrita; a atualização versionada exige revisão visual e commit
+separado da implementação testada.
 
 ## Gate de promoção 0.8
 

@@ -1,4 +1,5 @@
 import type { NeuralSnapshot } from "./protocol";
+import { snapshotBufferEntries } from "./snapshot-layout";
 
 export const SNAPSHOT_CADENCES = [1, 2, 4, 6] as const;
 export type SnapshotCadence = (typeof SNAPSHOT_CADENCES)[number];
@@ -17,42 +18,7 @@ export function shouldRequestSnapshot(
 }
 
 export function snapshotByteLength(snapshot: NeuralSnapshot): number {
-  return [
-    snapshot.potentials,
-    snapshot.activations,
-    snapshot.weights,
-    snapshot.signals.synapseIds,
-    snapshot.signals.progress,
-    snapshot.signals.strength,
-    snapshot.signals.inhibitory,
-    snapshot.field.nodeIndices,
-    snapshot.field.eField,
-    snapshot.field.iField,
-    snapshot.field.waveActivity,
-    snapshot.corticothalamic.excitatory,
-    snapshot.corticothalamic.inhibitory,
-    snapshot.cellPatch.kinds,
-    snapshot.cellPatch.membraneVolts,
-    snapshot.cellPatch.dendriteVolts,
-    snapshot.cellPatch.adaptationAmperes,
-    snapshot.cellPatch.ampaAmperes,
-    snapshot.cellPatch.nmdaAmperes,
-    snapshot.cellPatch.gabaaAmperes,
-    snapshot.cellPatch.gababAmperes,
-    snapshot.cellPatch.spiked,
-    snapshot.chemical.releaseEventIndices,
-    snapshot.chemical.presynapticSpikeCounts,
-    snapshot.chemical.vesicleAvailableFraction,
-    snapshot.chemical.vesicleUtilizationFraction,
-    snapshot.chemical.latestReleaseMoles,
-    snapshot.chemical.latestReleaseTimeSeconds,
-    snapshot.chemical.totalReleasedMoles,
-    snapshot.chemical.cleftMoles,
-    snapshot.chemical.cleftConcentrationMolesPerCubicMeter,
-    snapshot.chemical.receptorBoundMoles,
-    snapshot.chemical.receptorOccupancyFraction,
-    snapshot.chemical.clearedMoles,
-  ].reduce((sum, view) => sum + view.byteLength, 0);
+  return snapshotBufferEntries(snapshot).reduce((sum, { view }) => sum + view.byteLength, 0);
 }
 
 interface RenderCounters {

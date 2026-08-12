@@ -6,7 +6,7 @@
 
 **Estado de promoção:** 0.8 implementada, mas ainda não promovida
 
-**Próximo gate:** `R08-PROMOTION`
+**Próximo gate:** `R08-P3` · prova gráfica renderizada e baseline em GPU física
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -55,7 +55,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | modelos | schemas `1` por subsistema | constantes Rust | patch, STP, fenda, solver e trilha química |
 | fixtures | `v1` por artefato | `fixtures/` | não implica produto 1.0 |
 | hashes | quatro domínios | snapshot/fixtures | rede, corticotalâmico, célula e química |
-| auditoria visual versionada | schema `1`, captura 0.7 | `runtime-audit.json` | está defasada da aba Sinapse/ABI v6 |
+| auditoria runtime versionada | schema `2`, captura ABI v6 | `runtime-audit.json` | comprova P2 em Chromium headless/SwiftShader; não é baseline em GPU física |
 
 ### Matriz resumida de capacidades
 
@@ -67,7 +67,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | patch AdEx e quatro correntes | IMPLEMENTADO E VALIDADO | `cell_patch` | replay/convergência 0.7 | um dendrito passivo, sem morfologia |
 | recursos e STP | IMPLEMENTADO E VALIDADO NO CONTRATO | `chemical_contract`, `short_term_plasticity` | testes e fixture v1 | preset didático não calibrado |
 | fenda, ocupação e solver | IMPLEMENTADO E VALIDADO NO REGIME TESTADO | `cleft_occupancy`, `chemical_solver` | replays e convergência | microdomínio representativo, não população de fendas |
-| ABI v6 e aba Sinapse | IMPLEMENTADO, MAS SEM EVIDÊNCIA DE PROMOÇÃO SUFICIENTE | `brain-wasm`, Worker, `SynapseRenderLayer` | testes de código; artefato visual antigo | falta recaptura de evidência versionada |
+| ABI v6 e aba Sinapse | IMPLEMENTADO E VALIDADO NO NAVEGADOR | `brain-wasm`, Worker, `SynapseRenderLayer` | [auditoria ABI v6](AUDIT_0.8_ABI_V6.md) | promoção geral ainda depende de P3/P4 |
 | passes matéria/emissão e tokens | IMPLEMENTADO, MAS SEM EVIDÊNCIA DE PROMOÇÃO SUFICIENTE | `src/render` | testes estruturais | gate de invertibilidade ainda é analítico, não pixel→estado |
 | inferência Bayesiana do painel | EXPERIMENTAL/CONTRADITÓRIO | `inference.ts`, `main.ts` | dois testes unitários | posterior TypeScript alimenta `confidence` sem contrato de experimento |
 | neurônio resolvido, cortes, vascular, atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
@@ -82,10 +82,10 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | 0.7 | patch AdEx, quatro receptores e ABI v5 | promovida | auditorias 0.7 | `PLAN-0.7.md` |
 | 0.8 | recursos, química local, solver, ABI v6 e Sinapse | implementada | código, fixtures e testes | proposta 0.8 legada |
 
-A 0.8 não é marcada como promovida porque não existe auditoria de fechamento
-equivalente às versões anteriores e o artefato visual versionado ainda contém
-somente as cinco capturas da 0.7. Checkboxes do plano legado não substituem essa
-evidência.
+A 0.8 não é marcada como promovida porque P3 ainda precisa provar a relação
+pixel→estado, a redundância sem cor e o custo em GPU física. A evidência da ABI
+v6 e do lifecycle do Worker foi fechada em [R08-P2](AUDIT_0.8_ABI_V6.md), mas
+não substitui os gates gráficos nem a auditoria final de P4.
 
 ## Modelo obrigatório de corte
 
@@ -110,9 +110,12 @@ Worker → frontend → renderer → auditoria → documentação → promoção
 
 ## R08-PROMOTION · fechar a versão 0.8
 
-**Estado:** em preparação. Nenhuma nova fisiologia entra antes deste gate.
+**Estado:** P1 e P2 concluídas; P3 é o próximo corte. Nenhuma nova fisiologia
+entra antes deste gate.
 
 ### R08-P1 · fonte documental única
+
+**Estado:** concluída em `f70207d`.
 
 | Campo | Contrato |
 | :-- | :-- |
@@ -127,6 +130,8 @@ Worker → frontend → renderer → auditoria → documentação → promoção
 | complexidade/confiança | média / alta |
 
 ### R08-P2 · evidência executável da ABI v6
+
+**Estado:** concluída; evidência em [AUDIT_0.8_ABI_V6.md](AUDIT_0.8_ABI_V6.md).
 
 | Campo | Contrato |
 | :-- | :-- |

@@ -1,6 +1,11 @@
 {
-  "schemaVersion": 1,
-  "capturedAt": "2026-08-02T09:57:29.704Z",
+  "schemaVersion": 2,
+  "capturedAt": "2026-08-12T13:31:06.039Z",
+  "source": {
+    "commit": "eaaeb6e8d461ebda62658da09f0d55517cb55c45",
+    "productVersion": "0.8.0",
+    "command": "npm run audit:runtime"
+  },
   "viewports": [
     "1440x960",
     "390x844"
@@ -10,12 +15,27 @@
     "laminar-desktop.png",
     "cell-desktop.png",
     "electricity-desktop.png",
-    "overview-mobile.png"
+    "synapse-desktop.png",
+    "overview-mobile.png",
+    "overview-monochrome.png",
+    "laminar-monochrome.png",
+    "cell-monochrome.png",
+    "electricity-monochrome.png",
+    "synapse-monochrome.png"
   ],
   "keyboard": {
     "focused": "tab-overview",
     "selected": "true",
     "laminarHidden": true
+  },
+  "views": {
+    "tabCount": 5,
+    "synapse": {
+      "selected": true,
+      "glutamate": "2.05 mol/m³",
+      "gaba": "0.00 mol/m³",
+      "occupancy": "0.3%"
+    }
   },
   "contrast": [
     {
@@ -39,26 +59,431 @@
       "ratio": 10.046784330025826
     }
   ],
+  "saturation": {
+    "overview-desktop.png": 0,
+    "laminar-desktop.png": 0,
+    "cell-desktop.png": 0,
+    "electricity-desktop.png": 0.001994357638888889,
+    "synapse-desktop.png": 0
+  },
+  "visualGate": {
+    "colorMode": "color",
+    "provenance": {
+      "total": 76,
+      "state": 72,
+      "topology": 4,
+      "decoration": 0,
+      "undeclared": 0
+    },
+    "invertibility": {
+      "samples": 25,
+      "tolerance": 0.000001,
+      "maximumError": 2.220446049250313e-16
+    },
+    "redundancy": {
+      "overview": "pulsos E/I usam diâmetros distintos e legenda textual",
+      "laminar": "excitação é cilindro; inibição e TRN são toros",
+      "cell": "somata E/I usam razões de aspecto opostas",
+      "electricity": "entrada, saída e shunt ocupam planos de anel distintos",
+      "synapse": "vesículas, transmissores, receptores e recaptura têm formas e posições distintas"
+    }
+  },
+  "monochromeGate": {
+    "report": {
+      "colorMode": "monochrome",
+      "provenance": {
+        "total": 76,
+        "state": 72,
+        "topology": 4,
+        "decoration": 0,
+        "undeclared": 0
+      },
+      "invertibility": {
+        "samples": 25,
+        "tolerance": 0.000001,
+        "maximumError": 2.220446049250313e-16
+      },
+      "redundancy": {
+        "overview": "pulsos E/I usam diâmetros distintos e legenda textual",
+        "laminar": "excitação é cilindro; inibição e TRN são toros",
+        "cell": "somata E/I usam razões de aspecto opostas",
+        "electricity": "entrada, saída e shunt ocupam planos de anel distintos",
+        "synapse": "vesículas, transmissores, receptores e recaptura têm formas e posições distintas"
+      }
+    },
+    "canvasFilter": "grayscale(1) contrast(1.08)"
+  },
+  "abi": {
+    "schemaVersion": 6,
+    "buffers": [
+      {
+        "name": "potentials",
+        "byteLength": 7560
+      },
+      {
+        "name": "activations",
+        "byteLength": 7560
+      },
+      {
+        "name": "weights",
+        "byteLength": 37392
+      },
+      {
+        "name": "signals.synapseIds",
+        "byteLength": 164
+      },
+      {
+        "name": "signals.progress",
+        "byteLength": 164
+      },
+      {
+        "name": "signals.strength",
+        "byteLength": 164
+      },
+      {
+        "name": "signals.inhibitory",
+        "byteLength": 41
+      },
+      {
+        "name": "field.nodeIndices",
+        "byteLength": 4960
+      },
+      {
+        "name": "field.eField",
+        "byteLength": 4960
+      },
+      {
+        "name": "field.iField",
+        "byteLength": 4960
+      },
+      {
+        "name": "field.waveActivity",
+        "byteLength": 4960
+      },
+      {
+        "name": "corticothalamic.excitatory",
+        "byteLength": 24
+      },
+      {
+        "name": "corticothalamic.inhibitory",
+        "byteLength": 24
+      },
+      {
+        "name": "cellPatch.kinds",
+        "byteLength": 12
+      },
+      {
+        "name": "cellPatch.membraneVolts",
+        "byteLength": 48
+      },
+      {
+        "name": "cellPatch.dendriteVolts",
+        "byteLength": 48
+      },
+      {
+        "name": "cellPatch.adaptationAmperes",
+        "byteLength": 48
+      },
+      {
+        "name": "cellPatch.ampaAmperes",
+        "byteLength": 48
+      },
+      {
+        "name": "cellPatch.nmdaAmperes",
+        "byteLength": 48
+      },
+      {
+        "name": "cellPatch.gabaaAmperes",
+        "byteLength": 48
+      },
+      {
+        "name": "cellPatch.gababAmperes",
+        "byteLength": 48
+      },
+      {
+        "name": "cellPatch.spiked",
+        "byteLength": 12
+      },
+      {
+        "name": "chemical.releaseEventIndices",
+        "byteLength": 8
+      },
+      {
+        "name": "chemical.presynapticSpikeCounts",
+        "byteLength": 8
+      },
+      {
+        "name": "chemical.vesicleAvailableFraction",
+        "byteLength": 16
+      },
+      {
+        "name": "chemical.vesicleUtilizationFraction",
+        "byteLength": 16
+      },
+      {
+        "name": "chemical.latestReleaseMoles",
+        "byteLength": 16
+      },
+      {
+        "name": "chemical.latestReleaseTimeSeconds",
+        "byteLength": 16
+      },
+      {
+        "name": "chemical.totalReleasedMoles",
+        "byteLength": 16
+      },
+      {
+        "name": "chemical.cleftMoles",
+        "byteLength": 16
+      },
+      {
+        "name": "chemical.cleftConcentrationMolesPerCubicMeter",
+        "byteLength": 16
+      },
+      {
+        "name": "chemical.receptorBoundMoles",
+        "byteLength": 32
+      },
+      {
+        "name": "chemical.receptorOccupancyFraction",
+        "byteLength": 32
+      },
+      {
+        "name": "chemical.clearedMoles",
+        "byteLength": 16
+      }
+    ],
+    "hashes": {
+      "network": "160ab79bad747f0c",
+      "corticothalamic": "489357b9d5054059",
+      "cell": "c40691ba0769b814",
+      "chemical": "73cf0559993e6d25"
+    },
+    "bufferCount": 34,
+    "snapshotBytes": 73501,
+    "lifecycle": {
+      "schemaVersion": 6,
+      "runtime": "rust-wasm",
+      "initialized": true,
+      "buffers": [
+        {
+          "name": "potentials",
+          "byteLength": 2168
+        },
+        {
+          "name": "activations",
+          "byteLength": 2168
+        },
+        {
+          "name": "weights",
+          "byteLength": 9904
+        },
+        {
+          "name": "signals.synapseIds",
+          "byteLength": 32
+        },
+        {
+          "name": "signals.progress",
+          "byteLength": 32
+        },
+        {
+          "name": "signals.strength",
+          "byteLength": 32
+        },
+        {
+          "name": "signals.inhibitory",
+          "byteLength": 8
+        },
+        {
+          "name": "field.nodeIndices",
+          "byteLength": 384
+        },
+        {
+          "name": "field.eField",
+          "byteLength": 384
+        },
+        {
+          "name": "field.iField",
+          "byteLength": 384
+        },
+        {
+          "name": "field.waveActivity",
+          "byteLength": 384
+        },
+        {
+          "name": "corticothalamic.excitatory",
+          "byteLength": 24
+        },
+        {
+          "name": "corticothalamic.inhibitory",
+          "byteLength": 24
+        },
+        {
+          "name": "cellPatch.kinds",
+          "byteLength": 12
+        },
+        {
+          "name": "cellPatch.membraneVolts",
+          "byteLength": 48
+        },
+        {
+          "name": "cellPatch.dendriteVolts",
+          "byteLength": 48
+        },
+        {
+          "name": "cellPatch.adaptationAmperes",
+          "byteLength": 48
+        },
+        {
+          "name": "cellPatch.ampaAmperes",
+          "byteLength": 48
+        },
+        {
+          "name": "cellPatch.nmdaAmperes",
+          "byteLength": 48
+        },
+        {
+          "name": "cellPatch.gabaaAmperes",
+          "byteLength": 48
+        },
+        {
+          "name": "cellPatch.gababAmperes",
+          "byteLength": 48
+        },
+        {
+          "name": "cellPatch.spiked",
+          "byteLength": 12
+        },
+        {
+          "name": "chemical.releaseEventIndices",
+          "byteLength": 8
+        },
+        {
+          "name": "chemical.presynapticSpikeCounts",
+          "byteLength": 8
+        },
+        {
+          "name": "chemical.vesicleAvailableFraction",
+          "byteLength": 16
+        },
+        {
+          "name": "chemical.vesicleUtilizationFraction",
+          "byteLength": 16
+        },
+        {
+          "name": "chemical.latestReleaseMoles",
+          "byteLength": 16
+        },
+        {
+          "name": "chemical.latestReleaseTimeSeconds",
+          "byteLength": 16
+        },
+        {
+          "name": "chemical.totalReleasedMoles",
+          "byteLength": 16
+        },
+        {
+          "name": "chemical.cleftMoles",
+          "byteLength": 16
+        },
+        {
+          "name": "chemical.cleftConcentrationMolesPerCubicMeter",
+          "byteLength": 16
+        },
+        {
+          "name": "chemical.receptorBoundMoles",
+          "byteLength": 32
+        },
+        {
+          "name": "chemical.receptorOccupancyFraction",
+          "byteLength": 32
+        },
+        {
+          "name": "chemical.clearedMoles",
+          "byteLength": 16
+        }
+      ],
+      "snapshotBytes": 16496,
+      "hashes": {
+        "network": "e7cbb74604318724",
+        "corticothalamic": "e8bff5084117f755",
+        "cell": "b06b0c767da9b4df",
+        "chemical": "73d612aaabac820c"
+      },
+      "reset": {
+        "ready": true,
+        "exactReplay": true,
+        "hashes": {
+          "network": "e7cbb74604318724",
+          "corticothalamic": "e8bff5084117f755",
+          "cell": "b06b0c767da9b4df",
+          "chemical": "73d612aaabac820c"
+        }
+      },
+      "dispose": {
+        "rejectedAdvance": true,
+        "faultCode": "engine-command-failed"
+      },
+      "reinitialize": {
+        "ready": true,
+        "exactReplay": true,
+        "hashes": {
+          "network": "e7cbb74604318724",
+          "corticothalamic": "e8bff5084117f755",
+          "cell": "b06b0c767da9b4df",
+          "chemical": "73d612aaabac820c"
+        }
+      }
+    }
+  },
+  "auditHost": {
+    "cpu": "Intel(R) Core(TM) i7-14700",
+    "logicalCores": 28,
+    "memoryBytes": 16943251456,
+    "platform": "win32",
+    "release": "10.0.26200",
+    "architecture": "x64"
+  },
   "profile": {
     "snapshotCadenceTicks": 2,
-    "sampleCount": 39,
+    "sampleCount": 69,
     "workerLatencyMs": {
-      "mean": 16.08974358363029,
-      "p95": 64.89999997615814
+      "mean": 489.5985507256743,
+      "p95": 1200
     },
     "frameCpuMs": {
-      "mean": 37.853333327505325,
-      "p95": 81.5
+      "mean": 277.4152000007629,
+      "p95": 1084.6000000238419
     },
     "gpu": {
-      "drawCalls": 31,
-      "triangles": 72896
+      "drawCalls": 48,
+      "triangles": 145778
     },
     "memory": {
-      "snapshotBytes": 73410,
-      "jsHeapBytes": 14039462,
-      "geometries": 58,
-      "textures": 13
+      "snapshotBytes": 73501,
+      "jsHeapBytes": 14288953,
+      "geometries": 69,
+      "textures": 15
+    },
+    "environment": {
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
+        "platform": ""
+      },
+      "hardware": {
+        "logicalCores": 28,
+        "deviceMemoryGiB": 16,
+        "webglVendor": "Google Inc. (Google)",
+        "webglRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      },
+      "simulation": {
+        "runtime": "rust-wasm",
+        "preset": "interactive-default",
+        "units": 1890,
+        "synapses": 9348,
+        "fieldVertices": 1240,
+        "stepSeconds": 0.016666666666666666
+      }
     }
   }
 }
