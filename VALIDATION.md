@@ -367,8 +367,9 @@ Os contratos executáveis atuais são:
   independentes antes de sua composição na ABI v6;
 - `chemical-track-v1.json`: composição integrada de vesículas, solver e buffers
   públicos da ABI v6, com gerador e consumidor Rust independentes;
-- `abi-v5-hash-preservation-v1.json`: os três hashes da captura determinística
-  v5 que a captura v6 deve reproduzir antes de acrescentar o hash químico;
+- `abi-v5-hash-preservation-v1.json`: registra os três hashes da captura 0.8 no
+  cenário de entrada congelado; capturas de outro cenário validam proveniência e
+  seus quatro hashes próprios, sem comparação entre entradas distintas;
 - `scripts/shadow_replay.js`: recompõe o replay no Wasm e exige os hashes do
   oráculo congelado e o SHA-256 auditado do fixture;
 - testes Cargo: reproduzem o artefato, inclusive o replay neural completo, e

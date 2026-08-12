@@ -62,7 +62,7 @@ describe("brain GIF provenance manifest", () => {
     })).toThrow(/Rust\/Wasm/);
   });
 
-  it("rejects any ABI v6 mutation of the three legacy hashes", () => {
+  it("compares legacy hashes only inside the same frozen input scenario", () => {
     const legacy = {
       stateHash: diagnostics.stateHash,
       corticothalamicHash: diagnostics.corticothalamicHash,
