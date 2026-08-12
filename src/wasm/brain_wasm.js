@@ -239,6 +239,60 @@ export class WasmNeuralEngine {
         return v1;
     }
     /**
+     * @returns {Uint32Array}
+     */
+    cell_spike_event_cell_ids() {
+        const ret = wasm.wasmneuralengine_cell_spike_event_cell_ids(this.__wbg_ptr);
+        var v1 = getArrayU32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_spike_event_end_tick() {
+        const ret = wasm.wasmneuralengine_cell_spike_event_end_tick(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {string}
+     */
+    cell_spike_event_hash() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.wasmneuralengine_cell_spike_event_hash(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * @returns {number}
+     */
+    cell_spike_event_schema_version() {
+        const ret = wasm.wasmneuralengine_cell_spike_event_schema_version(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    cell_spike_event_start_tick() {
+        const ret = wasm.wasmneuralengine_cell_spike_event_start_tick(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {Float64Array}
+     */
+    cell_spike_event_time_offsets_seconds() {
+        const ret = wasm.wasmneuralengine_cell_spike_event_time_offsets_seconds(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v1;
+    }
+    /**
      * @returns {Uint8Array}
      */
     cell_spiked() {

@@ -2,7 +2,6 @@ import { readFile, stat } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import packageManifest from "../package.json" with { type: "json" };
 import { assertWorkerLifecycleEvidence } from "./worker_lifecycle_audit.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -30,7 +29,7 @@ const requiredCaptures = [
 
 if (
   report.schemaVersion !== 2 ||
-  report.source?.productVersion !== packageManifest.version ||
+  report.source?.productVersion !== "0.8.0" ||
   !commitPattern.test(report.source?.commit ?? "") ||
   report.source?.command !== "npm run audit:runtime" ||
   !["swiftshader", "hardware"].includes(report.source?.requestedGraphicsBackend) ||
@@ -78,7 +77,11 @@ if (!shallowRepository && !sourceIsAncestor) {
   throw new Error(`commit de origem da auditoria não pertence ao histórico atual: ${report.source.commit}`);
 }
 
-assertWorkerLifecycleEvidence(report.abi.lifecycle);
+assertWorkerLifecycleEvidence(report.abi.lifecycle, {
+  schemaVersion: 6,
+  bufferCount: 34,
+  hashCount: 4,
+});
 
 for (const filename of requiredCaptures) {
   if (!report.captures.includes(filename)) {

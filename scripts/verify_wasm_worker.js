@@ -40,19 +40,24 @@ try {
   const abi = await page.evaluate(() => window.__BRAIN_ENGINE__.abiEvidence());
   if (
     diagnostics.runtime !== "rust-wasm" ||
-    diagnostics.schemaVersion !== 6 ||
+    diagnostics.schemaVersion !== 7 ||
     diagnostics.degraded ||
     !/^[0-9a-f]{16}$/.test(diagnostics.stateHash) ||
     !/^[0-9a-f]{16}$/.test(diagnostics.corticothalamicHash) ||
     !/^[0-9a-f]{16}$/.test(diagnostics.cellPatchHash) ||
-    !/^[0-9a-f]{16}$/.test(diagnostics.chemicalHash)
+    !/^[0-9a-f]{16}$/.test(diagnostics.chemicalHash) ||
+    !/^[0-9a-f]{16}$/.test(diagnostics.cellSpikeEventHash)
   ) {
     throw new Error(`diagnóstico inesperado: ${JSON.stringify(diagnostics)}`);
   }
   if (
-    abi.schemaVersion !== 6 ||
-    abi.buffers.length !== 34 ||
-    new Set(abi.buffers.map(({ name }) => name)).size !== 34 ||
+    abi.schemaVersion !== 7 ||
+    abi.buffers.length !== 36 ||
+    new Set(abi.buffers.map(({ name }) => name)).size !== 36 ||
+    abi.cellSpikeEvents.bytesPerEvent !== 12 ||
+    abi.cellSpikeEvents.maximumEvents !== 4_096 ||
+    abi.cellSpikeEvents.count > abi.cellSpikeEvents.maximumEvents ||
+    abi.cellSpikeEvents.bytes !== abi.cellSpikeEvents.count * 12 ||
     Object.values(abi.hashes).some((hash) => !/^[0-9a-f]{16}$/.test(hash))
   ) {
     throw new Error(`layout ABI inesperado: ${JSON.stringify(abi)}`);
@@ -144,7 +149,7 @@ try {
   const lifecycle = await auditWorkerLifecycle(page);
   console.log(
     `Worker Wasm verificado no navegador: schema ${diagnostics.schemaVersion}, ` +
-      `${abi.buffers.length} buffers, quatro hashes, reset/dispose/reinit e cinco abas operantes ` +
+      `${abi.buffers.length} buffers, cinco hashes, reset/dispose/reinit e cinco abas operantes ` +
       `(replay ${lifecycle.hashes.chemical})`,
   );
 } finally {

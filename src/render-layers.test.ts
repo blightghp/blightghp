@@ -4,6 +4,7 @@ import {
   interpolatePublishedValue,
   signalPulseDiameter,
 } from "./render/brain-layer";
+import { markStampedSpikeCells } from "./render/cell-layer";
 
 describe("render activity composition", () => {
   it("interpolates only between published values and clamps presentation alpha", () => {
@@ -23,5 +24,13 @@ describe("render activity composition", () => {
 
   it("keeps excitatory and inhibitory pulses distinguishable without color", () => {
     expect(signalPulseDiameter(false)).toBeGreaterThan(signalPulseDiameter(true));
+  });
+
+  it("uses only stamped event IDs to mark cellular spikes", () => {
+    const marked = new Uint8Array(12);
+    markStampedSpikeCells(marked, Uint32Array.from([8, 2, 8, 99]));
+    expect([...marked]).toEqual([0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0]);
+    markStampedSpikeCells(marked, new Uint32Array());
+    expect(marked.every((value) => value === 0)).toBe(true);
   });
 });

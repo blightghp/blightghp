@@ -60,6 +60,12 @@ export class WasmNeuralEngine {
     cell_kinds(): Uint8Array;
     cell_membrane_volts(): Float32Array;
     cell_nmda_amperes(): Float32Array;
+    cell_spike_event_cell_ids(): Uint32Array;
+    cell_spike_event_end_tick(): number;
+    cell_spike_event_hash(): string;
+    cell_spike_event_schema_version(): number;
+    cell_spike_event_start_tick(): number;
+    cell_spike_event_time_offsets_seconds(): Float64Array;
     cell_spiked(): Uint8Array;
     cell_state_hash(): string;
     chemical_cleared_moles(): Float64Array;
@@ -159,6 +165,12 @@ export interface InitOutput {
     readonly wasmneuralengine_cell_kinds: (a: number) => [number, number];
     readonly wasmneuralengine_cell_membrane_volts: (a: number) => [number, number];
     readonly wasmneuralengine_cell_nmda_amperes: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_spike_event_cell_ids: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_spike_event_end_tick: (a: number) => number;
+    readonly wasmneuralengine_cell_spike_event_hash: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_spike_event_schema_version: (a: number) => number;
+    readonly wasmneuralengine_cell_spike_event_start_tick: (a: number) => number;
+    readonly wasmneuralengine_cell_spike_event_time_offsets_seconds: (a: number) => [number, number];
     readonly wasmneuralengine_cell_spiked: (a: number) => [number, number];
     readonly wasmneuralengine_cell_state_hash: (a: number) => [number, number];
     readonly wasmneuralengine_chemical_cleared_moles: (a: number) => [number, number];

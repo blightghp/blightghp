@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { generateBrainData } from "./brain";
 import {
   assertAdvanceWithinEnvelope,
+  assertCellSpikeEventBatch,
   assertResourceCounts,
   assertScheduledInputsWithinEnvelope,
   DiagnosticFallbackHost,
@@ -80,8 +81,8 @@ describe("diagnostic Wasm fallback", () => {
     const buffers = snapshotTransferList(snapshot);
     const entries = snapshotBufferEntries(snapshot);
 
-    expect(buffers).toHaveLength(34);
-    expect(entries).toHaveLength(34);
+    expect(buffers).toHaveLength(36);
+    expect(entries).toHaveLength(36);
     expect(new Set(entries.map(({ name }) => name)).size).toBe(entries.length);
     expect(entries.map(({ view }) => view.buffer)).toEqual(buffers);
     expect(new Set(buffers).size).toBe(buffers.length);
@@ -90,9 +91,40 @@ describe("diagnostic Wasm fallback", () => {
     expect(buffers).toContain(snapshot.corticothalamic.excitatory.buffer);
     expect(buffers).toContain(snapshot.cellPatch.membraneVolts.buffer);
     expect(buffers).toContain(snapshot.cellPatch.gababAmperes.buffer);
+    expect(buffers).toContain(snapshot.cellSpikeEvents.cellIds.buffer);
+    expect(buffers).toContain(snapshot.cellSpikeEvents.timeOffsetsSeconds.buffer);
     expect(buffers).toContain(snapshot.chemical.latestReleaseMoles.buffer);
     expect(buffers).toContain(snapshot.chemical.receptorOccupancyFraction.buffer);
     expect(buffers).toContain(snapshot.chemical.clearedMoles.buffer);
+  });
+
+  it("validates bounded, canonical cellular event batches", () => {
+    expect(() => assertCellSpikeEventBatch({
+      schemaVersion: 1,
+      startTick: 10,
+      endTick: 12,
+      cellIds: Uint32Array.from([2, 5, 1]),
+      timeOffsetsSeconds: Float64Array.from([0, 0, 0.02]),
+      hash: "0123456789abcdef",
+    }, 1 / 60)).not.toThrow();
+    expect(() => assertCellSpikeEventBatch({
+      schemaVersion: 1,
+      startTick: 10,
+      endTick: 12,
+      cellIds: Uint32Array.from([5, 2]),
+      timeOffsetsSeconds: Float64Array.from([0, 0]),
+      hash: "0123456789abcdef",
+    }, 1 / 60)).toThrow(/ordem/);
+    expect(() => assertCellSpikeEventBatch({
+      schemaVersion: 1,
+      startTick: 0,
+      endTick: 1,
+      cellIds: new Uint32Array(WORKER_RESOURCE_LIMITS.cellSpikeEventsPerSnapshot + 1),
+      timeOffsetsSeconds: new Float64Array(
+        WORKER_RESOURCE_LIMITS.cellSpikeEventsPerSnapshot + 1,
+      ),
+      hash: "0123456789abcdef",
+    }, 1 / 60)).toThrow(/lote/);
   });
 
   it("bounds replay input batches and rejects ambiguous addresses", () => {

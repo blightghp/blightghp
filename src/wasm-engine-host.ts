@@ -1,9 +1,12 @@
 import type { BrainData } from "./brain";
 import {
+  CELL_SPIKE_EVENT_SCHEMA_VERSION,
+  MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT,
   SIMULATION_PROTOCOL_VERSION,
   SIMULATION_STEP_SECONDS,
 } from "./protocol";
 import type {
+  CellSpikeEventBatch,
   EngineAdvanceCommand,
   EngineDiagnostics,
   EngineInitializeCommand,
@@ -26,6 +29,7 @@ export const WORKER_RESOURCE_LIMITS = {
   ticksPerCommand: 600,
   inputsPerCommand: 256,
   scheduledInputs: 4_096,
+  cellSpikeEventsPerSnapshot: MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT,
 } as const;
 
 export interface WorkerResourceCounts {
@@ -99,6 +103,45 @@ export function assertScheduledInputsWithinEnvelope(
     const address = `${input.tick}:${input.sequence}`;
     if (addresses.has(address)) throw new Error("endereço de entrada duplicado no lote");
     addresses.add(address);
+  }
+}
+
+export function assertCellSpikeEventBatch(
+  batch: CellSpikeEventBatch,
+  fixedStep: number,
+): void {
+  if (
+    batch.schemaVersion !== CELL_SPIKE_EVENT_SCHEMA_VERSION ||
+    !Number.isSafeInteger(batch.startTick) ||
+    !Number.isSafeInteger(batch.endTick) ||
+    batch.startTick < 0 ||
+    batch.endTick < batch.startTick ||
+    batch.cellIds.length !== batch.timeOffsetsSeconds.length ||
+    batch.cellIds.length > WORKER_RESOURCE_LIMITS.cellSpikeEventsPerSnapshot ||
+    !/^[0-9a-f]{16}$/.test(batch.hash)
+  ) {
+    throw new Error("lote de eventos celulares inválido");
+  }
+  const maximumOffset = (batch.endTick - batch.startTick) * fixedStep;
+  let previousOffset = -1;
+  let previousCellId = -1;
+  for (let index = 0; index < batch.cellIds.length; index += 1) {
+    const cellId = batch.cellIds[index];
+    const offset = batch.timeOffsetsSeconds[index];
+    if (
+      cellId === undefined ||
+      cellId >= 12 ||
+      offset === undefined ||
+      !Number.isFinite(offset) ||
+      offset < 0 ||
+      offset > maximumOffset + Number.EPSILON ||
+      offset < previousOffset ||
+      (offset === previousOffset && cellId < previousCellId)
+    ) {
+      throw new Error("ordem ou payload de evento celular inválido");
+    }
+    previousOffset = offset;
+    previousCellId = cellId;
   }
 }
 
@@ -299,8 +342,18 @@ export class WasmEngineHost {
       corticothalamicHash: engine.corticothalamic_state_hash(),
       cellPatchHash: engine.cell_state_hash(),
       chemicalHash: engine.chemical_state_hash(),
+      cellSpikeEventHash: engine.cell_spike_event_hash(),
       degraded: false,
     };
+    const cellSpikeEvents: CellSpikeEventBatch = {
+      schemaVersion: engine.cell_spike_event_schema_version() as typeof CELL_SPIKE_EVENT_SCHEMA_VERSION,
+      startTick: engine.cell_spike_event_start_tick(),
+      endTick: engine.cell_spike_event_end_tick(),
+      cellIds: engine.cell_spike_event_cell_ids(),
+      timeOffsetsSeconds: engine.cell_spike_event_time_offsets_seconds(),
+      hash: diagnostics.cellSpikeEventHash,
+    };
+    assertCellSpikeEventBatch(cellSpikeEvents, this.fixedStep);
     return {
       schemaVersion: SIMULATION_PROTOCOL_VERSION,
       tick: engine.tick(),
@@ -348,6 +401,7 @@ export class WasmEngineHost {
         fieldVertex: engine.cell_field_vertex(),
         blend: engine.cell_blend(),
       },
+      cellSpikeEvents,
       chemical: {
         timeSeconds: engine.chemical_time_seconds(),
         solverStepIndex: Number(chemicalSolverStepIndex),
@@ -436,6 +490,14 @@ export class DiagnosticFallbackHost {
           fieldVertex: 0,
           blend: 0,
         },
+        cellSpikeEvents: {
+          schemaVersion: CELL_SPIKE_EVENT_SCHEMA_VERSION,
+          startTick: this.tick,
+          endTick: this.tick,
+          cellIds: new Uint32Array(),
+          timeOffsetsSeconds: new Float64Array(),
+          hash: "unavailable",
+        },
         chemical: {
           timeSeconds: this.tick * this.fixedStep,
           solverStepIndex: 0,
@@ -458,6 +520,7 @@ export class DiagnosticFallbackHost {
           corticothalamicHash: "unavailable",
           cellPatchHash: "unavailable",
           chemicalHash: "unavailable",
+          cellSpikeEventHash: "unavailable",
           degraded: true,
           detail: this.detail,
         },

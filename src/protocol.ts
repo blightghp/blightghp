@@ -1,6 +1,9 @@
 import type { BrainData } from "./brain";
-export const SIMULATION_PROTOCOL_VERSION = 6 as const;
+export const SIMULATION_PROTOCOL_VERSION = 7 as const;
 export const SIMULATION_STEP_SECONDS = 1 / 60;
+export const CELL_SPIKE_EVENT_SCHEMA_VERSION = 1 as const;
+export const MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT = 4_096;
+export const CELL_SPIKE_EVENT_BYTES = Uint32Array.BYTES_PER_ELEMENT + Float64Array.BYTES_PER_ELEMENT;
 
 export type SimulationTick = number;
 
@@ -63,6 +66,15 @@ export interface CellPatchSnapshot {
   blend: number;
 }
 
+export interface CellSpikeEventBatch {
+  schemaVersion: typeof CELL_SPIKE_EVENT_SCHEMA_VERSION;
+  startTick: SimulationTick;
+  endTick: SimulationTick;
+  cellIds: Uint32Array;
+  timeOffsetsSeconds: Float64Array;
+  hash: string;
+}
+
 // Ordens fixas: transmissor [glutamato, GABA] e receptor
 // [AMPA, NMDA, GABA-A, GABA-B]. Cada buffer vem do trilho químico Rust; a
 // apresentação não sintetiza liberação, ocupação ou recaptura.
@@ -91,6 +103,7 @@ export interface EngineDiagnostics {
   corticothalamicHash: string;
   cellPatchHash: string;
   chemicalHash: string;
+  cellSpikeEventHash: string;
   degraded: boolean;
   detail?: string;
 }
@@ -109,6 +122,7 @@ export interface NeuralSnapshot {
   field: FieldSnapshot;
   corticothalamic: CorticothalamicSnapshot;
   cellPatch: CellPatchSnapshot;
+  cellSpikeEvents: CellSpikeEventBatch;
   chemical: ChemicalSnapshot;
   diagnostics: EngineDiagnostics;
 }

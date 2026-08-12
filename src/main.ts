@@ -34,7 +34,11 @@ import {
   shouldRequestSnapshot,
 } from "./performance-profile";
 import type { RuntimeEnvironment, RuntimeProfile } from "./performance-profile";
-import { SIMULATION_STEP_SECONDS } from "./protocol";
+import {
+  CELL_SPIKE_EVENT_BYTES,
+  MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT,
+  SIMULATION_STEP_SECONDS,
+} from "./protocol";
 import type {
   EngineCommand,
   EngineEvent,
@@ -60,6 +64,7 @@ declare global {
         corticothalamicHash?: string;
         cellPatchHash?: string;
         chemicalHash?: string;
+        cellSpikeEventHash?: string;
         degraded: boolean;
         detail?: string;
       };
@@ -67,6 +72,15 @@ declare global {
         schemaVersion: number;
         buffers: Array<{ name: string; byteLength: number }>;
         hashes: Record<string, string | undefined>;
+        cellSpikeEvents: {
+          schemaVersion: number;
+          count: number;
+          bytes: number;
+          bytesPerEvent: number;
+          maximumEvents: number;
+          startTick: number;
+          endTick: number;
+        };
       };
       snapshotBufferLayout: (snapshot: NeuralSnapshot) => Array<{
         name: string;
@@ -759,6 +773,7 @@ async function init(): Promise<void> {
           latestSnapshot?.diagnostics.corticothalamicHash,
         cellPatchHash: latestSnapshot?.diagnostics.cellPatchHash,
         chemicalHash: latestSnapshot?.diagnostics.chemicalHash,
+        cellSpikeEventHash: latestSnapshot?.diagnostics.cellSpikeEventHash,
         degraded:
           latestSnapshot?.diagnostics.degraded ??
           engineReady?.degraded ??
@@ -781,6 +796,18 @@ async function init(): Promise<void> {
           corticothalamic: latestSnapshot.diagnostics.corticothalamicHash,
           cell: latestSnapshot.diagnostics.cellPatchHash,
           chemical: latestSnapshot.diagnostics.chemicalHash,
+          cellSpikes: latestSnapshot.diagnostics.cellSpikeEventHash,
+        },
+        cellSpikeEvents: {
+          schemaVersion: latestSnapshot.cellSpikeEvents.schemaVersion,
+          count: latestSnapshot.cellSpikeEvents.cellIds.length,
+          bytes:
+            latestSnapshot.cellSpikeEvents.cellIds.byteLength +
+            latestSnapshot.cellSpikeEvents.timeOffsetsSeconds.byteLength,
+          bytesPerEvent: CELL_SPIKE_EVENT_BYTES,
+          maximumEvents: MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT,
+          startTick: latestSnapshot.cellSpikeEvents.startTick,
+          endTick: latestSnapshot.cellSpikeEvents.endTick,
         },
       };
     },
