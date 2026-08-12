@@ -430,9 +430,9 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | P4 `src/render`/interface | FECHADO | diretório, `RenderLayer` e testes existem |
 | P5 inferência fora do contrato | ABERTO | `posterior` ainda alimenta `confidence`; R09-A |
 | E1 perfil sem ambiente | FECHADO em R08-P2 | artefato schema 2 registra host, navegador, preset e contagens |
-| E2 hardware real | ABERTO | somente evidência headless versionada |
-| E3 redundância sem cor | PARCIAL | formas/testes/capturas existem; gate automático é declarativo |
-| E4 estado→pixel | PARCIAL | rampa pura e saturação existem; pixel conhecido não volta ao estado |
+| E2 hardware real | FECHADO em R08-P3 | Intel UHD 770/ANGLE D3D11 versionada com ambiente e custos |
+| E3 redundância sem cor | FECHADO em R08-P3 | 72 bindings + testes das geometrias/posições/orientações concretas |
+| E4 estado→pixel | FECHADO em R08-P3 | alvo WebGL, readback sRGB→linear e erro abaixo de `0,012` em dois backends |
 | R1 tokens dispersos | FECHADO | `visual-tokens.ts` |
 | R2 bloom global/aditivo | FECHADO | `SelectiveBloomPipeline` + contrato de materiais |
 | R3 corrente sem sinal | FECHADO | `signedMean`, direção e testes |

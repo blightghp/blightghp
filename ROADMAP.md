@@ -6,7 +6,7 @@
 
 **Estado de promoção:** 0.8 implementada, mas ainda não promovida
 
-**Próximo gate:** `R08-P3` · prova gráfica renderizada e baseline em GPU física
+**Próximo gate:** `R08-P4` · auditoria final de promoção
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -56,6 +56,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | fixtures | `v1` por artefato | `fixtures/` | não implica produto 1.0 |
 | hashes | quatro domínios | snapshot/fixtures | rede, corticotalâmico, célula e química |
 | auditoria runtime versionada | schema `2`, captura ABI v6 | `runtime-audit.json` | comprova P2 em Chromium headless/SwiftShader; não é baseline em GPU física |
+| baseline gráfico físico | schema `2`, Intel UHD 770/D3D11 | `artifacts/hardware-audit` | comprova P3 no hardware/driver registrados |
 
 ### Matriz resumida de capacidades
 
@@ -68,7 +69,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | recursos e STP | IMPLEMENTADO E VALIDADO NO CONTRATO | `chemical_contract`, `short_term_plasticity` | testes e fixture v1 | preset didático não calibrado |
 | fenda, ocupação e solver | IMPLEMENTADO E VALIDADO NO REGIME TESTADO | `cleft_occupancy`, `chemical_solver` | replays e convergência | microdomínio representativo, não população de fendas |
 | ABI v6 e aba Sinapse | IMPLEMENTADO E VALIDADO NO NAVEGADOR | `brain-wasm`, Worker, `SynapseRenderLayer` | [auditoria ABI v6](AUDIT_0.8_ABI_V6.md) | promoção geral ainda depende de P3/P4 |
-| passes matéria/emissão e tokens | IMPLEMENTADO, MAS SEM EVIDÊNCIA DE PROMOÇÃO SUFICIENTE | `src/render` | testes estruturais | gate de invertibilidade ainda é analítico, não pixel→estado |
+| passes matéria/emissão e tokens | IMPLEMENTADO E VALIDADO EM P3 | `src/render` | [auditoria gráfica](AUDIT_0.8_GRAPHICS.md) | validade restrita aos backends/envelopes registrados |
 | inferência Bayesiana do painel | EXPERIMENTAL/CONTRADITÓRIO | `inference.ts`, `main.ts` | dois testes unitários | posterior TypeScript alimenta `confidence` sem contrato de experimento |
 | neurônio resolvido, cortes, vascular, atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
 
@@ -82,10 +83,10 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | 0.7 | patch AdEx, quatro receptores e ABI v5 | promovida | auditorias 0.7 | `PLAN-0.7.md` |
 | 0.8 | recursos, química local, solver, ABI v6 e Sinapse | implementada | código, fixtures e testes | proposta 0.8 legada |
 
-A 0.8 não é marcada como promovida porque P3 ainda precisa provar a relação
-pixel→estado, a redundância sem cor e o custo em GPU física. A evidência da ABI
-v6 e do lifecycle do Worker foi fechada em [R08-P2](AUDIT_0.8_ABI_V6.md), mas
-não substitui os gates gráficos nem a auditoria final de P4.
+A 0.8 ainda não é marcada como promovida porque falta a auditoria final P4. A
+evidência da ABI v6 foi fechada em [R08-P2](AUDIT_0.8_ABI_V6.md), e pixel→estado,
+redundância sem cor e custo em GPU física foram fechados em
+[R08-P3](AUDIT_0.8_GRAPHICS.md).
 
 ## Modelo obrigatório de corte
 
@@ -110,8 +111,8 @@ Worker → frontend → renderer → auditoria → documentação → promoção
 
 ## R08-PROMOTION · fechar a versão 0.8
 
-**Estado:** P1 e P2 concluídas; P3 é o próximo corte. Nenhuma nova fisiologia
-entra antes deste gate.
+**Estado:** P1–P3 concluídas; P4 é o próximo corte. Nenhuma nova fisiologia entra
+antes deste gate.
 
 ### R08-P1 · fonte documental única
 
@@ -146,6 +147,8 @@ entra antes deste gate.
 | complexidade/confiança | média / alta |
 
 ### R08-P3 · fechar os gates gráficos reais
+
+**Estado:** concluída; evidência em [AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md).
 
 | Campo | Contrato |
 | :-- | :-- |

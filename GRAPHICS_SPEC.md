@@ -348,5 +348,6 @@ degradação reduz qualidade/cadência visual; nunca equações.
 - orçamento por vista e baseline em hardware real.
 
 Capturas de pixel complementam, mas não substituem, prova estrutural. O estado
-atual fecha tokens, sinal e proveniência básica; pixel→estado e baseline real
-permanecem no gate de promoção 0.8. Veja [VALIDATION.md](VALIDATION.md).
+0.8 fecha tokens, sinal, proveniência, bindings estruturais, pixel→estado
+renderizado e baseline físico dentro dos envelopes documentados em
+[AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md).
