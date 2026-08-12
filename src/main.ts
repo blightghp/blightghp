@@ -64,6 +64,10 @@ declare global {
         buffers: Array<{ name: string; byteLength: number }>;
         hashes: Record<string, string | undefined>;
       };
+      snapshotBufferLayout: (snapshot: NeuralSnapshot) => Array<{
+        name: string;
+        byteLength: number;
+      }>;
       profile: () => RuntimeProfile;
       setColorMode: (mode: VisualColorMode) => void;
       visualAudit: () => {
@@ -72,6 +76,8 @@ declare global {
         invertibility: { samples: number; tolerance: number; maximumError: number };
         redundancy: Record<SimulationView, string>;
       };
+      createAuditWorker: () => Worker;
+      createAuditTopology: () => BrainData;
     };
   }
 }
@@ -771,6 +777,12 @@ async function init(): Promise<void> {
         },
       };
     },
+    snapshotBufferLayout(snapshot) {
+      return snapshotBufferEntries(snapshot).map(({ name, view }) => ({
+        name,
+        byteLength: view.byteLength,
+      }));
+    },
     async schedule(inputs) {
       const event = await sendCommand({ type: "schedule", inputs });
       if (event.type !== "scheduled") {
@@ -787,6 +799,16 @@ async function init(): Promise<void> {
     },
     visualAudit() {
       return visualAuditReport();
+    },
+    createAuditWorker() {
+      return new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });
+    },
+    createAuditTopology() {
+      return generateBrainData({
+        seed: 0x51a7c0de,
+        surfaceNodesPerHemisphere: 48,
+        innerNodesPerHemisphere: 8,
+      });
     },
   };
 

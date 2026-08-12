@@ -2,13 +2,8 @@ const HASH_PATTERN = /^[0-9a-f]{16}$/;
 
 export async function auditWorkerLifecycle(page) {
   const evidence = await page.evaluate(async () => {
-    const [{ generateBrainData }, { snapshotBufferEntries }] = await Promise.all([
-      import("/src/brain.ts"),
-      import("/src/snapshot-layout.ts"),
-    ]);
-    const worker = new Worker(new URL("/src/simulation.worker.ts", window.location.origin), {
-      type: "module",
-    });
+    const engine = window.__BRAIN_ENGINE__;
+    const worker = engine.createAuditWorker();
 
     const send = (command) =>
       new Promise((resolve, reject) => {
@@ -51,11 +46,7 @@ export async function auditWorkerLifecycle(page) {
     };
 
     try {
-      const topology = generateBrainData({
-        seed: 0x51a7c0de,
-        surfaceNodesPerHemisphere: 48,
-        innerNodesPerHemisphere: 8,
-      });
+      const topology = engine.createAuditTopology();
       const initialize = {
         type: "initialize",
         topology,
@@ -64,7 +55,7 @@ export async function auditWorkerLifecycle(page) {
       };
       const ready = await send(initialize);
       const first = await runReplay();
-      const entries = snapshotBufferEntries(first);
+      const buffers = engine.snapshotBufferLayout(first);
       const firstHashes = hashes(first);
 
       const resetReady = await send({ type: "reset" });
@@ -87,8 +78,8 @@ export async function auditWorkerLifecycle(page) {
         schemaVersion: first.schemaVersion,
         runtime: first.diagnostics.runtime,
         initialized: ready.type === "ready" && ready.tick === 0,
-        buffers: entries.map(({ name, view }) => ({ name, byteLength: view.byteLength })),
-        snapshotBytes: entries.reduce((total, { view }) => total + view.byteLength, 0),
+        buffers,
+        snapshotBytes: buffers.reduce((total, { byteLength }) => total + byteLength, 0),
         hashes: firstHashes,
         reset: {
           ready: resetReady.type === "ready" && resetReady.tick === 0,
