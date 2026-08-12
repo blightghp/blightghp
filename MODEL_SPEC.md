@@ -1,6 +1,6 @@
 # Especificação matemática e epistemológica · BRAIN PRO
 
-**Revisão:** 1 · produto observado 0.8.0 · modelos com schema próprio
+**Revisão:** 2 · produto observado 0.9.0 · modelos com schema próprio
 
 Esta é a fonte canônica das perguntas, variáveis, equações, métodos, hipóteses e
 limites do motor. Ela não transforma a fisiologia em algo que o código ainda não
@@ -45,6 +45,7 @@ Geometria 3D não altera esta classe.
 | MOD-080 | solver químico | compor operadores positivos sob rigidez | tempo, exposição, estoques | Strang palindrômico adaptativo | NUMÉRICO VALIDADO NO REGIME TESTADO | convergência/replay |
 | MOD-081 | trilha química | publicar uma sinapse representativa | buffers químicos v6 | composição por tick | DIDÁTICO/EXPERIMENTAL | fixture integrada; visual promovido nos limites 0.8 |
 | MOD-090 | inferência Bayesiana de tarefa | atualizar crença escalar | probabilidades | Bayes discreto em TS, schema 1 | EXPERIMENTAL/ISOLADO | fixture, replay exato e controle nulo; posterior não alimenta drive |
+| MOD-091 | eventos celulares carimbados | preservar identidade e instante de spikes do patch | ID, s | evento híbrido AdEx em subpasso; lote SoA schema 1 | OBSERVÁVEL DO MODELO | fixture/replay exato, ordem, hash e teto; não altera dinâmica |
 
 “Validado” na última coluna refere-se ao contrato numérico testado, não a
 validade fisiológica externa.

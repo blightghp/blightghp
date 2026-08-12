@@ -91,13 +91,13 @@ publicado neste repositório.
   <img src="assets/brain.gif?v=a31dec912ec5" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular com correntes assinadas" />
 </a>
 
-<sub>▲ Captura do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI e aos quatro hashes do motor.</sub>
+<sub>▲ Captura do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI e aos cinco hashes do motor.</sub>
 
 </div>
 
 ---
 
-## BRAIN PRO [v. 0.8.0 promovida · desenvolvimento 0.9]
+## BRAIN PRO [v. 0.9.0 em desenvolvimento · baseline 0.8 promovida]
 
 Estou construindo o BRAIN PRO como um caderno de aprendizagem executável. Sou
 um programador aprendendo a usar a [Rust Programming Language](https://www.rust-lang.org/)
@@ -119,6 +119,10 @@ final sem achado alto aberto. O resultado, os limites aceitos e o próximo corte
 estão no [ROADMAP canônico](ROADMAP.md) e na
 [auditoria de promoção](AUDIT_0.8_PROMOTION.md).
 
+A 0.9 mantém essa baseline e avança por gates independentes. R09-A isolou o
+modelo de tarefa; R09-B publica eventos celulares carimbados pelo Rust, sem
+pedir ao renderer que deduza spikes ausentes entre snapshots.
+
 ### O que consigo explorar hoje
 
 - uma rede procedural de 1.890 nós, com sinapses direcionadas, atrasos,
@@ -129,9 +133,11 @@ estão no [ROADMAP canônico](ROADMAP.md) e na
   NMDA, GABA-A e GABA-B integrados a `83,3 µs`;
 - cinco vistas sincronizadas: **Visão Geral**, **Lâminas**, **Célula**,
   **Eletricidade** e **Sinapse**;
-- execução Rust/Wasm em Worker, ABI v6 e 34 buffers transferíveis;
-- quatro hashes separados: baseline 0.5, circuito córtico-talâmico, patch
-  celular e trilho químico;
+- execução Rust/Wasm em Worker, ABI v7 e 36 buffers transferíveis;
+- cinco hashes separados: baseline 0.5, circuito córtico-talâmico, patch
+  celular, trilho químico e lote de eventos celulares;
+- IDs celulares e offsets de spike em arrays paralelos, schema 1, ordem
+  canônica, 12 bytes por evento e teto de 4.096 eventos por snapshot;
 - pipeline visual com matéria, emissão e composição; bloom restrito ao que
   realmente emite e proveniência declarada por objeto;
 - corrente receptora média com sinal, halos orientados para entrada, saída e
@@ -181,7 +187,7 @@ brain-engine (Rust: estado, equações, limites e hashes)
       ├── chemical_solver (Strang, rigidez, orçamento e hash)
       ├── chemical_track (microdomínio publicado e quarto hash)
       ├── testes nativos e replay
-      └── brain-wasm → Web Worker → snapshot ABI v6
+      └── brain-wasm → Web Worker → snapshot ABI v7
                                       ↓
                        TypeScript → DOM, teclado e Three.js
 ```
@@ -222,6 +228,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-12 | fecho R08-P2 com 34 buffers, quatro hashes, replay após reset, descarte/reinicialização e 11 capturas versionadas da ABI v6 |
 | 2026-08-12 | fecho R08-P3 com pixel→estado, 72 bindings redundantes, 11 capturas e baseline Intel/D3D11; R08-P4 promove a 0.8 sem achado alto aberto |
 | 2026-08-12 | fecho R09-A com fronteira de experimento versionada, replay e controle nulo; a posterior de tarefa deixa de influenciar o estímulo neural direto |
+| 2026-08-12 | fecho R09-B com eventos celulares carimbados no Rust, replay exato, ABI v7, 36 buffers e quinto hash independente |
 
 O histórico da base está em
 [`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
@@ -234,8 +241,9 @@ O histórico da base está em
 histórica dos achados; o fechamento executável da ABI está em
 [AUDIT_0.8_ABI_V6.md](AUDIT_0.8_ABI_V6.md), a prova gráfica em
 [AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md) e o veredito final em
-[AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md). A primeira etapa da 0.9 está
-registrada na [auditoria R09-A](AUDIT_0.9_R09_A.md).
+[AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md). As etapas encerradas da 0.9
+estão registradas nas auditorias [R09-A](AUDIT_0.9_R09_A.md) e
+[R09-B](AUDIT_0.9_R09_B.md).
 
 ### Executar e conferir
 
@@ -268,8 +276,8 @@ npm run sync:brain-gif
 npm run verify:brain-gif
 ```
 
-O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v6,
-registra os quatro hashes independentes e o SHA-256 do GIF em
+O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v7,
+registra os cinco hashes independentes e o SHA-256 do GIF em
 [`assets/brain-gif.json`](assets/brain-gif.json), carimba o README com o commit
 de origem e só então publica os artefatos. O GitHub ainda pode levar alguns
 minutos para invalidar o cache do perfil.

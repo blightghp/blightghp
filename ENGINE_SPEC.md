@@ -1,6 +1,6 @@
 # Especificação do motor · BRAIN PRO
 
-**Revisão:** 1 · produto 0.8.0 · ABI/snapshot 6
+**Revisão:** 2 · produto 0.9.0 · ABI/snapshot 7
 
 Este é o manual de implementação do motor científico e de sua fronteira de
 execução. A matemática pertence a [MODEL_SPEC.md](MODEL_SPEC.md); este documento
@@ -20,13 +20,13 @@ define ownership, ordem, memória, falha, ABI e procedimento de evolução.
 | ENG-008 | `f64` interno e quantização `f32` precisam de contrato por bloco. |
 | ENG-009 | hashes são detectores de regressão, não autenticação criptográfica. |
 | ENG-010 | renderer/FPS/LOD nunca alteram solver ou `dt`. |
-| ABI-001 | protocolo, ABI e snapshot são eixos distintos, ainda que hoje valham 6. |
+| ABI-001 | protocolo, ABI e snapshot são eixos distintos, ainda que hoje valham 7. |
 | ABI-002 | mudança de layout, unidade, ordem ou significado exige decisão de compatibilidade. |
 | ABI-003 | arrays paralelos têm comprimento/ordem validados antes do uso. |
 | ABI-004 | campos frequentes são compactados; não há mensagem por spike. |
 | WRK-001 | comandos são processados em ordem e limitados por recursos. |
 | WRK-002 | fallback permanece inerte e anuncia degradação. |
-| WRK-003 | backpressure, cancelamento e timeout devem existir antes de ampliar eventos/importações. |
+| WRK-003 | filas têm backpressure explícito; cancelamento e timeout entram antes de importações/lotes longos. |
 
 ## Organização e direção de dependências
 
@@ -53,14 +53,14 @@ aplicação e renderer somente leitura
 | `field` | campo E/I, histórico atrasado e projeção |
 | `lib` | contrato laminar L1–L6 |
 | `corticothalamic` | relé, TRN, rebote e atrasos |
-| `cell_patch` | 12 células AdEx, dendrito passivo e quatro correntes |
+| `cell_patch` | 12 células AdEx, dendrito passivo, quatro correntes e origem dos spikes carimbados |
 | `chemical_contract` | frações, ledgers de massa/carga e tolerâncias |
 | `short_term_plasticity` | `R`, `u`, `g` e ordem de liberação |
 | `cleft_occupancy` | fenda, concentração, ligação, ocupação e remoção |
 | `chemical_solver` | composição Strang, adaptação e atomicidade |
 | `chemical_track` | microdomínio químico integrado e hash público |
 | `observables` | leituras baratas que não realimentam por padrão |
-| `simulation` | composição, tick global, snapshot e hashes |
+| `simulation` | composição, tick global, lote de eventos, snapshot e hashes |
 
 Dependências permitidas apontam de composição para kernels e de kernels para
 tipos/contratos. `brain-wasm` depende do engine; o engine nunca depende do
@@ -109,7 +109,7 @@ exigir reset.
   e acesso justificarem;
 - alinhamento/SIMD só após benchmark e sem alterar ordem numérica silenciosa.
 
-### Layout publicado v6
+### Layout publicado v7
 
 | Bloco | Buffers |
 | :-- | :-- |
@@ -118,11 +118,18 @@ exigir reset.
 | campo | IDs de nós, E, I, atividade composta |
 | coluna | E e I L1–L6 |
 | patch | tipo, soma, dendrito, adaptação, AMPA, NMDA, GABA-A, GABA-B, spike |
+| eventos celulares | IDs `u32` e offsets temporais `f64` |
 | química | índice de evento, contagem de spikes, R, u, última liberação, tempo da última liberação, liberação total, mol na fenda, concentração, mol ligado, ocupação, remoção |
 
-Total: 34 `ArrayBuffer`s. Escalares e diagnósticos não fazem parte da contagem.
+Total: 36 `ArrayBuffer`s. Escalares e diagnósticos não fazem parte da contagem.
 Cada ordem canônica é fixa: transmissores `[glutamato, GABA]`; receptores
-`[AMPA, NMDA, GABA-A, GABA-B]`; lâminas L1–L6.
+`[AMPA, NMDA, GABA-A, GABA-B]`; lâminas L1–L6; eventos celulares por
+`(timeOffsetSeconds, cellId)`.
+
+O lote celular schema 1 cobre `[startTick,endTick]`, admite vazio e contém no
+máximo 4.096 pares. Cada evento ocupa 12 bytes, totalizando teto de 49.152 bytes
+nos dois buffers. O hash próprio inclui schema, intervalo, tamanho, IDs e bits
+`f64` dos offsets. O renderer só marca IDs publicados; não reconstrói eventos.
 
 ### Vida útil
 
@@ -149,14 +156,15 @@ limitação conhecida. Corrigir exige novo fixture e decisão de replay.
 - entradas: `(tick, sequence)`;
 - CSR de saída: `(origem, destino, id)`;
 - CSR de entrada: `(destino, origem, id)`;
-- eventos simultâneos: ordem do chamador/protocolo documentada;
+- eventos celulares simultâneos: offset crescente e `cellId` crescente no empate;
 - redução futura paralela: partições fixas e fusão por ID do bloco;
 - operações químicas: sequência palindrômica publicada;
 - aleatoriedade nunca depende da ordem física das chamadas.
 
 ### Hash e replay
 
-Os hashes atuais cobrem rede, circuito, patch e química separadamente. Hash
+Os hashes atuais cobrem rede, circuito, patch, química e eventos celulares
+separadamente. Hash
 inclui schema/configuração relevante ao domínio. Compatibilidade v5 exige que
 os três hashes anteriores permaneçam exatos ao acrescentar química v6.
 
@@ -192,7 +200,7 @@ Incrementar o eixo aplicável quando ocorrer:
 - mudança de limites que invalida consumidor.
 
 Adições compatíveis futuras podem usar campos opcionais e feature negotiation;
-hoje a inicialização exige igualdade `schema_version() == 6`. Depreciação deve
+hoje a inicialização exige igualdade `schema_version() == 7`. Depreciação deve
 ter janela, teste de consumidor antigo e rollback. Nenhum fallback reinterpreta
 um campo desconhecido.
 
@@ -213,14 +221,14 @@ explícitos; a fila agendada existente continua reservada a replays endereçados
 - inicialização lazy do módulo Wasm;
 - fila Promise serial;
 - cotas duplicadas no host/adaptador;
-- transfer list de 34 buffers;
+- transfer list de 36 buffers;
+- no máximo 64 mensagens pendentes; a seguinte recebe `worker-backpressure`;
 - reset com possível regeneração da topologia;
 - dispose libera Wasm;
 - fallback inerte em falha de inicialização.
 
 ### Lacunas obrigatórias antes de escalar
 
-- limite de mensagens aguardando e sinal explícito de backpressure;
 - cancelamento de avanço/lote que ainda não iniciou;
 - timeout distinto de falha numérica;
 - códigos de fault por versão, recurso, input, solver e runtime;

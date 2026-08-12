@@ -1,6 +1,6 @@
 # Estratégia canônica de validação · BRAIN PRO
 
-**Revisão:** 3 · produto observado 0.8.0 · promoção 0.8 concluída · R09-A validada
+**Revisão:** 4 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A/R09-B validadas
 
 Quatro perguntas permanecem separadas: o cálculo é reproduzível, respeita
 limites, converge e produz o fenômeno definido pelo experimento? Uma única
@@ -19,6 +19,7 @@ artefato de promoção.
 | hardware real | perfil completo e rejeição de software renderer | Intel UHD 770/ANGLE D3D11 | baseline versionado; não é promessa universal |
 | promoção 0.8 | gate agregado de versão, ABI, evidência e achados | `promotion-0.8.json` schema 1 | P1–P4 concluídas; nenhum achado alto aberto |
 | experimento de tarefa R09-A | schema/adapters, controle nulo, fixture e replay | `bayesian-observation-v1.json` | posterior isolada do drive; contexto interativo nulo |
+| eventos celulares R09-B | fixture exata, ABI/Worker e renderer | `cell-spike-events-v1.json` + auditoria de lifecycle | IDs/offsets carimbados pelo Rust; limite e backpressure provados |
 
 O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
@@ -43,6 +44,7 @@ ambiente e dos envelopes registrados.
 | QA-009 | falha é atômica e rollback verificável |
 | QA-010 | segurança cobre input malformado, cotas, supply chain e privacidade aplicável |
 | QA-090 | modelo de tarefa tem schema, owner, limite, controle nulo e replay; não atravessa a fronteira científica implicitamente |
+| QA-091 | evento celular tem carimbo temporal, ordem canônica, teto, hash próprio e transporte sem inferência visual |
 
 ## Camadas de evidência
 
@@ -353,6 +355,23 @@ um artefato versionado em cada linha:
 | acessibilidade visual | cinco tabs, Sinapse, viewport móvel e 11 capturas estão no artefato schema 2; prova estrutural sem cor permanece em P3 |
 | degradação | fallback químico é inerte e publica `chemicalHash = unavailable` |
 
+### R09-B · eventos celulares carimbados e ABI v7
+
+| Gate | Evidência executável |
+| :-- | :-- |
+| propriedade | o Rust publica `cellId` e `timeOffsetSeconds`; ABI, Worker e renderer apenas transportam/consomem o lote |
+| replay não vazio | `cell-spike-events-v1.json` congela 55 eventos em três intervalos e compara IDs, bits `f64`, ticks e hashes |
+| ordem e janela | cada offset pertence ao intervalo publicado e a sequência é canônica por `(timeOffsetSeconds, cellId)` |
+| limite | o motor rejeita atomicamente o primeiro evento acima de 4.096 por snapshot |
+| hash independente | schema, ticks, tamanho, IDs e bits dos offsets alimentam o quinto FNV-1a; os quatro hashes anteriores não mudam |
+| ABI Rust/TypeScript | ambos usam `schemaVersion = 7`; dois buffers SoA elevam o total a 36 |
+| validação host | schema de evento 1, comprimentos, finitude, faixa temporal, IDs, ordem e teto são rejeitados no primeiro valor inválido |
+| transferência | 36 `ArrayBuffer` distintos incluem `Uint32Array` de IDs e `Float64Array` de offsets |
+| apresentação | `CellRenderLayer` marca somente IDs presentes no lote; o flag instantâneo não autoriza inferir eventos perdidos |
+| lifecycle | Worker real prova quinto hash, reset/dispose/reinit e 65 respostas sob rajada, com ao menos uma rejeição `worker-backpressure` |
+| orçamento | 12 bytes por evento; teto teórico de 49.152 bytes por snapshot |
+| lote vazio | é válido no cenário integrado padrão; a fixture não vazia prova separadamente geração, ordenação e replay |
+
 Os contratos executáveis atuais são:
 
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
@@ -370,6 +389,8 @@ Os contratos executáveis atuais são:
 - `abi-v5-hash-preservation-v1.json`: registra os três hashes da captura 0.8 no
   cenário de entrada congelado; capturas de outro cenário validam proveniência e
   seus quatro hashes próprios, sem comparação entre entradas distintas;
+- `cell-spike-events-v1.json`: congela três intervalos não vazios, 55 eventos,
+  IDs, offsets, ticks e hashes; o gerador Rust vive em `examples/`;
 - `scripts/shadow_replay.js`: recompõe o replay no Wasm e exige os hashes do
   oráculo congelado e o SHA-256 auditado do fixture;
 - testes Cargo: reproduzem o artefato, inclusive o replay neural completo, e
@@ -406,8 +427,8 @@ erro e estabilidade no regime em que será usado.
 | ENG-004/010 tempo independente do frame | relógio, captura e hash sob LOD/câmera | Vitest + teste de integração |
 | ENG-005/QA-009 atomicidade | snapshot/hash idênticos após falha | Cargo por solver |
 | ENG-006 determinismo | repetição, fixture e ordem empatada | Cargo + replay |
-| ABI-001..004 | schema, 34 buffers, ordens/unidades e compatibilidade v5 | Cargo, Vitest, Wasm browser |
-| WRK-001/002 | fila serial, cotas, fallback inerte, reset/dispose | Vitest + navegador forçando falha |
+| ABI-001..004/012 | schema 7, 36 buffers, ordens/unidades, eventos e compatibilidade v5 | Cargo, Vitest, Wasm browser |
+| WRK-001..003 | fila serial, cotas, backpressure, fallback inerte, reset/dispose | Vitest + navegador forçando falha |
 | UI-001..010 | estado, unidades, controles e acessibilidade | unitário/DOM/E2E |
 | GFX-001..010 | hash invariável, proveniência e estado→pixel | testes estruturais + render target + capturas |
 | AST/VAS | fonte/licença/sem animação sem estado | manifesto de asset + auditoria visual |

@@ -2,13 +2,13 @@
 
 **Estado documental:** vigente desde 12 de agosto de 2026
 
-**Produto declarado nos manifests:** `0.8.0`
+**Produto declarado nos manifests:** `0.9.0`
 
 **Estado de promoção:** 0.8 promovida em 12 de agosto de 2026
 
-**Estado de desenvolvimento:** 0.9 em construção; R09-A concluída
+**Estado de desenvolvimento:** 0.9 em construção; R09-A e R09-B concluídas
 
-**Próximo gate:** `R09-B` · eventos celulares carimbados
+**Próximo gate:** `R09-C` · Prancha Elétrica
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -49,14 +49,14 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 
 | Eixo | Valor verdadeiro | Evidência | Observação |
 | :-- | :-- | :-- | :-- |
-| produto npm/Cargo/Tauri | `0.8.0` | manifests | versão de distribuição |
-| protocolo Worker | `6` | `src/protocol.ts` | hoje acoplado ao schema da ABI |
-| ABI Wasm | `6` | `SIMULATION_SCHEMA_VERSION` | rejeição por igualdade no host |
-| snapshot | `6` | `NeuralSnapshot.schemaVersion` | 34 buffers transferíveis |
+| produto npm/Cargo/Tauri | `0.9.0` | manifests | versão corrente em desenvolvimento |
+| protocolo Worker | `7` | `src/protocol.ts` | hoje acoplado ao schema da ABI |
+| ABI Wasm | `7` | `SIMULATION_SCHEMA_VERSION` | rejeição por igualdade no host |
+| snapshot | `7` | `NeuralSnapshot.schemaVersion` | 36 buffers transferíveis |
 | schema do host Tauri | `1` | `ENGINE_SCHEMA_VERSION` | não é a ABI da simulação |
 | modelos | schemas `1` por subsistema | constantes Rust | patch, STP, fenda, solver e trilha química |
 | fixtures | `v1` por artefato | `fixtures/` | não implica produto 1.0 |
-| hashes | quatro domínios | snapshot/fixtures | rede, corticotalâmico, célula e química |
+| hashes | cinco domínios | snapshot/fixtures | rede, corticotalâmico, célula, química e eventos celulares |
 | auditoria runtime versionada | schema `2`, captura ABI v6 | `runtime-audit.json` | comprova P2 em Chromium headless/SwiftShader; não é baseline em GPU física |
 | baseline gráfico físico | schema `2`, Intel UHD 770/D3D11 | `artifacts/hardware-audit` | comprova P3 no hardware/driver registrados |
 
@@ -73,6 +73,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | ABI v6 e aba Sinapse | IMPLEMENTADO, VALIDADO E PROMOVIDO | `brain-wasm`, Worker, `SynapseRenderLayer` | [auditoria de promoção](AUDIT_0.8_PROMOTION.md) | validade restrita ao contrato 0.8 declarado |
 | passes matéria/emissão e tokens | IMPLEMENTADO E VALIDADO EM P3 | `src/render` | [auditoria gráfica](AUDIT_0.8_GRAPHICS.md) | validade restrita aos backends/envelopes registrados |
 | inferência Bayesiana de tarefa | EXPERIMENTAL E ISOLADA | `experiment.ts`, `inference.ts` | schema 1, fixture, controle nulo e replay | posterior é apenas apresentada; estímulo interativo exige contexto nulo |
+| eventos celulares carimbados | IMPLEMENTADO E VALIDADO EM R09-B | `cell_patch`, `simulation`, ABI/Worker | fixture, hash próprio, browser e lifecycle | lote limitado a 4.096; cenário padrão pode legitimamente produzir lote vazio |
 | neurônio resolvido, cortes, vascular, atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
 
 ## Histórico verificável
@@ -202,11 +203,13 @@ o cálculo como modelo de tarefa e retira sua influência do drive. Não cria
 Publica IDs e offsets de tempo de spikes em lote compacto. Rust possui o evento;
 ABI/Worker apenas o transportam; renderer nunca infere um spike entre snapshots.
 
-- **Estado:** planejada; **IDs:** ENG-018, ABI-012, GFX-031, QA-091.
+- **Estado:** concluída; **IDs:** ENG-018, ABI-012, GFX-031, QA-091;
+  **evidência:** [AUDIT_0.9_R09_B.md](AUDIT_0.9_R09_B.md).
 - **Aceite:** ordem canônica, replay, limite de eventos, hash próprio ou regra
   explícita de compatibilidade, reset/dispose e teste de backpressure.
-- **Orçamento:** bytes/evento e teto por snapshot medidos. **Rollback:** manter
-  flag por tick e desabilitar propagação visual.
+- **Orçamento:** 12 bytes/evento, dois buffers e teto de 4.096 eventos/49.152
+  bytes por snapshot. **Rollback:** manter o flag legado e desabilitar o consumo
+  do lote no renderer.
 - **Complexidade/confiança:** média / alta.
 
 ### R09-C · Prancha Elétrica
@@ -231,7 +234,7 @@ dendrito inteiro usa um único valor; nenhum gradiente é inventado.
 
 - **Estado:** planejada; **IDs:** UI-021, GFX-050, AST-010, QA-093.
 - **Aceite:** seleção não muta motor; `Tab`/`Enter`/`Escape`; hash de geometria
-  determinístico; evento visual somente após R09-B.
+  determinístico; evento visual consome exclusivamente o lote carimbado em R09-B.
 - **Rollback:** voltar ao patch de 12 células. **Complexidade/confiança:** média / alta.
 
 ### R09-E · dendrito multicompartimental
