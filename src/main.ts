@@ -6,6 +6,7 @@ import { FixedStepClock } from "./clock";
 import {
   amperesToPicoamperes,
   auditVisualProvenance,
+  auditVisualBindings,
   BrainRenderLayers,
   CellRenderLayer,
   decodeStateColor,
@@ -74,6 +75,7 @@ declare global {
       visualAudit: () => {
         colorMode: VisualColorMode;
         provenance: ReturnType<typeof auditVisualProvenance>;
+        bindings: ReturnType<typeof auditVisualBindings>;
         invertibility: { samples: number; tolerance: number; maximumError: number };
         redundancy: Record<SimulationView, string>;
       };
@@ -312,6 +314,7 @@ function visualAuditReport() {
   return {
     colorMode: visualColorMode,
     provenance: auditVisualProvenance(scene),
+    bindings: auditVisualBindings(scene),
     invertibility: { samples: bases.length * states.length, tolerance: 1e-6, maximumError },
     redundancy: {
       overview: "pulsos E/I usam diâmetros distintos e legenda textual",

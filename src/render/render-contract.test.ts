@@ -5,9 +5,11 @@ import { LaminarRenderLayer } from "./laminar-layer";
 import { SynapseRenderLayer } from "./synapse-layer";
 import {
   auditVisualProvenance,
+  auditVisualBindings,
   declareVisual,
   visualPassOf,
   visualProvenanceOf,
+  visualSemanticBindingOf,
 } from "./render-types";
 import { projectionColorToken, VISUAL_COLORS } from "./visual-tokens";
 
@@ -69,6 +71,29 @@ describe("render presentation contract", () => {
       expect(report.total).toBeGreaterThan(0);
       expect(report.undeclared).toBe(0);
       expect(report.state).toBeGreaterThan(0);
+      layer.dispose();
+    }
+  });
+
+  it("binds every state object to a field, unit, transform and non-color cue", () => {
+    for (const layer of [
+      new LaminarRenderLayer(),
+      new CellRenderLayer(),
+      new SynapseRenderLayer(),
+    ]) {
+      const report = auditVisualBindings(layer.group);
+      expect(report.totalStateObjects).toBeGreaterThan(0);
+      expect(report.declaredBindings).toBe(report.totalStateObjects);
+      expect(report.missingBindings).toEqual([]);
+      expect(report.missingRedundancy).toEqual([]);
+      for (const object of renderedObjects(layer.group)) {
+        if (visualProvenanceOf(object) !== "state") continue;
+        const binding = visualSemanticBindingOf(object);
+        expect(binding?.field).toBeTruthy();
+        expect(binding?.unit).toBeTruthy();
+        expect(binding?.transform).toBeTruthy();
+        expect(binding?.redundancy.length).toBeGreaterThan(0);
+      }
       layer.dispose();
     }
   });

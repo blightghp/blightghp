@@ -50,6 +50,10 @@ if (
   report.profile?.environment?.simulation?.runtime !== "rust-wasm"
   || report.renderedStateGate?.samples?.length !== 5
   || report.renderedStateGate?.maximumError > report.renderedStateGate?.tolerance
+  || report.visualGate?.bindings?.totalStateObjects !==
+    report.visualGate?.bindings?.declaredBindings
+  || report.visualGate?.bindings?.missingBindings?.length !== 0
+  || report.visualGate?.bindings?.missingRedundancy?.length !== 0
 ) {
   throw new Error("artefato runtime-audit.json não comprova integralmente a ABI v6");
 }

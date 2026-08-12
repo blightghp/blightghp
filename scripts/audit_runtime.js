@@ -96,6 +96,9 @@ try {
   if (
     visualGate.provenance.total <= 0 ||
     visualGate.provenance.undeclared !== 0 ||
+    visualGate.bindings.totalStateObjects !== visualGate.bindings.declaredBindings ||
+    visualGate.bindings.missingBindings.length !== 0 ||
+    visualGate.bindings.missingRedundancy.length !== 0 ||
     visualGate.invertibility.samples < 20 ||
     visualGate.invertibility.maximumError > visualGate.invertibility.tolerance ||
     Object.values(visualGate.redundancy).some((encoding) => !encoding)
