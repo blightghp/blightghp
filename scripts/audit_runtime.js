@@ -15,6 +15,9 @@ const outputDirectory = process.env.BRAIN_AUDIT_DIR
   ? path.resolve(process.env.BRAIN_AUDIT_DIR)
   : path.join(os.tmpdir(), "brain-pro-visual-audit");
 await mkdir(outputDirectory, { recursive: true });
+const requestedGraphicsBackend = process.env.BRAIN_GRAPHICS_BACKEND === "hardware"
+  ? "hardware"
+  : "swiftshader";
 
 async function saturatedPixelRatio(filename) {
   const png = PNG.sync.read(await readFile(path.join(outputDirectory, filename)));
@@ -42,7 +45,16 @@ try {
   await server.listen();
   browser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-angle=swiftshader"],
+    executablePath: process.env.BRAIN_BROWSER_EXECUTABLE || undefined,
+    args: requestedGraphicsBackend === "hardware"
+      ? [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--enable-gpu",
+          "--use-angle=d3d11",
+          "--disable-software-rasterizer",
+        ]
+      : ["--no-sandbox", "--disable-setuid-sandbox", "--use-angle=swiftshader"],
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 960, deviceScaleFactor: 1 });
@@ -218,6 +230,15 @@ try {
   ) {
     throw new Error(`perfil incompleto: ${JSON.stringify(profile)}`);
   }
+  const softwareRenderer = /swiftshader|llvmpipe|software/i.test(
+    profile.environment.hardware.webglRenderer,
+  );
+  if (requestedGraphicsBackend === "hardware" && softwareRenderer) {
+    throw new Error(
+      `GPU física solicitada, mas renderer de software foi selecionado: ` +
+      profile.environment.hardware.webglRenderer,
+    );
+  }
 
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
   await page.screenshot({ path: path.join(outputDirectory, "overview-mobile.png") });
@@ -243,6 +264,7 @@ try {
       commit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
       productVersion: packageManifest.version,
       command: "npm run audit:runtime",
+      requestedGraphicsBackend,
     },
     viewports: ["1440x960", "390x844"],
     captures: [

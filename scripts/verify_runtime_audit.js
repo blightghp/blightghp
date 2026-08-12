@@ -33,6 +33,7 @@ if (
   report.source?.productVersion !== packageManifest.version ||
   !commitPattern.test(report.source?.commit ?? "") ||
   report.source?.command !== "npm run audit:runtime" ||
+  !["swiftshader", "hardware"].includes(report.source?.requestedGraphicsBackend) ||
   report.abi?.schemaVersion !== 6 ||
   report.abi?.bufferCount !== 34 ||
   report.abi?.buffers?.length !== 34 ||
