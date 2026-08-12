@@ -16,6 +16,7 @@ import {
   parseSimulationView,
   parseVisualColorMode,
   receptorCurrentTotals,
+  auditRenderedStatePixels,
   SelectiveBloomPipeline,
   SynapseRenderLayer,
   VISUAL_COLORS,
@@ -76,6 +77,7 @@ declare global {
         invertibility: { samples: number; tolerance: number; maximumError: number };
         redundancy: Record<SimulationView, string>;
       };
+      renderedStateAudit: () => ReturnType<typeof auditRenderedStatePixels>;
       createAuditWorker: () => Worker;
       createAuditTopology: () => BrainData;
     };
@@ -799,6 +801,9 @@ async function init(): Promise<void> {
     },
     visualAudit() {
       return visualAuditReport();
+    },
+    renderedStateAudit() {
+      return auditRenderedStatePixels(renderer);
     },
     createAuditWorker() {
       return new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });

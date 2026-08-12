@@ -92,6 +92,7 @@ try {
   }
 
   const visualGate = await page.evaluate(() => window.__BRAIN_ENGINE__.visualAudit());
+  const renderedStateGate = await page.evaluate(() => window.__BRAIN_ENGINE__.renderedStateAudit());
   if (
     visualGate.provenance.total <= 0 ||
     visualGate.provenance.undeclared !== 0 ||
@@ -100,6 +101,9 @@ try {
     Object.values(visualGate.redundancy).some((encoding) => !encoding)
   ) {
     throw new Error(`gates de apresentação incompletos: ${JSON.stringify(visualGate)}`);
+  }
+  if (renderedStateGate.maximumError > renderedStateGate.tolerance) {
+    throw new Error(`pixel→estado excedeu a tolerância: ${JSON.stringify(renderedStateGate)}`);
   }
 
   const colorCaptures = [
@@ -252,6 +256,7 @@ try {
     contrast,
     saturation,
     visualGate,
+    renderedStateGate,
     monochromeGate,
     abi: {
       ...abi,

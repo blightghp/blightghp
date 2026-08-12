@@ -48,6 +48,8 @@ if (
   !report.views?.synapse?.gaba?.endsWith("mol/m³") ||
   !report.views?.synapse?.occupancy?.endsWith("%") ||
   report.profile?.environment?.simulation?.runtime !== "rust-wasm"
+  || report.renderedStateGate?.samples?.length !== 5
+  || report.renderedStateGate?.maximumError > report.renderedStateGate?.tolerance
 ) {
   throw new Error("artefato runtime-audit.json não comprova integralmente a ABI v6");
 }

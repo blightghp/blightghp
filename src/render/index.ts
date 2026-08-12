@@ -2,6 +2,7 @@ export * from "./brain-layer";
 export * from "./cell-layer";
 export * from "./laminar-layer";
 export * from "./render-types";
+export * from "./rendered-state-probe";
 export * from "./selective-bloom";
 export * from "./synapse-layer";
 export * from "./visual-tokens";
