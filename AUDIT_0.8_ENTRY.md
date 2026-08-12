@@ -1,5 +1,10 @@
 # Auditoria de entrada da 0.8
 
+> Nota histórica: referências `arquivo:linha` abaixo identificam o checkout
+> auditado em 10 de agosto de 2026 e não devem ser usadas como rastreabilidade
+> vigente. O veredito atual por ID está em
+> [ARCHITECTURE.md, “Achados da auditoria 0.8 reavaliados”](ARCHITECTURE.md#achados-da-auditoria-08-reavaliados).
+
 **Data:** 10 de agosto de 2026
 **Escopo:** estado implementado da 0.7, coerência entre documentação e código,
 qualidade executável, e viabilidade do programa de leitura visual pedido para as
@@ -54,7 +59,7 @@ registrada.
 
 | # | Achado | Severidade |
 | :-- | :-- | :-- |
-| P1 | A 0.8 não tem plano de cortes equivalente a [PLAN_0.6.md](PLAN_0.6.md) e [PLAN_0.7.md](PLAN_0.7.md). A fase existe como uma linha de tabela (`ROADMAP.md:37`) e três itens abertos de preparação (`ROADMAP.md:153-156`). As duas fases anteriores só começaram com plano escrito antes do código. | alto |
+| P1 | A 0.8 não tem plano de cortes equivalente a [PLAN_0.6](docs/legacy/plans/PLAN-0.6.md) e [PLAN_0.7](docs/legacy/plans/PLAN-0.7.md). A fase existe como uma linha de tabela (`ROADMAP.md:37`) e três itens abertos de preparação (`ROADMAP.md:153-156`). As duas fases anteriores só começaram com plano escrito antes do código. | alto |
 | P2 | O programa visual pedido não aparece em nenhum documento. Plano de corte, película transparente, ampliação de neurônio, espraiamento espacial de neurotransmissor e sistema de cor por substância não têm uma linha sequer; morfologia aparece apenas como negação, nas ressalvas do que o modelo não faz. E não é omissão de redação — `ROADMAP.md:182-188` declara o contrário, mantendo regiões procedurais, casca convexa e ausência de atlas e morfologia como limites assumidos até a 1.0. | bloqueio |
 | P3 | `ARCHITECTURE.md:49` ainda intitula a seção principal como arquitetura 0.6, e `ARCHITECTURE.md:15` descreve `main.ts` no estado 0.4 — "ainda concentra relógio, cena, renderização, HUD, captura e controles" —, o que deixou de ser verdade quando as camadas de render foram extraídas. | médio |
 | P4 | A própria arquitetura define o gatilho para criar `src/render/`: três camadas extraídas de `main.ts` (`ARCHITECTURE.md:462`). O gatilho disparou — existem `render-layers.ts`, `laminar-layer.ts` e `cell-layer.ts` — e o diretório não foi criado. As três camadas convivem soltas em `src/`, sem tipo comum e sem a interface `RenderLayer` que o documento especifica em `ARCHITECTURE.md:404`. | médio |
@@ -148,7 +153,7 @@ alegação que o motor não pode sustentar.
     Fecha P3.
 11. Escrever o plano de cortes da 0.8 no formato das fases anteriores. Fecha P1.
 12. Escrever o contrato de apresentação — o que este relatório entrega em
-    [VISUAL_SPEC.md](VISUAL_SPEC.md) — e substituir os limites assumidos do
+    [proposta visual arquivada](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md) — e substituir os limites assumidos do
     roadmap por limites com data e condição de entrada. Fecha P2.
 13. Decidir o destino do experimento bayesiano: portá-lo para o contrato de
     encoder/decoder ou aposentá-lo do painel principal, liberando o espaço para
@@ -185,5 +190,5 @@ A 0.8 termina quando:
 
 O próximo trabalho autorizado é **0.8-a: contrato de recursos e conservação**,
 em paralelo com **0.8-v1: fundação da apresentação**. O roadmap revisado está em
-[ROADMAP_NEXT.md](ROADMAP_NEXT.md) e o desenho da leitura visual em
-[VISUAL_SPEC.md](VISUAL_SPEC.md).
+[proposta de roadmap arquivada](docs/legacy/roadmaps/ROADMAP-NEXT-v0.8-proposal.md) e o desenho da leitura visual na
+[proposta visual arquivada](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).

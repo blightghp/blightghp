@@ -1,6 +1,8 @@
-# Contrato de apresentação · BRAIN PRO
+# LEGACY — Contrato de apresentação da proposta 0.8
 
-Este documento faz para a imagem o que [MODEL_SPEC.md](MODEL_SPEC.md) faz para a
+> **LEGACY — documento preservado para rastreabilidade histórica. Foi incorporado a [GRAPHICS_SPEC.md](../../../GRAPHICS_SPEC.md). Não deve ser utilizado como instrução vigente de implementação.**
+
+Este documento faz para a imagem o que [MODEL_SPEC.md](../../../MODEL_SPEC.md) faz para a
 matemática: declara o que cada elemento visível significa, de onde vem seu valor
 e o que ele não afirma. Ele nasce de uma dificuldade concreta — quero mostrar
 anatomia, corte, película transparente, um neurônio ampliado em funcionamento e
@@ -246,7 +248,7 @@ decorativo recebe animação de estado.
 Para moduladores — dopamina, acetilcolina, noradrenalina, serotonina — a
 transmissão relevante não é pontual. É liberação por varicosidade, difusão no
 espaço extracelular e captação. O modelo correspondente é reação–difusão, que
-[MODEL_SPEC.md](MODEL_SPEC.md) já antecipa como classe de solver:
+[MODEL_SPEC.md](../../../MODEL_SPEC.md) já antecipa como classe de solver:
 
 $$
 \frac{\partial C}{\partial t} = D^{*}\nabla^{2}C + S(x,t) - \frac{V_{\max}C}{K_m + C},
@@ -404,5 +406,5 @@ cadência de snapshot. Ela nunca aumenta `dt` (`VALIDATION.md:108`).
 - Não afirma que atividade visualmente coerente seja evidência fisiológica.
 
 A sequência em que estes elementos entram, e a condição de entrada de cada um,
-estão em [ROADMAP_NEXT.md](ROADMAP_NEXT.md). Os achados que motivaram este
-contrato estão em [AUDIT_0.8_ENTRY.md](AUDIT_0.8_ENTRY.md).
+estão na [proposta de roadmap arquivada](../roadmaps/ROADMAP-NEXT-v0.8-proposal.md). Os achados que motivaram este
+contrato estão em [AUDIT_0.8_ENTRY.md](../../../AUDIT_0.8_ENTRY.md).

@@ -1,4 +1,6 @@
-# Plano 0.5 · Corredor Rust/Wasm
+# LEGACY — Plano 0.5 · Corredor Rust/Wasm
+
+> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../../ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
 
 Este é o registro didático da etapa em que aprendi a retirar as equações do
 shell TypeScript e a torná-las responsabilidade do motor Rust. Ele permanece

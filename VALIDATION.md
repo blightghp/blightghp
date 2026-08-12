@@ -1,8 +1,41 @@
-# Estratégia de validação · BRAIN PRO [v. 0.7.0]
+# Estratégia canônica de validação · BRAIN PRO
 
-Enquanto aprendo Rust e cálculo numérico, separo quatro perguntas: meu cálculo é
-reproduzível, respeita limites, converge e produz o fenômeno definido pelo
-experimento? Uma única comparação de snapshot não responde às quatro.
+**Revisão:** 1 · produto observado 0.8.0 · promoção 0.8 pendente
+
+Quatro perguntas permanecem separadas: o cálculo é reproduzível, respeita
+limites, converge e produz o fenômeno definido pelo experimento? Uma única
+comparação de snapshot não responde às quatro. “Há teste” também não significa
+“foi executado nesta revisão”; comandos, resultado e ambiente pertencem ao
+artefato de promoção.
+
+## Estado da evidência
+
+| Domínio | Código/teste disponível | Evidência versionada atual | Veredito |
+| :-- | :-- | :-- | :-- |
+| 0.4–0.7 | fixtures, Cargo/Vitest e auditorias | auditorias de promoção | promovido nos limites declarados |
+| química nativa 0.8-a..d | testes unitários, replays e convergência | fixtures v1 | implementado e validado no contrato/regime testado |
+| trilha/ABI v6 | fixture integrada, testes host/Worker/scripts | não há auditoria de promoção 0.8 | implementado, promoção pendente |
+| gráficos 0.8 | testes estruturais, rampa pura, saturação e script atual | `runtime-audit.json` ainda é captura 0.7 | implementação parcial, evidência defasada |
+| hardware real | campos de perfil existem no código | nenhum baseline versionado em GPU física | aberto |
+
+O artefato `artifacts/visual-audit/runtime-audit.json` não deve ser usado como
+prova de ABI v6: ele foi capturado em 2 de agosto de 2026, lista cinco arquivos
+sem Sinapse e não contém o ambiente ampliado esperado pelo script atual.
+
+## IDs de qualidade
+
+| ID | Regra |
+| :-- | :-- |
+| QA-001 | igualdade exata somente onde o contrato numérico a exige |
+| QA-002 | invariantes rodam em limites, treino longo e primeiro valor inválido |
+| QA-003 | solver demonstra erro/convergência, não apenas finitude |
+| QA-004 | fixture tem schema, gerador/consumidor e proveniência |
+| QA-005 | ABI testa versão, layout, unidades, ordens, transfer e fallback |
+| QA-006 | gráficos combinam prova estrutural, renderizada e acessível |
+| QA-007 | desempenho registra ambiente, preset, tamanho e percentis |
+| QA-008 | promoção exige comandos reais e artefatos reproduzíveis |
+| QA-009 | falha é atômica e rollback verificável |
+| QA-010 | segurança cobre input malformado, cotas, supply chain e privacidade aplicável |
 
 ## Camadas de evidência
 
@@ -201,15 +234,23 @@ O alvo visual é manter interação fluida em 60 Hz quando o hardware permitir. 
 
 Mudanças de shader podem usar tolerância perceptual. Mudanças de posição, contagem de objetos e associação entre estado e cor exigem também testes estruturais.
 
-O gate contínuo `scripts/audit_runtime.js` captura Visão Geral, Lâminas, Célula,
-Eletricidade e Sinapse em
-`1440×960`, repete a captura móvel em `390×844`, percorre as abas por teclado,
-mede os textos críticos contra o fundo mais claro do painel e exige razão mínima
-de 4,5:1. O mesmo gate rejeita overflow horizontal, perfil incompleto, objeto
-renderizado sem proveniência, rampa material não invertível, saturação acima do
-teto e distinção que desapareça no modo monocromático. O relatório registra CPU,
-memória, navegador, plataforma WebGL, preset, unidades, sinapses, vértices, passo
-e cadência de snapshots; as cinco vistas também são capturadas sem cor.
+O código atual de `scripts/audit_runtime.js` captura Visão Geral, Lâminas,
+Célula, Eletricidade e Sinapse em `1440×960`, repete a captura móvel em
+`390×844`, percorre abas por teclado, mede contraste 4,5:1, saturação, perfil,
+proveniência declarada e gera versões monocromáticas.
+
+Limites que o nome do gate não pode ocultar:
+
+- “invertibilidade” hoje executa round-trip das funções puras
+  `encodeStateColor`/`decodeStateColor`; não amostra um pixel renderizado de
+  estado conhecido;
+- “redundância” recebe descrições textuais e confirma filtro `grayscale`; ainda
+  não prova automaticamente que cada distinção sobrevive sem cor;
+- a saturação lê PNGs, mas o artefato versionado não foi recapturado após ABI v6;
+- SwiftShader/headless é ambiente funcional, não baseline de GPU física.
+
+R08-P3 fecha esses quatro pontos com teste estrutural obrigatório, alvos
+renderizados conhecidos, tolerância por backend e baseline em hardware real.
 
 ## Pirâmide de testes no `src/`
 
@@ -303,8 +344,8 @@ um artefato versionado em cada linha:
 | proveniência do evento | sem spike publicado não há novo índice ou liberação; uma contagem positiva autoriza no máximo um evento no microdomínio representativo |
 | apresentação | vesícula lê `R`; fusão lê último evento; nuvem lê concentração; receptores leem ocupação; recaptura lê delta da remoção publicada |
 | transferência | teste lista 34 `ArrayBuffer` distintos, incluindo evento, concentração, ocupação e remoção química |
-| navegador | Worker real publica quatro hashes válidos e as cinco abas exibem unidades esperadas |
-| acessibilidade visual | teclado percorre cinco tabs; Sinapse participa das capturas em cor, monocromia, saturação e proveniência |
+| navegador | o script exige Worker real, quatro hashes e cinco abas; precisa ser executado/registrado no fechamento 0.8 |
+| acessibilidade visual | o script atual cobre cinco tabs e Sinapse; o artefato versionado ainda não demonstra isso |
 | degradação | fallback químico é inerte e publica `chemicalHash = unavailable` |
 
 Os contratos executáveis atuais são:
@@ -351,6 +392,104 @@ replay, publicar buffers e sobreviver a reset/dispose.
 
 Um solver rígido não é aprovado apenas por permanecer finito. Deve demonstrar
 erro e estabilidade no regime em que será usado.
+
+## Matriz requisito → evidência
+
+| Requisito | Prova obrigatória | Artefato/comando |
+| :-- | :-- | :-- |
+| ENG-004/010 tempo independente do frame | relógio, captura e hash sob LOD/câmera | Vitest + teste de integração |
+| ENG-005/QA-009 atomicidade | snapshot/hash idênticos após falha | Cargo por solver |
+| ENG-006 determinismo | repetição, fixture e ordem empatada | Cargo + replay |
+| ABI-001..004 | schema, 34 buffers, ordens/unidades e compatibilidade v5 | Cargo, Vitest, Wasm browser |
+| WRK-001/002 | fila serial, cotas, fallback inerte, reset/dispose | Vitest + navegador forçando falha |
+| UI-001..010 | estado, unidades, controles e acessibilidade | unitário/DOM/E2E |
+| GFX-001..010 | hash invariável, proveniência e estado→pixel | testes estruturais + render target + capturas |
+| AST/VAS | fonte/licença/sem animação sem estado | manifesto de asset + auditoria visual |
+| SEC | inputs/cotas/CSP/dependências/import | unitário, fuzz/property, SCA e revisão |
+| PERF | custo por subsistema/ambiente | relatório versionado |
+
+## ABI e Worker
+
+Além dos testes existentes, cada promoção de wire cobre:
+
+- mismatch de versão e feature desconhecida;
+- comprimentos divergentes, ordem errada, buffer destacado e safe integers;
+- mensagem malformada, duplicada, passada e acima de cota;
+- fila, backpressure, cancelamento, timeout e retry idempotente quando existirem;
+- reset/dispose com comandos pendentes;
+- falha forçada de Wasm e fallback explicitamente degradado;
+- memória estável e reciclagem sem use-after-transfer.
+
+## Frontend e acessibilidade
+
+- reducer/estado de UI e separação de preferências/preset;
+- teclado, foco, leitor de tela e equivalente textual do canvas;
+- alto contraste, monocromia estrutural, movimento reduzido e zoom de texto;
+- touch, responsividade, orientação e erros recuperáveis;
+- persistência/import/export: schema, cota, corrupção, migração e sanitização;
+- modos Guiado/Explorador/Laboratório usam o mesmo motor;
+- seleção por cena e árvore produz o mesmo ID.
+
+## Segurança e supply chain
+
+- cotas em host e Rust/Wasm, com primeiro valor acima do limite;
+- CSP/Tauri capabilities/IPC mínimo e ausência de código remoto;
+- labels, URLs, SVG/assets e paths sanitizados;
+- replay/topologia/import malformados e excessivos;
+- `npm audit`/SCA Cargo, licenças, Actions pinadas e SBOM no release;
+- secrets ausentes do cliente/log; telemetria opt-in;
+- plano de privacidade antes de usuários, projetos compartilhados ou anotações.
+
+## Ambientes
+
+| Ambiente | Função | Mínimo de prova |
+| :-- | :-- | :-- |
+| Chromium headless/SwiftShader | gate determinístico funcional | Worker/Wasm, DOM, capturas e contratos |
+| Chromium/Firefox/WebKit suportados | compatibilidade web | smoke, acessibilidade e performance observada |
+| Windows/Linux | nativo/CI | Cargo, Wasm e replay cross-platform |
+| macOS | aplicável ao release | build/smoke quando suportado |
+| Tauri | desktop | IPC/capabilities, mesmo comportamento observável |
+| GPU integrada | baseline baixo | frame/LOD/memória e fallback WebGL |
+| GPU intermediária | baseline de apresentação | orçamento por vista |
+| WebGPU | somente se adotado | paridade WebGL + fallback |
+| touch/DPR/movimento reduzido | UX | interação e informação equivalentes |
+
+## Comandos de gate
+
+Use conforme o corte, sem afirmar execução futura:
+
+```text
+cargo fmt --all -- --check
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+cargo check -p brain-wasm --target wasm32-unknown-unknown
+npm run typecheck
+npx vitest run
+npm run build
+npm run check:shadow-replay
+npm run test:wasm-browser
+npm run audit:runtime
+```
+
+`npm run check` inclui build, navegador e auditoria, e esta última escreve
+capturas no diretório padrão. Em uma revisão documental que proíbe modificar
+artefatos, execute apenas os gates não mutantes ou redirecione a auditoria para
+diretório temporário explicitamente aprovado.
+
+## Gate de promoção 0.8
+
+A 0.8 só pode ser promovida quando:
+
+1. todos os replays nativos químicos e a compatibilidade v5 passarem;
+2. bindings gerados, ABI 6, 34 buffers e quatro hashes passarem no Worker real;
+3. fallback forçado, reset e dispose forem exercitados;
+4. auditoria visual atual produzir Sinapse, monocromia, proveniência e perfil;
+5. pixel→estado e redundância estrutural fecharem E3/E4;
+6. existir baseline em hardware real, com ambiente/preset/contagens;
+7. achados P/R/M estiverem fechados ou aceitos com owner/fase;
+8. auditoria de promoção registrar comandos e resultados reais.
+
+Até lá, a formulação correta é “0.8 implementada; promoção pendente”.
 
 ### C# e aceleradores externos
 

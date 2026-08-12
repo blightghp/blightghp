@@ -4,6 +4,16 @@ Esta lista acompanha meu estudo de Rust, do Kandel e dos modelos matemáticos.
 Nenhuma referência funciona como argumento automático de autoridade: cada
 preset precisa registrar a fonte específica dos valores que utilizar.
 
+## Regra de proveniência científica e visual
+
+Uma referência bibliográfica sustenta somente a afirmação explicitamente ligada
+a ela. Presets registram parâmetro, unidade, preparação/regime e transformação;
+assets registram origem, licença, versão, hash, escala, orientação e pipeline.
+Atlas ou malha detalhada não promovem um modelo matemático. Nenhum asset
+anatômico ou vascular externo está aprovado pelo simples fato de aparecer nesta
+lista; sua entrada exige manifesto próprio definido em
+[GRAPHICS_SPEC.md](GRAPHICS_SPEC.md).
+
 ## Percurso de aprendizagem desde 2025
 
 - Kandel, E. R.; Koester, J. D.; Mack, S. H.; Siegelbaum, S. A. (2021). [*Principles of Neural Science*, 6ª ed.](https://books.google.com/books/about/Principles_of_Neural_Science_Sixth_Editi.html?id=8yGq0QEACAAJ). O “Kandel” é meu projeto de leitura; enquanto o estudo, uso o BRAIN PRO para consolidar conceitos sem tratar o livro como calibração automática.
@@ -52,3 +62,7 @@ preset precisa registrar a fonte específica dos valores que utilizar.
 ## Regra de uso
 
 Ao implementar um modelo, o código referencia o preset e a documentação do preset referencia a fonte. Comentários não carregam revisões bibliográficas extensas. Quando duas fontes usam convenções incompatíveis, seus parâmetros não são combinados sem conversão e justificativa explícitas.
+
+Para novas fontes, usar forma bibliográfica consistente, preferencialmente
+compatível com ABNT, e registrar DOI/URL verificável quando disponível. Uma
+fonte ausente permanece lacuna; não deve ser reconstruída por memória.

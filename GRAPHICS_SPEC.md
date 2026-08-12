@@ -1,0 +1,352 @@
+# Especificação gráfica e de proveniência · BRAIN PRO
+
+**Revisão:** 1 · baseline Three.js/WebGL · produto 0.8.0
+
+Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
+preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
+Ele regula scene graph, materiais, animações, assets, camadas, cortes e prova de
+fidelidade entre estado calculado e estado mostrado.
+
+## Requisitos normativos
+
+| ID | Requisito |
+| :-- | :-- |
+| GFX-001 | câmera, LOD, clipping, cor e qualidade não alteram motor ou hashes. |
+| GFX-002 | objeto visível declara `STATE`, `TOPOLOGY` ou `DECORATION`. |
+| GFX-003 | `STATE` aponta para campo/unidade/transformação publicados. |
+| GFX-004 | `TOPOLOGY` declara origem, escala, transformação e limite. |
+| GFX-005 | `DECORATION` nunca pulsa ou muda por estado científico. |
+| GFX-006 | matéria e emissão usam pipelines distinguíveis; bloom só amplia emissão. |
+| GFX-007 | cor não é a única codificação. |
+| GFX-008 | animação discreta nasce de evento publicado. |
+| GFX-009 | movimento reduzido mantém equivalente estático. |
+| GFX-010 | vínculo estado→objeto é estruturado e auditável, não comentário informal. |
+| AST-001 | anatomia detalhada não implica validação biológica. |
+| AST-002 | estrutura entra por função, orientação decorativa ou proveniência topológica declarada. |
+| VAS-001 | fluxo/perfusão/oxigenação só animam com estado/modelo correspondente. |
+| ELE-001 | Prancha Elétrica mostra grandezas com unidade e origem operacional. |
+| PERF-010 | todo shader/pass/asset tem orçamento e fallback. |
+
+## Proveniência por objeto
+
+Cada objeto/lote registra:
+
+| Campo | Conteúdo |
+| :-- | :-- |
+| `id`/nome | identidade semântica estável e rótulo humano |
+| escala | encéfalo, região, coluna, patch, neurônio, sinapse, receptor |
+| classe | `STATE`, `TOPOLOGY` ou `DECORATION` |
+| fonte | snapshot/símbolo, gerador/preset ou asset/atlas |
+| unidade | obrigatória para `STATE` quantitativo |
+| campo | caminho canônico no snapshot/observável |
+| transformação | normalização, interpolação, clamp autorizado e escala visual |
+| material/passe | matéria/emissão/overlay e parâmetros relevantes |
+| animação | primitiva permitida e condição de autorização |
+| LOD | níveis e informação preservada |
+| interação | picking, teclado, foco e equivalente textual |
+| teste | estrutural, visual e de independência do hash |
+| licença/versão/hash | obrigatório para assets externos |
+| evidência | ilustrativo, procedural, topológico, atlas, calculado ou calibrado |
+
+O código atual declara domínio (`matter`/`emission`) e origem
+(`state`/`topology`/`decoration`). GFX-010 estende essa marcação com campo,
+unidade e transformação. O contador atual prova que há declaração; ainda não
+prova que o campo declarado pintou o pixel correto.
+
+## Estado gráfico atual
+
+| Layer | Objetos principais | Fonte | Limite conhecido |
+| :-- | :-- | :-- | :-- |
+| `BrainRenderLayers` | pontos, cascas convexas, conexões e pulsos | rede/campo/topologia procedural | aloca array interpolado e limpa 900 instâncias por frame |
+| `LaminarRenderLayer` | L1–L6 E/I, vias, relé e TRN | snapshot corticotalâmico | coluna didática, não anatomia |
+| `CellRenderLayer` | 12 somas, dendritos, halos e contorno | patch | Célula/Eletricidade compartilham cena; dendrito único |
+| `SynapseRenderLayer` | membranas, vesículas, nuvens, receptores e recaptura | química v6 | microdomínio representativo; escalas exageradas |
+
+`visual-tokens.ts` centraliza identidades. `visual-encoding.ts` conserva sinal
+de corrente e usa plano do toro como pista redundante. `SelectiveBloomPipeline`
+separa objetos de emissão, renderiza o bloom e compõe com a cena base.
+
+## Pipeline
+
+```mermaid
+flowchart LR
+    INPUT["STATE + TOPOLOGY + DECORATION"] --> GRAPH["scene graph"]
+    GRAPH --> DEPTH["matéria / depth"]
+    GRAPH --> EMIT["emissão seletiva"]
+    DEPTH --> BASE["base color"]
+    EMIT --> BLOOM["bloom com teto"]
+    BASE --> COMPOSE["composição + tone mapping"]
+    BLOOM --> COMPOSE
+    GRAPH --> PICK["picking/labels/overlays"]
+```
+
+### Matéria
+
+- `NormalBlending`, profundidade e ordenação coerentes;
+- anatomia, membrana, células, vias e objetos que ocupam espaço;
+- transparência declara ordem e limita overdraw;
+- PBR/transmission/SSS aproximado só após orçamento e fallback.
+
+### Emissão
+
+- aditivo apenas para atividade/corrente/evento que realmente emite;
+- testa contra profundidade da matéria;
+- bloom seletivo, intensidade limitada e medição de saturação;
+- não branqueia matiz/intensidade até perder invertibilidade.
+
+### Composição e overlays
+
+- tone mapping/exposição fazem parte do contrato de rampa;
+- antialiasing e resolução podem degradar sem mudar ciência;
+- HUD/labels/probes ficam semanticamente no DOM quando possível;
+- clipping/stencil usa pass próprio e possui limpeza/dispose explícitos.
+
+Shaders futuros declaram custo de compilação, textura/render target, precisão,
+backend e versão fallback. WebGPU não é requisito da baseline.
+
+## Materiais e realismo
+
+| Recurso | Uso permitido | Condição |
+| :-- | :-- | :-- |
+| PBR/roughness/normal | matéria orientativa | asset/procedural com escala e custo |
+| transmissão/translucidez | películas/membranas | ordenação e contraste preservados |
+| SSS aproximado | tecido ilustrativo | rotulado e com fallback |
+| mielina/vascular | identidade topológica | fonte/licença/limite |
+| volumetria/raymarch | campo calculado | buffer real, passo visual, orçamento e WebGL fallback |
+| sombras/oclusão | profundidade | não ocultar estado nem quebrar acessibilidade |
+
+Uma malha mais detalhada continua `DECORATION` até haver proveniência. Material
+“médico” não transforma o projeto em visualização clínica.
+
+## Pilha anatômica progressiva
+
+| Camada | Por que existe | Classe antes/depois da fonte | Entrada | Interação/limite |
+| :-- | :-- | :-- | :-- | :-- |
+| escalpo/crânio | orientação | DECORATION → TOPOLOGY | pós-baseline | desligados por padrão; sem afirmação clínica |
+| meninges/pia | ensinar relações de cobertura | DECORATION → TOPOLOGY | com tarefa educacional | transparência/recorte; escala declarada |
+| córtex/superfície | suporte da leitura macro | procedural DECORATION; atlas TOPOLOGY | 0.9/1.0 | casca atual não é variedade anatômica |
+| L1–L6 | ligar coluna ao patch | STATE no esquema; anatomia futura | já há coluna didática | espessura não calibrada |
+| substância branca/feixes | orientação causal | TOPOLOGY | com fonte/IDs | não chamar de tractografia detalhada |
+| tálamo/TRN | circuito existente | STATE/TOPOLOGY | existente na coluna | agregados fenomenológicos |
+| hipotálamo/amígdala/hipocampo/basal | função futura | DECORATION proibida como atividade | quando circuito/tarefa existir | não animar sem estado |
+| cerebelo/tronco | orientação procedural | TOPOLOGY procedural | existente na visão geral | fora do campo cortical atual |
+| ventrículos | orientação | DECORATION/TOPOLOGY | opcional | sem fluxo de LCR sem modelo |
+| vascular | orientação/fluxo futuro | TOPOLOGY; STATE somente com hemodinâmica | 0.10+ | ver VAS-001 |
+| patch/neurônio/sinapse | escalas científicas | STATE + TOPOLOGY | patch/sinapse atuais; neurônio futuro | selo de resolução obrigatório |
+
+Cada camada define opacidade, raio-X, recorte, material, LOD, custo, picking,
+fonte e nível de evidência. Estruturas sem função podem existir apenas como
+orientação decorativa inequívoca.
+
+## Isolamento e navegação anatômica
+
+Usuário deve poder:
+
+- esconder tudo, mostrar uma camada, isolar estrutura e manter contexto residual;
+- alternar raio-X, opacidade, borda e clipping;
+- percorrer hierarquia, restaurar conjunto e salvar preset visual;
+- mostrar matéria sem emissão, emissão sem matéria e camada química selecionada;
+- isolar arterial/venoso/capilar, tálamo, hipotálamo, amígdala, hipocampo,
+  área cortical ou conexões escolhidas quando existirem no catálogo.
+
+Isolamento é estado de apresentação. O hash científico antes/depois deve ser
+idêntico. Preset visual é versionado separadamente de preset científico.
+
+Busca futura inclui nome, sinônimos, árvore, breadcrumbs, esquerda/direita,
+cubo de orientação, miniatura, câmera, labels com collision avoidance e painel
+de fonte/evidência. Toda busca gráfica tem equivalente acessível no DOM.
+
+## Sistema vascular
+
+O primeiro corte é topológico/ilustrativo:
+
+- hierarquia arterial, venosa e capilar com IDs semânticos;
+- direção topológica, espessura, LOD, seleção, isolamento e transparência;
+- relação com estruturas, licença, escala, transformação e orçamento;
+- modo “esqueleto vascular”, probe e legenda;
+- padrões/forma distinguem arterial e venoso sem depender só de cor.
+
+Fluxo, pulso, perfusão e oxigenação ficam proibidos até existir estado com
+unidade, origem, solver, validação e campo publicado. Um relógio visual não é
+modelo hemodinâmico.
+
+## Planos de corte
+
+Quatro orientações: coronal, sagital, axial e oblíqua, além de laje entre dois
+planos.
+
+- clipping local por camada opt-in;
+- tampa por stencil para evitar casca visualmente oca;
+- espessura/laje, reset e câmera predefinida;
+- sonda da face lê grandeza publicada, unidade e interpolação declarada;
+- teclado/touch alteram posição/orientação com feedback numérico;
+- qualquer operação mantém hashes do motor.
+
+Uma face pode mostrar campo, atividade laminar ou concentração somente quando a
+transformação posição→domínio é válida. Não se amostra química de sinapse local
+num corte encefálico como se fosse campo volumétrico.
+
+## Escada de escalas e vista Neurônio
+
+| Escala | Extensão orientativa | Estado autoritativo | Estado da vista |
+| :-- | :-- | :-- | :-- |
+| encéfalo | dezenas de cm | rede + campo | implementada |
+| região | cm | campo por vértice | incorporada à Visão Geral |
+| coluna | mm | L1–L6 + relé/TRN | implementada |
+| patch | centenas de µm | 12 células | implementada |
+| neurônio | dezenas de µm | uma célula/compartimentos | planejada |
+| sinapse | µm | microdomínio químico | implementada com escala exagerada rotulada |
+
+### Seleção
+
+Clique/raycast e lista/teclado escolhem o mesmo ID. `Tab` percorre, `Enter`
+amplia e `Escape` retorna. Seleção/câmera não cruzam o protocolo científico.
+
+### Morfologia honesta
+
+No estado atual, toda árvore ilustrativa recebe um único `dendriteVolts[i]`.
+Gradiente só é autorizado após o motor publicar compartimentos proximal/distal
+com convergência. Morfologia procedural usa seed/fluxo próprios e hash de
+geometria; não afirma tipo celular real.
+
+### Propagação
+
+Só começa após evento celular com timestamp publicado. A velocidade visual é
+metadado de apresentação se o motor continuar pontual e deve ser rotulada como
+tal. Sem timestamp, a propagação é desabilitada; a flag por tick não autoriza
+inventar fase entre snapshots.
+
+### Elementos
+
+Soma, dendrito, adaptação e quatro correntes leem o patch. Axônio/mielina/nós
+são topologia/decoração até existir condução. Espinhas e sítios exigem preset ou
+asset. Forma, direção e rótulo redundam matiz.
+
+## Sinapse e química local
+
+| Elemento | Estado autorizador |
+| :-- | :-- |
+| vesículas | `vesicleAvailableFraction` |
+| fusão/liberação | índice, tempo e mol da última liberação |
+| nuvem | concentração na fenda |
+| receptor | ocupação por família |
+| transportador/recaptura | delta positivo de `clearedMoles` |
+| depleção/recuperação | `R` e `u` publicados |
+| corrente | corrente assinada do patch, não ocupação inferida |
+
+Concentração, ocupação e efeito são grandezas diferentes. A aba Sinapse atual
+mostra glutamato/GABA no microdomínio representativo; não é transmissão de
+volume nem produção em núcleos.
+
+Relações futuras entre dois neurônios mostram pré/pós, direção, atraso, peso,
+receptor, evento, corrente, STP, recurso, ocupação e resposta sincronizada nas
+escalas anatômica/microscópica.
+
+## Prancha Elétrica
+
+A futura vista tem scene graph próprio e pode alternar esquema abstrato,
+overlay anatômico, circuito laminar, celular, sináptico e observáveis.
+
+Mostra nós, vias, direção, atrasos, ganho, excitação, inibição, shunt,
+feedforward, feedback, recorrência, relé, TRN, V, A, S, Hz, taxa, ocupação e
+carga apenas quando definidos. Probe/timeline/comparação têm equivalente
+tabular. “Intensidade cerebral” e “poder de processamento” são proibidos sem
+definição operacional.
+
+## Vocabulário visual
+
+| Conceito | Cor (token) | Pista redundante |
+| :-- | :-- | :-- |
+| excitação/inibição/shunt | identidade dedicada | forma, plano, direção e rótulo |
+| voltagem | rampa divergente ancorada | número/unidade/posição na escala |
+| corrente | sinal + magnitude | sentido e padrão de fluxo |
+| condutância | presença/espessura | anel estático perto da reversão |
+| concentração | luminância/alfa | densidade/contorno/legenda |
+| ocupação | luminância/escala | preenchimento/percentual |
+| liberação/remoção | evento/identidade | glifo e sentido |
+| seleção/advertência/degradado | tokens de UI | borda, ícone e texto |
+| matéria/emissão/decoração | material/passe | legenda de proveniência |
+| vascular | família dedicada | padrão/espessura/direção topológica |
+
+Rampa atual é invertível por funções puras e limitada. A meta perceptual é uma
+tabela pré-calculada em espaço uniforme; qualquer troca exige teste renderizado,
+contraste e tolerância por backend.
+
+Tabela de substâncias futura deve conter ID, nome, matiz, forma, glifo, textura,
+origem, alvo, cinética, receptor, unidade, fonte e restrições. Motor e UI não
+podem manter números fisiológicos independentes.
+
+## Vocabulário de animação
+
+| Primitiva | Autorização | Duração/origem | Alternativa reduzida |
+| :-- | :-- | :-- | :-- |
+| propagação | evento com timestamp | distância/velocidade declarada | marcador de posição |
+| liberação | evento pré-sináptico | tempo/limpeza publicados | glifo de evento |
+| difusão | campo escalar calculado | passos do solver | isolinhas/superfície fixa |
+| recaptura | remoção positiva | cinética publicada | delta numérico/glifo |
+| respiração | estado contínuo | constante do estado | escala/opacidade estática |
+
+Rotação orbital e névoa são ornamentais, independentes do motor e removíveis
+por movimento reduzido.
+
+## Assets
+
+Nenhum asset entra sem manifesto contendo:
+
+- origem, licença, versão, arquivo/hash e data de obtenção;
+- unidade, escala, orientação, sistema de coordenadas e transformação;
+- semantic IDs/hierarquia e nível de evidência;
+- geometria, UV, normal, material e LOD;
+- compressão (glTF/GLB, Meshopt, Draco ou KTX2/Basis quando justificados);
+- ferramenta/versão, script reproduzível e parâmetros de pré-processamento;
+- auditoria de licença, integridade, tamanho, triângulos e importação segura.
+
+Blender ou equivalente pode produzir LODs, mas o pipeline deve ser reproduzível.
+Asset não versionado, sem licença ou sem transformação é rejeitado, não “fixado”
+manualmente no renderer.
+
+## Desempenho e degradação
+
+Medir por vista: frame CPU/GPU, draw calls, triângulos, objetos, partículas,
+render targets, texturas/geometria, shader compilation, picking, clipping,
+volumetria e memória.
+
+Ordem de otimização:
+
+1. medir e remover alocações/updates desnecessários;
+2. reutilizar buffers/objetos e reduzir transferências;
+3. instancing, batching, geometria indexada e culling;
+4. LOD/impostors/texturas comprimidas;
+5. GPU para partículas/culling/volume com fallback;
+6. WebGPU após paridade e ganho demonstrado.
+
+Lacunas atuais prioritárias: `Float32Array` interpolado por frame, novos
+`Vector3`/`Quaternion` em loops, limpeza de 900 matrizes e atualização de
+visibilidade dependente apenas da UI executada no frame.
+
+Perfis:
+
+- integrado/baixo: sem volumetria/sombras caras, menos partículas/labels;
+- intermediário: baseline visual completo;
+- avançado: passes opcionais medidos;
+- headless: evidência funcional, não proxy de GPU física.
+
+Perda de contexto WebGL exige pausa, mensagem, recriação/dispose e teste. A
+degradação reduz qualidade/cadência visual; nunca equações.
+
+## Gates gráficos
+
+- zero objetos sem proveniência;
+- associação estado→objeto/cor/forma por teste estrutural;
+- evento visual pareado a evento publicado;
+- pixel→estado em alvos conhecidos e tolerância declarada;
+- saturação/bloom abaixo do teto;
+- modo monocromático com distinções verificadas, não só `grayscale`;
+- câmera, LOD, corte, opacidade e isolamento preservam hashes;
+- contraste, teclado, touch e movimento reduzido;
+- clipping, seleção, labels, perda de contexto e dispose;
+- orçamento por vista e baseline em hardware real.
+
+Capturas de pixel complementam, mas não substituem, prova estrutural. O estado
+atual fecha tokens, sinal e proveniência básica; pixel→estado e baseline real
+permanecem no gate de promoção 0.8. Veja [VALIDATION.md](VALIDATION.md).

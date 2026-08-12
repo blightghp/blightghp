@@ -1,6 +1,8 @@
-# Roadmap revisado · BRAIN PRO [0.8 → 1.0]
+# LEGACY — proposta de roadmap 0.8 → 1.0
 
-Proposta de substituição para [ROADMAP.md](ROADMAP.md). Ela mantém a espinha do
+> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../../ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
+
+Proposta histórica de substituição para o roadmap 0.7. Ela mantém a espinha do
 documento original — descer de escala fechando uma resolução por vez — e
 acrescenta o que faltava: a leitura visual como trilha com contrato, condição de
 entrada e evidência própria, em vez de consequência acidental de cada fase.
@@ -10,8 +12,8 @@ Duas mudanças de fundo justificam a revisão.
 A primeira é que a apresentação virou gargalo. O motor publica estado celular em
 SI, com quatro receptores separados e sinal correto, e a interface reduz tudo a
 quatro medidores sem sinal e a doze esferas brancas. Não é falta de dado: é falta
-de contrato de imagem. [VISUAL_SPEC.md](VISUAL_SPEC.md) passa a ser esse
-contrato, no mesmo nível de [MODEL_SPEC.md](MODEL_SPEC.md).
+de contrato de imagem. A [proposta visual arquivada](../specs/VISUAL-SPEC-v0.8-proposal.md) passa a ser esse
+contrato, no mesmo nível de [MODEL_SPEC.md](../../../MODEL_SPEC.md).
 
 A segunda é que o documento anterior excluía, até a 1.0, exatamente as peças que
 a leitura visual precisa — atlas, morfologia, tractografia. Era uma boa defesa
@@ -49,10 +51,10 @@ Os treze primeiros continuam valendo sem alteração. Dois entram.
 | :-- | :-- | :-- | :-- |
 | **0.2 · Excitabilidade** | LIF, atrasos, STDP, inferência escalar | atividade por unidade e envoltórios | concluída |
 | **0.3 · Fundação** | relógio, RNG endereçado, CSR, Worker | feixes, instrumentos, LOD, interpolação | concluída |
-| **0.4 · Superfície** | domínio cortical, campo E/I atrasado | atividade sobre o envelope, zoom orbital | concluída · [AUDIT_0.4.md](AUDIT_0.4.md) |
-| **0.5 · Corredor Rust/Wasm** | crate puro, ABI estreita, paridade | shell consumindo snapshots Rust | concluída · [AUDIT_0.5_ENTRY.md](AUDIT_0.5_ENTRY.md) |
-| **0.6 · Lâmina e tálamo** | seis lâminas, relé e TRN | aba Lâminas, coluna explodida | concluída · [AUDIT_0.6.md](AUDIT_0.6.md) |
-| **0.7 · Célula e eletricidade** | patch AdEx, quatro receptores em SI | abas Célula e Eletricidade | concluída · [AUDIT_0.7.md](AUDIT_0.7.md) |
+| **0.4 · Superfície** | domínio cortical, campo E/I atrasado | atividade sobre o envelope, zoom orbital | concluída · [AUDIT_0.4.md](../../../AUDIT_0.4.md) |
+| **0.5 · Corredor Rust/Wasm** | crate puro, ABI estreita, paridade | shell consumindo snapshots Rust | concluída · [AUDIT_0.5_ENTRY.md](../../../AUDIT_0.5_ENTRY.md) |
+| **0.6 · Lâmina e tálamo** | seis lâminas, relé e TRN | aba Lâminas, coluna explodida | concluída · [AUDIT_0.6.md](../../../AUDIT_0.6.md) |
+| **0.7 · Célula e eletricidade** | patch AdEx, quatro receptores em SI | abas Célula e Eletricidade | concluída · [AUDIT_0.7.md](../../../AUDIT_0.7.md) |
 | **0.8 · Sinapse e química local** | vesícula, fenda, ocupação, plasticidade curta | fundação da apresentação e aba Sinapse em escala µm | conservação, positividade, rigidez, invertibilidade cor↔estado |
 | **0.9 · Neurônio resolvido e corte anatômico** | dendrito em três compartimentos, tempo de evento, condução declarada | vista Neurônio, pilha de películas, planos de corte com tampa e sonda | convergência de cabo, evento carimbado, hash invariante ao recorte |
 | **0.10 · Transmissão de volume** | núcleos de projeção com função, reação–difusão de moduladores | plumas por substância e os três mapas separados | conservação de massa, positividade, tortuosidade declarada, orçamento de raymarch |
@@ -72,7 +74,7 @@ TRN, patch AdEx com quatro receptores em SI, ABI v5 com 22 buffers e três hashe
 independentes.
 
 A auditoria de entrada desta fase está em
-[AUDIT_0.8_ENTRY.md](AUDIT_0.8_ENTRY.md). Ela registra dezenove achados; os de
+[AUDIT_0.8_ENTRY.md](../../../AUDIT_0.8_ENTRY.md). Ela registra dezenove achados; os de
 severidade alta e de bloqueio estão distribuídos nos cortes abaixo, e nenhum
 corte seguinte pode esconder um achado aberto do anterior.
 
@@ -215,7 +217,7 @@ o que é:
 
 Nenhum degrau altera o motor. Todos alteram o que o leitor pode inspecionar. O
 contrato completo, incluindo pipeline, cor, animação e gates, está em
-[VISUAL_SPEC.md](VISUAL_SPEC.md).
+[proposta visual arquivada](../specs/VISUAL-SPEC-v0.8-proposal.md).
 
 ### Anatomia funcional
 
@@ -280,7 +282,7 @@ diferentes.
    superfície visual;
 4. daí em diante, os cortes na ordem listada.
 
-As equações e convenções ficam em [MODEL_SPEC.md](MODEL_SPEC.md), a tradução
-para o código em [ARCHITECTURE.md](ARCHITECTURE.md), os critérios de evidência
-em [VALIDATION.md](VALIDATION.md) e o contrato de imagem em
-[VISUAL_SPEC.md](VISUAL_SPEC.md).
+As equações e convenções vigentes ficam em [MODEL_SPEC.md](../../../MODEL_SPEC.md), a tradução
+para o código em [ARCHITECTURE.md](../../../ARCHITECTURE.md), os critérios de evidência
+em [VALIDATION.md](../../../VALIDATION.md) e o contrato vigente em
+[GRAPHICS_SPEC.md](../../../GRAPHICS_SPEC.md).

@@ -93,7 +93,7 @@ publicado neste repositório.
 
 ---
 
-## BRAIN PRO [v. 0.8 em construção · base 0.7 íntegra]
+## BRAIN PRO [v. 0.8.0 · implementação concluída, promoção em auditoria]
 
 Estou construindo o BRAIN PRO como um caderno de aprendizagem executável. Sou
 um programador aprendendo a usar a [Rust Programming Language](https://www.rust-lang.org/)
@@ -108,11 +108,11 @@ de equação, unidade, limite e teste próprios.
 
 Minha pergunta prática nesta fase é: **como ampliar a resolução — da rede à
 sinapse e da forma à química — sem desenhar um fenômeno que o motor não
-calcula?** A base 0.7 continua sendo um patch AdEx determinístico em Rust, com
-WebAssembly dentro de um Web Worker. A 0.8 começou pelo contrato: separou matéria
-de emissão na imagem, congelou recursos, unidades e conservação, preservou o
-sinal das correntes e agora mantém liberação, fenda e ocupação como estados
-químicos auditáveis.
+calcula?** A 0.8 implementa, sobre a base 0.7, recursos, química local, solver,
+ABI v6 e leitura sináptica. Ainda não a classifico como promovida: falta repetir
+e versionar os gates de navegador/visual da ABI v6, fechar a prova pixel→estado
+e registrar um baseline em hardware real. O estado e o próximo gate estão no
+[ROADMAP canônico](ROADMAP.md).
 
 ### O que consigo explorar hoje
 
@@ -131,8 +131,9 @@ químicos auditáveis.
   realmente emite e proveniência declarada por objeto;
 - corrente receptora média com sinal, halos orientados para entrada, saída e
   shunt, além de forma redundante para leitura sem depender de matiz;
-- gates automáticos de rampa invertível, saturação, modo monocromático,
-  proveniência e baseline com navegador, hardware, preset e custo de cena;
+- gates automáticos de rampa pura invertível, saturação, modo monocromático,
+  proveniência e perfil de navegador/preset/custo; o artefato versionado ainda
+  precisa ser recapturado para a ABI v6 e não substitui baseline em GPU real;
 - contrato 0.8-a para recurso vesicular `R`, utilização `u`, liberação `uR`,
   cinco estoques em mol equivalente e carga transmembrana em coulombs;
 - dinâmica 0.8-b de Tsodyks–Markram determinística, com recuperação e decaimento
@@ -184,7 +185,7 @@ brain-engine (Rust: estado, equações, limites e hashes)
 | TypeScript | protocolo, acessibilidade, DOM e visualização dos dados publicados |
 | Three.js | transformar estado em leitura espacial sem inventar atividade |
 | Tauri | empacotar a mesma experiência com um host Rust nativo |
-| testes | Cargo, Clippy, Vitest, replay celular, convergência de eventos/correntes, ensembles, Wasm em navegador, contraste e captura reproduzível |
+| testes | Cargo, Clippy, Vitest, replays, convergência, Wasm em navegador, contraste e captura reproduzível; execução e promoção são registradas separadamente |
 
 C# continua fora do payload web. Só fará sentido como serviço nativo/offline se
 um benchmark reproduzível demonstrar uma necessidade que Rust/Wasm não atende.
@@ -208,12 +209,17 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-10 | implemento Tsodyks–Markram determinístico com ordem de evento explícita, solução exponencial exata e oráculo versionado |
 | 2026-08-10 | separo concentração, ocupação, matéria ligada e remoção na fenda, com conservação individual de glutamato e GABA |
 | 2026-08-11 | componho a química por Strang palindrômico, com adaptação de rigidez, avanço atômico e estudo de convergência |
-| 2026-08-11 | publico a química na ABI v6 sem tocar nos hashes anteriores e fecho a 0.8 com a aba Sinapse presa ao estado do motor |
+| 2026-08-11 | publico a química na ABI v6 sem tocar nos hashes anteriores e concluo sua implementação com a aba Sinapse; a promoção permanece condicionada aos gates de fechamento |
 
-O detalhamento da base está em [PLAN_0.7.md](PLAN_0.7.md) e
-[AUDIT_0.7.md](AUDIT_0.7.md). A sequência atual, o contrato visual e a auditoria
-de entrada estão em [ROADMAP_NEXT.md](ROADMAP_NEXT.md),
-[VISUAL_SPEC.md](VISUAL_SPEC.md) e [AUDIT_0.8_ENTRY.md](AUDIT_0.8_ENTRY.md).
+O histórico da base está em
+[`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
+[AUDIT_0.7.md](AUDIT_0.7.md). A sequência vigente está em
+[ROADMAP.md](ROADMAP.md); os contratos canônicos estão em
+[ARCHITECTURE.md](ARCHITECTURE.md), [MODEL_SPEC.md](MODEL_SPEC.md),
+[ENGINE_SPEC.md](ENGINE_SPEC.md), [FRONTEND_SPEC.md](FRONTEND_SPEC.md),
+[GRAPHICS_SPEC.md](GRAPHICS_SPEC.md) e [VALIDATION.md](VALIDATION.md). A
+[auditoria de entrada 0.8](AUDIT_0.8_ENTRY.md) permanece como evidência
+histórica dos achados.
 
 ### Executar e conferir
 
@@ -266,7 +272,5 @@ minutos para invalidar o cache do perfil.
   — apoio para anatomia, dados e leitura crítica.
 
 As referências científicas específicas de cada modelo estão em
-[REFERENCES.md](REFERENCES.md). Registro equações e limites em
-[MODEL_SPEC.md](MODEL_SPEC.md), a separação dos módulos em
-[ARCHITECTURE.md](ARCHITECTURE.md) e os critérios de evidência em
-[VALIDATION.md](VALIDATION.md).
+[REFERENCES.md](REFERENCES.md). O índice de documentos históricos e seus
+substitutos está em [docs/legacy/README.md](docs/legacy/README.md).
