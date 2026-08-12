@@ -5,6 +5,38 @@ export async function auditWorkerLifecycle(page) {
     const engine = window.__BRAIN_ENGINE__;
     const worker = engine.createAuditWorker();
 
+    const auditBackpressure = (topology) =>
+      new Promise((resolve, reject) => {
+        const probe = engine.createAuditWorker();
+        const responses = [];
+        const timeout = window.setTimeout(() => {
+          probe.terminate();
+          reject(new Error("timeout aguardando prova de backpressure"));
+        }, 30_000);
+        probe.addEventListener("message", (event) => {
+          responses.push(event.data);
+          if (responses.length !== 65) return;
+          window.clearTimeout(timeout);
+          probe.terminate();
+          resolve({
+            responses: responses.length,
+            rejected: responses.filter(
+              (response) =>
+                response.type === "fault" && response.code === "worker-backpressure",
+            ).length,
+          });
+        });
+        probe.postMessage({
+          type: "initialize",
+          topology,
+          fixedStep: 1 / 60,
+          seed: topology.seed,
+        });
+        for (let index = 0; index < 64; index += 1) {
+          probe.postMessage({ type: "schedule", inputs: [] });
+        }
+      });
+
     const send = (command) =>
       new Promise((resolve, reject) => {
         const onMessage = (event) => {
@@ -65,6 +97,7 @@ export async function auditWorkerLifecycle(page) {
 
     try {
       const topology = engine.createAuditTopology();
+      const backpressure = await auditBackpressure(topology);
       const initialize = {
         type: "initialize",
         topology,
@@ -101,6 +134,7 @@ export async function auditWorkerLifecycle(page) {
         snapshotBytes: buffers.reduce((total, { byteLength }) => total + byteLength, 0),
         hashes: firstHashes,
         cellSpikeEvents: firstCellSpikeEvents,
+        backpressure,
         reset: {
           ready: resetReady.type === "ready" && resetReady.tick === 0,
           exactReplay: JSON.stringify(resetHashes) === JSON.stringify(firstHashes),
@@ -142,6 +176,11 @@ export function assertWorkerLifecycleEvidence(
     evidence.cellSpikeEvents.startTick > evidence.cellSpikeEvents.endTick ||
     !evidence.cellSpikeEvents.canonical
   );
+  const backpressureInvalid = schemaVersion >= 7 && (
+    !evidence.backpressure ||
+    evidence.backpressure.responses !== 65 ||
+    evidence.backpressure.rejected < 1
+  );
   if (
     evidence.schemaVersion !== schemaVersion ||
     evidence.runtime !== "rust-wasm" ||
@@ -150,6 +189,7 @@ export function assertWorkerLifecycleEvidence(
     new Set(evidence.buffers.map(({ name }) => name)).size !== bufferCount ||
     evidence.snapshotBytes <= 0 ||
     stampedEventsInvalid ||
+    backpressureInvalid ||
     Object.keys(evidence.hashes).length !== hashCount ||
     !Object.values(evidence.hashes).every((hash) => HASH_PATTERN.test(hash)) ||
     !evidence.reset.ready ||
