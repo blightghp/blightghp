@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "eventSchemaVersion": 1,
+  "seed": 1592590345,
+  "macroStepSeconds": 0.016666666666666666,
+  "drive": {
+    "excitatoryRateHz": 70.0,
+    "inhibitoryRateHz": 30.0,
+    "boundaryCurrentAmperes": 4.2e-10
+  },
+  "batches": [
+    {
+      "macroTick": 1,
+      "microTick": 200,
+      "cellIds": [10, 8, 11, 9, 10, 11, 8, 9],
+      "timeOffsetBitsHex": [
+        "3f844f3078263ab5", "3f847ae147ae147b", "3f84a6921735ee40",
+        "3f84d242e6bdc805", "3f8dddddddddddde", "3f8dddddddddddde",
+        "3f8e098ead65b7a3", "3f8eb851eb851eb8"
+      ]
+    },
+    {
+      "macroTick": 2,
+      "microTick": 400,
+      "cellIds": [11, 10, 8, 9, 6, 2, 4, 1, 7, 0, 3, 5, 11, 10, 8, 9, 11, 10, 8, 9, 11, 10, 8, 9],
+      "timeOffsetBitsHex": [
+        "3f626e978d4fdf3b", "3f63cc1e098ead66", "3f65d867c3ece2a5",
+        "3f694237fa89e60f", "3f700aec33e1f671", "3f70b9af72015d86",
+        "3f721735ee402bb1", "3f726e978d4fdf3b", "3f72c5f92c5f92c6",
+        "3f73cc1e098ead66", "3f73cc1e098ead66", "3f73cc1e098ead66",
+        "3f7a9fbe76c8b439", "3f7bfd44f3078263", "3f7d0369d0369d03",
+        "3f7f0fb38a94d243", "3f85acb6f46508e0", "3f86872b020c49ba",
+        "3f870a3d70a3d70a", "3f8810624dd2f1aa", "3f8e098ead65b7a3",
+        "3f8f3b645a1cac08", "3f8fbe76c8b43958", "3f90624dd2f1a9fc"
+      ]
+    },
+    {
+      "macroTick": 3,
+      "microTick": 600,
+      "cellIds": [11, 6, 2, 10, 8, 1, 9, 7, 4, 0, 3, 5, 11, 10, 8, 9, 11, 10, 8, 9, 11, 8, 10],
+      "timeOffsetBitsHex": [
+        "3f626e978d4fdf3b", "3f6529a485cd7b90", "3f66872b020c49ba",
+        "3f67e4b17e4b17e4", "3f6a9fbe76c8b439", "3f6bfd44f3078263",
+        "3f6f671529a485cd", "3f70624dd2f1a9fc", "3f71111111111111",
+        "3f716872b020c49b", "3f72c5f92c5f92c6", "3f7374bc6a7ef9db",
+        "3f7af72015d867c4", "3f7db22d0e560418", "3f7eb851eb851eb8",
+        "3f80e5604189374c", "3f85d867c3ece2a5", "3f878d4fdf3b645a",
+        "3f87e4b17e4b17e4", "3f89999999999999", "3f8e8ca11bfd44f3",
+        "3f90624dd2f1a9fc", "3f90624dd2f1a9fc"
+      ]
+    }
+  ]
+}

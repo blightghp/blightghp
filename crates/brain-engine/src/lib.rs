@@ -19,10 +19,11 @@ mod simulation;
 mod synaptic;
 
 pub use cell_patch::{
-    CellPatch, CellPatchConfig, CellPatchDrive, CellPatchError, CellPatchSnapshot, PatchCellKind,
-    ResolutionMap, CELL_COUNT, CELL_PATCH_SCHEMA_VERSION, DEFAULT_CELL_STEP_SECONDS,
-    EXCITATORY_CELL_COUNT, MAX_BOUNDARY_CURRENT_AMPERES, MAX_CELL_SUBSTEPS_PER_INTERVAL,
-    MAX_PATCH_DRIVE_HZ,
+    CellPatch, CellPatchConfig, CellPatchDrive, CellPatchError, CellPatchSnapshot, CellSpikeEvent,
+    PatchCellKind, ResolutionMap, CELL_COUNT, CELL_PATCH_SCHEMA_VERSION,
+    CELL_SPIKE_EVENT_SCHEMA_VERSION, DEFAULT_CELL_STEP_SECONDS, EXCITATORY_CELL_COUNT,
+    MAX_BOUNDARY_CURRENT_AMPERES, MAX_CELL_SPIKE_EVENTS_PER_INTERVAL,
+    MAX_CELL_SUBSTEPS_PER_INTERVAL, MAX_PATCH_DRIVE_HZ,
 };
 pub use chemical_contract::{
     ChemicalContractError, ConservationTolerance, DeterministicRelease, MembraneChargeTransfer,
@@ -61,9 +62,9 @@ pub use short_term_plasticity::{
     SHORT_TERM_PLASTICITY_SCHEMA_VERSION,
 };
 pub use simulation::{
-    CorticothalamicSignal, NeuralSimulation, NeuralStimulus, SignalBatch, SimulationConfig,
-    SimulationError, SimulationInput, SimulationSnapshot, SimulationSynapse, MAX_SCHEDULED_INPUTS,
-    SIMULATION_SCHEMA_VERSION,
+    CellSpikeEventBatch, CorticothalamicSignal, NeuralSimulation, NeuralStimulus, SignalBatch,
+    SimulationConfig, SimulationError, SimulationInput, SimulationSnapshot, SimulationSynapse,
+    MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT, MAX_SCHEDULED_INPUTS, SIMULATION_SCHEMA_VERSION,
 };
 pub use synaptic::{
     analytic_response_area, response_area, AMPA_TIME_CONSTANT_SECONDS, GABAA_TIME_CONSTANT_SECONDS,
