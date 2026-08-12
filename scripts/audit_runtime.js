@@ -105,6 +105,7 @@ try {
 
   const visualGate = await page.evaluate(() => window.__BRAIN_ENGINE__.visualAudit());
   const renderedStateGate = await page.evaluate(() => window.__BRAIN_ENGINE__.renderedStateAudit());
+  const electricalBoardGate = await page.evaluate(() => window.__BRAIN_ENGINE__.electricalBoardAudit());
   if (
     visualGate.provenance.total <= 0 ||
     visualGate.provenance.undeclared !== 0 ||
@@ -119,6 +120,16 @@ try {
   }
   if (renderedStateGate.maximumError > renderedStateGate.tolerance) {
     throw new Error(`pixel→estado excedeu a tolerância: ${JSON.stringify(renderedStateGate)}`);
+  }
+  if (
+    electricalBoardGate.detail !== "cellular" ||
+    electricalBoardGate.cost.totalDrawCalls !== 10 ||
+    electricalBoardGate.cost.stateValuesPerSnapshot !== 96 ||
+    electricalBoardGate.topology.synapseCount <= 0 ||
+    electricalBoardGate.topology.meanDelaySeconds <= 0 ||
+    electricalBoardGate.topology.meanAbsoluteGain <= 0
+  ) {
+    throw new Error(`orçamento/origem da Prancha Elétrica inválidos: ${JSON.stringify(electricalBoardGate)}`);
   }
 
   const colorCaptures = [
@@ -178,6 +189,49 @@ try {
   ) {
     throw new Error(`evidência da aba Sinapse incompleta: ${JSON.stringify(views)}`);
   }
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("electricity"));
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setCaptureMode(true));
+  const hashesBeforeElectricalControls = await page.evaluate(
+    () => window.__BRAIN_ENGINE__.diagnostics(),
+  );
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setCameraRotation(1.23));
+  await page.select("#electrical-detail", "events");
+  await page.select("#electrical-detail", "summary");
+  await page.select("#electrical-detail", "cellular");
+  const hashesAfterElectricalControls = await page.evaluate(
+    () => window.__BRAIN_ENGINE__.diagnostics(),
+  );
+  const hashFields = [
+    "stateHash",
+    "corticothalamicHash",
+    "cellPatchHash",
+    "chemicalHash",
+    "cellSpikeEventHash",
+  ];
+  if (hashFields.some((field) => hashesBeforeElectricalControls[field] !== hashesAfterElectricalControls[field])) {
+    throw new Error(
+      `controles de apresentação alteraram hashes: ${JSON.stringify({ hashesBeforeElectricalControls, hashesAfterElectricalControls })}`,
+    );
+  }
+  const electricalView = await page.evaluate(() => ({
+    selected: document.querySelector("#tab-electricity")?.getAttribute("aria-selected") === "true",
+    voltage: document.querySelector("#board-voltage")?.textContent,
+    current: document.querySelector("#board-net-current")?.textContent,
+    conductance: document.querySelector("#board-conductance")?.textContent,
+    delay: document.querySelector("#board-delay")?.textContent,
+    tableRows: document.querySelectorAll(".electrical-table tbody tr").length,
+  }));
+  if (
+    !electricalView.selected ||
+    !electricalView.voltage?.endsWith("mV") ||
+    !electricalView.current?.endsWith("pA") ||
+    !electricalView.conductance?.endsWith("nS") ||
+    !electricalView.delay?.endsWith("ms") ||
+    electricalView.tableRows < 8
+  ) {
+    throw new Error(`equivalente textual da Prancha Elétrica incompleto: ${JSON.stringify(electricalView)}`);
+  }
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setCaptureMode(false));
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
 
   const colors = await page.evaluate(() => {
@@ -281,6 +335,13 @@ try {
     contrast,
     saturation,
     visualGate,
+    electricalBoardGate,
+    electricalView,
+    electricalHashInvariance: {
+      fields: hashFields,
+      before: hashesBeforeElectricalControls,
+      after: hashesAfterElectricalControls,
+    },
     renderedStateGate,
     monochromeGate,
     abi: {

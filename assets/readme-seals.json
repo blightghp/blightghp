@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "createdOn": "2026-08-12",
+  "scope": "README biography strip",
+  "license": "All rights reserved by the repository owner",
+  "assets": [
+    {
+      "file": "rustacean-warning.png",
+      "sha256": "20d23b6758bd8ba5e582eaa82f0051a572c55206f4f74f2cc07a8df781d8419b",
+      "bytes": 284606,
+      "pixels": "512x512 RGBA",
+      "origin": "original project illustration from the repository owner's brief",
+      "reference": "none",
+      "orientation": "upright square raster",
+      "displayTransform": "README width 124 px; no crop",
+      "semanticRole": "compact road-warning seal for Rustacean identity",
+      "evidenceLevel": "profile decoration; no scientific meaning",
+      "preprocess": "Lanczos downsample and PNG optimization with Pillow 12.2.0"
+    },
+    {
+      "file": "crypto-anarchist-badge.png",
+      "sha256": "b7d77195248d7d1e8d3ed8616a5085d03ebe717a8b64a9e618840ff75c48dfdb",
+      "bytes": 2129962,
+      "pixels": "1254x1254 RGB",
+      "origin": "original project illustration from the repository owner's brief",
+      "reference": "user-supplied protest poster used only as loose style reference",
+      "orientation": "upright square raster",
+      "displayTransform": "README width 112 px; no crop",
+      "semanticRole": "compact Crypto-Anarchist position seal and footnote link",
+      "evidenceLevel": "profile decoration; no scientific meaning",
+      "preprocess": "none"
+    }
+  ]
+}

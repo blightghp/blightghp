@@ -1,6 +1,6 @@
 # Estratégia canônica de validação · BRAIN PRO
 
-**Revisão:** 4 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A/R09-B validadas
+**Revisão:** 5 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A/R09-B/R09-C validadas
 
 Quatro perguntas permanecem separadas: o cálculo é reproduzível, respeita
 limites, converge e produz o fenômeno definido pelo experimento? Uma única
@@ -20,6 +20,7 @@ artefato de promoção.
 | promoção 0.8 | gate agregado de versão, ABI, evidência e achados | `promotion-0.8.json` schema 1 | P1–P4 concluídas; nenhum achado alto aberto |
 | experimento de tarefa R09-A | schema/adapters, controle nulo, fixture e replay | `bayesian-observation-v1.json` | posterior isolada do drive; contexto interativo nulo |
 | eventos celulares R09-B | fixture exata, ABI/Worker e renderer | `cell-spike-events-v1.json` + auditoria de lifecycle | IDs/offsets carimbados pelo Rust; limite e backpressure provados |
+| Prancha Elétrica R09-C | observáveis puros, scene graph, DOM e auditoria | [auditoria R09-C](AUDIT_0.9_R09_C.md) | 10/11 draws, equivalente textual, hashes invariantes e zero objeto sem proveniência |
 
 O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
@@ -45,6 +46,7 @@ ambiente e dos envelopes registrados.
 | QA-010 | segurança cobre input malformado, cotas, supply chain e privacidade aplicável |
 | QA-090 | modelo de tarefa tem schema, owner, limite, controle nulo e replay; não atravessa a fronteira científica implicitamente |
 | QA-091 | evento celular tem carimbo temporal, ordem canônica, teto, hash próprio e transporte sem inferência visual |
+| QA-092 | Prancha Elétrica prova origem/unidade, scene graph separado, orçamento, acessibilidade e invariância dos cinco hashes |
 
 ## Camadas de evidência
 

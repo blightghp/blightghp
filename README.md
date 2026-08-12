@@ -15,14 +15,19 @@ aprendizagem, ciência de dados e engenharia de software. Meu GitHub é um porta
 de experimentos: uso código para pensar, mas procuro não reduzir um fenômeno
 àquilo que é mais fácil medir.
 
-<div align="center">
-  <img src="assets/rustacean-amateur.svg" width="680" alt="I'm an amateur and also a passionate Rustacean!" />
-</div>
-
-O BRAIN PRO expressa uma particularidade desse percurso. Ao estudar Rust e o
-Kandel lado a lado, exploro aproximações e diferenças entre biologia e máquina:
-o que pode ser formalizado, o que permanece interpretação e o que ainda exige
-melhor evidência.
+<table role="presentation">
+  <tr>
+    <td width="18%" align="center">
+      <a href="#crypto-anarchist-note"><img src="assets/crypto-anarchist-badge.png" width="112" alt="Selo Crypto-Anarchist: gato preto, cadeado aberto e asterisco" /></a>
+    </td>
+    <td width="64%">
+      O BRAIN PRO expressa uma particularidade desse percurso. Ao estudar Rust e o Kandel lado a lado, exploro aproximações e diferenças entre biologia e máquina: o que pode ser formalizado, o que permanece interpretação e o que ainda exige melhor evidência.
+    </td>
+    <td width="18%" align="center">
+      <img src="assets/rustacean-warning.png" width="124" alt="WARNING! RUSTACEAN HERE — caranguejo em placa de alerta viário" />
+    </td>
+  </tr>
+</table>
 
 ### Eixo Norteador e Áreas de Atuação
 
@@ -120,8 +125,9 @@ estão no [ROADMAP canônico](ROADMAP.md) e na
 [auditoria de promoção](AUDIT_0.8_PROMOTION.md).
 
 A 0.9 mantém essa baseline e avança por gates independentes. R09-A isolou o
-modelo de tarefa; R09-B publica eventos celulares carimbados pelo Rust, sem
-pedir ao renderer que deduza spikes ausentes entre snapshots.
+modelo de tarefa; R09-B publicou eventos celulares carimbados pelo Rust, sem
+pedir ao renderer que deduza spikes ausentes entre snapshots; R09-C criou uma
+Prancha Elétrica própria sem tocar na ABI ou no motor.
 
 ### O que consigo explorar hoje
 
@@ -133,6 +139,9 @@ pedir ao renderer que deduza spikes ausentes entre snapshots.
   NMDA, GABA-A e GABA-B integrados a `83,3 µs`;
 - cinco vistas sincronizadas: **Visão Geral**, **Lâminas**, **Célula**,
   **Eletricidade** e **Sinapse**;
+- Prancha Elétrica com 12 nós, vias direcionais, V/A/S, excitação, inibição,
+  shunt, eventos e equivalente tabular com unidade/origem; níveis de detalhe
+  custam 6, 10 ou 11 draws e não alteram os cinco hashes;
 - execução Rust/Wasm em Worker, ABI v7 e 36 buffers transferíveis;
 - cinco hashes separados: baseline 0.5, circuito córtico-talâmico, patch
   celular, trilho químico e lote de eventos celulares;
@@ -229,6 +238,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-12 | fecho R08-P3 com pixel→estado, 72 bindings redundantes, 11 capturas e baseline Intel/D3D11; R08-P4 promove a 0.8 sem achado alto aberto |
 | 2026-08-12 | fecho R09-A com fronteira de experimento versionada, replay e controle nulo; a posterior de tarefa deixa de influenciar o estímulo neural direto |
 | 2026-08-12 | fecho R09-B com eventos celulares carimbados no Rust, replay exato, ABI v7, 36 buffers e quinto hash independente |
+| 2026-08-12 | fecho R09-C com Prancha Elétrica própria, V/A/S rastreáveis, eventos publicados, fallback tabular e teto de 11 draws |
 
 O histórico da base está em
 [`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
@@ -242,8 +252,8 @@ histórica dos achados; o fechamento executável da ABI está em
 [AUDIT_0.8_ABI_V6.md](AUDIT_0.8_ABI_V6.md), a prova gráfica em
 [AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md) e o veredito final em
 [AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md). As etapas encerradas da 0.9
-estão registradas nas auditorias [R09-A](AUDIT_0.9_R09_A.md) e
-[R09-B](AUDIT_0.9_R09_B.md).
+estão registradas nas auditorias [R09-A](AUDIT_0.9_R09_A.md),
+[R09-B](AUDIT_0.9_R09_B.md) e [R09-C](AUDIT_0.9_R09_C.md).
 
 ### Executar e conferir
 
@@ -299,3 +309,6 @@ minutos para invalidar o cache do perfil.
 As referências científicas específicas de cada modelo estão em
 [REFERENCES.md](REFERENCES.md). O índice de documentos históricos e seus
 substitutos está em [docs/legacy/README.md](docs/legacy/README.md).
+
+<a id="crypto-anarchist-note"></a>
+<sub>* <strong><em>anti-fascist</em></strong></sub>

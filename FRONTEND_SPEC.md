@@ -21,6 +21,7 @@ do Worker. Não regula equações nem materiais 3D.
 | UI-010 | controles e imports são validados e limitados antes do Worker. |
 | UI-011 | UI modular/DOM direto permanece enquanto for testável e compreensível. |
 | UI-012 | experimentos usam `ExperimentEncoder`/`ExperimentDecoder` explícitos. |
+| UI-020 | Prancha Elétrica possui scene graph próprio, níveis apenas de apresentação, teclado e equivalente tabular com unidade/origem. |
 | UX-001 | ampliar muda enquadramento/resolução mostrada, não equação por câmera. |
 | UX-002 | cada vista mostra “o que vejo”, modelo, unidade, hipótese e limite. |
 
@@ -31,7 +32,7 @@ DOMContentLoaded
   └─ main.ts:init
       ├─ cria scene/camera/renderer/pipeline
       ├─ generateBrainData()
-      ├─ monta quatro RenderLayers
+      ├─ monta cinco RenderLayers
       ├─ cria simulation.worker.ts
       ├─ initialize → ready/fallback
       ├─ liga DOM e controles
@@ -89,7 +90,7 @@ visual. Novas funções exigem teste e não podem furar a validação do protoco
 | Visão Geral | rede, campo, sinais e hashes | orientação macro e saúde | topologia procedural, não atlas |
 | Lâminas | L1–L6, relé, TRN, rebote | circuito didático | massa neural fenomenológica |
 | Célula | patch, contorno e eventos carimbados | 12 células e compartimentos | um dendrito passivo |
-| Eletricidade | mesmo patch, eventos e correntes | sinal/direção/receptores | não é ainda Prancha Elétrica própria |
+| Eletricidade | patch, eventos e topologia macro rotulada | Prancha Elétrica com V/A/S, direção e origem | esquema didático; atraso/ganho macro não pertencem ao patch |
 | Sinapse | química v6 | vesícula, fenda, ocupação/remoção | microdomínio representativo |
 
 ## Modos de uso alvo
@@ -160,15 +161,18 @@ pendente resolver sobre uma instância nova.
 
 ## Prancha Elétrica
 
-A futura vista própria deve oferecer:
+A vista própria implementada em R09-C oferece:
 
-- esquema abstrato, overlay anatômico, circuito laminar, celular, sináptico e
-  observáveis;
-- nós/vias, direção, atraso, ganho, excitação, inibição, shunt, recorrência,
-  feedforward, feedback, relé e TRN;
-- V, A, S, Hz, taxa, ocupação e carga somente quando publicados/definidos;
-- probe, timeline, comparação e equivalente tabular;
-- seleção sincronizada com a cena sem compartilhar geometria obrigatoriamente.
+- esquema abstrato do patch em scene graph distinto da vista Célula;
+- 12 nós E/I, quatro vias receptoras, direção, V, A, S efetiva, excitação,
+  inibição, shunt e eventos celulares carimbados;
+- atraso e ganho médios da rede em linhas próprias, rotulados como topologia
+  macro para não fingir que são atributos das células do patch;
+- níveis agregado, celular e eventos, além de equivalente tabular com caminho
+  de origem e unidade.
+
+Overlay anatômico, circuito laminar, probe, timeline, comparação, seleção e
+observáveis químicos continuam futuros; R09-C não os reivindica.
 
 “Nível de processamento” só significa agregação visual, escala, conjunto de
 observáveis ou preset explicitamente selecionado. Nunca altera silenciosamente

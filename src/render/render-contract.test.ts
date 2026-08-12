@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { generateBrainData } from "../brain";
 import { DiagnosticFallbackHost } from "../wasm-engine-host";
 import { CellRenderLayer } from "./cell-layer";
+import { ElectricalBoardLayer } from "./electrical-board-layer";
 import { LaminarRenderLayer } from "./laminar-layer";
 import { SynapseRenderLayer } from "./synapse-layer";
 import {
@@ -39,6 +40,7 @@ describe("render presentation contract", () => {
     for (const layer of [
       new LaminarRenderLayer(),
       new CellRenderLayer(),
+      new ElectricalBoardLayer(),
       new SynapseRenderLayer(),
     ]) {
       const objects = renderedObjects(layer.group);
@@ -67,6 +69,7 @@ describe("render presentation contract", () => {
     for (const layer of [
       new LaminarRenderLayer(),
       new CellRenderLayer(),
+      new ElectricalBoardLayer(),
       new SynapseRenderLayer(),
     ]) {
       const report = auditVisualProvenance(layer.group);
@@ -81,6 +84,7 @@ describe("render presentation contract", () => {
     for (const layer of [
       new LaminarRenderLayer(),
       new CellRenderLayer(),
+      new ElectricalBoardLayer(),
       new SynapseRenderLayer(),
     ]) {
       const report = auditVisualBindings(layer.group);
@@ -160,9 +164,29 @@ describe("render presentation contract", () => {
     expect(excitatoryScale.y / excitatoryScale.x).toBeGreaterThan(1);
     expect(inhibitoryScale.y / inhibitoryScale.x).toBeLessThan(1);
 
+    const electrical = new ElectricalBoardLayer();
+    electrical.update({ current: snapshot, alpha: 1 });
+    expect(electrical.group.getObjectByName("electrical-excitatory-nodes")).toHaveProperty(
+      "geometry.type",
+      "CircleGeometry",
+    );
+    expect(electrical.group.getObjectByName("electrical-inhibitory-nodes")).toHaveProperty(
+      "geometry.type",
+      "PlaneGeometry",
+    );
+    expect(electrical.group.getObjectByName("electrical-ampa-paths")).toHaveProperty(
+      "geometry.type",
+      "ShapeGeometry",
+    );
+    expect(electrical.group.getObjectByName("electrical-stamped-events")).toHaveProperty(
+      "geometry.type",
+      "RingGeometry",
+    );
+
     laminar.dispose();
     synapse.dispose();
     cell.dispose();
+    electrical.dispose();
     fallback.dispose();
   });
 });

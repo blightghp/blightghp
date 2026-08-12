@@ -29,6 +29,7 @@ como planejada e nunca é descrita como implementada.
 | ARC-012 | objetos gráficos declaram proveniência | aceita | não há gatilho previsto |
 | ARC-013 | fallback é diagnóstico e inerte | aceita | substituição por falha explícita, nunca por motor TS |
 | ARC-014 | modelos de tarefa atravessam adaptadores explícitos | aceita em R09-A | mudar schema/identidade do experimento |
+| ARC-015 | Prancha Elétrica é projeção de apresentação com scene graph próprio | aceita em R09-C | novo observável científico exige contrato/ABI antes do renderer |
 
 ## Contexto do sistema
 
@@ -241,15 +242,17 @@ schema separado de presets/replays científicos.
 
 ## Arquitetura da apresentação
 
-`main.ts` compõe quatro implementações de `RenderLayer`: cérebro, lâminas,
-célula/eletricidade e sinapse. `SelectiveBloomPipeline` separa emissão do
-restante e compõe o resultado. `visual-tokens.ts` centraliza identidades;
-`visual-encoding.ts` transforma grandezas publicadas em cor/forma/direção.
+`main.ts` compõe cinco implementações de `RenderLayer`: cérebro, lâminas,
+célula, Prancha Elétrica e sinapse. A prancha consome o patch publicado e
+topologia macro rotulada, sem compartilhar cena com `CellRenderLayer`.
+`SelectiveBloomPipeline` separa emissão do restante e compõe o resultado.
+`visual-tokens.ts` centraliza identidades; `visual-encoding.ts` transforma
+grandezas publicadas em cor/forma/direção.
 
 Proveniência atual é declarada por objeto como domínio visual (`matter` ou
 `emission`) e origem (`state`, `topology`, `decoration`). Todo efeito de estado
-deve apontar para snapshot, embora esse apontamento ainda não seja um campo
-estruturado por objeto; GRAPHICS-010 torna o vínculo obrigatório.
+aponta por binding estruturado para campo, unidade, transformação e pistas
+redundantes.
 
 ## Introdução de uma nova grandeza
 
@@ -439,10 +442,10 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | R1 tokens dispersos | FECHADO | `visual-tokens.ts` |
 | R2 bloom global/aditivo | FECHADO | `SelectiveBloomPipeline` + contrato de materiais |
 | R3 corrente sem sinal | FECHADO | `signedMean`, direção e testes |
-| R4 fronteira ilegível | ACEITO PARA R09-C | legenda textual existe; a Prancha Elétrica substituirá o toro agregado |
-| R5 Célula/Eletricidade duplicadas | ACEITO PARA R09-C | compartilham `CellRenderLayer`; R09-C cria prancha própria |
-| R6 alocações por frame | ACEITO PARA R09-C | dívida baixa medida no baseline físico; otimização acompanha a nova camada |
-| R7 limpeza/visibilidade por frame | ACEITO PARA R09-C | custo medido; reciclagem acompanha a nova camada |
+| R4 fronteira ilegível | FECHADO EM R09-C | prancha usa nós, vias orientadas, grandezas e tabela com origem |
+| R5 Célula/Eletricidade duplicadas | FECHADO EM R09-C | `ElectricalBoardLayer` tem scene graph próprio |
+| R6 alocações por frame | FECHADO NO ESCOPO R09-C | nova camada reutiliza vetores/matrizes; `CellRenderLayer` remove alocações do loop |
+| R7 limpeza/visibilidade por frame | FECHADO NO ESCOPO R09-C | visibilidade da rede só atualiza em evento de UI; eventos da prancha reciclam instâncias por hash |
 | M1 tempo por spike | FECHADO EM R09-B | IDs/offsets schema 1, ordem canônica, hash, teto e replay publicados na ABI v7 |
 | M2 dendrito único | ACEITO PARA R09-E | contrato atual é um compartimento; multicompartimentos pertencem à 0.9 |
 | M3 química inexistente | FECHADO no microdomínio local | química v6 existe; transmissão de volume continua futura |

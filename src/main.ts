@@ -10,9 +10,13 @@ import {
   BrainRenderLayers,
   CellRenderLayer,
   decodeStateColor,
+  ElectricalBoardLayer,
+  electricalBoardObservables,
+  electricalBoardTopologyObservables,
   encodeStateColor,
   LaminarRenderLayer,
   mean,
+  parseElectricalBoardDetail,
   parseLaminarLod,
   parseSimulationView,
   parseVisualColorMode,
@@ -25,6 +29,7 @@ import {
   voltsToMillivolts,
 } from "./render";
 import type { SimulationView, VisualColorMode } from "./render";
+import type { ElectricalBoardTopologyObservables } from "./render";
 import { directNeuralStimulus } from "./direct-stimulus";
 import { BayesianObservationExperiment } from "./experiment";
 import type { BayesianExperimentView } from "./experiment";
@@ -55,6 +60,7 @@ declare global {
     __BRAIN_ENGINE__?: {
       capture: (time: number, rotation: number) => Promise<void>;
       setCaptureMode: (enabled: boolean) => Promise<void>;
+      setCameraRotation: (rotation: number) => void;
       setView: (view: SimulationView) => void;
       schedule: (inputs: ScheduledEngineInput[]) => Promise<number>;
       diagnostics: () => {
@@ -96,6 +102,11 @@ declare global {
         redundancy: Record<SimulationView, string>;
       };
       renderedStateAudit: () => ReturnType<typeof auditRenderedStatePixels>;
+      electricalBoardAudit: () => {
+        detail: ReturnType<ElectricalBoardLayer["audit"]>["detail"];
+        cost: ReturnType<ElectricalBoardLayer["audit"]>["cost"];
+        topology: ElectricalBoardTopologyObservables;
+      };
       createAuditWorker: () => Worker;
       createAuditTopology: () => BrainData;
     };
@@ -125,8 +136,10 @@ let renderPipeline: SelectiveBloomPipeline;
 let layers: BrainRenderLayers;
 let laminarLayer: LaminarRenderLayer;
 let cellLayer: CellRenderLayer;
+let electricalBoardLayer: ElectricalBoardLayer;
 let synapseLayer: SynapseRenderLayer;
 let brainData: BrainData;
+let electricalTopology: ElectricalBoardTopologyObservables;
 let worker: Worker;
 let latestSnapshot: NeuralSnapshot | undefined;
 let previousSnapshot: NeuralSnapshot | undefined;
@@ -227,6 +240,36 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
         ? "outward"
         : "reversal";
   }
+  const electrical = electricalBoardObservables(snapshot);
+  const signedPicoamperes = (amperes: number): string => {
+    const value = amperesToPicoamperes(amperes);
+    return `${value > 0 ? "+" : ""}${value.toFixed(1)} pA`;
+  };
+  element("#board-voltage").textContent =
+    `${voltsToMillivolts(electrical.meanMembraneVolts).toFixed(1)} mV`;
+  element("#board-net-current").textContent = signedPicoamperes(
+    electrical.netCurrentAmperes,
+  );
+  element("#board-conductance").textContent =
+    `${(electrical.effectiveConductanceSiemens * 1e9).toFixed(3)} nS`;
+  element("#board-excitation").textContent = signedPicoamperes(
+    electrical.excitatoryCurrentAmperes,
+  );
+  element("#board-inhibition").textContent = signedPicoamperes(
+    electrical.inhibitoryCurrentAmperes,
+  );
+  element("#board-shunt").textContent =
+    `${electrical.shuntingCells} / ${snapshot.cellPatch.membraneVolts.length} células`;
+  element("#board-events").textContent = electrical.eventCount === 0
+    ? "0 eventos"
+    : `${electrical.eventCount} · ${(
+        (electrical.firstEventOffsetSeconds ?? 0) * 1_000
+      ).toFixed(2)}–${(
+        (electrical.lastEventOffsetSeconds ?? 0) * 1_000
+      ).toFixed(2)} ms`;
+  element("#board-delay").textContent =
+    `${(electricalTopology.meanDelaySeconds * 1_000).toFixed(2)} ms`;
+  element("#board-gain").textContent = electricalTopology.meanAbsoluteGain.toFixed(3);
   element("#synapse-glutamate").textContent =
     `${(snapshot.chemical.cleftConcentrationMolesPerCubicMeter[0] ?? 0).toFixed(2)} mol/m³`;
   element("#synapse-gaba").textContent =
@@ -336,7 +379,7 @@ function visualAuditReport() {
       overview: "pulsos E/I usam diâmetros distintos e legenda textual",
       laminar: "excitação é cilindro; inibição e TRN são toros",
       cell: "somata E/I usam razões de aspecto opostas",
-      electricity: "entrada, saída e shunt ocupam planos de anel distintos",
+      electricity: "setas preservam sentido; nós E/I usam círculo/quadrado e shunt usa anel",
       synapse: "vesículas, transmissores, receptores e recaptura têm formas e posições distintas",
     },
   };
@@ -391,6 +434,7 @@ function renderFrame(
     : -0.06 + Math.sin(time * 0.12) * 0.025;
   cellLayer.group.rotation.y = rotation * 0.42;
   cellLayer.group.rotation.x = -0.04 + Math.sin(time * 0.11) * 0.02;
+  electricalBoardLayer.group.rotation.set(0, 0, 0);
   synapseLayer.group.rotation.y = rotation * 0.34;
   synapseLayer.group.rotation.x = -0.08;
 
@@ -399,11 +443,12 @@ function renderFrame(
     Math.max(0, (nowTimestamp - lastSnapshotReceivedTimestamp) / (SIMULATION_STEP_SECONDS * 1000)),
   );
   if (activeView === "overview") {
-    layers.updateVisibility(state, currentFocusRegion);
     layers.setDetail(state.pulseCount);
     layers.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else if (activeView === "laminar") {
     laminarLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
+  } else if (activeView === "electricity") {
+    electricalBoardLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else if (activeView === "synapse") {
     synapseLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else {
@@ -480,9 +525,9 @@ function setActiveView(view: SimulationView): void {
   activeView = view;
   layers.setVisible(view === "overview");
   laminarLayer.setVisible(view === "laminar");
-  cellLayer.setVisible(view === "cell" || view === "electricity");
+  cellLayer.setVisible(view === "cell");
+  electricalBoardLayer.setVisible(view === "electricity");
   synapseLayer.setVisible(view === "synapse");
-  if (view === "cell" || view === "electricity") cellLayer.setMode(view);
   element("#overview-panel").hidden = view !== "overview";
   element("#laminar-panel").hidden = view !== "laminar";
   element("#cell-panel").hidden = view !== "cell";
@@ -548,6 +593,19 @@ function setupInterface(): void {
       return;
     }
     state.snapshotCadence = cadence;
+  });
+  const electricalDetail = element<HTMLSelectElement>("#electrical-detail");
+  electricalDetail.addEventListener("change", () => {
+    const detail = parseElectricalBoardDetail(electricalDetail.value);
+    if (!detail) {
+      electricalDetail.value = "cellular";
+      electricalBoardLayer.setBoardDetail("cellular");
+      return;
+    }
+    electricalBoardLayer.setBoardDetail(detail);
+    if (latestSnapshot && activeView === "electricity") {
+      renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+    }
   });
   const monochromeToggle = element<HTMLInputElement>("#color-mode-monochrome");
   monochromeToggle.checked = visualColorMode === "monochrome";
@@ -676,6 +734,7 @@ async function init(): Promise<void> {
   );
 
   brainData = generateBrainData();
+  electricalTopology = electricalBoardTopologyObservables(brainData);
   const renderContext = { scene, camera, renderer };
   const renderTopology = { brain: brainData };
   layers = new BrainRenderLayers(brainData);
@@ -686,6 +745,9 @@ async function init(): Promise<void> {
   cellLayer = new CellRenderLayer();
   cellLayer.setVisible(false);
   cellLayer.mount(renderContext, renderTopology);
+  electricalBoardLayer = new ElectricalBoardLayer();
+  electricalBoardLayer.setVisible(false);
+  electricalBoardLayer.mount(renderContext, renderTopology);
   synapseLayer = new SynapseRenderLayer();
   synapseLayer.setVisible(false);
   synapseLayer.mount(renderContext, renderTopology);
@@ -757,6 +819,12 @@ async function init(): Promise<void> {
       }
       captureTime = time;
       if (latestSnapshot) renderFrame(latestSnapshot, time, rotation);
+    },
+    setCameraRotation(rotation) {
+      if (!Number.isFinite(rotation)) throw new Error("rotação de câmera inválida");
+      if (latestSnapshot) {
+        renderFrame(latestSnapshot, simulationClock.renderTimeSeconds, rotation);
+      }
     },
     diagnostics() {
       return {
@@ -836,6 +904,9 @@ async function init(): Promise<void> {
     },
     renderedStateAudit() {
       return auditRenderedStatePixels(renderer);
+    },
+    electricalBoardAudit() {
+      return { ...electricalBoardLayer.audit(), topology: electricalTopology };
     },
     createAuditWorker() {
       return new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });

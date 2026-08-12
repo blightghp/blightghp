@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#020711" />
-    <meta name="description" content="BRAIN PRO [v. 0.8] — células AdEx e correntes AMPA, NMDA, GABA-A e GABA-B com sinal em Rust/Wasm." />
-    <meta property="og:title" content="BRAIN PRO [v. 0.8]" />
-    <meta property="og:description" content="Rust, WebAssembly, L1–L6, relé talâmico e TRN em um caderno de aprendizagem executável." />
+    <meta name="description" content="BRAIN PRO [v. 0.9.0] — células AdEx, eventos carimbados e Prancha Elétrica com sinal em Rust/Wasm." />
+    <meta property="og:title" content="BRAIN PRO [v. 0.9.0]" />
+    <meta property="og:description" content="Rust, WebAssembly, L1–L6, química sináptica e Prancha Elétrica em um caderno de aprendizagem executável." />
     <meta property="og:image" content="https://raw.githubusercontent.com/blightghp/blightghp/main/assets/brain-concept.png" />
-    <title>BRAIN PRO [v. 0.8]</title>
+    <title>BRAIN PRO [v. 0.9.0]</title>
     <link rel="stylesheet" href="/src/styles.css" />
     <script type="module" src="/src/main.ts"></script>
   </head>
@@ -19,7 +19,7 @@
     <header class="topbar">
       <a class="brand" href="https://github.com/blightghp" aria-label="Perfil blightghp no GitHub">
         <span class="brand-mark" aria-hidden="true"></span>
-        <span>BRAIN PRO [v. 0.8]</span>
+        <span>BRAIN PRO [v. 0.9.0]</span>
       </a>
       <div class="runtime"><span class="runtime-dot"></span><span id="runtime-status">INICIALIZANDO MOTOR</span></div>
     </header>
@@ -192,9 +192,28 @@
     </aside>
 
     <aside class="glass-panel control-panel electricity-panel" id="electricity-panel" role="tabpanel" aria-labelledby="tab-electricity" hidden>
-      <div class="eyebrow">CORRENTE COM SINAL · ABI V6</div>
-      <h1>Correntes<br /><span>sinápticas.</span></h1>
-      <p class="lede">AMPA e GABA-A mostram a resposta rápida; NMDA e GABA-B preservam componentes lentas. Os medidores mantêm o sinal: valores positivos entram na célula e negativos saem.</p>
+      <div class="eyebrow">PRANCHA ELÉTRICA · ABI V7</div>
+      <h1>Fluxo<br /><span>com origem.</span></h1>
+      <p class="lede">O esquema lê o patch publicado e separa nós, vias, sentido, potencial, corrente e condutância efetiva. A prancha não calcula o circuito nem altera o motor.</p>
+
+      <div class="metric-strip electrical-metrics" aria-label="Grandezas elétricas médias do patch">
+        <div><strong id="board-voltage">−70.0 mV</strong><span>VOLTAGEM</span></div>
+        <div><strong id="board-net-current">0.0 pA</strong><span>CORRENTE</span></div>
+        <div><strong id="board-conductance">0.000 nS</strong><span>CONDUTÂNCIA</span></div>
+      </div>
+
+      <section>
+        <div class="section-heading"><span>LEITURA</span><span>SÓ APRESENTAÇÃO</span></div>
+        <div class="control-group compact">
+          <label for="electrical-detail"><span>Nível de processamento</span></label>
+          <select id="electrical-detail" class="glass-select">
+            <option value="summary">Agregado · V/A/S</option>
+            <option value="cellular" selected>Celular · 12 nós</option>
+            <option value="events">Eventos · IDs/tempo</option>
+          </select>
+        </div>
+        <p class="model-copy">A escolha muda apenas observáveis e detalhe visual; <code>dt</code>, solver, topologia e compartimentos permanecem idênticos.</p>
+      </section>
 
       <section class="current-stack" aria-label="Correntes receptoras médias com sinal">
         <label for="ampa-meter"><span>AMPA</span><output id="ampa-current">0.0 pA</output></label>
@@ -212,17 +231,24 @@
         </div>
       </section>
 
-      <section>
-        <div class="section-heading"><span>TEMPORALIDADE</span><span>EVENTOS</span></div>
-        <dl class="runtime-profile">
-          <div><dt>Primeiro disparo</dt><dd id="first-spike">—</dd></div>
-          <div><dt>Adaptação média</dt><dd id="adaptation-current">0.0 pA</dd></div>
-          <div><dt>τ AMPA / NMDA</dt><dd>5 / 80 ms</dd></div>
-          <div><dt>τ GABA-A / B</dt><dd>10 / 150 ms</dd></div>
-        </dl>
+      <section aria-labelledby="electrical-table-heading">
+        <div class="section-heading" id="electrical-table-heading"><span>EQUIVALENTE TEXTUAL</span><span>VALOR · ORIGEM</span></div>
+        <table class="electrical-table">
+          <caption>Leitura tabular da Prancha Elétrica</caption>
+          <tbody>
+            <tr><th scope="row">Excitação</th><td id="board-excitation">0.0 pA</td><td><code>cellPatch.ampa/nmda</code></td></tr>
+            <tr><th scope="row">Inibição</th><td id="board-inhibition">0.0 pA</td><td><code>cellPatch.gabaa/gabab</code></td></tr>
+            <tr><th scope="row">Shunt GABA-A</th><td id="board-shunt">0 / 12 células</td><td><code>I/(E−Vd)</code></td></tr>
+            <tr><th scope="row">Eventos</th><td id="board-events">0 eventos</td><td><code>cellSpikeEvents</code></td></tr>
+            <tr><th scope="row">Primeiro disparo</th><td id="first-spike">—</td><td><code>cellPatch.firstSpikeSeconds</code></td></tr>
+            <tr><th scope="row">Adaptação média</th><td id="adaptation-current">0.0 pA</td><td><code>cellPatch.adaptationAmperes</code></td></tr>
+            <tr><th scope="row">Atraso macro médio</th><td id="board-delay">0.00 ms</td><td><code>topology.synapses.delay</code></td></tr>
+            <tr><th scope="row">Ganho macro médio</th><td id="board-gain">0.000</td><td><code>|topology.synapses.weight|</code></td></tr>
+          </tbody>
+        </table>
       </section>
 
-      <p class="model-caveat">O plano do halo codifica a direção sem depender da cor. Shunt é identificado quando a corrente GABA-A publicada implica condutância ativa junto ao potencial de reversão; o retorno microscópico ao campo permanece desativado.</p>
+      <p class="model-caveat">Círculo = célula E; quadrado = célula I. A orientação das setas preserva o sinal. A condutância é derivada das correntes e forças motrizes publicadas; atraso e ganho vêm da topologia macro e são rotulados separadamente.</p>
     </aside>
 
     <aside class="glass-panel control-panel synapse-panel" id="synapse-panel" role="tabpanel" aria-labelledby="tab-synapse" hidden>
