@@ -1,4 +1,5 @@
 import { readFile, stat } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import packageManifest from "../package.json" with { type: "json" };
@@ -49,6 +50,21 @@ if (
   report.profile?.environment?.simulation?.runtime !== "rust-wasm"
 ) {
   throw new Error("artefato runtime-audit.json não comprova integralmente a ABI v6");
+}
+
+const sourceIsAncestor = (() => {
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", report.source.commit, "HEAD"], {
+      cwd: root,
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+})();
+if (!sourceIsAncestor) {
+  throw new Error(`commit de origem da auditoria não pertence ao histórico atual: ${report.source.commit}`);
 }
 
 assertWorkerLifecycleEvidence(report.abi.lifecycle);

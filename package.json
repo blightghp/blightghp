@@ -19,7 +19,7 @@
     "verify:runtime-audit": "node scripts/verify_runtime_audit.js",
     "build:wasm": "cargo build -p brain-wasm --release --target wasm32-unknown-unknown && wasm-bindgen target/wasm32-unknown-unknown/release/brain_wasm.wasm --out-dir src/wasm --target web --typescript",
     "stamp:brain-gif": "node scripts/stamp_brain_gif.js",
-    "check": "npm run typecheck && npm run check:shadow-replay && npm run test && npm run build && npm run test:wasm-browser && npm run audit:runtime && npm run verify:runtime-audit"
+    "check": "npm run typecheck && npm run check:shadow-replay && npm run test && npm run build && npm run test:wasm-browser && npm run verify:runtime-audit && npm run audit:runtime"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

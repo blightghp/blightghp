@@ -411,7 +411,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | :-- | :-- | :-- | :-- |
 | C-01 | headers 0.7 × manifests/código 0.8 | manifests + ABI/código | docs passam a declarar produto 0.8.0 e promoção pendente |
 | C-02 | roadmap 0.7 × proposta 0.8 × código concluído | código/testes | um roadmap canônico; ambos arquivados |
-| C-03 | “0.8 fechada” no README × ausência de auditoria 0.8 | artefato visual versionado | implementação não equivale a promoção |
+| C-03 | “0.8 fechada” × gates de promoção incompletos | auditorias P2/P3/P4 | P2 concluída não equivale à promoção geral |
 | C-04 | 22 buffers/ABI v5 × ABI v6 atual | protocolo/transfer list | estado atual é 34; 22 permanece só como história |
 | C-05 | `main.ts` concentrava render × `src/render` existente | árvore atual | descrição atualizada; `main.ts` ainda concentra composição/UI |
 | C-06 | “gate de invertibilidade pixel” × teste analítico | script/testes | classificar como parcial até amostrar render target/pixels conhecidos |
@@ -429,7 +429,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | P3 arquitetura desatualizada | FECHADO por esta revisão | este documento |
 | P4 `src/render`/interface | FECHADO | diretório, `RenderLayer` e testes existem |
 | P5 inferência fora do contrato | ABERTO | `posterior` ainda alimenta `confidence`; R09-A |
-| E1 perfil sem ambiente | PARCIAL | script atual coleta; artefato versionado ainda antigo |
+| E1 perfil sem ambiente | FECHADO em R08-P2 | artefato schema 2 registra host, navegador, preset e contagens |
 | E2 hardware real | ABERTO | somente evidência headless versionada |
 | E3 redundância sem cor | PARCIAL | formas/testes/capturas existem; gate automático é declarativo |
 | E4 estado→pixel | PARCIAL | rampa pura e saturação existem; pixel conhecido não volta ao estado |
