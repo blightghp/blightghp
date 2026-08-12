@@ -39,6 +39,7 @@ import type {
   SimulationTick,
 } from "./protocol";
 import { BrainSettings, getInitialBrainSettings } from "./schema";
+import { snapshotBufferEntries } from "./snapshot-layout";
 
 declare global {
   interface Window {
@@ -57,6 +58,11 @@ declare global {
         chemicalHash?: string;
         degraded: boolean;
         detail?: string;
+      };
+      abiEvidence: () => {
+        schemaVersion: number;
+        buffers: Array<{ name: string; byteLength: number }>;
+        hashes: Record<string, string | undefined>;
       };
       profile: () => RuntimeProfile;
       setColorMode: (mode: VisualColorMode) => void;
@@ -747,6 +753,22 @@ async function init(): Promise<void> {
         detail:
           latestSnapshot?.diagnostics.detail ??
           engineReady?.detail,
+      };
+    },
+    abiEvidence() {
+      if (!latestSnapshot) throw new Error("snapshot indisponível para auditoria da ABI");
+      return {
+        schemaVersion: latestSnapshot.schemaVersion,
+        buffers: snapshotBufferEntries(latestSnapshot).map(({ name, view }) => ({
+          name,
+          byteLength: view.byteLength,
+        })),
+        hashes: {
+          network: latestSnapshot.diagnostics.stateHash,
+          corticothalamic: latestSnapshot.diagnostics.corticothalamicHash,
+          cell: latestSnapshot.diagnostics.cellPatchHash,
+          chemical: latestSnapshot.diagnostics.chemicalHash,
+        },
       };
     },
     async schedule(inputs) {

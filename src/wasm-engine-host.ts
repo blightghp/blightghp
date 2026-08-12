@@ -13,6 +13,7 @@ import type {
   EngineSnapshotEvent,
   NeuralSnapshot,
 } from "./protocol";
+import { snapshotBufferEntries } from "./snapshot-layout";
 import initWasm, { WasmNeuralEngine } from "./wasm/brain_wasm.js";
 
 let wasmInitialization: Promise<unknown> | undefined;
@@ -143,42 +144,7 @@ function flattenTopology(data: BrainData) {
 }
 
 export function snapshotTransferList(snapshot: NeuralSnapshot): ArrayBuffer[] {
-  return [
-    snapshot.potentials.buffer,
-    snapshot.activations.buffer,
-    snapshot.weights.buffer,
-    snapshot.signals.synapseIds.buffer,
-    snapshot.signals.progress.buffer,
-    snapshot.signals.strength.buffer,
-    snapshot.signals.inhibitory.buffer,
-    snapshot.field.nodeIndices.buffer,
-    snapshot.field.eField.buffer,
-    snapshot.field.iField.buffer,
-    snapshot.field.waveActivity.buffer,
-    snapshot.corticothalamic.excitatory.buffer,
-    snapshot.corticothalamic.inhibitory.buffer,
-    snapshot.cellPatch.kinds.buffer,
-    snapshot.cellPatch.membraneVolts.buffer,
-    snapshot.cellPatch.dendriteVolts.buffer,
-    snapshot.cellPatch.adaptationAmperes.buffer,
-    snapshot.cellPatch.ampaAmperes.buffer,
-    snapshot.cellPatch.nmdaAmperes.buffer,
-    snapshot.cellPatch.gabaaAmperes.buffer,
-    snapshot.cellPatch.gababAmperes.buffer,
-    snapshot.cellPatch.spiked.buffer,
-    snapshot.chemical.releaseEventIndices.buffer,
-    snapshot.chemical.presynapticSpikeCounts.buffer,
-    snapshot.chemical.vesicleAvailableFraction.buffer,
-    snapshot.chemical.vesicleUtilizationFraction.buffer,
-    snapshot.chemical.latestReleaseMoles.buffer,
-    snapshot.chemical.latestReleaseTimeSeconds.buffer,
-    snapshot.chemical.totalReleasedMoles.buffer,
-    snapshot.chemical.cleftMoles.buffer,
-    snapshot.chemical.cleftConcentrationMolesPerCubicMeter.buffer,
-    snapshot.chemical.receptorBoundMoles.buffer,
-    snapshot.chemical.receptorOccupancyFraction.buffer,
-    snapshot.chemical.clearedMoles.buffer,
-  ];
+  return snapshotBufferEntries(snapshot).map(({ view }) => view.buffer as ArrayBuffer);
 }
 
 export class WasmEngineHost {

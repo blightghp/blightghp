@@ -8,6 +8,7 @@ import {
   snapshotTransferList,
   WORKER_RESOURCE_LIMITS,
 } from "./wasm-engine-host";
+import { snapshotBufferEntries } from "./snapshot-layout";
 
 describe("diagnostic Wasm fallback", () => {
   it("publishes an explicit inert snapshot without inventing activity", () => {
@@ -77,8 +78,12 @@ describe("diagnostic Wasm fallback", () => {
       stimulus: { intensity: 0, confidence: 0 },
     }).snapshot;
     const buffers = snapshotTransferList(snapshot);
+    const entries = snapshotBufferEntries(snapshot);
 
     expect(buffers).toHaveLength(34);
+    expect(entries).toHaveLength(34);
+    expect(new Set(entries.map(({ name }) => name)).size).toBe(entries.length);
+    expect(entries.map(({ view }) => view.buffer)).toEqual(buffers);
     expect(new Set(buffers).size).toBe(buffers.length);
     expect(buffers).toContain(snapshot.potentials.buffer);
     expect(buffers).toContain(snapshot.field.waveActivity.buffer);
