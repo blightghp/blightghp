@@ -6,7 +6,9 @@
 
 **Estado de promoção:** 0.8 promovida em 12 de agosto de 2026
 
-**Próximo gate:** `R09-A` · fronteira de experimentos
+**Estado de desenvolvimento:** 0.9 em construção; R09-A concluída
+
+**Próximo gate:** `R09-B` · eventos celulares carimbados
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -70,7 +72,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | fenda, ocupação e solver | IMPLEMENTADO E VALIDADO NO REGIME TESTADO | `cleft_occupancy`, `chemical_solver` | replays e convergência | microdomínio representativo, não população de fendas |
 | ABI v6 e aba Sinapse | IMPLEMENTADO, VALIDADO E PROMOVIDO | `brain-wasm`, Worker, `SynapseRenderLayer` | [auditoria de promoção](AUDIT_0.8_PROMOTION.md) | validade restrita ao contrato 0.8 declarado |
 | passes matéria/emissão e tokens | IMPLEMENTADO E VALIDADO EM P3 | `src/render` | [auditoria gráfica](AUDIT_0.8_GRAPHICS.md) | validade restrita aos backends/envelopes registrados |
-| inferência Bayesiana do painel | EXPERIMENTAL/CONTRADITÓRIO | `inference.ts`, `main.ts` | dois testes unitários | posterior TypeScript alimenta `confidence` sem contrato de experimento |
+| inferência Bayesiana de tarefa | EXPERIMENTAL E ISOLADA | `experiment.ts`, `inference.ts` | schema 1, fixture, controle nulo e replay | posterior é apenas apresentada; estímulo interativo exige contexto nulo |
 | neurônio resolvido, cortes, vascular, atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
 
 ## Histórico verificável
@@ -111,8 +113,8 @@ Worker → frontend → renderer → auditoria → documentação → promoção
 
 ## R08-PROMOTION · fechar a versão 0.8
 
-**Estado:** P1–P4 concluídas; 0.8 promovida. A próxima fisiologia começa em
-R09-A sob os contratos abaixo.
+**Estado:** P1–P4 concluídas; 0.8 promovida e oficialmente encerrada. A evolução
+0.9 prossegue sob os contratos abaixo.
 
 ### R08-P1 · fonte documental única
 
@@ -180,18 +182,19 @@ R09-A sob os contratos abaixo.
 
 ### R09-A · fronteira de experimentos
 
-Resolve a posterior Bayesiana que hoje é calculada em TypeScript e enviada como
+Resolve a posterior Bayesiana antes calculada em TypeScript e enviada como
 `confidence`. O corte define `ExperimentEncoder`/`ExperimentDecoder`, classifica
-o cálculo como modelo de tarefa e escolhe: portar a dinâmica científica ao Rust
-ou retirar sua influência do drive. Não cria “cognição” genérica.
+o cálculo como modelo de tarefa e retira sua influência do drive. Não cria
+“cognição” genérica.
 
-- **Estado:** planejada; **IDs:** ARC-014, UI-012, MOD-090, QA-090.
-- **Arquivos prováveis:** `inference.ts`, `main.ts`, protocolo, módulo Rust de
-  experimento e testes.
-- **Aceite:** nenhuma posterior não versionada atravessa o protocolo; controle
-  nulo e replay da tarefa; UI explica hipótese e limite.
+- **Estado:** concluída; **IDs:** ARC-014, UI-012, MOD-090, QA-090; **evidência:**
+  [AUDIT_0.9_R09_A.md](AUDIT_0.9_R09_A.md).
+- **Arquivos:** `experiment.ts`, `direct-stimulus.ts`, `inference.ts`, `main.ts`,
+  protocolo, schemas de aplicação, fixture e testes.
+- **Aceite:** nenhuma posterior atravessa o comando interativo; contexto nulo é
+  validado no host; controle nulo, replay e UI explicam hipótese e limite.
 - **Desempenho/segurança:** custo fora do laço gráfico; payload validado e
-  limitado. **Rollback:** remover o painel do drive e manter estímulo direto.
+  limitado a 4.096 observações. **Rollback:** manter apenas estímulo direto.
 - **Complexidade/confiança:** média / alta.
 
 ### R09-B · eventos celulares carimbados

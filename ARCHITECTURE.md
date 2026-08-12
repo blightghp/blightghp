@@ -28,7 +28,7 @@ como planejada e nunca é descrita como implementada.
 | ARC-011 | quatro hashes têm domínios independentes | aceita | mudança de schema deliberada e migração de replay |
 | ARC-012 | objetos gráficos declaram proveniência | aceita | não há gatilho previsto |
 | ARC-013 | fallback é diagnóstico e inerte | aceita | substituição por falha explícita, nunca por motor TS |
-| ARC-014 | modelos de tarefa atravessam adaptadores explícitos | proposta | fechamento de `inference.ts` em R09-A |
+| ARC-014 | modelos de tarefa atravessam adaptadores explícitos | aceita em R09-A | mudar schema/identidade do experimento |
 
 ## Contexto do sistema
 
@@ -79,7 +79,7 @@ flowchart TB
 | fronteira Wasm | `crates/brain-wasm/src/lib.rs` | construir motor, adaptar erros, expor buffers/métodos | equações alternativas |
 | host/Worker | `simulation.worker.ts`, `wasm-engine-host.ts`, `protocol.ts` | ordenar comandos, validar cotas, mover snapshots, degradação | criar atividade ou reinterpretar unidade |
 | aplicação | `main.ts`, `schema.ts`, `clock.ts`, `performance-profile.ts` | bootstrap, estado de UI, cadência, controles, métricas | mutar buffers científicos |
-| tarefa experimental | `inference.ts` | posterior Bayesiana escalar | permanece experimental porque alimenta `confidence` sem adaptador versionado |
+| tarefa experimental | `experiment.ts`, `inference.ts` | posterior Bayesiana escalar | schema/adapter/replay próprios; permanece experimental e não alimenta o drive |
 | gráficos | `src/render/*` | scene graph, materiais, passes, tokens, LOD e proveniência | eventos/valores inexistentes no snapshot |
 | topologia visual | `brain.ts` | geometria e conectividade procedural serializada ao motor | afirmar anatomia parcelada |
 | desktop | `src-tauri` | janela, CSP, comando de metadados e opener | segundo motor |
@@ -291,8 +291,8 @@ Mudanças alvo:
 
 - separar estado de aplicação do bootstrap monolítico sem escolher framework por
   preferência;
-- introduzir adaptadores de experimento e remover a posterior implícita do
-  comando genérico;
+- manter adaptadores de experimento versionados e a posterior fora do comando
+  neural interativo;
 - adicionar backpressure, cancelamento e diagnóstico de fila;
 - gerar/testar metadados de ABI e unidades a partir de contrato único;
 - oferecer runner Rust headless/Tauri sem duplicar o motor;
@@ -416,7 +416,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | C-05 | `main.ts` concentrava render × `src/render` existente | árvore atual | descrição atualizada; `main.ts` ainda concentra composição/UI |
 | C-06 | “gate de invertibilidade pixel” × teste analítico | script/testes | R08-P3 amostra render target e pixels conhecidos em dois backends |
 | C-07 | “modo sem cor comprova redundância” × filtro grayscale | código auditável | R08-P3 exige bindings e pistas geométricas concretas além da captura |
-| C-08 | TS só apresenta × posterior alimenta drive | `main.ts`/`inference.ts` | experimento permanece explícito e R09-A resolve ownership |
+| C-08 | TS só apresenta × posterior alimentava drive | `experiment.ts`/protocolo/testes | R09-A isola o modelo de tarefa; comando interativo aceita apenas contexto nulo |
 | C-09 | Tauri roda núcleo nativo × host atual só informa schema | `src-tauri/src/lib.rs` | execução nativa é alvo, não capacidade atual |
 | C-10 | VISUAL_SPEC ativo × GRAPHICS_SPEC requerido | conjunto canônico | conteúdo incorporado e proposta arquivada |
 
@@ -428,7 +428,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | P2 programa visual ausente | FECHADO documentalmente | GRAPHICS_SPEC/roadmap; futuras features ainda planejadas |
 | P3 arquitetura desatualizada | FECHADO por esta revisão | este documento |
 | P4 `src/render`/interface | FECHADO | diretório, `RenderLayer` e testes existem |
-| P5 inferência fora do contrato | ACEITO PARA R09-A | `posterior` ainda alimenta `confidence`; primeiro corte da 0.9 |
+| P5 inferência fora do contrato | FECHADO EM R09-A | schema 1, adapters, fixture/replay e posterior sem influência motora |
 | E1 perfil sem ambiente | FECHADO em R08-P2 | artefato schema 2 registra host, navegador, preset e contagens |
 | E2 hardware real | FECHADO em R08-P3 | Intel UHD 770/ANGLE D3D11 versionada com ambiente e custos |
 | E3 redundância sem cor | FECHADO em R08-P3 | 72 bindings + testes das geometrias/posições/orientações concretas |
@@ -453,7 +453,7 @@ flowchart LR
     P2 --> P4["R08-P4 promoted"]
     P3 --> P4
     P4 --> A["R09-A experiments"]
-    P4 --> B["R09-B events"]
+    A --> B["R09-B events"]
     B --> C["R09-C Electrical Board"]
     B --> D["R09-D Neuron"]
     D --> E["R09-E multicompartment"]

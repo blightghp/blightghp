@@ -15,6 +15,10 @@ aprendizagem, ciência de dados e engenharia de software. Meu GitHub é um porta
 de experimentos: uso código para pensar, mas procuro não reduzir um fenômeno
 àquilo que é mais fácil medir.
 
+<div align="center">
+  <img src="assets/rustacean-amateur.svg" width="680" alt="I'm an amateur and also a passionate Rustacean!" />
+</div>
+
 O BRAIN PRO expressa uma particularidade desse percurso. Ao estudar Rust e o
 Kandel lado a lado, exploro aproximações e diferenças entre biologia e máquina:
 o que pode ser formalizado, o que permanece interpretação e o que ainda exige
@@ -93,7 +97,7 @@ publicado neste repositório.
 
 ---
 
-## BRAIN PRO [v. 0.8.0 · promovida]
+## BRAIN PRO [v. 0.8.0 promovida · desenvolvimento 0.9]
 
 Estou construindo o BRAIN PRO como um caderno de aprendizagem executável. Sou
 um programador aprendendo a usar a [Rust Programming Language](https://www.rust-lang.org/)
@@ -155,7 +159,10 @@ estão no [ROADMAP canônico](ROADMAP.md) e na
 - curvas axonais recorrentes em L1–L6, ciclos independentes e LOD visual com
   custo de cena declarado de 26, 36 ou 44 draw calls;
 - navegação de abas por teclado, movimento reduzido e fallback diagnóstico
-  inerte quando o Wasm não carrega.
+  inerte quando o Wasm não carrega;
+- experimento Bayesiano de tarefa com schema próprio, encoder/decoder, controle
+  nulo e replay determinístico; sua posterior é apenas apresentada e não
+  atravessa o comando interativo nem altera o drive neural.
 
 O ritmo produzido pelo laço relé–TRN e as classes celulares são
 **fenomenológicos**. O patch não possui morfologia multicompartimental, canais
@@ -214,6 +221,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-11 | publico a química na ABI v6 sem tocar nos hashes anteriores e concluo sua implementação com a aba Sinapse; a promoção permanece condicionada aos gates de fechamento |
 | 2026-08-12 | fecho R08-P2 com 34 buffers, quatro hashes, replay após reset, descarte/reinicialização e 11 capturas versionadas da ABI v6 |
 | 2026-08-12 | fecho R08-P3 com pixel→estado, 72 bindings redundantes, 11 capturas e baseline Intel/D3D11; R08-P4 promove a 0.8 sem achado alto aberto |
+| 2026-08-12 | fecho R09-A com fronteira de experimento versionada, replay e controle nulo; a posterior de tarefa deixa de influenciar o estímulo neural direto |
 
 O histórico da base está em
 [`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
@@ -226,7 +234,8 @@ O histórico da base está em
 histórica dos achados; o fechamento executável da ABI está em
 [AUDIT_0.8_ABI_V6.md](AUDIT_0.8_ABI_V6.md), a prova gráfica em
 [AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md) e o veredito final em
-[AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md).
+[AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md). A primeira etapa da 0.9 está
+registrada na [auditoria R09-A](AUDIT_0.9_R09_A.md).
 
 ### Executar e conferir
 

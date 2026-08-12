@@ -200,6 +200,12 @@ Erros cruzam a fronteira como código fechado e mensagem segura. Payloads
 malformados, arrays divergentes e contadores acima de `Number.MAX_SAFE_INTEGER`
 são rejeitados antes da apresentação.
 
+O comando interativo `advance` recebe somente `DirectNeuralStimulus`, com
+intensidade finita em `[0,1]` e contexto literal zero. Modelos de tarefa podem
+produzir observáveis no shell, mas não reutilizam esse campo para influenciar o
+motor. Entradas futuras contextualizadas exigem comando, versão e replay
+explícitos; a fila agendada existente continua reservada a replays endereçados.
+
 ## Worker
 
 ### Estado atual

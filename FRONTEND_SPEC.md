@@ -65,10 +65,11 @@ custo aceitável de bundle/migração. Não há evidência atual para fazê-la.
 | efêmero | hover, transição, menu aberto | componente | não | não |
 | auditoria | perfil, contraste, proveniência, faults | ferramentas | artefato | não |
 
-Hoje `BrainSettings` mistura apresentação (`rotationSpeed`, bloom, visibilidade,
-`pulseCount`) com controles que atravessam o motor (`learningRate`) e velocidade
-de execução (`pulseSpeed`). R09-A deve separar `PresentationPreferences`,
-`RunControls` e `ScientificPresetSelection`.
+O input inicial continua plano por compatibilidade de URL e controles, mas R09-A
+passou a compô-lo a partir de três schemas e tipos distintos:
+`PresentationPreferences`, `RunControls` e `ScientificPresetSelection`. Essa
+separação impede que validação de aparência seja confundida com parâmetro
+científico; uma futura persistência pode armazená-los independentemente.
 
 ## Relação com o Worker
 
@@ -250,17 +251,18 @@ Importação nunca executa código, valida tamanho antes do parse, limita
 topologia/eventos/strings e conserva o original para diagnóstico quando seguro.
 Migração falha de modo recuperável e oferece exportação.
 
-## Estado experimental de `inference.ts`
+## Experimento Bayesiano de tarefa
 
-`BayesianBelief.observe` calcula uma posterior no shell; `main.ts` a envia como
-`stimulus.confidence`. Isso não é uma segunda integração biofísica, mas é um
-modelo de tarefa que influencia o motor sem versão, preset ou replay próprio.
-Até R09-A:
+`BayesianObservationExperiment` encapsula `BayesianBelief.observe` como modelo
+de tarefa schema 1. Encoder e decoder validam identificação, sequência,
+probabilidades e o limite de 4.096 observações; fixture, replay e controle nulo
+demonstram o contrato. A posterior permanece no shell e é exibida no painel.
 
-- deve permanecer rotulado experimental;
-- não sustenta alegação cognitiva geral;
-- não é usado como evidência de validade do núcleo;
-- qualquer promoção exige encoder/decoder, controle nulo, fixture e owner.
+O comando interativo usa `DirectNeuralStimulus`: intensidade direta e contexto
+literal zero, também rejeitado no host se divergente. Portanto a posterior não
+altera o drive, não sustenta alegação cognitiva geral e não é evidência de
+validade do núcleo. Qualquer influência científica futura exigirá novo contrato
+Rust/ABI, hipótese, preset e replay próprios.
 
 ## Testes necessários
 

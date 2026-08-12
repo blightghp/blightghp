@@ -1,6 +1,6 @@
 # Estratégia canônica de validação · BRAIN PRO
 
-**Revisão:** 2 · produto observado 0.8.0 · promoção 0.8 concluída
+**Revisão:** 3 · produto observado 0.8.0 · promoção 0.8 concluída · R09-A validada
 
 Quatro perguntas permanecem separadas: o cálculo é reproduzível, respeita
 limites, converge e produz o fenômeno definido pelo experimento? Uma única
@@ -18,6 +18,7 @@ artefato de promoção.
 | gráficos 0.8 | bindings estruturais, pixel renderizado, saturação e capturas | headless + baseline físico versionados | validado em P3 |
 | hardware real | perfil completo e rejeição de software renderer | Intel UHD 770/ANGLE D3D11 | baseline versionado; não é promessa universal |
 | promoção 0.8 | gate agregado de versão, ABI, evidência e achados | `promotion-0.8.json` schema 1 | P1–P4 concluídas; nenhum achado alto aberto |
+| experimento de tarefa R09-A | schema/adapters, controle nulo, fixture e replay | `bayesian-observation-v1.json` | posterior isolada do drive; contexto interativo nulo |
 
 O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
@@ -41,6 +42,7 @@ ambiente e dos envelopes registrados.
 | QA-008 | promoção exige comandos reais e artefatos reproduzíveis |
 | QA-009 | falha é atômica e rollback verificável |
 | QA-010 | segurança cobre input malformado, cotas, supply chain e privacidade aplicável |
+| QA-090 | modelo de tarefa tem schema, owner, limite, controle nulo e replay; não atravessa a fronteira científica implicitamente |
 
 ## Camadas de evidência
 
