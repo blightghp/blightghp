@@ -46,11 +46,17 @@ explicitamente como média macro; não são atribuídos às células do patch.
 | `npm run test -- --run` | passou · 19 arquivos/74 testes |
 | `npm run build` | passou |
 | `npm run audit:runtime` | passou · cinco vistas desktop/monocromáticas, móvel, teclado, tabela e orçamento |
+| `npm run check` | passou · replay sombra, 74 testes, build, Worker Wasm, promoção 0.8 e auditoria visual agregados |
+| `cargo test --workspace --all-targets` | passou · 53 testes unitários e todas as integrações/replays |
+| `cargo fmt --all -- --check` | passou |
+| `cargo clippy --workspace --all-targets -- -D warnings` | passou |
+| `cargo check -p brain-wasm --target wasm32-unknown-unknown` | passou |
 | captura Eletricidade `1440×960` | passou · nós, vias, unidades e painel legíveis |
 
-O build preserva o aviso não bloqueante já conhecido do chunk Three.js. R09-C
-não altera Rust, ABI, Worker, buffers, passo, solver, topologia ou os cinco
-domínios de hash.
+O build preserva o aviso não bloqueante já conhecido do chunk Three.js; o linker
+MSVC informa apenas a criação normal da biblioteca de importação do host Tauri.
+R09-C não altera Rust, ABI, Worker, buffers, passo, solver, topologia ou os
+cinco domínios de hash.
 
 ## Limites e próximo gate
 
