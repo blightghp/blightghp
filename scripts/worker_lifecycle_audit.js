@@ -36,7 +36,7 @@ export async function auditWorkerLifecycle(page) {
       const advanced = await send({
         type: "advance",
         targetTick: 12,
-        stimulus: { intensity: 0.61, confidence: 0.73 },
+        stimulus: { intensity: 0.61, confidence: 0 },
         learningRate: 0.003,
       });
       if (scheduled.type !== "scheduled" || advanced.type !== "snapshot") {

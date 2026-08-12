@@ -25,7 +25,9 @@ import {
   voltsToMillivolts,
 } from "./render";
 import type { SimulationView, VisualColorMode } from "./render";
-import { BayesianBelief, BayesianUpdate } from "./inference";
+import { directNeuralStimulus } from "./direct-stimulus";
+import { BayesianObservationExperiment } from "./experiment";
+import type { BayesianExperimentView } from "./experiment";
 import {
   parseSnapshotCadence,
   RuntimeProfiler,
@@ -94,7 +96,7 @@ interface RuntimeInfo {
 }
 
 const state: BrainSettings = getInitialBrainSettings();
-const belief = new BayesianBelief(0.35);
+const taskExperiment = new BayesianObservationExperiment(0.35);
 const simulationClock = new FixedStepClock({
   stepSeconds: SIMULATION_STEP_SECONDS,
   maxInteractiveDeltaSeconds: 0.1,
@@ -116,7 +118,7 @@ let latestSnapshot: NeuralSnapshot | undefined;
 let previousSnapshot: NeuralSnapshot | undefined;
 let lastSnapshotReceivedTimestamp = performance.now();
 let engineBusy = false;
-let currentInference: BayesianUpdate;
+let currentInference: BayesianExperimentView;
 let captureMode = false;
 let captureTime = 0;
 let metricAccumulator = 0;
@@ -341,7 +343,7 @@ function requestAdvance(targetTick: SimulationTick): void {
   sendCommand({
     type: "advance",
     targetTick,
-    stimulus: { intensity: state.stimulusIntensity, confidence: currentInference.posterior },
+    stimulus: directNeuralStimulus(state.stimulusIntensity),
     learningRate: state.learningRate,
   }).then((event) => {
     runtimeProfiler.recordWorkerLatency(performance.now() - requestTimestamp);
@@ -454,7 +456,7 @@ function formatCount(value: number): string {
   return `${(value / 1000).toFixed(1)}K`;
 }
 
-function showInference(update: BayesianUpdate): void {
+function showInference(update: BayesianExperimentView): void {
   element("#prior-val").textContent = update.prior.toFixed(2);
   element("#posterior-val").textContent = update.posterior.toFixed(2);
   element("#stimulus-val").textContent = `${Math.round(update.observation * 100)}%`;
@@ -577,7 +579,7 @@ function setupInterface(): void {
   let intensityLevel = Math.round(state.stimulusIntensity * 10);
   const registerObservation = (): void => {
     state.stimulusIntensity = intensityLevel / 10;
-    currentInference = belief.observe(state.stimulusIntensity);
+    currentInference = taskExperiment.observe(state.stimulusIntensity);
     showInference(currentInference);
   };
   element("#btn-intensity-up").addEventListener("click", () => {
@@ -714,7 +716,7 @@ async function init(): Promise<void> {
         const event = await sendCommand({
           type: "advance",
           targetTick: warmup.targetTick,
-          stimulus: { intensity: state.stimulusIntensity, confidence: currentInference.posterior },
+          stimulus: directNeuralStimulus(state.stimulusIntensity),
           learningRate: state.learningRate,
         });
         if (event.type === "snapshot") {
@@ -732,7 +734,7 @@ async function init(): Promise<void> {
       const event = await sendCommand({
         type: "advance",
         targetTick: frame.targetTick,
-        stimulus: { intensity: state.stimulusIntensity, confidence: currentInference.posterior },
+        stimulus: directNeuralStimulus(state.stimulusIntensity),
         learningRate: state.learningRate,
       });
       if (event.type === "snapshot") {
