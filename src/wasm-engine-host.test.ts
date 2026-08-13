@@ -81,8 +81,8 @@ describe("diagnostic Wasm fallback", () => {
     const buffers = snapshotTransferList(snapshot);
     const entries = snapshotBufferEntries(snapshot);
 
-    expect(buffers).toHaveLength(36);
-    expect(entries).toHaveLength(36);
+    expect(buffers).toHaveLength(37);
+    expect(entries).toHaveLength(37);
     expect(new Set(entries.map(({ name }) => name)).size).toBe(entries.length);
     expect(entries.map(({ view }) => view.buffer)).toEqual(buffers);
     expect(new Set(buffers).size).toBe(buffers.length);
@@ -90,6 +90,8 @@ describe("diagnostic Wasm fallback", () => {
     expect(buffers).toContain(snapshot.field.waveActivity.buffer);
     expect(buffers).toContain(snapshot.corticothalamic.excitatory.buffer);
     expect(buffers).toContain(snapshot.cellPatch.membraneVolts.buffer);
+    expect(buffers).toContain(snapshot.cellPatch.dendriteProximalVolts.buffer);
+    expect(buffers).toContain(snapshot.cellPatch.dendriteDistalVolts.buffer);
     expect(buffers).toContain(snapshot.cellPatch.gababAmperes.buffer);
     expect(buffers).toContain(snapshot.cellSpikeEvents.cellIds.buffer);
     expect(buffers).toContain(snapshot.cellSpikeEvents.timeOffsetsSeconds.buffer);

@@ -72,7 +72,7 @@ fn main() {
         });
     }
     let fixture = Fixture {
-        schema_version: 1,
+        schema_version: 2,
         event_schema_version: brain_engine::CELL_SPIKE_EVENT_SCHEMA_VERSION,
         seed,
         macro_step_seconds,

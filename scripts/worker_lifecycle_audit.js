@@ -163,7 +163,7 @@ export async function auditWorkerLifecycle(page) {
 
 export function assertWorkerLifecycleEvidence(
   evidence,
-  { schemaVersion = 7, bufferCount = 36, hashCount = 5 } = {},
+  { schemaVersion = 8, bufferCount = 37, hashCount = 5 } = {},
 ) {
   const stampedEventsInvalid = schemaVersion >= 7 && (
     !evidence.cellSpikeEvents ||

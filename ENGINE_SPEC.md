@@ -1,6 +1,6 @@
 # Especificação do motor · BRAIN PRO
 
-**Revisão:** 3 · produto 0.9.0 · ABI/snapshot 7
+**Revisão:** 4 · produto 0.9.0 · ABI/snapshot 8
 
 Este é o manual de implementação do motor científico e de sua fronteira de
 execução. A matemática pertence a [MODEL_SPEC.md](MODEL_SPEC.md); este documento
@@ -21,7 +21,7 @@ define ownership, ordem, memória, falha, ABI e procedimento de evolução.
 | ENG-009 | hashes são detectores de regressão, não autenticação criptográfica. |
 | ENG-010 | renderer/FPS/LOD nunca alteram solver ou `dt`. |
 | ENG-019 | perfil de material, iluminação, textura, clipping e pós-processamento nunca entram em comando, snapshot, replay ou hash científico. |
-| ABI-001 | protocolo, ABI e snapshot são eixos distintos, ainda que hoje valham 7. |
+| ABI-001 | protocolo, ABI e snapshot são eixos distintos, ainda que hoje valham 8. |
 | ABI-002 | mudança de layout, unidade, ordem ou significado exige decisão de compatibilidade. |
 | ABI-003 | arrays paralelos têm comprimento/ordem validados antes do uso. |
 | ABI-004 | campos frequentes são compactados; não há mensagem por spike. |
@@ -110,7 +110,7 @@ exigir reset.
   e acesso justificarem;
 - alinhamento/SIMD só após benchmark e sem alterar ordem numérica silenciosa.
 
-### Layout publicado v7
+### Layout publicado v8
 
 | Bloco | Buffers |
 | :-- | :-- |
@@ -118,11 +118,11 @@ exigir reset.
 | sinais | IDs, progresso, força, inibitório |
 | campo | IDs de nós, E, I, atividade composta |
 | coluna | E e I L1–L6 |
-| patch | tipo, soma, dendrito, adaptação, AMPA, NMDA, GABA-A, GABA-B, spike |
+| patch | tipo, soma, dendrito proximal, dendrito distal, adaptação, AMPA, NMDA, GABA-A, GABA-B, spike |
 | eventos celulares | IDs `u32` e offsets temporais `f64` |
 | química | índice de evento, contagem de spikes, R, u, última liberação, tempo da última liberação, liberação total, mol na fenda, concentração, mol ligado, ocupação, remoção |
 
-Total: 36 `ArrayBuffer`s. Escalares e diagnósticos não fazem parte da contagem.
+Total: 37 `ArrayBuffer`s. Escalares e diagnósticos não fazem parte da contagem.
 Cada ordem canônica é fixa: transmissores `[glutamato, GABA]`; receptores
 `[AMPA, NMDA, GABA-A, GABA-B]`; lâminas L1–L6; eventos celulares por
 `(timeOffsetSeconds, cellId)`.
@@ -201,7 +201,7 @@ Incrementar o eixo aplicável quando ocorrer:
 - mudança de limites que invalida consumidor.
 
 Adições compatíveis futuras podem usar campos opcionais e feature negotiation;
-hoje a inicialização exige igualdade `schema_version() == 7`. Depreciação deve
+hoje a inicialização exige igualdade `schema_version() == 8`. Depreciação deve
 ter janela, teste de consumidor antigo e rollback. Nenhum fallback reinterpreta
 um campo desconhecido.
 
@@ -222,7 +222,7 @@ explícitos; a fila agendada existente continua reservada a replays endereçados
 - inicialização lazy do módulo Wasm;
 - fila Promise serial;
 - cotas duplicadas no host/adaptador;
-- transfer list de 36 buffers;
+- transfer list de 37 buffers;
 - no máximo 64 mensagens pendentes; a seguinte recebe `worker-backpressure`;
 - reset com possível regeneração da topologia;
 - dispose libera Wasm;

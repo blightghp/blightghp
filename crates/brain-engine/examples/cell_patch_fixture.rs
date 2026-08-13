@@ -26,7 +26,8 @@ struct Checkpoint {
     micro_tick: u64,
     state_hash_hex: String,
     membrane_volts_0: f32,
-    dendrite_volts_0: f32,
+    dendrite_proximal_volts_0: f32,
+    dendrite_distal_volts_0: f32,
     firing_rate_hz: f64,
     first_spike_seconds: Option<f64>,
 }
@@ -63,14 +64,15 @@ fn main() {
                 micro_tick: snapshot.tick,
                 state_hash_hex: format!("{:016x}", snapshot.state_hash),
                 membrane_volts_0: snapshot.membrane_volts[0],
-                dendrite_volts_0: snapshot.dendrite_volts[0],
+                dendrite_proximal_volts_0: snapshot.dendrite_proximal_volts[0],
+                dendrite_distal_volts_0: snapshot.dendrite_distal_volts[0],
                 firing_rate_hz: snapshot.firing_rate_hz,
                 first_spike_seconds: snapshot.first_spike_seconds,
             });
         }
     }
     let fixture = Fixture {
-        schema_version: 1,
+        schema_version: 2,
         seed,
         macro_step_seconds,
         drive,

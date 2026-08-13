@@ -142,20 +142,20 @@ aparência não será apresentada como evidência biológica.
   condutâncias AMPA/GABA-A, plasticidade STDP e um campo populacional E/I;
 - uma coluna didática com populações E/I em L1–L6, vias feedforward/feedback,
   relé talâmico, TRN e retorno corticotalâmico;
-- um patch com 12 células AdEx, dendrito passivo, adaptação e receptores AMPA,
-  NMDA, GABA-A e GABA-B integrados a `83,3 µs`;
+- um patch com 12 células AdEx e cabo passivo soma→proximal→distal, adaptação e
+  receptores roteados por compartimento, integrados a `83,3 µs`;
 - seis vistas sincronizadas: **Visão Geral**, **Lâminas**, **Célula**,
   **Neurônio**, **Eletricidade** e **Sinapse**;
 - seleção celular por raycast ou lista, com `Tab`/`Enter`/`Escape`, foco
-  restaurado e uma vista de célula única que lê soma, dendrito, adaptação,
+  restaurado e uma vista de célula única que lê soma, proximal, distal, adaptação,
   correntes e apenas os eventos carimbados daquela célula;
 - morfologia ilustrativa determinística por `seed + cellId`, hash geométrico de
-  64 bits, 10 draws e zero reconstrução por frame; toda a árvore usa um único
-  potencial dendrítico e não reivindica condução ou tipo celular real;
+  64 bits, 10 draws e zero reconstrução por frame; a árvore interpola somente os
+  três potenciais publicados e não reivindica condução ativa ou tipo celular real;
 - Prancha Elétrica com 12 nós, vias direcionais, V/A/S, excitação, inibição,
   shunt, eventos e equivalente tabular com unidade/origem; níveis de detalhe
   custam 6, 10 ou 11 draws e não alteram os cinco hashes;
-- execução Rust/Wasm em Worker, ABI v7 e 36 buffers transferíveis;
+- execução Rust/Wasm em Worker, ABI v8 e 37 buffers transferíveis;
 - cinco hashes separados: baseline 0.5, circuito córtico-talâmico, patch
   celular, trilho químico e lote de eventos celulares;
 - IDs celulares e offsets de spike em arrays paralelos, schema 1, ordem
@@ -193,8 +193,8 @@ aparência não será apresentada como evidência biológica.
   atravessa o comando interativo nem altera o drive neural.
 
 O ritmo produzido pelo laço relé–TRN e as classes celulares são
-**fenomenológicos**. O patch não possui morfologia multicompartimental, canais
-intrínsecos detalhados nem calibração experimental. As formas 3D ajudam a estudar
+**fenomenológicos**. O patch possui três compartimentos passivos, mas não uma
+morfologia espacial calibrada, canais intrínsecos detalhados nem calibração experimental. As formas 3D ajudam a estudar
 relações entre estados; elas não são um atlas anatômico.
 
 ### Como o projeto se organiza
@@ -209,7 +209,7 @@ brain-engine (Rust: estado, equações, limites e hashes)
       ├── chemical_solver (Strang, rigidez, orçamento e hash)
       ├── chemical_track (microdomínio publicado e quarto hash)
       ├── testes nativos e replay
-      └── brain-wasm → Web Worker → snapshot ABI v7
+      └── brain-wasm → Web Worker → snapshot ABI v8
                                       ↓
                        TypeScript → DOM, teclado e Three.js
 ```
@@ -253,6 +253,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-12 | fecho R09-B com eventos celulares carimbados no Rust, replay exato, ABI v7, 36 buffers e quinto hash independente |
 | 2026-08-12 | fecho R09-C com Prancha Elétrica própria, V/A/S rastreáveis, eventos publicados, fallback tabular e teto de 11 draws |
 | 2026-08-13 | fecho R09-D com seleção convergente, vista Neurônio determinística, evento carimbado, foco restaurado e cinco hashes invariantes |
+| 2026-08-13 | fecho R09-E com cabo soma/proximal/distal implícito, replay v1/v2, ABI v8, 37 buffers e gradiente auditável |
 | 2026-08-13 | preparo as seis vistas para uma futura película 3D com inventário executável, fallback esquemático e manifesto GIF schema 2 |
 
 O histórico da base está em
@@ -303,7 +304,7 @@ npm run sync:brain-gif
 npm run verify:brain-gif
 ```
 
-O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v7,
+O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v8,
 registra os cinco hashes independentes, a cobertura das seis vistas e o SHA-256 do GIF em
 [`assets/brain-gif.json`](assets/brain-gif.json), carimba o README com o commit
 de origem e só então publica os artefatos. O GitHub ainda pode levar alguns

@@ -26,7 +26,14 @@ export function snapshotBufferEntries(snapshot: NeuralSnapshot): SnapshotBufferE
     { name: "corticothalamic.inhibitory", view: snapshot.corticothalamic.inhibitory },
     { name: "cellPatch.kinds", view: snapshot.cellPatch.kinds },
     { name: "cellPatch.membraneVolts", view: snapshot.cellPatch.membraneVolts },
-    { name: "cellPatch.dendriteVolts", view: snapshot.cellPatch.dendriteVolts },
+    {
+      name: "cellPatch.dendriteProximalVolts",
+      view: snapshot.cellPatch.dendriteProximalVolts,
+    },
+    {
+      name: "cellPatch.dendriteDistalVolts",
+      view: snapshot.cellPatch.dendriteDistalVolts,
+    },
     { name: "cellPatch.adaptationAmperes", view: snapshot.cellPatch.adaptationAmperes },
     { name: "cellPatch.ampaAmperes", view: snapshot.cellPatch.ampaAmperes },
     { name: "cellPatch.nmdaAmperes", view: snapshot.cellPatch.nmdaAmperes },

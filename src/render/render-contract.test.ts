@@ -215,7 +215,7 @@ describe("render presentation contract", () => {
       "IcosahedronGeometry",
     );
     expect(
-      neuron.group.getObjectByName("resolved-neuron-single-compartment-dendrite"),
+      neuron.group.getObjectByName("resolved-neuron-multicompartment-dendrite"),
     ).toHaveProperty("geometry.type", "BufferGeometry");
     expect(neuron.group.getObjectByName("resolved-neuron-ampa-current")).toHaveProperty(
       "geometry.type",

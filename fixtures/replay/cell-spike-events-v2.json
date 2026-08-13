@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "eventSchemaVersion": 1,
+  "seed": 1592590345,
+  "macroStepSeconds": 0.016666666666666666,
+  "drive": {
+    "excitatoryRateHz": 70.0,
+    "inhibitoryRateHz": 30.0,
+    "boundaryCurrentAmperes": 4.2e-10
+  },
+  "batches": [
+    {
+      "macroTick": 1,
+      "microTick": 200,
+      "cellIds": [],
+      "timeOffsetBitsHex": []
+    },
+    {
+      "macroTick": 2,
+      "microTick": 400,
+      "cellIds": [11, 8, 10, 9, 10, 6, 2, 4, 1, 7, 3, 0, 5, 10, 10, 11, 8, 9, 10, 10, 10],
+      "timeOffsetBitsHex": [
+        "3f589374bc6a7efa", "3f5b4e81b4e81b4e", "3f5cac083126e979",
+        "3f5f671529a485cd", "3f70624dd2f1a9fc", "3f7735ee402bb0cf",
+        "3f77e4b17e4b17e4", "3f77e4b17e4b17e4", "3f789374bc6a7efa",
+        "3f789374bc6a7efa", "3f79999999999999", "3f7a485cd7b900af",
+        "3f7a485cd7b900af", "3f7c54a6921735ee", "3f829a485cd7b901",
+        "3f8374bc6a7ef9db", "3f84237fa89e60f0", "3f844f3078263ab5",
+        "3f88bf258bf258bf", "3f8d5acb6f46508e", "3f90fb38a94d242e"
+      ]
+    },
+    {
+      "macroTick": 3,
+      "microTick": 600,
+      "cellIds": [11, 8, 10, 9, 11, 8, 10, 11, 10, 8, 10, 11, 8, 6, 1, 2, 10, 11, 4, 9, 7, 3, 10, 0, 8, 5],
+      "timeOffsetBitsHex": [
+        "3f547ae147ae147b", "3f5f671529a485cd", "3f61bfd44f307826",
+        "3f626e978d4fdf3b", "3f6eb851eb851eb8", "3f71bfd44f307826",
+        "3f726e978d4fdf3b", "3f794237fa89e60f", "3f7cac083126e979",
+        "3f816872b020c49b", "3f831d5acb6f4650", "3f84a6921735ee40",
+        "3f865b7a32846ff5", "3f8735ee402bb0cf", "3f889374bc6a7efa",
+        "3f88ead65b7a3284", "3f8916872b020c49", "3f89c54a6921735f",
+        "3f8c54a6921735ee", "3f8c8057619f0fb3", "3f8cac083126e979",
+        "3f8e098ead65b7a3", "3f8e098ead65b7a3", "3f8e8ca11bfd44f3",
+        "3f8eb851eb851eb8", "3f90cf87d9c54a69"
+      ]
+    }
+  ]
+}

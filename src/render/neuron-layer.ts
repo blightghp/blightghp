@@ -19,6 +19,8 @@ export const NEURON_PRESENTATION_STREAM = 0x4e455552;
 
 const RESTING_VOLTS = -0.07;
 const SPIKE_THRESHOLD_VOLTS = -0.045;
+const MIN_COMPARTMENT_VOLTS = -0.12;
+const MAX_COMPARTMENT_VOLTS = 0.06;
 const CURRENT_CEILING_AMPERES = 180e-12;
 const ADAPTATION_CEILING_AMPERES = 200e-12;
 const FNV_OFFSET = 0xcbf29ce484222325n;
@@ -28,6 +30,7 @@ export interface NeuronMorphology {
   readonly seed: number;
   readonly cellId: number;
   readonly dendriteSegments: Float32Array;
+  readonly dendritePathPositions: Float32Array;
   readonly axonPoints: Float32Array;
   readonly ranvierNodes: Float32Array;
   readonly hash: string;
@@ -36,8 +39,9 @@ export interface NeuronMorphology {
 export interface NeuronCellObservables {
   readonly cellId: number;
   readonly kind: "excitatory" | "inhibitory";
-  readonly membraneVolts: number;
-  readonly dendriteVolts: number;
+  readonly somaVolts: number;
+  readonly dendriteProximalVolts: number;
+  readonly dendriteDistalVolts: number;
   readonly adaptationAmperes: number;
   readonly ampaAmperes: number;
   readonly nmdaAmperes: number;
@@ -73,7 +77,7 @@ export function parseCellId(value: unknown): number | undefined {
 export function neuronViewCost(): NeuronViewCost {
   return {
     totalDrawCalls: 10,
-    stateValuesPerSnapshot: 8,
+    stateValuesPerSnapshot: 9,
     geometryRebuildsPerFrame: 0,
   };
 }
@@ -138,6 +142,7 @@ export function generateNeuronMorphology(seed: number, cellId: number): NeuronMo
   if (selectedCell === undefined) throw new Error("cellId fora do patch de 12 células");
 
   const segments: number[] = [];
+  const pathPositions: number[] = [];
   let ordinal = 0;
   const grow = (
     x: number,
@@ -146,6 +151,7 @@ export function generateNeuronMorphology(seed: number, cellId: number): NeuronMo
     angle: number,
     length: number,
     depth: number,
+    pathPosition: number,
   ): void => {
     const jitter = (randomUnit(seed, selectedCell, ordinal++) - 0.5) * 0.22;
     const nextAngle = angle + jitter;
@@ -153,16 +159,34 @@ export function generateNeuronMorphology(seed: number, cellId: number): NeuronMo
     const nextY = y + Math.sin(nextAngle) * length;
     const nextZ = z + (randomUnit(seed, selectedCell, ordinal++) - 0.5) * 0.18;
     segments.push(x, y, z, nextX, nextY, nextZ);
+    const nextPathPosition = 1 - depth / 3;
+    pathPositions.push(pathPosition, nextPathPosition);
     if (depth === 0) return;
     const spread = 0.3 + randomUnit(seed, selectedCell, ordinal++) * 0.18;
-    grow(nextX, nextY, nextZ, nextAngle - spread, length * 0.7, depth - 1);
-    grow(nextX, nextY, nextZ, nextAngle + spread, length * 0.66, depth - 1);
+    grow(
+      nextX,
+      nextY,
+      nextZ,
+      nextAngle - spread,
+      length * 0.7,
+      depth - 1,
+      nextPathPosition,
+    );
+    grow(
+      nextX,
+      nextY,
+      nextZ,
+      nextAngle + spread,
+      length * 0.66,
+      depth - 1,
+      nextPathPosition,
+    );
   };
 
   for (let branch = 0; branch < 5; branch += 1) {
     const fan = (branch - 2) * 0.42;
     const length = 0.42 + randomUnit(seed, selectedCell, ordinal++) * 0.16;
-    grow(-0.32, -0.03, 0, Math.PI / 2 + fan, length, 2);
+    grow(-0.32, -0.03, 0, Math.PI / 2 + fan, length, 2, 0);
   }
 
   const axon: number[] = [];
@@ -176,15 +200,22 @@ export function generateNeuronMorphology(seed: number, cellId: number): NeuronMo
   }
 
   const dendriteSegments = Float32Array.from(segments);
+  const dendritePathPositions = Float32Array.from(pathPositions);
   const axonPoints = Float32Array.from(axon);
   const ranvierNodes = Float32Array.from(nodes);
   return {
     seed: seed >>> 0,
     cellId: selectedCell,
     dendriteSegments,
+    dendritePathPositions,
     axonPoints,
     ranvierNodes,
-    hash: hashMorphology(seed, selectedCell, [dendriteSegments, axonPoints, ranvierNodes]),
+    hash: hashMorphology(seed, selectedCell, [
+      dendriteSegments,
+      dendritePathPositions,
+      axonPoints,
+      ranvierNodes,
+    ]),
   };
 }
 
@@ -205,8 +236,11 @@ export function neuronCellObservables(
   return {
     cellId: selectedCell,
     kind: snapshot.cellPatch.kinds[selectedCell] === 0 ? "excitatory" : "inhibitory",
-    membraneVolts: snapshot.cellPatch.membraneVolts[selectedCell] ?? RESTING_VOLTS,
-    dendriteVolts: snapshot.cellPatch.dendriteVolts[selectedCell] ?? RESTING_VOLTS,
+    somaVolts: snapshot.cellPatch.membraneVolts[selectedCell] ?? RESTING_VOLTS,
+    dendriteProximalVolts:
+      snapshot.cellPatch.dendriteProximalVolts[selectedCell] ?? RESTING_VOLTS,
+    dendriteDistalVolts:
+      snapshot.cellPatch.dendriteDistalVolts[selectedCell] ?? RESTING_VOLTS,
     adaptationAmperes: snapshot.cellPatch.adaptationAmperes[selectedCell] ?? 0,
     ampaAmperes: snapshot.cellPatch.ampaAmperes[selectedCell] ?? 0,
     nmdaAmperes: snapshot.cellPatch.nmdaAmperes[selectedCell] ?? 0,
@@ -243,6 +277,27 @@ function currentFor(
 function geometryFrom(values: Float32Array): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(values, 3));
+  return geometry;
+}
+
+export function dendriteVoltageAtPathPosition(
+  somaVolts: number,
+  proximalVolts: number,
+  distalVolts: number,
+  pathPosition: number,
+): number {
+  const position = THREE.MathUtils.clamp(pathPosition, 0, 1);
+  return position <= 0.5
+    ? THREE.MathUtils.lerp(somaVolts, proximalVolts, position * 2)
+    : THREE.MathUtils.lerp(proximalVolts, distalVolts, (position - 0.5) * 2);
+}
+
+function dendriteGeometryFrom(morphology: NeuronMorphology): THREE.BufferGeometry {
+  const geometry = geometryFrom(morphology.dendriteSegments);
+  const vertexCount = morphology.dendriteSegments.length / 3;
+  const colors = new THREE.BufferAttribute(new Float32Array(vertexCount * 3), 3);
+  colors.setUsage(THREE.DynamicDrawUsage);
+  geometry.setAttribute("color", colors);
   return geometry;
 }
 
@@ -289,20 +344,23 @@ export class NeuronRenderLayer implements RenderLayer {
     this.group.add(this.soma);
 
     this.dendrites = new THREE.LineSegments(
-      geometryFrom(this.morphology.dendriteSegments),
+      dendriteGeometryFrom(this.morphology),
       new THREE.LineBasicMaterial({
-        color: VISUAL_COLORS.dendrite,
+        color: VISUAL_COLORS.white,
+        vertexColors: true,
         transparent: true,
         opacity: 0.72,
         blending: THREE.NormalBlending,
         depthWrite: true,
       }),
     );
-    this.dendrites.name = "resolved-neuron-single-compartment-dendrite";
+    this.dendrites.name = "resolved-neuron-multicompartment-dendrite";
     declareVisual(this.dendrites, "matter", "state", {
-      field: "cellPatch.dendriteVolts[selectedCellId]",
+      field:
+        "cellPatch.{membraneVolts,dendriteProximalVolts,dendriteDistalVolts}[selectedCellId]",
       unit: "V",
-      transform: "one published dendrite value uniformly colors the entire illustrative tree",
+      transform:
+        "piecewise-linear soma-to-proximal-to-distal voltage interpolation over deterministic path coordinates",
       redundancy: ["label"],
     });
     this.group.add(this.dendrites);
@@ -407,6 +465,7 @@ export class NeuronRenderLayer implements RenderLayer {
     });
     this.group.add(this.eventMarker);
     this.applyMorphology();
+    this.updateDendriteGradient(RESTING_VOLTS, RESTING_VOLTS, RESTING_VOLTS);
   }
 
   setSelectedCell(cellId: number): void {
@@ -428,6 +487,8 @@ export class NeuronRenderLayer implements RenderLayer {
     geometryHash: string;
     eventMarkerVisible: boolean;
     selectedEventCount: number;
+    gradientVertexCount: number;
+    compartmentLabels: readonly ["soma", "proximal", "distal"];
     cost: NeuronViewCost;
   } {
     return {
@@ -435,13 +496,15 @@ export class NeuronRenderLayer implements RenderLayer {
       geometryHash: this.morphology.hash,
       eventMarkerVisible: this.eventMarker.visible,
       selectedEventCount: this.selectedEventCount,
+      gradientVertexCount: this.morphology.dendritePathPositions.length,
+      compartmentLabels: ["soma", "proximal", "distal"],
       cost: neuronViewCost(),
     };
   }
 
   private applyMorphology(): void {
     this.dendrites.geometry.dispose();
-    this.dendrites.geometry = geometryFrom(this.morphology.dendriteSegments);
+    this.dendrites.geometry = dendriteGeometryFrom(this.morphology);
     this.axon.geometry.dispose();
     this.axon.geometry = geometryFrom(this.morphology.axonPoints);
     const nodes = this.morphology.ranvierNodes;
@@ -457,6 +520,31 @@ export class NeuronRenderLayer implements RenderLayer {
     }
     this.ranvierNodes.count = count;
     this.ranvierNodes.instanceMatrix.needsUpdate = true;
+  }
+
+  private updateDendriteGradient(
+    somaVolts: number,
+    proximalVolts: number,
+    distalVolts: number,
+  ): void {
+    const colors = this.dendrites.geometry.getAttribute("color") as THREE.BufferAttribute;
+    for (let index = 0; index < this.morphology.dendritePathPositions.length; index += 1) {
+      const volts = dendriteVoltageAtPathPosition(
+        somaVolts,
+        proximalVolts,
+        distalVolts,
+        this.morphology.dendritePathPositions[index] ?? 0,
+      );
+      const activation = THREE.MathUtils.clamp(
+        (volts - MIN_COMPARTMENT_VOLTS) /
+          (MAX_COMPARTMENT_VOLTS - MIN_COMPARTMENT_VOLTS),
+        0,
+        1,
+      );
+      this.color.copy(COLOR_TOKENS.inactive).lerp(COLOR_TOKENS.featured, activation);
+      colors.setXYZ(index, this.color.r, this.color.g, this.color.b);
+    }
+    colors.needsUpdate = true;
   }
 
   private updateStampedEvent(snapshot: NeuralSnapshot): void {
@@ -477,23 +565,23 @@ export class NeuronRenderLayer implements RenderLayer {
   update(view: InterpolatedSnapshot): void {
     const snapshot = view.current;
     if (this.selectedCellId >= snapshot.cellPatch.membraneVolts.length) return;
-    const membrane = interpolatePublishedValue(
+    const soma = interpolatePublishedValue(
       snapshot.cellPatch.membraneVolts[this.selectedCellId] ?? RESTING_VOLTS,
       view.previous?.cellPatch.membraneVolts[this.selectedCellId],
       view.alpha,
     );
-    const dendrite = interpolatePublishedValue(
-      snapshot.cellPatch.dendriteVolts[this.selectedCellId] ?? RESTING_VOLTS,
-      view.previous?.cellPatch.dendriteVolts[this.selectedCellId],
+    const proximal = interpolatePublishedValue(
+      snapshot.cellPatch.dendriteProximalVolts[this.selectedCellId] ?? RESTING_VOLTS,
+      view.previous?.cellPatch.dendriteProximalVolts[this.selectedCellId],
+      view.alpha,
+    );
+    const distal = interpolatePublishedValue(
+      snapshot.cellPatch.dendriteDistalVolts[this.selectedCellId] ?? RESTING_VOLTS,
+      view.previous?.cellPatch.dendriteDistalVolts[this.selectedCellId],
       view.alpha,
     );
     const activation = THREE.MathUtils.clamp(
-      (membrane - RESTING_VOLTS) / (SPIKE_THRESHOLD_VOLTS - RESTING_VOLTS),
-      0,
-      1,
-    );
-    const dendriteActivation = THREE.MathUtils.clamp(
-      (dendrite - RESTING_VOLTS) / (SPIKE_THRESHOLD_VOLTS - RESTING_VOLTS),
+      (soma - RESTING_VOLTS) / (SPIKE_THRESHOLD_VOLTS - RESTING_VOLTS),
       0,
       1,
     );
@@ -507,9 +595,7 @@ export class NeuronRenderLayer implements RenderLayer {
     this.color.copy(excitatory ? COLOR_TOKENS.excitatory : COLOR_TOKENS.inhibitory);
     this.color.lerp(COLOR_TOKENS.white, activation * 0.52);
     (this.soma.material as THREE.MeshBasicMaterial).color.copy(this.color);
-    (this.dendrites.material as THREE.LineBasicMaterial).color
-      .copy(COLOR_TOKENS.inactive)
-      .lerp(COLOR_TOKENS.featured, dendriteActivation);
+    this.updateDendriteGradient(soma, proximal, distal);
 
     const adaptation = Math.abs(
       snapshot.cellPatch.adaptationAmperes[this.selectedCellId] ?? 0,
@@ -538,7 +624,7 @@ export class NeuronRenderLayer implements RenderLayer {
   }
 
   setDetail(_level: number): void {
-    // R09-D has one audited geometry budget. Multicompartment detail belongs to R09-E.
+    // Compartment count is scientific state and never changes with visual detail.
   }
 
   setVisible(visible: boolean): void {

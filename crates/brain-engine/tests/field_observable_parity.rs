@@ -1,7 +1,7 @@
 use brain_engine::{
-    mean_absolute_weight, project_spikes_to_field, FieldConfig, FieldTopology, NeuralSimulation,
-    NeuralStimulus, NeuronKind, PopulationField, PopulationFiringRate, Seconds, SimulationConfig,
-    SimulationSynapse,
+    mean_absolute_weight, project_spikes_to_field, CellPatchModel, FieldConfig, FieldTopology,
+    NeuralSimulation, NeuralStimulus, NeuronKind, PopulationField, PopulationFiringRate, Seconds,
+    SimulationConfig, SimulationSynapse,
 };
 use serde::Deserialize;
 
@@ -273,6 +273,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
     let mut simulation = NeuralSimulation::new(SimulationConfig {
         seed: simulation_fixture.seed,
         fixed_step: Seconds::try_new(fixture.input.config.dt_seconds).unwrap(),
+        cell_patch_model: CellPatchModel::MultiCompartmentV2,
         neuron_kinds: kinds,
         synapses,
         cortical_nodes,
@@ -300,7 +301,7 @@ fn complete_rust_simulation_matches_the_typescript_replay() {
             )
             .unwrap();
         assert_eq!(snapshot.tick, expected.tick);
-        assert_eq!(snapshot.schema_version, 7);
+        assert_eq!(snapshot.schema_version, 8);
         assert_eq!(snapshot.spikes, expected.spikes);
         assert!((snapshot.firing_rate - expected.firing_rate).abs() <= 1.0e-12);
         assert!((snapshot.mean_weight - expected.mean_weight).abs() <= 1.0e-12);

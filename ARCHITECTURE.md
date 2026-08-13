@@ -118,7 +118,7 @@ todas as sinapses da rede.
 | rede abstrata | `NeuralSimulation` | potenciais, ativações, pesos, sinais | proxies/u.a. e metadados | `stateHash` |
 | campo | `PopulationField` | E, I, `waveActivity` por vértice | u.a. | incluído no hash da rede |
 | córtico-talâmico | `CorticothalamicEngine` | L1–L6 E/I e cinco escalares | adimensional | `corticothalamicHash` |
-| patch | `CellPatch` | 9 arrays + escalares | V, A, Hz, s, frações | `cellPatchHash` |
+| patch | `CellPatch` | 10 arrays + escalares | V, A, Hz, s, frações | `cellPatchHash` |
 | eventos celulares | `CellPatch`/`NeuralSimulation` | IDs + offsets em lote | ID, s | `cellSpikeEventHash` |
 | química | `ChemicalTrack` | 12 arrays + escalares | mol, mol·m⁻³, s, frações | `chemicalHash` |
 | UI | `main.ts`/DOM | seleção, aba, controles, câmera | apresentação | nenhum |
@@ -129,7 +129,7 @@ quantizados para `f32` nos snapshots quando o contrato assim define; a química
 v6 cruza a ABI em `Float64Array`. UI pode converter V→mV e A→pA somente na
 apresentação.
 
-Snapshots são novas views/cópias publicadas. A transfer list destaca 36
+Snapshots são novas views/cópias publicadas. A transfer list destaca 37
 `ArrayBuffer`s ao enviá-los para a thread principal. O renderer trata todos
 como somente leitura. Pooling de snapshots ainda não está implementado.
 
@@ -140,13 +140,13 @@ como somente leitura. Pooling de snapshots ainda não está implementado.
 | Eixo | Valor | Política |
 | :-- | :-- | :-- |
 | produto | 0.9.0 | desenvolvimento; não determina compatibilidade de wire |
-| protocolo Worker | 7 | formas de comandos/eventos; atualmente usa a constante da simulação |
-| ABI Wasm | 7 | métodos/buffers expostos por `brain-wasm` |
-| snapshot | 7 | layout/semântica de `NeuralSnapshot` |
+| protocolo Worker | 8 | formas de comandos/eventos; atualmente usa a constante da simulação |
+| ABI Wasm | 8 | métodos/buffers expostos por `brain-wasm` |
+| snapshot | 8 | layout/semântica de `NeuralSnapshot` |
 | engine/Tauri | 1 | metadado do crate, fora da ABI web |
-| subsistemas/fixtures | 1/v1 | evolução independente por modelo/oráculo |
+| subsistemas/fixtures | patch 2/v1+v2; demais 1/v1 | evolução independente por modelo/oráculo |
 
-ABI, protocolo e snapshot valem 7 e são verificados por igualdade, mas são
+ABI, protocolo e snapshot valem 8 e são verificados por igualdade, mas são
 conceitos diferentes. Futuras revisões devem registrar qual eixo mudou; a
 igualdade numérica atual não os transforma em uma única “versão do projeto”.
 
@@ -198,7 +198,7 @@ sequenceDiagram
     W->>H: valida cotas e carrega módulo
     H->>A: new WasmNeuralEngine(arrays)
     A->>E: NeuralSimulation::new
-    H->>H: schema ABI == 7
+    H->>H: schema ABI == 8
     H-->>DOM: ready(runtime, schema, degraded=false)
     Note over W,H: se Wasm falhar, fallback publica zeros e degraded=true
 ```
@@ -217,7 +217,7 @@ sequenceDiagram
     RAF->>W: advance(targetTick, entradas)
     W->>E: agenda em ordem e avança ticks fixos
     E-->>W: snapshot imutável + cinco hashes
-    W-->>RAF: postMessage(snapshot, 36 buffers)
+    W-->>RAF: postMessage(snapshot, 37 buffers)
     RAF->>R: interpola apenas valores publicados
     R->>R: matéria → emissão/bloom → composição
 ```
@@ -430,7 +430,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | C-01 | headers 0.7 × manifests/código 0.8 | manifests + ABI/código | docs declaram produto 0.8.0 promovido em R08-P4 |
 | C-02 | roadmap 0.7 × proposta 0.8 × código concluído | código/testes | um roadmap canônico; ambos arquivados |
 | C-03 | “0.8 fechada” × gates de promoção incompletos | auditorias P2/P3/P4 | promoção ocorreu somente após os quatro gates |
-| C-04 | 22 buffers/ABI v5 × ABI v6/v7 | protocolo/transfer list | estado atual é 36; 22 e 34 permanecem como história |
+| C-04 | 22 buffers/ABI v5 × ABI v6/v7/v8 | protocolo/transfer list | estado atual é 37; 22, 34 e 36 permanecem como história |
 | C-05 | `main.ts` concentrava render × `src/render` existente | árvore atual | descrição atualizada; `main.ts` ainda concentra composição/UI |
 | C-06 | “gate de invertibilidade pixel” × teste analítico | script/testes | R08-P3 amostra render target e pixels conhecidos em dois backends |
 | C-07 | “modo sem cor comprova redundância” × filtro grayscale | código auditável | R08-P3 exige bindings e pistas geométricas concretas além da captura |
@@ -459,7 +459,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | R6 alocações por frame | FECHADO NO ESCOPO R09-C | nova camada reutiliza vetores/matrizes; `CellRenderLayer` remove alocações do loop |
 | R7 limpeza/visibilidade por frame | FECHADO NO ESCOPO R09-C | visibilidade da rede só atualiza em evento de UI; eventos da prancha reciclam instâncias por hash |
 | M1 tempo por spike | FECHADO EM R09-B | IDs/offsets schema 1, ordem canônica, hash, teto e replay publicados na ABI v7 |
-| M2 dendrito único | ACEITO PARA R09-E | contrato atual é um compartimento; multicompartimentos pertencem à 0.9 |
+| M2 dendrito único | FECHADO EM R09-E | soma/proximal/distal, cabo implícito, replay v1/v2 e ABI v8 |
 | M3 química inexistente | FECHADO no microdomínio local | química v6 existe; transmissão de volume continua futura |
 
 ## Dependência entre fases

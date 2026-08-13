@@ -19,11 +19,11 @@ mod simulation;
 mod synaptic;
 
 pub use cell_patch::{
-    CellPatch, CellPatchConfig, CellPatchDrive, CellPatchError, CellPatchSnapshot, CellSpikeEvent,
-    PatchCellKind, ResolutionMap, CELL_COUNT, CELL_PATCH_SCHEMA_VERSION,
+    CellPatch, CellPatchConfig, CellPatchDrive, CellPatchError, CellPatchModel, CellPatchSnapshot,
+    CellSpikeEvent, PatchCellKind, ResolutionMap, CELL_COUNT, CELL_PATCH_SCHEMA_VERSION,
     CELL_SPIKE_EVENT_SCHEMA_VERSION, DEFAULT_CELL_STEP_SECONDS, EXCITATORY_CELL_COUNT,
-    MAX_BOUNDARY_CURRENT_AMPERES, MAX_CELL_SPIKE_EVENTS_PER_INTERVAL,
-    MAX_CELL_SUBSTEPS_PER_INTERVAL, MAX_PATCH_DRIVE_HZ,
+    LEGACY_CELL_PATCH_SCHEMA_VERSION, MAX_BOUNDARY_CURRENT_AMPERES,
+    MAX_CELL_SPIKE_EVENTS_PER_INTERVAL, MAX_CELL_SUBSTEPS_PER_INTERVAL, MAX_PATCH_DRIVE_HZ,
 };
 pub use chemical_contract::{
     ChemicalContractError, ConservationTolerance, DeterministicRelease, MembraneChargeTransfer,

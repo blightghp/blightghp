@@ -1,6 +1,7 @@
 use brain_engine::{
     CellPatch, CellPatchConfig, CellPatchDrive, ResolutionMap, Seconds,
-    CELL_SPIKE_EVENT_SCHEMA_VERSION, MAX_CELL_SPIKE_EVENTS_PER_INTERVAL,
+    CELL_SPIKE_EVENT_SCHEMA_VERSION, LEGACY_CELL_PATCH_SCHEMA_VERSION,
+    MAX_CELL_SPIKE_EVENTS_PER_INTERVAL,
 };
 use serde::Deserialize;
 
@@ -32,20 +33,14 @@ struct Batch {
     time_offset_bits_hex: Vec<String>,
 }
 
-#[test]
-fn cell_spike_events_replay_in_canonical_order() {
-    let fixture: Fixture = serde_json::from_str(include_str!(
-        "../../../fixtures/replay/cell-spike-events-v1.json"
-    ))
-    .expect("cell spike event fixture must be valid");
-    assert_eq!(fixture.schema_version, 1);
+fn replay_fixture(fixture: Fixture, config: CellPatchConfig) {
     assert_eq!(
         fixture.event_schema_version,
         CELL_SPIKE_EVENT_SCHEMA_VERSION
     );
     let mut patch = CellPatch::new(
         fixture.seed,
-        CellPatchConfig::default(),
+        config,
         ResolutionMap::learning_patch(Some(0)).unwrap(),
     )
     .unwrap();
@@ -85,4 +80,27 @@ fn cell_spike_events_replay_in_canonical_order() {
         total_events += snapshot.spike_events.len();
     }
     assert!(total_events > 0, "the replay must exercise stamped events");
+}
+
+#[test]
+fn cell_spike_events_replay_the_frozen_v1_artifact_in_canonical_order() {
+    let fixture: Fixture = serde_json::from_str(include_str!(
+        "../../../fixtures/replay/cell-spike-events-v1.json"
+    ))
+    .expect("v1 cell spike event fixture must be valid");
+    assert_eq!(fixture.schema_version, LEGACY_CELL_PATCH_SCHEMA_VERSION);
+    replay_fixture(
+        fixture,
+        CellPatchConfig::legacy_v1(Seconds::try_new(1.0 / 12_000.0).unwrap()),
+    );
+}
+
+#[test]
+fn cell_spike_events_replay_the_multicompartment_v2_artifact_in_canonical_order() {
+    let fixture: Fixture = serde_json::from_str(include_str!(
+        "../../../fixtures/replay/cell-spike-events-v2.json"
+    ))
+    .expect("v2 cell spike event fixture must be valid");
+    assert_eq!(fixture.schema_version, 2);
+    replay_fixture(fixture, CellPatchConfig::default());
 }

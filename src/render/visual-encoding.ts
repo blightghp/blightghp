@@ -43,17 +43,17 @@ export function estimateConductanceSiemens(
 export function classifyCellCurrent(
   netAmperes: number,
   magnitudeAmperes: number,
-  dendriteVolts: number,
+  proximalVolts: number,
   gabaaAmperes: number,
 ): CellCurrentState {
   const gabaaConductanceSiemens = estimateConductanceSiemens(
     gabaaAmperes,
     GABAA_REVERSAL_VOLTS,
-    dendriteVolts,
+    proximalVolts,
   );
   const shunting =
     gabaaConductanceSiemens >= ACTIVE_GABAA_SIEMENS &&
-    Math.abs(dendriteVolts - GABAA_REVERSAL_VOLTS) <= SHUNT_DRIVING_FORCE_VOLTS;
+    Math.abs(proximalVolts - GABAA_REVERSAL_VOLTS) <= SHUNT_DRIVING_FORCE_VOLTS;
   const direction: CurrentDirection = shunting
     ? "shunting"
     : magnitudeAmperes <= Number.EPSILON
@@ -72,7 +72,7 @@ export function cellCurrentState(snapshot: NeuralSnapshot, index: number): CellC
   return classifyCellCurrent(
     ampa + nmda + gabaa + gabab,
     Math.abs(ampa) + Math.abs(nmda) + Math.abs(gabaa) + Math.abs(gabab),
-    snapshot.cellPatch.dendriteVolts[index] ?? GABAA_REVERSAL_VOLTS,
+    snapshot.cellPatch.dendriteProximalVolts[index] ?? GABAA_REVERSAL_VOLTS,
     gabaa,
   );
 }
