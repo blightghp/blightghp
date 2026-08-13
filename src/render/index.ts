@@ -5,6 +5,7 @@ export * from "./electrical-board-layer";
 export * from "./laminar-layer";
 export * from "./material-profile";
 export * from "./neuron-layer";
+export * from "./procedural-textures";
 export * from "./render-types";
 export * from "./rendered-state-probe";
 export * from "./selective-bloom";

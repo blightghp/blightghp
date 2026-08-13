@@ -1,0 +1,4005 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-13T21:44:11.736Z",
+  "source": {
+    "commit": "97e27e1c55ae89edd6cb9f95c5a2a2a074d7801d",
+    "productVersion": "0.9.0",
+    "command": "npm run audit:material"
+  },
+  "environment": {
+    "browser": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
+      "platform": ""
+    },
+    "hardware": {
+      "logicalCores": 8,
+      "deviceMemoryGiB": 8,
+      "webglVendor": "Google Inc. (Google)",
+      "webglRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    "host": {
+      "cpu": "Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz",
+      "logicalCores": 8,
+      "memoryBytes": 8412778496,
+      "platform": "win32",
+      "release": "10.0.26200",
+      "architecture": "x64"
+    }
+  },
+  "hashInvariance": {
+    "fields": [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash"
+    ],
+    "baseline": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "final": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "invariant": true
+  },
+  "captures": [
+    "01-schematic.png",
+    "02-realistic-illustrative.png",
+    "03-realistic-coronal-clipping.png",
+    "04-realistic-coronal-xray.png",
+    "05-realistic-coronal-opacity-50.png",
+    "06-realistic-coronal-monochrome.png",
+    "view-cell-schematic.png",
+    "view-cell-realistic.png",
+    "view-electricity-schematic.png",
+    "view-electricity-realistic.png",
+    "view-laminar-schematic.png",
+    "view-laminar-realistic.png",
+    "view-neuron-schematic.png",
+    "view-neuron-realistic.png",
+    "view-overview-schematic.png",
+    "view-overview-realistic.png",
+    "view-synapse-schematic.png",
+    "view-synapse-realistic.png"
+  ],
+  "steps": [
+    {
+      "name": "01-schematic",
+      "capture": "01-schematic.png",
+      "diagnostics": {
+        "runtime": "rust-wasm",
+        "schemaVersion": 8,
+        "stateHash": "b342793f3d23c6ae",
+        "corticothalamicHash": "28cb2c021f56dbf7",
+        "cellPatchHash": "cff663ed3fc20880",
+        "chemicalHash": "d6f6b8dd06975c24",
+        "cellSpikeEventHash": "602d9181b8d246dc",
+        "degraded": false
+      },
+      "presentation": {
+        "material": {
+          "activeProfile": "schematic",
+          "requestedProfile": "schematic",
+          "eligibleObjects": 25,
+          "physicalMaterialObjects": 0,
+          "transmissionObjects": 0,
+          "semanticGeometryChanges": 0,
+          "estimatedAdditionalObjectDraws": 0,
+          "estimatedTransmissionPasses": 0,
+          "lightCount": 3,
+          "environmentMapActive": false,
+          "environmentMapWidth": 768,
+          "environmentMapHeight": 1024,
+          "estimatedEnvironmentTextureBytes": 6291456,
+          "proceduralNormalMapTextures": 0,
+          "estimatedProceduralTextureBytes": 0,
+          "estimatedOwnedTextureBytes": 6291456,
+          "generatedPresentationUvAttributes": 4
+        },
+        "clipping": {
+          "enabled": false,
+          "orientation": "coronal",
+          "slab": false,
+          "planeCount": 0,
+          "registeredLayers": 6,
+          "optedInLayers": 6,
+          "clippedMaterials": 0,
+          "capSources": 0,
+          "estimatedAdditionalDrawCalls": 0,
+          "maximumAdditionalDrawCalls": 18
+        },
+        "effects": {
+          "opacity": 1,
+          "xray": false,
+          "isolateMatter": false
+        },
+        "probe": {
+          "field": "field.waveActivity",
+          "unit": "normalized field activity",
+          "interpolation": "linear between adjacent published snapshots",
+          "available": false,
+          "sampling": "mean on the cut-face band",
+          "sampleCount": 0,
+          "reason": "clipping or the published cortical field is unavailable"
+        },
+        "renderer": {
+          "drawCalls": 48,
+          "triangles": 145778,
+          "geometries": 18,
+          "textures": 17
+        }
+      },
+      "manifest": {
+        "overview": {
+          "activeProfile": "schematic",
+          "totalRenderableObjects": 17,
+          "matterObjects": 12,
+          "emissionObjects": 5,
+          "pbrCandidateMeshes": 4,
+          "boundedPbrObjects": 4,
+          "physicalMaterialObjects": 0,
+          "schematicOnlyObjects": 13,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:leftHemi-shell",
+              "objectName": "leftHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:rightHemi-shell",
+              "objectName": "rightHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:cerebellum-shell",
+              "objectName": "cerebellum-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:stem-shell",
+              "objectName": "stem-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "schematic",
+            "requestedProfile": "schematic",
+            "eligibleObjects": 4,
+            "physicalMaterialObjects": 0,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": false,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 0,
+            "estimatedProceduralTextureBytes": 0,
+            "estimatedOwnedTextureBytes": 6291456,
+            "generatedPresentationUvAttributes": 4
+          }
+        },
+        "laminar": {
+          "activeProfile": "schematic",
+          "totalRenderableObjects": 44,
+          "matterObjects": 29,
+          "emissionObjects": 15,
+          "pbrCandidateMeshes": 14,
+          "boundedPbrObjects": 14,
+          "physicalMaterialObjects": 0,
+          "schematicOnlyObjects": 30,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:L1-excitatory",
+              "objectName": "L1-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L1-inhibitory",
+              "objectName": "L1-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-excitatory",
+              "objectName": "L2-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-inhibitory",
+              "objectName": "L2-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-excitatory",
+              "objectName": "L3-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-inhibitory",
+              "objectName": "L3-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-excitatory",
+              "objectName": "L4-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-inhibitory",
+              "objectName": "L4-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-excitatory",
+              "objectName": "L5-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-inhibitory",
+              "objectName": "L5-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-excitatory",
+              "objectName": "L6-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-inhibitory",
+              "objectName": "L6-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-relay",
+              "objectName": "thalamic-relay",
+              "surface": "tissue",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-reticular-nucleus",
+              "objectName": "thalamic-reticular-nucleus",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "schematic",
+            "requestedProfile": "schematic",
+            "eligibleObjects": 14,
+            "physicalMaterialObjects": 0,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": false,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 0,
+            "estimatedProceduralTextureBytes": 0,
+            "estimatedOwnedTextureBytes": 6291456,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "cell": {
+          "activeProfile": "schematic",
+          "totalRenderableObjects": 5,
+          "matterObjects": 4,
+          "emissionObjects": 1,
+          "pbrCandidateMeshes": 2,
+          "boundedPbrObjects": 2,
+          "physicalMaterialObjects": 0,
+          "schematicOnlyObjects": 3,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:adex-somata",
+              "objectName": "adex-somata",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:field-boundary",
+              "objectName": "field-boundary",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.2,
+              "opacityRange": [
+                0.05,
+                0.6
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "schematic",
+            "requestedProfile": "schematic",
+            "eligibleObjects": 2,
+            "physicalMaterialObjects": 0,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": false,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 0,
+            "estimatedProceduralTextureBytes": 0,
+            "estimatedOwnedTextureBytes": 6291456,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "neuron": {
+          "activeProfile": "schematic",
+          "totalRenderableObjects": 10,
+          "matterObjects": 4,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 0,
+          "schematicOnlyObjects": 9,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:resolved-neuron-soma",
+              "objectName": "resolved-neuron-soma",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "schematic",
+            "requestedProfile": "schematic",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 0,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": false,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 0,
+            "estimatedProceduralTextureBytes": 0,
+            "estimatedOwnedTextureBytes": 6291456,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "electricity": {
+          "activeProfile": "schematic",
+          "totalRenderableObjects": 11,
+          "matterObjects": 5,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 0,
+          "schematicOnlyObjects": 10,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:electrical-board-surface",
+              "objectName": "electrical-board-surface",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.8,
+              "opacityRange": [
+                0.1,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "schematic",
+            "requestedProfile": "schematic",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 0,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": false,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 0,
+            "estimatedProceduralTextureBytes": 0,
+            "estimatedOwnedTextureBytes": 6291456,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "synapse": {
+          "activeProfile": "schematic",
+          "totalRenderableObjects": 11,
+          "matterObjects": 4,
+          "emissionObjects": 7,
+          "pbrCandidateMeshes": 3,
+          "boundedPbrObjects": 3,
+          "physicalMaterialObjects": 0,
+          "schematicOnlyObjects": 8,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:presynaptic-bouton",
+              "objectName": "presynaptic-bouton",
+              "surface": "membrane",
+              "maximumLocalRadius": 1.6,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:postsynaptic-membrane",
+              "objectName": "postsynaptic-membrane",
+              "surface": "membrane",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:vesicular-reserve",
+              "objectName": "vesicular-reserve",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "schematic",
+            "requestedProfile": "schematic",
+            "eligibleObjects": 3,
+            "physicalMaterialObjects": 0,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": false,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 0,
+            "estimatedProceduralTextureBytes": 0,
+            "estimatedOwnedTextureBytes": 6291456,
+            "generatedPresentationUvAttributes": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "02-realistic-illustrative",
+      "capture": "02-realistic-illustrative.png",
+      "diagnostics": {
+        "runtime": "rust-wasm",
+        "schemaVersion": 8,
+        "stateHash": "b342793f3d23c6ae",
+        "corticothalamicHash": "28cb2c021f56dbf7",
+        "cellPatchHash": "cff663ed3fc20880",
+        "chemicalHash": "d6f6b8dd06975c24",
+        "cellSpikeEventHash": "602d9181b8d246dc",
+        "degraded": false
+      },
+      "presentation": {
+        "material": {
+          "activeProfile": "realistic-illustrative",
+          "requestedProfile": "realistic-illustrative",
+          "eligibleObjects": 25,
+          "physicalMaterialObjects": 25,
+          "transmissionObjects": 23,
+          "semanticGeometryChanges": 0,
+          "estimatedAdditionalObjectDraws": 10,
+          "estimatedTransmissionPasses": 1,
+          "lightCount": 3,
+          "environmentMapActive": true,
+          "environmentMapWidth": 768,
+          "environmentMapHeight": 1024,
+          "estimatedEnvironmentTextureBytes": 6291456,
+          "proceduralNormalMapTextures": 3,
+          "estimatedProceduralTextureBytes": 1048576,
+          "estimatedOwnedTextureBytes": 7340032,
+          "generatedPresentationUvAttributes": 4
+        },
+        "clipping": {
+          "enabled": false,
+          "orientation": "coronal",
+          "slab": false,
+          "planeCount": 0,
+          "registeredLayers": 6,
+          "optedInLayers": 6,
+          "clippedMaterials": 0,
+          "capSources": 0,
+          "estimatedAdditionalDrawCalls": 0,
+          "maximumAdditionalDrawCalls": 18
+        },
+        "effects": {
+          "opacity": 1,
+          "xray": false,
+          "isolateMatter": false
+        },
+        "probe": {
+          "field": "field.waveActivity",
+          "unit": "normalized field activity",
+          "interpolation": "linear between adjacent published snapshots",
+          "available": false,
+          "sampling": "mean on the cut-face band",
+          "sampleCount": 0,
+          "reason": "clipping or the published cortical field is unavailable"
+        },
+        "renderer": {
+          "drawCalls": 56,
+          "triangles": 147542,
+          "geometries": 18,
+          "textures": 19
+        }
+      },
+      "manifest": {
+        "overview": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 17,
+          "matterObjects": 12,
+          "emissionObjects": 5,
+          "pbrCandidateMeshes": 4,
+          "boundedPbrObjects": 4,
+          "physicalMaterialObjects": 4,
+          "schematicOnlyObjects": 13,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:leftHemi-shell",
+              "objectName": "leftHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:rightHemi-shell",
+              "objectName": "rightHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:cerebellum-shell",
+              "objectName": "cerebellum-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:stem-shell",
+              "objectName": "stem-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 4,
+            "physicalMaterialObjects": 4,
+            "transmissionObjects": 4,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 4,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 4
+          }
+        },
+        "laminar": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 44,
+          "matterObjects": 29,
+          "emissionObjects": 15,
+          "pbrCandidateMeshes": 14,
+          "boundedPbrObjects": 14,
+          "physicalMaterialObjects": 14,
+          "schematicOnlyObjects": 30,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:L1-excitatory",
+              "objectName": "L1-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L1-inhibitory",
+              "objectName": "L1-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-excitatory",
+              "objectName": "L2-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-inhibitory",
+              "objectName": "L2-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-excitatory",
+              "objectName": "L3-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-inhibitory",
+              "objectName": "L3-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-excitatory",
+              "objectName": "L4-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-inhibitory",
+              "objectName": "L4-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-excitatory",
+              "objectName": "L5-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-inhibitory",
+              "objectName": "L5-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-excitatory",
+              "objectName": "L6-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-inhibitory",
+              "objectName": "L6-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-relay",
+              "objectName": "thalamic-relay",
+              "surface": "tissue",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-reticular-nucleus",
+              "objectName": "thalamic-reticular-nucleus",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 14,
+            "physicalMaterialObjects": 14,
+            "transmissionObjects": 14,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 6,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "cell": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 5,
+          "matterObjects": 4,
+          "emissionObjects": 1,
+          "pbrCandidateMeshes": 2,
+          "boundedPbrObjects": 2,
+          "physicalMaterialObjects": 2,
+          "schematicOnlyObjects": 3,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:adex-somata",
+              "objectName": "adex-somata",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:field-boundary",
+              "objectName": "field-boundary",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.2,
+              "opacityRange": [
+                0.05,
+                0.6
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 2,
+            "physicalMaterialObjects": 2,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "neuron": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 10,
+          "matterObjects": 4,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 9,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:resolved-neuron-soma",
+              "objectName": "resolved-neuron-soma",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "electricity": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 5,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 10,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:electrical-board-surface",
+              "objectName": "electrical-board-surface",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.8,
+              "opacityRange": [
+                0.1,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "synapse": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 4,
+          "emissionObjects": 7,
+          "pbrCandidateMeshes": 3,
+          "boundedPbrObjects": 3,
+          "physicalMaterialObjects": 3,
+          "schematicOnlyObjects": 8,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:presynaptic-bouton",
+              "objectName": "presynaptic-bouton",
+              "surface": "membrane",
+              "maximumLocalRadius": 1.6,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:postsynaptic-membrane",
+              "objectName": "postsynaptic-membrane",
+              "surface": "membrane",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:vesicular-reserve",
+              "objectName": "vesicular-reserve",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 3,
+            "physicalMaterialObjects": 3,
+            "transmissionObjects": 3,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "03-realistic-coronal-clipping",
+      "capture": "03-realistic-coronal-clipping.png",
+      "diagnostics": {
+        "runtime": "rust-wasm",
+        "schemaVersion": 8,
+        "stateHash": "b342793f3d23c6ae",
+        "corticothalamicHash": "28cb2c021f56dbf7",
+        "cellPatchHash": "cff663ed3fc20880",
+        "chemicalHash": "d6f6b8dd06975c24",
+        "cellSpikeEventHash": "602d9181b8d246dc",
+        "degraded": false
+      },
+      "presentation": {
+        "material": {
+          "activeProfile": "realistic-illustrative",
+          "requestedProfile": "realistic-illustrative",
+          "eligibleObjects": 25,
+          "physicalMaterialObjects": 25,
+          "transmissionObjects": 23,
+          "semanticGeometryChanges": 0,
+          "estimatedAdditionalObjectDraws": 10,
+          "estimatedTransmissionPasses": 1,
+          "lightCount": 3,
+          "environmentMapActive": true,
+          "environmentMapWidth": 768,
+          "environmentMapHeight": 1024,
+          "estimatedEnvironmentTextureBytes": 6291456,
+          "proceduralNormalMapTextures": 3,
+          "estimatedProceduralTextureBytes": 1048576,
+          "estimatedOwnedTextureBytes": 7340032,
+          "generatedPresentationUvAttributes": 4
+        },
+        "clipping": {
+          "enabled": true,
+          "orientation": "coronal",
+          "slab": false,
+          "planeCount": 1,
+          "registeredLayers": 6,
+          "optedInLayers": 6,
+          "clippedMaterials": 98,
+          "capSources": 4,
+          "estimatedAdditionalDrawCalls": 9,
+          "maximumAdditionalDrawCalls": 18
+        },
+        "effects": {
+          "opacity": 1,
+          "xray": false,
+          "isolateMatter": false
+        },
+        "probe": {
+          "field": "field.waveActivity",
+          "unit": "normalized field activity",
+          "interpolation": "linear between adjacent published snapshots",
+          "available": true,
+          "sampling": "arithmetic mean of published cortical vertices within ±0.08 procedural scene units",
+          "sampleCount": 98,
+          "value": 1.51367388351508e-7
+        },
+        "renderer": {
+          "drawCalls": 74,
+          "triangles": 151074,
+          "geometries": 19,
+          "textures": 19
+        }
+      },
+      "manifest": {
+        "overview": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 17,
+          "matterObjects": 12,
+          "emissionObjects": 5,
+          "pbrCandidateMeshes": 4,
+          "boundedPbrObjects": 4,
+          "physicalMaterialObjects": 4,
+          "schematicOnlyObjects": 13,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:leftHemi-shell",
+              "objectName": "leftHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:rightHemi-shell",
+              "objectName": "rightHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:cerebellum-shell",
+              "objectName": "cerebellum-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:stem-shell",
+              "objectName": "stem-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 4,
+            "physicalMaterialObjects": 4,
+            "transmissionObjects": 4,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 4,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 4
+          }
+        },
+        "laminar": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 44,
+          "matterObjects": 29,
+          "emissionObjects": 15,
+          "pbrCandidateMeshes": 14,
+          "boundedPbrObjects": 14,
+          "physicalMaterialObjects": 14,
+          "schematicOnlyObjects": 30,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:L1-excitatory",
+              "objectName": "L1-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L1-inhibitory",
+              "objectName": "L1-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-excitatory",
+              "objectName": "L2-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-inhibitory",
+              "objectName": "L2-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-excitatory",
+              "objectName": "L3-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-inhibitory",
+              "objectName": "L3-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-excitatory",
+              "objectName": "L4-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-inhibitory",
+              "objectName": "L4-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-excitatory",
+              "objectName": "L5-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-inhibitory",
+              "objectName": "L5-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-excitatory",
+              "objectName": "L6-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-inhibitory",
+              "objectName": "L6-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-relay",
+              "objectName": "thalamic-relay",
+              "surface": "tissue",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-reticular-nucleus",
+              "objectName": "thalamic-reticular-nucleus",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 14,
+            "physicalMaterialObjects": 14,
+            "transmissionObjects": 14,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 6,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "cell": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 5,
+          "matterObjects": 4,
+          "emissionObjects": 1,
+          "pbrCandidateMeshes": 2,
+          "boundedPbrObjects": 2,
+          "physicalMaterialObjects": 2,
+          "schematicOnlyObjects": 3,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:adex-somata",
+              "objectName": "adex-somata",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:field-boundary",
+              "objectName": "field-boundary",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.2,
+              "opacityRange": [
+                0.05,
+                0.6
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 2,
+            "physicalMaterialObjects": 2,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "neuron": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 10,
+          "matterObjects": 4,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 9,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:resolved-neuron-soma",
+              "objectName": "resolved-neuron-soma",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "electricity": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 5,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 10,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:electrical-board-surface",
+              "objectName": "electrical-board-surface",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.8,
+              "opacityRange": [
+                0.1,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "synapse": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 4,
+          "emissionObjects": 7,
+          "pbrCandidateMeshes": 3,
+          "boundedPbrObjects": 3,
+          "physicalMaterialObjects": 3,
+          "schematicOnlyObjects": 8,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:presynaptic-bouton",
+              "objectName": "presynaptic-bouton",
+              "surface": "membrane",
+              "maximumLocalRadius": 1.6,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:postsynaptic-membrane",
+              "objectName": "postsynaptic-membrane",
+              "surface": "membrane",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:vesicular-reserve",
+              "objectName": "vesicular-reserve",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 3,
+            "physicalMaterialObjects": 3,
+            "transmissionObjects": 3,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "04-realistic-coronal-xray",
+      "capture": "04-realistic-coronal-xray.png",
+      "diagnostics": {
+        "runtime": "rust-wasm",
+        "schemaVersion": 8,
+        "stateHash": "b342793f3d23c6ae",
+        "corticothalamicHash": "28cb2c021f56dbf7",
+        "cellPatchHash": "cff663ed3fc20880",
+        "chemicalHash": "d6f6b8dd06975c24",
+        "cellSpikeEventHash": "602d9181b8d246dc",
+        "degraded": false
+      },
+      "presentation": {
+        "material": {
+          "activeProfile": "realistic-illustrative",
+          "requestedProfile": "realistic-illustrative",
+          "eligibleObjects": 25,
+          "physicalMaterialObjects": 25,
+          "transmissionObjects": 23,
+          "semanticGeometryChanges": 0,
+          "estimatedAdditionalObjectDraws": 10,
+          "estimatedTransmissionPasses": 1,
+          "lightCount": 3,
+          "environmentMapActive": true,
+          "environmentMapWidth": 768,
+          "environmentMapHeight": 1024,
+          "estimatedEnvironmentTextureBytes": 6291456,
+          "proceduralNormalMapTextures": 3,
+          "estimatedProceduralTextureBytes": 1048576,
+          "estimatedOwnedTextureBytes": 7340032,
+          "generatedPresentationUvAttributes": 4
+        },
+        "clipping": {
+          "enabled": true,
+          "orientation": "coronal",
+          "slab": false,
+          "planeCount": 1,
+          "registeredLayers": 6,
+          "optedInLayers": 6,
+          "clippedMaterials": 98,
+          "capSources": 4,
+          "estimatedAdditionalDrawCalls": 9,
+          "maximumAdditionalDrawCalls": 18
+        },
+        "effects": {
+          "opacity": 1,
+          "xray": true,
+          "isolateMatter": false
+        },
+        "probe": {
+          "field": "field.waveActivity",
+          "unit": "normalized field activity",
+          "interpolation": "linear between adjacent published snapshots",
+          "available": true,
+          "sampling": "arithmetic mean of published cortical vertices within ±0.08 procedural scene units",
+          "sampleCount": 98,
+          "value": 1.51367388351508e-7
+        },
+        "renderer": {
+          "drawCalls": 74,
+          "triangles": 151074,
+          "geometries": 19,
+          "textures": 19
+        }
+      },
+      "manifest": {
+        "overview": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 17,
+          "matterObjects": 12,
+          "emissionObjects": 5,
+          "pbrCandidateMeshes": 4,
+          "boundedPbrObjects": 4,
+          "physicalMaterialObjects": 4,
+          "schematicOnlyObjects": 13,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:leftHemi-shell",
+              "objectName": "leftHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:rightHemi-shell",
+              "objectName": "rightHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:cerebellum-shell",
+              "objectName": "cerebellum-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:stem-shell",
+              "objectName": "stem-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 4,
+            "physicalMaterialObjects": 4,
+            "transmissionObjects": 4,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 4,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 4
+          }
+        },
+        "laminar": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 44,
+          "matterObjects": 29,
+          "emissionObjects": 15,
+          "pbrCandidateMeshes": 14,
+          "boundedPbrObjects": 14,
+          "physicalMaterialObjects": 14,
+          "schematicOnlyObjects": 30,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:L1-excitatory",
+              "objectName": "L1-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L1-inhibitory",
+              "objectName": "L1-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-excitatory",
+              "objectName": "L2-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-inhibitory",
+              "objectName": "L2-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-excitatory",
+              "objectName": "L3-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-inhibitory",
+              "objectName": "L3-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-excitatory",
+              "objectName": "L4-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-inhibitory",
+              "objectName": "L4-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-excitatory",
+              "objectName": "L5-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-inhibitory",
+              "objectName": "L5-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-excitatory",
+              "objectName": "L6-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-inhibitory",
+              "objectName": "L6-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-relay",
+              "objectName": "thalamic-relay",
+              "surface": "tissue",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-reticular-nucleus",
+              "objectName": "thalamic-reticular-nucleus",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 14,
+            "physicalMaterialObjects": 14,
+            "transmissionObjects": 14,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 6,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "cell": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 5,
+          "matterObjects": 4,
+          "emissionObjects": 1,
+          "pbrCandidateMeshes": 2,
+          "boundedPbrObjects": 2,
+          "physicalMaterialObjects": 2,
+          "schematicOnlyObjects": 3,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:adex-somata",
+              "objectName": "adex-somata",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:field-boundary",
+              "objectName": "field-boundary",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.2,
+              "opacityRange": [
+                0.05,
+                0.6
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 2,
+            "physicalMaterialObjects": 2,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "neuron": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 10,
+          "matterObjects": 4,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 9,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:resolved-neuron-soma",
+              "objectName": "resolved-neuron-soma",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "electricity": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 5,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 10,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:electrical-board-surface",
+              "objectName": "electrical-board-surface",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.8,
+              "opacityRange": [
+                0.1,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "synapse": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 4,
+          "emissionObjects": 7,
+          "pbrCandidateMeshes": 3,
+          "boundedPbrObjects": 3,
+          "physicalMaterialObjects": 3,
+          "schematicOnlyObjects": 8,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:presynaptic-bouton",
+              "objectName": "presynaptic-bouton",
+              "surface": "membrane",
+              "maximumLocalRadius": 1.6,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:postsynaptic-membrane",
+              "objectName": "postsynaptic-membrane",
+              "surface": "membrane",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:vesicular-reserve",
+              "objectName": "vesicular-reserve",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 3,
+            "physicalMaterialObjects": 3,
+            "transmissionObjects": 3,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "05-realistic-coronal-opacity-50",
+      "capture": "05-realistic-coronal-opacity-50.png",
+      "diagnostics": {
+        "runtime": "rust-wasm",
+        "schemaVersion": 8,
+        "stateHash": "b342793f3d23c6ae",
+        "corticothalamicHash": "28cb2c021f56dbf7",
+        "cellPatchHash": "cff663ed3fc20880",
+        "chemicalHash": "d6f6b8dd06975c24",
+        "cellSpikeEventHash": "602d9181b8d246dc",
+        "degraded": false
+      },
+      "presentation": {
+        "material": {
+          "activeProfile": "realistic-illustrative",
+          "requestedProfile": "realistic-illustrative",
+          "eligibleObjects": 25,
+          "physicalMaterialObjects": 25,
+          "transmissionObjects": 23,
+          "semanticGeometryChanges": 0,
+          "estimatedAdditionalObjectDraws": 10,
+          "estimatedTransmissionPasses": 1,
+          "lightCount": 3,
+          "environmentMapActive": true,
+          "environmentMapWidth": 768,
+          "environmentMapHeight": 1024,
+          "estimatedEnvironmentTextureBytes": 6291456,
+          "proceduralNormalMapTextures": 3,
+          "estimatedProceduralTextureBytes": 1048576,
+          "estimatedOwnedTextureBytes": 7340032,
+          "generatedPresentationUvAttributes": 4
+        },
+        "clipping": {
+          "enabled": true,
+          "orientation": "coronal",
+          "slab": false,
+          "planeCount": 1,
+          "registeredLayers": 6,
+          "optedInLayers": 6,
+          "clippedMaterials": 98,
+          "capSources": 4,
+          "estimatedAdditionalDrawCalls": 9,
+          "maximumAdditionalDrawCalls": 18
+        },
+        "effects": {
+          "opacity": 0.5,
+          "xray": false,
+          "isolateMatter": false
+        },
+        "probe": {
+          "field": "field.waveActivity",
+          "unit": "normalized field activity",
+          "interpolation": "linear between adjacent published snapshots",
+          "available": true,
+          "sampling": "arithmetic mean of published cortical vertices within ±0.08 procedural scene units",
+          "sampleCount": 98,
+          "value": 1.51367388351508e-7
+        },
+        "renderer": {
+          "drawCalls": 74,
+          "triangles": 151074,
+          "geometries": 19,
+          "textures": 19
+        }
+      },
+      "manifest": {
+        "overview": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 17,
+          "matterObjects": 12,
+          "emissionObjects": 5,
+          "pbrCandidateMeshes": 4,
+          "boundedPbrObjects": 4,
+          "physicalMaterialObjects": 4,
+          "schematicOnlyObjects": 13,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:leftHemi-shell",
+              "objectName": "leftHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:rightHemi-shell",
+              "objectName": "rightHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:cerebellum-shell",
+              "objectName": "cerebellum-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:stem-shell",
+              "objectName": "stem-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 4,
+            "physicalMaterialObjects": 4,
+            "transmissionObjects": 4,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 4,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 4
+          }
+        },
+        "laminar": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 44,
+          "matterObjects": 29,
+          "emissionObjects": 15,
+          "pbrCandidateMeshes": 14,
+          "boundedPbrObjects": 14,
+          "physicalMaterialObjects": 14,
+          "schematicOnlyObjects": 30,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:L1-excitatory",
+              "objectName": "L1-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L1-inhibitory",
+              "objectName": "L1-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-excitatory",
+              "objectName": "L2-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-inhibitory",
+              "objectName": "L2-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-excitatory",
+              "objectName": "L3-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-inhibitory",
+              "objectName": "L3-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-excitatory",
+              "objectName": "L4-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-inhibitory",
+              "objectName": "L4-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-excitatory",
+              "objectName": "L5-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-inhibitory",
+              "objectName": "L5-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-excitatory",
+              "objectName": "L6-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-inhibitory",
+              "objectName": "L6-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-relay",
+              "objectName": "thalamic-relay",
+              "surface": "tissue",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-reticular-nucleus",
+              "objectName": "thalamic-reticular-nucleus",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 14,
+            "physicalMaterialObjects": 14,
+            "transmissionObjects": 14,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 6,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "cell": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 5,
+          "matterObjects": 4,
+          "emissionObjects": 1,
+          "pbrCandidateMeshes": 2,
+          "boundedPbrObjects": 2,
+          "physicalMaterialObjects": 2,
+          "schematicOnlyObjects": 3,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:adex-somata",
+              "objectName": "adex-somata",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:field-boundary",
+              "objectName": "field-boundary",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.2,
+              "opacityRange": [
+                0.05,
+                0.6
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 2,
+            "physicalMaterialObjects": 2,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "neuron": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 10,
+          "matterObjects": 4,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 9,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:resolved-neuron-soma",
+              "objectName": "resolved-neuron-soma",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "electricity": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 5,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 10,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:electrical-board-surface",
+              "objectName": "electrical-board-surface",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.8,
+              "opacityRange": [
+                0.1,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "synapse": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 4,
+          "emissionObjects": 7,
+          "pbrCandidateMeshes": 3,
+          "boundedPbrObjects": 3,
+          "physicalMaterialObjects": 3,
+          "schematicOnlyObjects": 8,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:presynaptic-bouton",
+              "objectName": "presynaptic-bouton",
+              "surface": "membrane",
+              "maximumLocalRadius": 1.6,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:postsynaptic-membrane",
+              "objectName": "postsynaptic-membrane",
+              "surface": "membrane",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:vesicular-reserve",
+              "objectName": "vesicular-reserve",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 3,
+            "physicalMaterialObjects": 3,
+            "transmissionObjects": 3,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "06-realistic-coronal-monochrome",
+      "capture": "06-realistic-coronal-monochrome.png",
+      "diagnostics": {
+        "runtime": "rust-wasm",
+        "schemaVersion": 8,
+        "stateHash": "b342793f3d23c6ae",
+        "corticothalamicHash": "28cb2c021f56dbf7",
+        "cellPatchHash": "cff663ed3fc20880",
+        "chemicalHash": "d6f6b8dd06975c24",
+        "cellSpikeEventHash": "602d9181b8d246dc",
+        "degraded": false
+      },
+      "presentation": {
+        "material": {
+          "activeProfile": "realistic-illustrative",
+          "requestedProfile": "realistic-illustrative",
+          "eligibleObjects": 25,
+          "physicalMaterialObjects": 25,
+          "transmissionObjects": 23,
+          "semanticGeometryChanges": 0,
+          "estimatedAdditionalObjectDraws": 10,
+          "estimatedTransmissionPasses": 1,
+          "lightCount": 3,
+          "environmentMapActive": true,
+          "environmentMapWidth": 768,
+          "environmentMapHeight": 1024,
+          "estimatedEnvironmentTextureBytes": 6291456,
+          "proceduralNormalMapTextures": 3,
+          "estimatedProceduralTextureBytes": 1048576,
+          "estimatedOwnedTextureBytes": 7340032,
+          "generatedPresentationUvAttributes": 4
+        },
+        "clipping": {
+          "enabled": true,
+          "orientation": "coronal",
+          "slab": false,
+          "planeCount": 1,
+          "registeredLayers": 6,
+          "optedInLayers": 6,
+          "clippedMaterials": 98,
+          "capSources": 4,
+          "estimatedAdditionalDrawCalls": 9,
+          "maximumAdditionalDrawCalls": 18
+        },
+        "effects": {
+          "opacity": 0.5,
+          "xray": false,
+          "isolateMatter": false
+        },
+        "probe": {
+          "field": "field.waveActivity",
+          "unit": "normalized field activity",
+          "interpolation": "linear between adjacent published snapshots",
+          "available": true,
+          "sampling": "arithmetic mean of published cortical vertices within ±0.08 procedural scene units",
+          "sampleCount": 98,
+          "value": 1.51367388351508e-7
+        },
+        "renderer": {
+          "drawCalls": 74,
+          "triangles": 151074,
+          "geometries": 19,
+          "textures": 19
+        }
+      },
+      "manifest": {
+        "overview": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 17,
+          "matterObjects": 12,
+          "emissionObjects": 5,
+          "pbrCandidateMeshes": 4,
+          "boundedPbrObjects": 4,
+          "physicalMaterialObjects": 4,
+          "schematicOnlyObjects": 13,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:leftHemi-shell",
+              "objectName": "leftHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:rightHemi-shell",
+              "objectName": "rightHemi-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:cerebellum-shell",
+              "objectName": "cerebellum-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:stem-shell",
+              "objectName": "stem-shell",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0.22,
+                0.5
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 4,
+            "physicalMaterialObjects": 4,
+            "transmissionObjects": 4,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 4,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 4
+          }
+        },
+        "laminar": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 44,
+          "matterObjects": 29,
+          "emissionObjects": 15,
+          "pbrCandidateMeshes": 14,
+          "boundedPbrObjects": 14,
+          "physicalMaterialObjects": 14,
+          "schematicOnlyObjects": 30,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:L1-excitatory",
+              "objectName": "L1-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L1-inhibitory",
+              "objectName": "L1-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-excitatory",
+              "objectName": "L2-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L2-inhibitory",
+              "objectName": "L2-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-excitatory",
+              "objectName": "L3-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L3-inhibitory",
+              "objectName": "L3-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-excitatory",
+              "objectName": "L4-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L4-inhibitory",
+              "objectName": "L4-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-excitatory",
+              "objectName": "L5-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L5-inhibitory",
+              "objectName": "L5-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-excitatory",
+              "objectName": "L6-excitatory",
+              "surface": "tissue",
+              "maximumLocalRadius": 1.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:L6-inhibitory",
+              "objectName": "L6-inhibitory",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-relay",
+              "objectName": "thalamic-relay",
+              "surface": "tissue",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:thalamic-reticular-nucleus",
+              "objectName": "thalamic-reticular-nucleus",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.8,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 14,
+            "physicalMaterialObjects": 14,
+            "transmissionObjects": 14,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 6,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "cell": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 5,
+          "matterObjects": 4,
+          "emissionObjects": 1,
+          "pbrCandidateMeshes": 2,
+          "boundedPbrObjects": 2,
+          "physicalMaterialObjects": 2,
+          "schematicOnlyObjects": 3,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:adex-somata",
+              "objectName": "adex-somata",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:field-boundary",
+              "objectName": "field-boundary",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.2,
+              "opacityRange": [
+                0.05,
+                0.6
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 2,
+            "physicalMaterialObjects": 2,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "neuron": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 10,
+          "matterObjects": 4,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 9,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:resolved-neuron-soma",
+              "objectName": "resolved-neuron-soma",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.7,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 1,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "electricity": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 5,
+          "emissionObjects": 6,
+          "pbrCandidateMeshes": 1,
+          "boundedPbrObjects": 1,
+          "physicalMaterialObjects": 1,
+          "schematicOnlyObjects": 10,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:electrical-board-surface",
+              "objectName": "electrical-board-surface",
+              "surface": "substrate",
+              "maximumLocalRadius": 3.8,
+              "opacityRange": [
+                0.1,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 1,
+            "physicalMaterialObjects": 1,
+            "transmissionObjects": 0,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 0,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        },
+        "synapse": {
+          "activeProfile": "realistic-illustrative",
+          "totalRenderableObjects": 11,
+          "matterObjects": 4,
+          "emissionObjects": 7,
+          "pbrCandidateMeshes": 3,
+          "boundedPbrObjects": 3,
+          "physicalMaterialObjects": 3,
+          "schematicOnlyObjects": 8,
+          "undeclaredObjects": 0,
+          "missingStateBindings": 0,
+          "contractReady": true,
+          "manifest": [
+            {
+              "id": "r09-f:presynaptic-bouton",
+              "objectName": "presynaptic-bouton",
+              "surface": "membrane",
+              "maximumLocalRadius": 1.6,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:postsynaptic-membrane",
+              "objectName": "postsynaptic-membrane",
+              "surface": "membrane",
+              "maximumLocalRadius": 2.2,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            },
+            {
+              "id": "r09-f:vesicular-reserve",
+              "objectName": "vesicular-reserve",
+              "surface": "membrane",
+              "maximumLocalRadius": 0.3,
+              "opacityRange": [
+                0,
+                1
+              ],
+              "source": "procedural-scene-graph"
+            }
+          ],
+          "material": {
+            "activeProfile": "realistic-illustrative",
+            "requestedProfile": "realistic-illustrative",
+            "eligibleObjects": 3,
+            "physicalMaterialObjects": 3,
+            "transmissionObjects": 3,
+            "semanticGeometryChanges": 0,
+            "estimatedAdditionalObjectDraws": 0,
+            "estimatedTransmissionPasses": 1,
+            "lightCount": 3,
+            "environmentMapActive": true,
+            "environmentMapWidth": 768,
+            "environmentMapHeight": 1024,
+            "estimatedEnvironmentTextureBytes": 6291456,
+            "proceduralNormalMapTextures": 3,
+            "estimatedProceduralTextureBytes": 1048576,
+            "estimatedOwnedTextureBytes": 7340032,
+            "generatedPresentationUvAttributes": 0
+          }
+        }
+      }
+    }
+  ],
+  "manifest": {
+    "overview": {
+      "activeProfile": "realistic-illustrative",
+      "totalRenderableObjects": 17,
+      "matterObjects": 12,
+      "emissionObjects": 5,
+      "pbrCandidateMeshes": 4,
+      "boundedPbrObjects": 4,
+      "physicalMaterialObjects": 4,
+      "schematicOnlyObjects": 13,
+      "undeclaredObjects": 0,
+      "missingStateBindings": 0,
+      "contractReady": true,
+      "manifest": [
+        {
+          "id": "r09-f:leftHemi-shell",
+          "objectName": "leftHemi-shell",
+          "surface": "tissue",
+          "maximumLocalRadius": 2.2,
+          "opacityRange": [
+            0.22,
+            0.5
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:rightHemi-shell",
+          "objectName": "rightHemi-shell",
+          "surface": "tissue",
+          "maximumLocalRadius": 2.2,
+          "opacityRange": [
+            0.22,
+            0.5
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:cerebellum-shell",
+          "objectName": "cerebellum-shell",
+          "surface": "tissue",
+          "maximumLocalRadius": 1.2,
+          "opacityRange": [
+            0.22,
+            0.5
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:stem-shell",
+          "objectName": "stem-shell",
+          "surface": "tissue",
+          "maximumLocalRadius": 1.2,
+          "opacityRange": [
+            0.22,
+            0.5
+          ],
+          "source": "procedural-scene-graph"
+        }
+      ],
+      "material": {
+        "activeProfile": "realistic-illustrative",
+        "requestedProfile": "realistic-illustrative",
+        "eligibleObjects": 4,
+        "physicalMaterialObjects": 4,
+        "transmissionObjects": 4,
+        "semanticGeometryChanges": 0,
+        "estimatedAdditionalObjectDraws": 4,
+        "estimatedTransmissionPasses": 1,
+        "lightCount": 3,
+        "environmentMapActive": true,
+        "environmentMapWidth": 768,
+        "environmentMapHeight": 1024,
+        "estimatedEnvironmentTextureBytes": 6291456,
+        "proceduralNormalMapTextures": 3,
+        "estimatedProceduralTextureBytes": 1048576,
+        "estimatedOwnedTextureBytes": 7340032,
+        "generatedPresentationUvAttributes": 4
+      }
+    },
+    "laminar": {
+      "activeProfile": "realistic-illustrative",
+      "totalRenderableObjects": 44,
+      "matterObjects": 29,
+      "emissionObjects": 15,
+      "pbrCandidateMeshes": 14,
+      "boundedPbrObjects": 14,
+      "physicalMaterialObjects": 14,
+      "schematicOnlyObjects": 30,
+      "undeclaredObjects": 0,
+      "missingStateBindings": 0,
+      "contractReady": true,
+      "manifest": [
+        {
+          "id": "r09-f:L1-excitatory",
+          "objectName": "L1-excitatory",
+          "surface": "tissue",
+          "maximumLocalRadius": 1.2,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L1-inhibitory",
+          "objectName": "L1-inhibitory",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.7,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L2-excitatory",
+          "objectName": "L2-excitatory",
+          "surface": "tissue",
+          "maximumLocalRadius": 1.2,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L2-inhibitory",
+          "objectName": "L2-inhibitory",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.7,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L3-excitatory",
+          "objectName": "L3-excitatory",
+          "surface": "tissue",
+          "maximumLocalRadius": 1.2,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L3-inhibitory",
+          "objectName": "L3-inhibitory",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.7,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L4-excitatory",
+          "objectName": "L4-excitatory",
+          "surface": "tissue",
+          "maximumLocalRadius": 1.2,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L4-inhibitory",
+          "objectName": "L4-inhibitory",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.7,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L5-excitatory",
+          "objectName": "L5-excitatory",
+          "surface": "tissue",
+          "maximumLocalRadius": 1.2,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L5-inhibitory",
+          "objectName": "L5-inhibitory",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.7,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L6-excitatory",
+          "objectName": "L6-excitatory",
+          "surface": "tissue",
+          "maximumLocalRadius": 1.2,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:L6-inhibitory",
+          "objectName": "L6-inhibitory",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.7,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:thalamic-relay",
+          "objectName": "thalamic-relay",
+          "surface": "tissue",
+          "maximumLocalRadius": 0.8,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:thalamic-reticular-nucleus",
+          "objectName": "thalamic-reticular-nucleus",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.8,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        }
+      ],
+      "material": {
+        "activeProfile": "realistic-illustrative",
+        "requestedProfile": "realistic-illustrative",
+        "eligibleObjects": 14,
+        "physicalMaterialObjects": 14,
+        "transmissionObjects": 14,
+        "semanticGeometryChanges": 0,
+        "estimatedAdditionalObjectDraws": 6,
+        "estimatedTransmissionPasses": 1,
+        "lightCount": 3,
+        "environmentMapActive": true,
+        "environmentMapWidth": 768,
+        "environmentMapHeight": 1024,
+        "estimatedEnvironmentTextureBytes": 6291456,
+        "proceduralNormalMapTextures": 3,
+        "estimatedProceduralTextureBytes": 1048576,
+        "estimatedOwnedTextureBytes": 7340032,
+        "generatedPresentationUvAttributes": 0
+      }
+    },
+    "cell": {
+      "activeProfile": "realistic-illustrative",
+      "totalRenderableObjects": 5,
+      "matterObjects": 4,
+      "emissionObjects": 1,
+      "pbrCandidateMeshes": 2,
+      "boundedPbrObjects": 2,
+      "physicalMaterialObjects": 2,
+      "schematicOnlyObjects": 3,
+      "undeclaredObjects": 0,
+      "missingStateBindings": 0,
+      "contractReady": true,
+      "manifest": [
+        {
+          "id": "r09-f:adex-somata",
+          "objectName": "adex-somata",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.3,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:field-boundary",
+          "objectName": "field-boundary",
+          "surface": "substrate",
+          "maximumLocalRadius": 3.2,
+          "opacityRange": [
+            0.05,
+            0.6
+          ],
+          "source": "procedural-scene-graph"
+        }
+      ],
+      "material": {
+        "activeProfile": "realistic-illustrative",
+        "requestedProfile": "realistic-illustrative",
+        "eligibleObjects": 2,
+        "physicalMaterialObjects": 2,
+        "transmissionObjects": 1,
+        "semanticGeometryChanges": 0,
+        "estimatedAdditionalObjectDraws": 0,
+        "estimatedTransmissionPasses": 1,
+        "lightCount": 3,
+        "environmentMapActive": true,
+        "environmentMapWidth": 768,
+        "environmentMapHeight": 1024,
+        "estimatedEnvironmentTextureBytes": 6291456,
+        "proceduralNormalMapTextures": 3,
+        "estimatedProceduralTextureBytes": 1048576,
+        "estimatedOwnedTextureBytes": 7340032,
+        "generatedPresentationUvAttributes": 0
+      }
+    },
+    "neuron": {
+      "activeProfile": "realistic-illustrative",
+      "totalRenderableObjects": 10,
+      "matterObjects": 4,
+      "emissionObjects": 6,
+      "pbrCandidateMeshes": 1,
+      "boundedPbrObjects": 1,
+      "physicalMaterialObjects": 1,
+      "schematicOnlyObjects": 9,
+      "undeclaredObjects": 0,
+      "missingStateBindings": 0,
+      "contractReady": true,
+      "manifest": [
+        {
+          "id": "r09-f:resolved-neuron-soma",
+          "objectName": "resolved-neuron-soma",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.7,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        }
+      ],
+      "material": {
+        "activeProfile": "realistic-illustrative",
+        "requestedProfile": "realistic-illustrative",
+        "eligibleObjects": 1,
+        "physicalMaterialObjects": 1,
+        "transmissionObjects": 1,
+        "semanticGeometryChanges": 0,
+        "estimatedAdditionalObjectDraws": 0,
+        "estimatedTransmissionPasses": 1,
+        "lightCount": 3,
+        "environmentMapActive": true,
+        "environmentMapWidth": 768,
+        "environmentMapHeight": 1024,
+        "estimatedEnvironmentTextureBytes": 6291456,
+        "proceduralNormalMapTextures": 3,
+        "estimatedProceduralTextureBytes": 1048576,
+        "estimatedOwnedTextureBytes": 7340032,
+        "generatedPresentationUvAttributes": 0
+      }
+    },
+    "electricity": {
+      "activeProfile": "realistic-illustrative",
+      "totalRenderableObjects": 11,
+      "matterObjects": 5,
+      "emissionObjects": 6,
+      "pbrCandidateMeshes": 1,
+      "boundedPbrObjects": 1,
+      "physicalMaterialObjects": 1,
+      "schematicOnlyObjects": 10,
+      "undeclaredObjects": 0,
+      "missingStateBindings": 0,
+      "contractReady": true,
+      "manifest": [
+        {
+          "id": "r09-f:electrical-board-surface",
+          "objectName": "electrical-board-surface",
+          "surface": "substrate",
+          "maximumLocalRadius": 3.8,
+          "opacityRange": [
+            0.1,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        }
+      ],
+      "material": {
+        "activeProfile": "realistic-illustrative",
+        "requestedProfile": "realistic-illustrative",
+        "eligibleObjects": 1,
+        "physicalMaterialObjects": 1,
+        "transmissionObjects": 0,
+        "semanticGeometryChanges": 0,
+        "estimatedAdditionalObjectDraws": 0,
+        "estimatedTransmissionPasses": 0,
+        "lightCount": 3,
+        "environmentMapActive": true,
+        "environmentMapWidth": 768,
+        "environmentMapHeight": 1024,
+        "estimatedEnvironmentTextureBytes": 6291456,
+        "proceduralNormalMapTextures": 3,
+        "estimatedProceduralTextureBytes": 1048576,
+        "estimatedOwnedTextureBytes": 7340032,
+        "generatedPresentationUvAttributes": 0
+      }
+    },
+    "synapse": {
+      "activeProfile": "realistic-illustrative",
+      "totalRenderableObjects": 11,
+      "matterObjects": 4,
+      "emissionObjects": 7,
+      "pbrCandidateMeshes": 3,
+      "boundedPbrObjects": 3,
+      "physicalMaterialObjects": 3,
+      "schematicOnlyObjects": 8,
+      "undeclaredObjects": 0,
+      "missingStateBindings": 0,
+      "contractReady": true,
+      "manifest": [
+        {
+          "id": "r09-f:presynaptic-bouton",
+          "objectName": "presynaptic-bouton",
+          "surface": "membrane",
+          "maximumLocalRadius": 1.6,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:postsynaptic-membrane",
+          "objectName": "postsynaptic-membrane",
+          "surface": "membrane",
+          "maximumLocalRadius": 2.2,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        },
+        {
+          "id": "r09-f:vesicular-reserve",
+          "objectName": "vesicular-reserve",
+          "surface": "membrane",
+          "maximumLocalRadius": 0.3,
+          "opacityRange": [
+            0,
+            1
+          ],
+          "source": "procedural-scene-graph"
+        }
+      ],
+      "material": {
+        "activeProfile": "realistic-illustrative",
+        "requestedProfile": "realistic-illustrative",
+        "eligibleObjects": 3,
+        "physicalMaterialObjects": 3,
+        "transmissionObjects": 3,
+        "semanticGeometryChanges": 0,
+        "estimatedAdditionalObjectDraws": 0,
+        "estimatedTransmissionPasses": 1,
+        "lightCount": 3,
+        "environmentMapActive": true,
+        "environmentMapWidth": 768,
+        "environmentMapHeight": 1024,
+        "estimatedEnvironmentTextureBytes": 6291456,
+        "proceduralNormalMapTextures": 3,
+        "estimatedProceduralTextureBytes": 1048576,
+        "estimatedOwnedTextureBytes": 7340032,
+        "generatedPresentationUvAttributes": 0
+      }
+    }
+  },
+  "material": {
+    "activeProfile": "realistic-illustrative",
+    "requestedProfile": "realistic-illustrative",
+    "eligibleObjects": 25,
+    "physicalMaterialObjects": 25,
+    "transmissionObjects": 23,
+    "semanticGeometryChanges": 0,
+    "estimatedAdditionalObjectDraws": 10,
+    "estimatedTransmissionPasses": 1,
+    "lightCount": 3,
+    "environmentMapActive": true,
+    "environmentMapWidth": 768,
+    "environmentMapHeight": 1024,
+    "estimatedEnvironmentTextureBytes": 6291456,
+    "proceduralNormalMapTextures": 3,
+    "estimatedProceduralTextureBytes": 1048576,
+    "estimatedOwnedTextureBytes": 7340032,
+    "generatedPresentationUvAttributes": 4
+  },
+  "clipping": {
+    "enabled": true,
+    "orientation": "coronal",
+    "slab": false,
+    "planeCount": 1,
+    "registeredLayers": 6,
+    "optedInLayers": 6,
+    "clippedMaterials": 98,
+    "capSources": 4,
+    "estimatedAdditionalDrawCalls": 9,
+    "maximumAdditionalDrawCalls": 18
+  },
+  "perViewGpu": {
+    "cell": {
+      "schematic": {
+        "drawCalls": 22,
+        "triangles": 8558,
+        "geometries": 22,
+        "textures": 20
+      },
+      "realistic": {
+        "drawCalls": 22,
+        "triangles": 8558,
+        "geometries": 22,
+        "textures": 20
+      },
+      "delta": {
+        "drawCalls": 0,
+        "triangles": 0,
+        "geometries": 0,
+        "textures": 0
+      }
+    },
+    "electricity": {
+      "schematic": {
+        "drawCalls": 34,
+        "triangles": 2386,
+        "geometries": 32,
+        "textures": 20
+      },
+      "realistic": {
+        "drawCalls": 34,
+        "triangles": 2386,
+        "geometries": 32,
+        "textures": 20
+      },
+      "delta": {
+        "drawCalls": 0,
+        "triangles": 0,
+        "geometries": 0,
+        "textures": 0
+      }
+    },
+    "laminar": {
+      "schematic": {
+        "drawCalls": 92,
+        "triangles": 13054,
+        "geometries": 68,
+        "textures": 20
+      },
+      "realistic": {
+        "drawCalls": 98,
+        "triangles": 13630,
+        "geometries": 68,
+        "textures": 20
+      },
+      "delta": {
+        "drawCalls": 6,
+        "triangles": 576,
+        "geometries": 0,
+        "textures": 0
+      }
+    },
+    "neuron": {
+      "schematic": {
+        "drawCalls": 32,
+        "triangles": 4662,
+        "geometries": 77,
+        "textures": 20
+      },
+      "realistic": {
+        "drawCalls": 32,
+        "triangles": 4662,
+        "geometries": 77,
+        "textures": 20
+      },
+      "delta": {
+        "drawCalls": 0,
+        "triangles": 0,
+        "geometries": 0,
+        "textures": 0
+      }
+    },
+    "overview": {
+      "schematic": {
+        "drawCalls": 48,
+        "triangles": 145778,
+        "geometries": 77,
+        "textures": 20
+      },
+      "realistic": {
+        "drawCalls": 56,
+        "triangles": 147542,
+        "geometries": 77,
+        "textures": 20
+      },
+      "delta": {
+        "drawCalls": 8,
+        "triangles": 1764,
+        "geometries": 0,
+        "textures": 0
+      }
+    },
+    "synapse": {
+      "schematic": {
+        "drawCalls": 36,
+        "triangles": 32774,
+        "geometries": 88,
+        "textures": 21
+      },
+      "realistic": {
+        "drawCalls": 36,
+        "triangles": 32774,
+        "geometries": 88,
+        "textures": 21
+      },
+      "delta": {
+        "drawCalls": 0,
+        "triangles": 0,
+        "geometries": 0,
+        "textures": 0
+      }
+    }
+  },
+  "shaderOrPageErrors": [],
+  "schematicRealisticChangedPixelRatio": 0.27152633101851853
+}

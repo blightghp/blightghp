@@ -288,8 +288,11 @@ científico.
   teclado/touch, legenda de unidade, fallback esquemático atômico, manifesto por
   vista e custos de clipping/material medidos.
 - **Resultado:** 25 objetos `matter` elegíveis recebem `MeshPhysicalMaterial`,
-  zero geometria/binding muda, um corte simples adiciona 9 draws e a laje fica
-  limitada a 18; a sonda usa apenas `field.waveActivity` macroscópico publicado.
+  três normal maps 256² e um `RoomEnvironment`/PMREM procedurais; zero
+  geometria/binding muda. A medição dual-pass registrou delta material de 0
+  draws em quatro vistas, +6 em Lâminas e +8 na Visão Geral; corte simples
+  adiciona 9 draws e a laje fica limitada a 18. A sonda usa apenas
+  `field.waveActivity` macroscópico publicado.
 - **Rollback:** perda de contexto, alto contraste ou falha retornam a
   `schematic`; clipping pode ser desativado mantendo opacidade/isolamento.
   **Complexidade/confiança:** alta / alta no envelope auditado.

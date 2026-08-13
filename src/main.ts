@@ -127,15 +127,18 @@ declare global {
         invertibility: { samples: number; tolerance: number; maximumError: number };
         redundancy: Record<SimulationView, string>;
       };
-      materialProfileAudit: () => Record<
-        SimulationView,
-        ReturnType<typeof auditVisualMaterialReadiness>
-      >;
+      materialProfileAudit: () => ReturnType<typeof materialProfileAuditReport>;
       presentationAudit: () => {
         material: MaterialProfileAudit;
         clipping: ReturnType<ClippingSystem["audit"]>;
         effects: ReturnType<PresentationMaterialEffects["audit"]>;
         probe: ReturnType<typeof sampleMacroscopicCutProbe>;
+        renderer: {
+          drawCalls: number;
+          triangles: number;
+          geometries: number;
+          textures: number;
+        };
       };
       renderedStateAudit: () => ReturnType<typeof auditRenderedStatePixels>;
       electricalBoardAudit: () => {
@@ -208,6 +211,7 @@ let lastCutProbe: ReturnType<typeof sampleMacroscopicCutProbe> = {
   reason: "clipping is not initialized",
 };
 let applicationDisposed = false;
+let webGlShaderCompilationFailed = false;
 
 const pendingResponses: Array<(event: EngineEvent) => void> = [];
 const activitySamples = Array.from({ length: 96 }, () => 0);
@@ -221,6 +225,7 @@ const CUT_CAP_OBJECTS: Readonly<Record<SimulationView, readonly string[]>> = {
   electricity: ["electrical-board-surface"],
   synapse: ["presynaptic-bouton", "postsynaptic-membrane"],
 };
+const CUT_MILLIMETERS_PER_PROCEDURAL_UNIT = 40;
 
 function element<T extends HTMLElement>(selector: string): T {
   const match = document.querySelector<T>(selector);
@@ -416,6 +421,7 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
   if (latencyElement) latencyElement.textContent = `${profile.workerLatencyMs.p95.toFixed(1)} ms`;
   const drawElement = document.querySelector("#gpu-draw-calls");
   if (drawElement) drawElement.textContent = String(profile.gpu.drawCalls);
+  updatePresentationCostUi();
   const memoryElement = document.querySelector("#snapshot-memory");
   if (memoryElement) memoryElement.textContent = `${(profile.memory.snapshotBytes / 1024).toFixed(1)} KiB`;
 
@@ -498,18 +504,40 @@ function visualAuditReport() {
   };
 }
 
-function materialProfileAuditReport(): Record<
-  SimulationView,
-  ReturnType<typeof auditVisualMaterialReadiness>
-> {
+function materialProfileAuditReport() {
+  const reportFor = (view: SimulationView, root: THREE.Object3D) => ({
+    ...auditVisualMaterialReadiness(root),
+    manifest: REALISTIC_ILLUSTRATIVE_MANIFEST[view],
+    material: materialProfileManager.audit(view),
+  });
   return {
-    overview: auditVisualMaterialReadiness(layers.group),
-    laminar: auditVisualMaterialReadiness(laminarLayer.group),
-    cell: auditVisualMaterialReadiness(cellLayer.group),
-    neuron: auditVisualMaterialReadiness(neuronLayer.group),
-    electricity: auditVisualMaterialReadiness(electricalBoardLayer.group),
-    synapse: auditVisualMaterialReadiness(synapseLayer.group),
+    overview: reportFor("overview", layers.group),
+    laminar: reportFor("laminar", laminarLayer.group),
+    cell: reportFor("cell", cellLayer.group),
+    neuron: reportFor("neuron", neuronLayer.group),
+    electricity: reportFor("electricity", electricalBoardLayer.group),
+    synapse: reportFor("synapse", synapseLayer.group),
   };
+}
+
+function updateMaterialProfileUi(profile: VisualMaterialProfile): void {
+  const select = document.querySelector<HTMLSelectElement>("#material-profile");
+  if (select) select.value = profile;
+  document.body.dataset.materialProfile = profile;
+  const status = document.querySelector<HTMLElement>("#material-profile-status");
+  if (status) {
+    status.textContent = profile === "realistic-illustrative" ? "Realista" : "Esquemática";
+  }
+}
+
+function updatePresentationCostUi(): void {
+  const target = document.querySelector<HTMLElement>("#gpu-presentation-delta");
+  if (!target || !clippingSystem || !materialProfileManager) return;
+  const clipping = clippingSystem.audit();
+  const material = materialProfileManager.audit(activeView);
+  target.textContent = `+${clipping.estimatedAdditionalDrawCalls} corte · ` +
+    `+${material.estimatedAdditionalObjectDraws} dupla face · ` +
+    `+${material.estimatedTransmissionPasses} refração`;
 }
 
 function renderRootForView(view: SimulationView): THREE.Group {
@@ -524,9 +552,9 @@ function renderRootForView(view: SimulationView): THREE.Group {
 function setMaterialProfile(profile: VisualMaterialProfile): VisualMaterialProfile {
   const active = materialProfileManager.setProfile(profile);
   clippingSystem.refresh();
-  const select = document.querySelector<HTMLSelectElement>("#material-profile");
-  if (select) select.value = active;
-  document.body.dataset.materialProfile = active;
+  updateMaterialProfileUi(active);
+  updatePresentationCostUi();
+  if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   return active;
 }
 
@@ -588,14 +616,44 @@ function updatePresentationUi(state: CutPlaneState): void {
   if (thickness) thickness.value = String(state.slabThickness);
   if (azimuth) azimuth.value = String(state.obliqueAzimuthDegrees);
   if (elevation) elevation.value = String(state.obliqueElevationDegrees);
+  if (position) {
+    position.setAttribute("aria-valuenow", String(state.position));
+    position.setAttribute(
+      "aria-valuetext",
+      `${(state.position * CUT_MILLIMETERS_PER_PROCEDURAL_UNIT).toFixed(1)} milímetros orientativos`,
+    );
+  }
+  if (thickness) {
+    thickness.disabled = !state.slab;
+    thickness.setAttribute("aria-valuenow", String(state.slabThickness));
+    thickness.setAttribute(
+      "aria-valuetext",
+      `${(state.slabThickness * CUT_MILLIMETERS_PER_PROCEDURAL_UNIT).toFixed(1)} milímetros orientativos`,
+    );
+  }
+  if (azimuth) {
+    azimuth.disabled = state.orientation !== "oblique";
+    azimuth.setAttribute("aria-valuenow", String(state.obliqueAzimuthDegrees));
+  }
+  if (elevation) {
+    elevation.disabled = state.orientation !== "oblique";
+    elevation.setAttribute("aria-valuenow", String(state.obliqueElevationDegrees));
+  }
   const positionValue = document.querySelector<HTMLOutputElement>("#cut-position-val");
   const thicknessValue = document.querySelector<HTMLOutputElement>("#cut-thickness-val");
   const azimuthValue = document.querySelector<HTMLOutputElement>("#cut-azimuth-val");
   const elevationValue = document.querySelector<HTMLOutputElement>("#cut-elevation-val");
-  if (positionValue) positionValue.textContent = `${state.position.toFixed(2)} u.c.`;
-  if (thicknessValue) thicknessValue.textContent = `${state.slabThickness.toFixed(2)} u.c.`;
+  if (positionValue) {
+    positionValue.textContent =
+      `${(state.position * CUT_MILLIMETERS_PER_PROCEDURAL_UNIT).toFixed(1)} mm`;
+  }
+  if (thicknessValue) {
+    thicknessValue.textContent =
+      `${(state.slabThickness * CUT_MILLIMETERS_PER_PROCEDURAL_UNIT).toFixed(1)} mm`;
+  }
   if (azimuthValue) azimuthValue.textContent = `${state.obliqueAzimuthDegrees.toFixed(0)}°`;
   if (elevationValue) elevationValue.textContent = `${state.obliqueElevationDegrees.toFixed(0)}°`;
+  updatePresentationCostUi();
 }
 
 function setCutPlaneState(update: Partial<CutPlaneState>): CutPlaneState {
@@ -682,6 +740,7 @@ function renderFrame(
   materialProfileManager.sync();
   scene.updateMatrixWorld(true);
   clippingSystem.update();
+  updatePresentationCostUi();
   updateCutProbe(snapshot, alpha);
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta);
   controls.update();
@@ -737,9 +796,17 @@ function bindRange(
   const display = element<HTMLSpanElement>(`#${displayId}`);
   input.value = String(state[key]);
   display.textContent = format(state[key]);
+  input.setAttribute("role", "slider");
+  const accessibleName = document.querySelector<HTMLElement>(`label[for="${id}"] span`)
+    ?.textContent;
+  input.setAttribute("aria-label", accessibleName ?? id);
+  input.setAttribute("aria-valuenow", String(state[key]));
+  input.setAttribute("aria-valuetext", format(state[key]));
   input.addEventListener("input", () => {
     state[key] = Number(input.value);
     display.textContent = format(state[key]);
+    input.setAttribute("aria-valuenow", String(state[key]));
+    input.setAttribute("aria-valuetext", format(state[key]));
     onUpdate?.();
   });
 }
@@ -942,6 +1009,7 @@ function setupInterface(): void {
 
   const materialSelect = element<HTMLSelectElement>("#material-profile");
   materialSelect.value = materialProfileManager.profile();
+  updateMaterialProfileUi(materialProfileManager.profile());
   materialSelect.addEventListener("change", () => {
     const requested: VisualMaterialProfile = materialSelect.value === "realistic-illustrative"
       ? "realistic-illustrative"
@@ -984,6 +1052,8 @@ function setupInterface(): void {
       isolateMatter: isolationToggle.checked,
     });
     opacityOutput.textContent = `${Math.round(opacity * 100)}%`;
+    opacityInput.setAttribute("aria-valuenow", String(opacity));
+    opacityInput.setAttribute("aria-valuetext", `${Math.round(opacity * 100)} por cento`);
     if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   };
   xrayToggle.addEventListener("change", applyEffects);
@@ -995,13 +1065,12 @@ function setupInterface(): void {
   highContrastToggle.checked = prefersHighContrast;
   document.body.dataset.highContrast = String(prefersHighContrast);
   materialProfileManager.setEnvironment({ highContrast: prefersHighContrast });
-  document.body.dataset.materialProfile = materialProfileManager.profile();
+  updateMaterialProfileUi(materialProfileManager.profile());
   highContrastToggle.addEventListener("change", () => {
     document.body.dataset.highContrast = String(highContrastToggle.checked);
     materialProfileManager.setEnvironment({ highContrast: highContrastToggle.checked });
     clippingSystem.refresh();
-    materialSelect.value = materialProfileManager.profile();
-    document.body.dataset.materialProfile = materialProfileManager.profile();
+    updateMaterialProfileUi(materialProfileManager.profile());
     if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   });
   element<HTMLButtonElement>("#reset-cut-camera").addEventListener("click", resetCameraForCut);
@@ -1122,14 +1191,19 @@ function onWebGlContextLost(event: Event): void {
   event.preventDefault();
   materialProfileManager?.failAtomic("webgl-context-lost");
   clippingSystem?.disable();
-  document.body.dataset.materialProfile = "schematic";
-  const select = document.querySelector<HTMLSelectElement>("#material-profile");
-  if (select) select.value = "schematic";
+  updateMaterialProfileUi("schematic");
 }
 
 function onWebGlContextRestored(): void {
   materialProfileManager?.setEnvironment({ contextAvailable: true });
   clippingSystem?.refresh();
+}
+
+function onWebGlShaderError(): void {
+  webGlShaderCompilationFailed = true;
+  console.error("falha de compilação WebGL; perfil realista revertido atomicamente");
+  materialProfileManager?.failAtomic("webgl-shader-compilation-failure");
+  if (materialProfileManager) updateMaterialProfileUi(materialProfileManager.profile());
 }
 
 function disposeApplication(): void {
@@ -1148,6 +1222,7 @@ function disposeApplication(): void {
   synapseLayer?.dispose();
   renderer?.domElement.removeEventListener("webglcontextlost", onWebGlContextLost);
   renderer?.domElement.removeEventListener("webglcontextrestored", onWebGlContextRestored);
+  if (renderer) renderer.debug.onShaderError = null;
   renderer?.dispose();
 }
 
@@ -1169,7 +1244,8 @@ async function init(): Promise<void> {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.info.autoReset = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.0;
+  renderer.debug.onShaderError = onWebGlShaderError;
   element("#canvas-container").appendChild(renderer.domElement);
   renderer.domElement.addEventListener("webglcontextlost", onWebGlContextLost, false);
   renderer.domElement.addEventListener("webglcontextrestored", onWebGlContextRestored, false);
@@ -1213,7 +1289,10 @@ async function init(): Promise<void> {
   synapseLayer.setVisible(false);
   synapseLayer.mount(renderContext, renderTopology);
 
-  materialProfileManager = new RealisticIllustrativeMaterialManager(scene);
+  materialProfileManager = new RealisticIllustrativeMaterialManager(scene, { renderer });
+  if (webGlShaderCompilationFailed) {
+    materialProfileManager.failAtomic("webgl-shader-compilation-failure");
+  }
   materialProfileManager.registerLayer(
     "overview",
     layers.group,
@@ -1429,6 +1508,14 @@ async function init(): Promise<void> {
       element<HTMLInputElement>("#presentation-opacity").value = String(effects.opacity);
       element<HTMLOutputElement>("#presentation-opacity-val").textContent =
         `${Math.round(effects.opacity * 100)}%`;
+      element<HTMLInputElement>("#presentation-opacity").setAttribute(
+        "aria-valuenow",
+        String(effects.opacity),
+      );
+      element<HTMLInputElement>("#presentation-opacity").setAttribute(
+        "aria-valuetext",
+        `${Math.round(effects.opacity * 100)} por cento`,
+      );
       if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
     },
     setHighContrast(enabled) {
@@ -1437,8 +1524,7 @@ async function init(): Promise<void> {
       materialProfileManager.setEnvironment({ highContrast: enabled });
       clippingSystem.refresh();
       const profile = materialProfileManager.profile();
-      element<HTMLSelectElement>("#material-profile").value = profile;
-      document.body.dataset.materialProfile = profile;
+      updateMaterialProfileUi(profile);
       if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
       return profile;
     },
@@ -1454,6 +1540,12 @@ async function init(): Promise<void> {
         clipping: clippingSystem.audit(),
         effects: presentationEffects.audit(),
         probe: lastCutProbe,
+        renderer: {
+          drawCalls: renderer.info.render.calls,
+          triangles: renderer.info.render.triangles,
+          geometries: renderer.info.memory.geometries,
+          textures: renderer.info.memory.textures,
+        },
       };
     },
     renderedStateAudit() {

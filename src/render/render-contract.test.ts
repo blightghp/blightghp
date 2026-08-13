@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { generateBrainData } from "../brain";
 import { DiagnosticFallbackHost } from "../wasm-engine-host";
 import { CellRenderLayer } from "./cell-layer";
@@ -8,14 +8,28 @@ import { LaminarRenderLayer } from "./laminar-layer";
 import { NeuronRenderLayer } from "./neuron-layer";
 import { SynapseRenderLayer } from "./synapse-layer";
 import {
+  ClippingSystem,
+  createCutPlanes,
+  DEFAULT_CUT_PLANE_STATE,
+  sampleMacroscopicCutProbe,
+} from "./clipping";
+import {
+  PresentationMaterialEffects,
+  REALISTIC_ILLUSTRATIVE_MANIFEST,
+  RealisticIllustrativeMaterialManager,
+  surfaceParameters,
+} from "./material-profile";
+import {
   auditVisualMaterialReadiness,
   auditVisualProvenance,
   auditVisualBindings,
   declareVisual,
+  declareClippingParticipation,
   visualPassOf,
   visualProvenanceOf,
   visualSemanticBindingOf,
 } from "./render-types";
+import { syncBloomDepthMaskClipping } from "./selective-bloom";
 import { projectionColorToken, VISUAL_COLORS } from "./visual-tokens";
 
 function renderedObjects(root: THREE.Object3D): Array<THREE.Object3D & { material: THREE.Material }> {
@@ -26,6 +40,33 @@ function renderedObjects(root: THREE.Object3D): Array<THREE.Object3D & { materia
     }
   });
   return objects;
+}
+
+function materialManagerForContract(scene: THREE.Scene): RealisticIllustrativeMaterialManager {
+  const textures = new Map<string, THREE.Texture>();
+  return new RealisticIllustrativeMaterialManager(scene, {
+    environmentTexture: new THREE.Texture(),
+    normalMapProvider: {
+      get(type) {
+        const texture = textures.get(type) ?? new THREE.Texture();
+        textures.set(type, texture);
+        return texture;
+      },
+      count: () => textures.size,
+      estimatedBytes: () => textures.size * 256 * 256 * 4 * 4 / 3,
+      dispose: () => undefined,
+    },
+  });
+}
+
+function scientificHashes(snapshot: ReturnType<DiagnosticFallbackHost["advance"]>["snapshot"]) {
+  return {
+    stateHash: snapshot.diagnostics.stateHash,
+    corticothalamicHash: snapshot.diagnostics.corticothalamicHash,
+    cellPatchHash: snapshot.diagnostics.cellPatchHash,
+    chemicalHash: snapshot.diagnostics.chemicalHash,
+    cellSpikeEventHash: snapshot.diagnostics.cellSpikeEventHash,
+  };
 }
 
 describe("render presentation contract", () => {
@@ -232,5 +273,347 @@ describe("render presentation contract", () => {
     electrical.dispose();
     neuron.dispose();
     fallback.dispose();
+  });
+});
+
+describe("ClippingSystem contract", () => {
+  it("clipping planes do not modify any of the five scientific hashes or send Worker messages", () => {
+    const topology = generateBrainData({
+      seed: 31,
+      surfaceNodesPerHemisphere: 16,
+      innerNodesPerHemisphere: 2,
+    });
+    const host = new DiagnosticFallbackHost();
+    host.initialize({ type: "initialize", topology }, "clipping-hash-contract");
+    const snapshot = host.advance({
+      type: "advance",
+      targetTick: 1,
+      stimulus: { intensity: 0, confidence: 0 },
+    }).snapshot;
+    const before = scientificHashes(snapshot);
+    const workerPost = vi.fn();
+    const scene = new THREE.Scene();
+    const root = new THREE.Group();
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+    mesh.name = "cap";
+    declareVisual(mesh, "matter", "topology");
+    root.add(mesh);
+    const clipping = new ClippingSystem({ localClippingEnabled: false }, scene);
+    clipping.registerLayer({ id: "overview", root, optIn: true, capObjectNames: [mesh.name] });
+    clipping.setState({ enabled: true, position: 0.64, orientation: "coronal" });
+    expect(workerPost).not.toHaveBeenCalled();
+    expect(scientificHashes(snapshot)).toEqual(before);
+    clipping.dispose();
+    mesh.geometry.dispose();
+    mesh.material.dispose();
+    host.dispose();
+  });
+
+  it("bounds stencil caps to 18 additional draws and resets their state on view switches", () => {
+    const scene = new THREE.Scene();
+    const overview = new THREE.Group();
+    const laminar = new THREE.Group();
+    const overviewNames: string[] = [];
+    for (let index = 0; index < 10; index += 1) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+      mesh.name = `overview-cap-${index}`;
+      declareVisual(mesh, "matter", "topology");
+      overview.add(mesh);
+      overviewNames.push(mesh.name);
+    }
+    const laminarMesh = new THREE.Mesh(new THREE.SphereGeometry(), new THREE.MeshBasicMaterial());
+    laminarMesh.name = "laminar-cap";
+    declareVisual(laminarMesh, "matter", "topology");
+    laminar.add(laminarMesh);
+    const clipping = new ClippingSystem({ localClippingEnabled: false }, scene);
+    clipping.registerLayer({ id: "overview", root: overview, optIn: true, capObjectNames: overviewNames });
+    clipping.registerLayer({ id: "laminar", root: laminar, optIn: true, capObjectNames: [laminarMesh.name] });
+    clipping.setState({ enabled: true, slab: true });
+    clipping.update();
+    const previousStencil = scene.getObjectByName("cut-stencil-back-0-0") as THREE.Mesh;
+    expect(clipping.audit().estimatedAdditionalDrawCalls).toBeLessThanOrEqual(18);
+    clipping.setActiveLayer("laminar");
+    clipping.update();
+    const currentStencil = scene.getObjectByName("cut-stencil-back-0-0") as THREE.Mesh;
+    expect(previousStencil.parent).toBeNull();
+    expect(currentStencil).not.toBe(previousStencil);
+    expect(currentStencil.geometry).toBe(laminarMesh.geometry);
+    clipping.dispose();
+    for (const object of [...overview.children, ...laminar.children]) {
+      const renderable = object as THREE.Mesh;
+      renderable.geometry.dispose();
+      (renderable.material as THREE.Material).dispose();
+    }
+  });
+
+  it("keeps excluded materials unclipped and restores original clipping contracts on dispose", () => {
+    const originalPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.25);
+    const material = new THREE.MeshBasicMaterial({ clippingPlanes: [originalPlane] });
+    material.clipIntersection = true;
+    const excludedMaterial = new THREE.MeshBasicMaterial();
+    const included = new THREE.Mesh(new THREE.BoxGeometry(), material);
+    const excluded = new THREE.Mesh(new THREE.BoxGeometry(), excludedMaterial);
+    included.name = "included";
+    declareVisual(included, "matter", "topology");
+    declareVisual(excluded, "matter", "decoration");
+    declareClippingParticipation(excluded, "exclude");
+    const root = new THREE.Group();
+    root.add(included, excluded);
+    const scene = new THREE.Scene();
+    const clipping = new ClippingSystem({ localClippingEnabled: false }, scene);
+    clipping.registerLayer({ id: "overview", root, optIn: true, capObjectNames: [] });
+    clipping.setState({ enabled: true, orientation: "axial" });
+    expect(material.clippingPlanes).toHaveLength(1);
+    expect(material.clippingPlanes?.[0]).not.toBe(originalPlane);
+    expect(excludedMaterial.clippingPlanes).toBeNull();
+    clipping.dispose();
+    expect(material.clippingPlanes).toEqual([originalPlane]);
+    expect(material.clipIntersection).toBe(true);
+    included.geometry.dispose();
+    excluded.geometry.dispose();
+    material.dispose();
+    excludedMaterial.dispose();
+  });
+
+  it("uses exactly two opposing planes for slab mode", () => {
+    const planes = createCutPlanes({
+      ...DEFAULT_CUT_PLANE_STATE,
+      enabled: true,
+      slab: true,
+      orientation: "oblique",
+    });
+    expect(planes).toHaveLength(2);
+    expect(planes[0].normal.dot(planes[1].normal)).toBeCloseTo(-1);
+  });
+
+  it("applies the same clipping array to the bloom depth and base materials", () => {
+    const planes = [new THREE.Plane(new THREE.Vector3(1, 0, 0), 0.2)];
+    const base = new THREE.MeshPhysicalMaterial({ clippingPlanes: planes });
+    base.clipIntersection = true;
+    const bloomDepth = new THREE.MeshBasicMaterial();
+    syncBloomDepthMaskClipping(base, bloomDepth);
+    expect(bloomDepth.clippingPlanes).toBe(base.clippingPlanes);
+    expect(bloomDepth.clipIntersection).toBe(base.clipIntersection);
+    expect(bloomDepth.depthTest).toBe(base.depthTest);
+    expect(bloomDepth.depthWrite).toBe(base.depthWrite);
+    base.dispose();
+    bloomDepth.dispose();
+  });
+
+  it("exposes the face probe only for overview and includes a unit for a published field", () => {
+    const topology = generateBrainData({
+      seed: 37,
+      surfaceNodesPerHemisphere: 16,
+      innerNodesPerHemisphere: 2,
+    });
+    const current = new Float32Array(topology.corticalField.nodeIndices.length).fill(0.75);
+    const plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
+    const unavailable = sampleMacroscopicCutProbe(
+      "cell",
+      topology,
+      current,
+      current,
+      1,
+      plane,
+    );
+    const available = sampleMacroscopicCutProbe(
+      "overview",
+      topology,
+      current,
+      current,
+      1,
+      plane,
+    );
+    expect(unavailable.available).toBe(false);
+    expect(available).toMatchObject({
+      available: true,
+      unit: "normalized field activity",
+      value: 0.75,
+    });
+  });
+});
+
+describe("MaterialProfileManager contract", () => {
+  it("keeps schematic originals, upgrades only eligible matter, and leaves emission untouched", () => {
+    const scene = new THREE.Scene();
+    const layer = new SynapseRenderLayer();
+    const manager = materialManagerForContract(scene);
+    manager.registerLayer("synapse", layer.group, REALISTIC_ILLUSTRATIVE_MANIFEST.synapse);
+    const eligible = layer.group.getObjectByName("presynaptic-bouton") as THREE.Mesh;
+    const emission = layer.group.getObjectByName("glutamate-cloud") as THREE.Points;
+    const schematic = eligible.material;
+    const emissionMaterial = emission.material;
+    manager.setProfile("realistic-illustrative");
+    expect(eligible.material).toBeInstanceOf(THREE.MeshPhysicalMaterial);
+    expect(emission.material).toBe(emissionMaterial);
+    manager.setProfile("schematic");
+    expect(eligible.material).toBe(schematic);
+    manager.dispose();
+    layer.dispose();
+  });
+
+  it("preserves neuron vertex-color gradients because schematic lines are protected", () => {
+    const scene = new THREE.Scene();
+    const layer = new NeuronRenderLayer(41);
+    const manager = materialManagerForContract(scene);
+    manager.registerLayer("neuron", layer.group, REALISTIC_ILLUSTRATIVE_MANIFEST.neuron);
+    const dendrite = layer.group.getObjectByName(
+      "resolved-neuron-multicompartment-dendrite",
+    ) as THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
+    const material = dendrite.material;
+    manager.setProfile("realistic-illustrative");
+    expect(dendrite.material).toBe(material);
+    expect(dendrite.material.vertexColors).toBe(true);
+    expect(dendrite.geometry.getAttribute("color")).toBeDefined();
+    manager.dispose();
+    layer.dispose();
+  });
+
+  it("uses the refined tissue, membrane and substrate PBR presets", () => {
+    expect(surfaceParameters("membrane")).toMatchObject({
+      roughness: 0.32,
+      transmission: 0.22,
+      clearcoat: 0.28,
+      sheen: 0.18,
+      ior: 1.4,
+    });
+    expect(surfaceParameters("tissue")).toMatchObject({
+      roughness: 0.52,
+      transmission: 0.1,
+      clearcoat: 0.12,
+      sheen: 0.25,
+      ior: 1.38,
+    });
+    expect(surfaceParameters("substrate")).toMatchObject({
+      roughness: 0.72,
+      transmission: 0,
+      sheen: 0,
+      ior: 1.5,
+    });
+  });
+
+  it("keeps geometry UUIDs and five scientific hashes stable across profile switches", () => {
+    const topology = generateBrainData({
+      seed: 43,
+      surfaceNodesPerHemisphere: 16,
+      innerNodesPerHemisphere: 2,
+    });
+    const host = new DiagnosticFallbackHost();
+    host.initialize({ type: "initialize", topology }, "material-hash-contract");
+    const snapshot = host.advance({
+      type: "advance",
+      targetTick: 1,
+      stimulus: { intensity: 0, confidence: 0 },
+    }).snapshot;
+    const hashes = scientificHashes(snapshot);
+    const scene = new THREE.Scene();
+    const layer = new CellRenderLayer();
+    const manager = materialManagerForContract(scene);
+    manager.registerLayer("cell", layer.group, REALISTIC_ILLUSTRATIVE_MANIFEST.cell);
+    const soma = layer.group.getObjectByName("adex-somata") as THREE.Mesh;
+    const geometryUuid = soma.geometry.uuid;
+    manager.setProfile("realistic-illustrative");
+    manager.setProfile("schematic");
+    expect(soma.geometry.uuid).toBe(geometryUuid);
+    expect(manager.audit().semanticGeometryChanges).toBe(0);
+    expect(scientificHashes(snapshot)).toEqual(hashes);
+    manager.dispose();
+    layer.dispose();
+    host.dispose();
+  });
+
+  it("forces schematic on high contrast and context loss", () => {
+    const scene = new THREE.Scene();
+    const layer = new ElectricalBoardLayer();
+    const manager = materialManagerForContract(scene);
+    manager.registerLayer(
+      "electricity",
+      layer.group,
+      REALISTIC_ILLUSTRATIVE_MANIFEST.electricity,
+    );
+    manager.setProfile("realistic-illustrative");
+    manager.setEnvironment({ highContrast: true });
+    expect(manager.profile()).toBe("schematic");
+    expect(manager.audit().fallbackReason).toBe("high-contrast-requires-schematic");
+    manager.setEnvironment({ highContrast: false });
+    manager.failAtomic("webgl-context-lost");
+    expect(manager.profile()).toBe("schematic");
+    expect(manager.audit().fallbackReason).toBe("webgl-context-lost");
+    manager.dispose();
+    layer.dispose();
+  });
+
+  it("activates the environment and light rig only in realistic mode and disposes physical materials", () => {
+    const scene = new THREE.Scene();
+    const layer = new ElectricalBoardLayer();
+    const manager = materialManagerForContract(scene);
+    manager.registerLayer(
+      "electricity",
+      layer.group,
+      REALISTIC_ILLUSTRATIVE_MANIFEST.electricity,
+    );
+    manager.setProfile("realistic-illustrative");
+    const board = layer.group.getObjectByName("electrical-board-surface") as THREE.Mesh;
+    const physical = board.material as THREE.MeshPhysicalMaterial;
+    const disposed = vi.fn();
+    physical.addEventListener("dispose", disposed);
+    expect(manager.audit()).toMatchObject({ environmentMapActive: true, lightCount: 3 });
+    expect(scene.getObjectByName("realistic-illustrative-light-rig")?.visible).toBe(true);
+    manager.setProfile("schematic");
+    expect(scene.environment).toBeNull();
+    expect(scene.getObjectByName("realistic-illustrative-light-rig")?.visible).toBe(false);
+    manager.dispose();
+    expect(disposed).toHaveBeenCalledOnce();
+    layer.dispose();
+  });
+
+  it("publishes a complete 25-object manifest for all six views", () => {
+    expect(Object.keys(REALISTIC_ILLUSTRATIVE_MANIFEST).sort()).toEqual([
+      "cell",
+      "electricity",
+      "laminar",
+      "neuron",
+      "overview",
+      "synapse",
+    ]);
+    const entries = Object.values(REALISTIC_ILLUSTRATIVE_MANIFEST).flat();
+    expect(entries).toHaveLength(25);
+    expect(new Set(entries.map((entry) => entry.id)).size).toBe(entries.length);
+    expect(entries.every((entry) => entry.source === "procedural-scene-graph")).toBe(true);
+  });
+});
+
+describe("PresentationMaterialEffects contract", () => {
+  it("opacity and x-ray alter only temporary material state and restore it exactly", () => {
+    const topology = generateBrainData({
+      seed: 47,
+      surfaceNodesPerHemisphere: 16,
+      innerNodesPerHemisphere: 2,
+    });
+    const host = new DiagnosticFallbackHost();
+    host.initialize({ type: "initialize", topology }, "effects-hash-contract");
+    const snapshot = host.advance({
+      type: "advance",
+      targetTick: 1,
+      stimulus: { intensity: 0, confidence: 0 },
+    }).snapshot;
+    const hashes = scientificHashes(snapshot);
+    const material = new THREE.MeshBasicMaterial({ opacity: 0.73, transparent: true });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(), material);
+    declareVisual(mesh, "matter", "topology");
+    const effects = new PresentationMaterialEffects();
+    effects.setState({ opacity: 0.5, xray: true });
+    effects.beforeRender(mesh);
+    expect(material.opacity).toBeCloseTo(0.73 * 0.5 * 0.28);
+    expect(material.depthWrite).toBe(false);
+    expect(() => effects.beforeRender(mesh)).toThrow(/not restored/);
+    effects.afterRender();
+    expect(material.opacity).toBe(0.73);
+    expect(material.transparent).toBe(true);
+    expect(material.depthWrite).toBe(true);
+    expect(scientificHashes(snapshot)).toEqual(hashes);
+    mesh.geometry.dispose();
+    material.dispose();
+    host.dispose();
   });
 });

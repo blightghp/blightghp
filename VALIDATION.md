@@ -422,7 +422,8 @@ contagem de transmissão, zero troca geométrica, clipping e sonda.
 
 O gate executa: quatro normais canônicas e laje; opt-in/exclusão local;
 compartilhamento de geometria e descarte de materiais/geometrias auxiliares;
-fallback atômico em alto contraste/perda de contexto; equivalente textual;
+fallback atômico em alto contraste/perda de contexto/shader; três normal maps
+canvas determinísticos e `RoomEnvironment`/PMREM com dispose; equivalente textual;
 invariância dos cinco hashes com o relógio congelado; manifesto GIF schema 3;
 captura comparativa, teclado/touch, monocromia, movimento reduzido e orçamento
 GPU e cinco hashes invariantes. Qualquer falha mantém ou restaura o esquemático.

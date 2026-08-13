@@ -38,6 +38,20 @@ const COMPOSITE_SHADER = {
   `,
 };
 
+/** Keeps the bloom depth mask on the exact local clipping contract used by the base pass. */
+export function syncBloomDepthMaskClipping(
+  source: THREE.Material,
+  depthMask: THREE.MeshBasicMaterial,
+): void {
+  depthMask.clippingPlanes = source.clippingPlanes;
+  depthMask.clipIntersection = source.clipIntersection;
+  depthMask.clipShadows = source.clipShadows;
+  depthMask.side = source.side;
+  depthMask.depthTest = source.depthTest;
+  depthMask.depthWrite = source.depthWrite;
+  depthMask.depthFunc = source.depthFunc;
+}
+
 /**
  * Renders emission into its own bloom target while matter writes the depth mask.
  * The final pass draws the untouched scene and adds only the emission bloom.
@@ -46,13 +60,7 @@ export class SelectiveBloomPipeline {
   readonly bloomPass: UnrealBloomPass;
   private readonly bloomComposer: EffectComposer;
   private readonly finalComposer: EffectComposer;
-  private readonly depthMaskMaterial = new THREE.MeshBasicMaterial({
-    color: VISUAL_COLORS.transparentBlack,
-    colorWrite: false,
-    depthTest: true,
-    depthWrite: true,
-    side: THREE.DoubleSide,
-  });
+  private readonly depthMaskMaterials = new Map<THREE.Material, THREE.MeshBasicMaterial>();
   private readonly savedMaterials = new Map<MaterialObject, THREE.Material | THREE.Material[]>();
   private readonly savedVisibilities = new Map<THREE.Object3D, boolean>();
 
@@ -103,7 +111,9 @@ export class SelectiveBloomPipeline {
       }
       if (!hasMaterial(object) || visualPassOf(object) === "emission") return;
       this.savedMaterials.set(object, object.material);
-      object.material = this.depthMaskMaterial;
+      object.material = Array.isArray(object.material)
+        ? object.material.map((material) => this.depthMaskFor(material))
+        : this.depthMaskFor(object.material);
     });
     try {
       this.bloomComposer.render();
@@ -122,8 +132,25 @@ export class SelectiveBloomPipeline {
   }
 
   dispose(): void {
-    this.depthMaskMaterial.dispose();
+    for (const material of this.depthMaskMaterials.values()) material.dispose();
+    this.depthMaskMaterials.clear();
     this.bloomComposer.dispose();
     this.finalComposer.dispose();
+  }
+
+  private depthMaskFor(source: THREE.Material): THREE.MeshBasicMaterial {
+    let depthMask = this.depthMaskMaterials.get(source);
+    if (!depthMask) {
+      depthMask = new THREE.MeshBasicMaterial({
+        color: VISUAL_COLORS.transparentBlack,
+        colorWrite: false,
+        depthTest: true,
+        depthWrite: true,
+      });
+      depthMask.name = `${source.name || source.type}:selective-bloom-depth-mask`;
+      this.depthMaskMaterials.set(source, depthMask);
+    }
+    syncBloomDepthMaskClipping(source, depthMask);
+    return depthMask;
   }
 }

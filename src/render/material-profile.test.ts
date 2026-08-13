@@ -8,6 +8,7 @@ import {
   REALISTIC_ILLUSTRATIVE_MANIFEST,
   RealisticIllustrativeMaterialManager,
 } from "./material-profile";
+import type { MaterialProfileManagerOptions } from "./material-profile";
 import { NeuronRenderLayer } from "./neuron-layer";
 import {
   auditVisualMaterialReadiness,
@@ -15,6 +16,27 @@ import {
   visualSemanticBindingOf,
 } from "./render-types";
 import { SynapseRenderLayer } from "./synapse-layer";
+
+function managerForTest(
+  scene: THREE.Scene,
+  physicalMaterialFactory?: MaterialProfileManagerOptions["physicalMaterialFactory"],
+): RealisticIllustrativeMaterialManager {
+  const textures = new Map<string, THREE.Texture>();
+  return new RealisticIllustrativeMaterialManager(scene, {
+    environmentTexture: new THREE.Texture(),
+    normalMapProvider: {
+      get(type) {
+        const current = textures.get(type) ?? new THREE.Texture();
+        textures.set(type, current);
+        return current;
+      },
+      count: () => textures.size,
+      estimatedBytes: () => textures.size * 256 * 256 * 4 * 4 / 3,
+      dispose: () => undefined,
+    },
+    ...(physicalMaterialFactory ? { physicalMaterialFactory } : {}),
+  });
+}
 
 describe("R09-F realistic-illustrative material manager", () => {
   it("swaps only bounded matter while preserving geometry, bindings and emission", () => {
@@ -24,7 +46,7 @@ describe("R09-F realistic-illustrative material manager", () => {
     const neuron = new NeuronRenderLayer(19);
     const electricity = new ElectricalBoardLayer();
     const synapse = new SynapseRenderLayer();
-    const manager = new RealisticIllustrativeMaterialManager(scene);
+    const manager = managerForTest(scene);
     const registrations = [
       ["laminar", laminar.group, REALISTIC_ILLUSTRATIVE_MANIFEST.laminar],
       ["cell", cell.group, REALISTIC_ILLUSTRATIVE_MANIFEST.cell],
@@ -60,15 +82,21 @@ describe("R09-F realistic-illustrative material manager", () => {
       expect(report.physicalMaterialObjects).toBe(report.boundedPbrObjects);
     }
     expect(emission.material).toBe(emissionMaterial);
+    expect(scene.environment).toBeInstanceOf(THREE.Texture);
+    expect(scene.getObjectByName("realistic-illustrative-light-rig")?.visible).toBe(true);
     expect(manager.audit()).toMatchObject({
       eligibleObjects: 21,
       physicalMaterialObjects: 21,
       semanticGeometryChanges: 0,
-      estimatedAdditionalObjectDraws: 0,
+      estimatedAdditionalObjectDraws: 6,
       estimatedTransmissionPasses: 1,
+      environmentMapActive: true,
+      proceduralNormalMapTextures: 3,
     });
 
     expect(manager.setProfile("schematic")).toBe("schematic");
+    expect(scene.environment).toBeNull();
+    expect(scene.getObjectByName("realistic-illustrative-light-rig")?.visible).toBe(false);
     for (const [, root, manifest] of registrations) {
       for (const entry of manifest) {
         const object = root.getObjectByName(entry.objectName) as THREE.Mesh;
@@ -95,7 +123,7 @@ describe("R09-F realistic-illustrative material manager", () => {
     declareVisual(mesh, "matter", "topology");
     root.add(mesh);
     const schematic = mesh.material;
-    const manager = new RealisticIllustrativeMaterialManager(scene);
+    const manager = managerForTest(scene);
     manager.registerLayer("overview", root, [{
       id: "test:bounded-matter",
       objectName: mesh.name,
@@ -152,6 +180,7 @@ describe("R09-F realistic-illustrative material manager", () => {
     const effects = new PresentationMaterialEffects();
     effects.setState({ opacity: 0.5, xray: true, isolateMatter: true });
     effects.beforeRender(root);
+    expect(() => effects.beforeRender(root)).toThrow(/not restored/);
     expect((matter.material as THREE.Material).opacity).toBeCloseTo(0.8 * 0.5 * 0.28);
     expect((matter.material as THREE.Material).depthWrite).toBe(false);
     expect((emission.material as THREE.Material).opacity).toBeCloseTo(0.6 * 0.16);
@@ -164,5 +193,89 @@ describe("R09-F realistic-illustrative material manager", () => {
     matter.material.dispose();
     emission.geometry.dispose();
     emission.material.dispose();
+  });
+
+  it("falls back atomically when one material in a view cannot be created", () => {
+    const scene = new THREE.Scene();
+    const root = new THREE.Group();
+    const first = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial());
+    const second = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial());
+    first.name = "first";
+    second.name = "second";
+    declareVisual(first, "matter", "topology");
+    declareVisual(second, "matter", "topology");
+    root.add(first, second);
+    let created: THREE.MeshPhysicalMaterial | undefined;
+    let createdDisposed = false;
+    const manager = managerForTest(scene, (record) => {
+      if (record.object === second) throw new Error("forced-shader-failure");
+      created = new THREE.MeshPhysicalMaterial();
+      created.addEventListener("dispose", () => {
+        createdDisposed = true;
+      });
+      return created;
+    });
+    manager.registerLayer("overview", root, [
+      {
+        id: "test:first",
+        objectName: first.name,
+        surface: "membrane",
+        maximumLocalRadius: 0.3,
+        opacityRange: [0, 1],
+        source: "procedural-scene-graph",
+      },
+      {
+        id: "test:second",
+        objectName: second.name,
+        surface: "membrane",
+        maximumLocalRadius: 0.3,
+        opacityRange: [0, 1],
+        source: "procedural-scene-graph",
+      },
+    ]);
+    const firstSchematic = first.material;
+    const secondSchematic = second.material;
+    expect(manager.setProfile("realistic-illustrative")).toBe("schematic");
+    expect(first.material).toBe(firstSchematic);
+    expect(second.material).toBe(secondSchematic);
+    expect(manager.audit().fallbackReason).toContain("forced-shader-failure");
+    expect(created).toBeDefined();
+    expect(createdDisposed).toBe(true);
+    manager.dispose();
+    first.geometry.dispose();
+    second.geometry.dispose();
+    firstSchematic.dispose();
+    secondSchematic.dispose();
+  });
+
+  it("adds presentation-only spherical UVs without changing geometry identity and removes them on dispose", () => {
+    const scene = new THREE.Scene();
+    const geometry = new THREE.TetrahedronGeometry(0.2);
+    geometry.deleteAttribute("uv");
+    const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial());
+    mesh.name = "uv-less-tissue";
+    declareVisual(mesh, "matter", "topology");
+    const root = new THREE.Group();
+    root.add(mesh);
+    const uuid = geometry.uuid;
+    const manager = managerForTest(scene);
+    manager.registerLayer("overview", root, [{
+      id: "test:uv-less-tissue",
+      objectName: mesh.name,
+      surface: "tissue",
+      maximumLocalRadius: 0.3,
+      opacityRange: [0, 1],
+      source: "procedural-scene-graph",
+    }]);
+    expect(geometry.getAttribute("uv")).toHaveProperty("count", geometry.getAttribute("position").count);
+    expect(geometry.uuid).toBe(uuid);
+    expect(manager.audit()).toMatchObject({
+      semanticGeometryChanges: 0,
+      generatedPresentationUvAttributes: 1,
+    });
+    manager.dispose();
+    expect(geometry.getAttribute("uv")).toBeUndefined();
+    geometry.dispose();
+    mesh.material.dispose();
   });
 });

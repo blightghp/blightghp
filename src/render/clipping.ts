@@ -403,10 +403,11 @@ export class ClippingSystem {
           visualClippingParticipationOf(object) === "include";
         for (const material of materials) {
           if (!this.savedMaterials.has(material)) {
+            const inheritedActivePlanes = included && material.clippingPlanes === this.planes;
             this.savedMaterials.set(material, {
-              clippingPlanes: material.clippingPlanes,
-              clipIntersection: material.clipIntersection,
-              clipShadows: material.clipShadows,
+              clippingPlanes: inheritedActivePlanes ? null : material.clippingPlanes,
+              clipIntersection: inheritedActivePlanes ? false : material.clipIntersection,
+              clipShadows: inheritedActivePlanes ? false : material.clipShadows,
             });
           }
           const saved = this.savedMaterials.get(material);

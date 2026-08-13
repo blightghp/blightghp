@@ -38,15 +38,15 @@
       <details>
         <summary>PELÍCULA & CORTE</summary>
         <div class="control-group compact">
-          <label for="material-profile"><span>Materialidade</span></label>
-          <select id="material-profile" class="glass-select">
+          <label for="material-profile"><span>Materialidade</span><span id="material-profile-status" class="material-profile-status" role="status" aria-live="polite">Esquemática</span></label>
+          <select id="material-profile" class="glass-select" aria-label="Perfil visual de materialidade">
             <option value="schematic" selected>Esquemática · fallback</option>
             <option value="realistic-illustrative">Realista-ilustrativa</option>
           </select>
         </div>
         <div class="control-group compact">
           <label for="cut-orientation"><span>Plano de corte</span></label>
-          <select id="cut-orientation" class="glass-select">
+          <select id="cut-orientation" class="glass-select" aria-label="Orientação do plano de corte">
             <option value="none" selected>Desativado</option>
             <option value="coronal">Coronal</option>
             <option value="sagittal">Sagital</option>
@@ -61,27 +61,28 @@
           <label><input type="checkbox" id="high-contrast-mode" /><span></span>Alto contraste</label>
         </div>
         <div class="control-group compact">
-          <label for="cut-position"><span>Posição do corte</span><output id="cut-position-val">0.00 u.c.</output></label>
-          <input type="range" id="cut-position" min="-2.4" max="2.4" step="0.02" value="0" />
+          <label for="cut-position"><span>Posição do corte</span><output id="cut-position-val">0.0 mm</output></label>
+          <input type="range" id="cut-position" min="-2.4" max="2.4" step="0.02" value="0" role="slider" aria-label="Posição orientativa do corte" aria-valuenow="0" aria-valuetext="0.0 milímetros orientativos" aria-describedby="cut-scale-note" />
         </div>
         <div class="control-group compact">
-          <label for="cut-thickness"><span>Espessura da laje</span><output id="cut-thickness-val">0.42 u.c.</output></label>
-          <input type="range" id="cut-thickness" min="0.04" max="4.8" step="0.02" value="0.42" />
+          <label for="cut-thickness"><span>Espessura da laje</span><output id="cut-thickness-val">16.8 mm</output></label>
+          <input type="range" id="cut-thickness" min="0.04" max="4.8" step="0.02" value="0.42" role="slider" aria-label="Espessura orientativa da laje" aria-valuenow="0.42" aria-valuetext="16.8 milímetros orientativos" aria-describedby="cut-scale-note" />
         </div>
+        <p id="cut-scale-note" class="cut-scale-note">Escala orientativa da cena: 1 unidade procedural = 40 mm; não é calibração anatômica.</p>
         <div class="control-group compact oblique-control">
           <label for="cut-azimuth"><span>Azimute oblíquo</span><output id="cut-azimuth-val">38°</output></label>
-          <input type="range" id="cut-azimuth" min="-180" max="180" step="1" value="38" />
+          <input type="range" id="cut-azimuth" min="-180" max="180" step="1" value="38" role="slider" aria-label="Azimute do plano oblíquo" aria-valuenow="38" />
         </div>
         <div class="control-group compact oblique-control">
           <label for="cut-elevation"><span>Elevação oblíqua</span><output id="cut-elevation-val">24°</output></label>
-          <input type="range" id="cut-elevation" min="-89" max="89" step="1" value="24" />
+          <input type="range" id="cut-elevation" min="-89" max="89" step="1" value="24" role="slider" aria-label="Elevação do plano oblíquo" aria-valuenow="24" />
         </div>
         <div class="control-group compact">
           <label for="presentation-opacity"><span>Opacidade da matéria</span><output id="presentation-opacity-val">100%</output></label>
-          <input type="range" id="presentation-opacity" min="0.08" max="1" step="0.01" value="1" />
+          <input type="range" id="presentation-opacity" min="0.08" max="1" step="0.01" value="1" role="slider" aria-label="Opacidade da matéria" aria-valuenow="1" aria-valuetext="100 por cento" />
         </div>
         <button id="reset-cut-camera" class="presentation-reset" type="button">RESETAR CÂMERA DO CORTE · R</button>
-        <dl class="cut-probe" aria-live="polite" aria-label="Sonda textual da face de corte">
+        <dl class="cut-probe" role="status" aria-live="polite" aria-atomic="true" aria-label="Sonda textual da face de corte">
           <div><dt>CAMPO</dt><dd id="cut-probe-field">field.waveActivity</dd></div>
           <div><dt>VALOR</dt><dd id="cut-probe-value">corte desativado</dd></div>
           <div><dt>UNIDADE</dt><dd id="cut-probe-unit">atividade normalizada</dd></div>
@@ -199,6 +200,7 @@
         <dl class="runtime-profile" aria-label="Perfil de desempenho em tempo real">
           <div><dt>Worker p95</dt><dd id="worker-latency">0.0 ms</dd></div>
           <div><dt>Draw calls</dt><dd id="gpu-draw-calls">0</dd></div>
+          <div><dt>R09-F Δ estimado</dt><dd id="gpu-presentation-delta">+0 corte · +0 dupla face · +0 refração</dd></div>
           <div><dt>Snapshot</dt><dd id="snapshot-memory">0.0 KiB</dd></div>
         </dl>
       </section>

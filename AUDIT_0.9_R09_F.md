@@ -2,77 +2,130 @@
 
 **Data:** 13 de agosto de 2026
 
-**Estado:** implementado e validado no envelope local/CI declarado
+**Estado:** concluído e validado no envelope local Chromium/SwiftShader
 
-**IDs:** GFX-001, GFX-060..075, AST-020, UI-024, PERF-010, QA-101
+**IDs:** GFX-060..075, AST-020, UI-024, PERF-010, QA-101
 
 **ABI científica:** v8, inalterada; 37 buffers e cinco hashes independentes
 
 ## Veredito
 
-R09-F está apto para integração. A implementação acrescenta apenas estado de
-apresentação TypeScript/Three.js: nenhum comando, buffer, equação, passo,
-fixture ou hash Rust/Wasm foi alterado.
+R09-F está concluído no envelope declarado. A implementação acrescenta somente
+estado de apresentação TypeScript/Three.js. Nenhum comando Worker, `dt`,
+parâmetro, topologia, equação, buffer, fixture ou hash Rust/Wasm mudou.
 
-O perfil `realistic-illustrative` troca materiais sobre o mesmo scene graph. O
-manifesto aceita 25 objetos `matter` com proveniência, normal e limite local;
-emissão, linhas, pontos, labels e overlays continuam esquemáticos. A auditoria
-mediu zero mudança de UUID geométrico/binding e zero draw de objeto adicional
-pela troca. Vinte e três objetos usam transmissão moderada, agrupada em um passe
-de refração, com três luzes explicitamente `DECORATION`.
+O perfil `realistic-illustrative` substitui 25 materiais `matter` elegíveis
+sobre o mesmo scene graph. Um `RoomEnvironment` convertido por PMREM fornece a
+iluminação baseada em imagem; três normal maps determinísticos de 256² são
+fabricados por canvas e compartilhados. Emissão mantém materiais aditivos e
+`depthWrite: false`; linhas, pontos, labels e overlays permanecem esquemáticos.
+UUIDs geométricos e bindings semânticos não mudam.
+Malhas sem UV recebem coordenadas esféricas de apresentação enquanto o manager
+está ativo; o atributo é removido no dispose e nunca altera posição, índice ou
+UUID da geometria.
 
-O sistema de corte implementa coronal, sagital, axial, oblíquo e laje. Clipping
-é opt-in por `RenderLayer` e pode ser excluído por objeto. As tampas usam
-incremento/decremento de stencil sobre cópias rasas que compartilham a geometria
-original. O corte encefálico simples custa 9 draws adicionais; a laje tem teto
-de 18. Alto contraste, perda de contexto ou falha material retornam
-atomicamente ao perfil `schematic`. O rollback operacional desliga o clipping e
-mantém opacidade/isolamento.
+O sistema de corte mantém coronal, sagital, axial, oblíquo e laje, com opt-in
+por layer, exclusão por objeto, tampa stencil e sonda limitada ao campo
+macroscópico publicado. O depth-mask do bloom replica os mesmos
+`clippingPlanes`, `clipIntersection` e depth contract do passe base, impedindo
+vazamento de emissão pela face cortada.
 
-## Contrato da sonda
+## Estado dos entregáveis
 
-A face não inventa um volume. Somente a Visão Geral possui o mapeamento
-posição→campo necessário e lê `field.waveActivity`, em `normalized field
-activity`, por média dos vértices corticais publicados na faixa ±0,08 unidade
-procedural da face. O valor usa interpolação linear declarada entre os dois
-snapshots adjacentes. Lâminas, Célula, Neurônio, Eletricidade e Sinapse retornam
-indisponibilidade explícita; química microscópica nunca é projetada no corte
-encefálico.
+| Entregável | IDs | Estado e evidência |
+| :-- | :-- | :-- |
+| perfil PBR por superfície | GFX-069..073 | 25 `MeshPhysicalMaterial`; manifesto completo das seis vistas |
+| reflection/refraction environment | GFX-071, GFX-075 | `RoomEnvironment` + PMREM procedural; ativo só no perfil realista |
+| normal maps procedurais | GFX-071 | cortical, membrane e vesicle; seeds fixos; cache/dispose testados |
+| fallback atômico | GFX-074 | criação parcial, alto contraste, contexto e erro de shader retornam a `schematic` |
+| corte e laje | GFX-060..068, AST-020 | quatro orientações, 1/2 planos, tampa stencil e limite de 18 draws |
+| sonda da face | GFX-068 | somente `field.waveActivity`, unidade e interpolação publicadas |
+| UI e acessibilidade | UI-024 | mm orientativos, slab/oblíquo, ARIA sliders/live region, atalhos/touch |
+| invariância/cleanup | QA-101 | cinco hashes idênticos, dispose explícito e 110 testes Vitest |
 
-## Elegibilidade e limites
+## Parâmetros PBR aplicados
 
-| Vista | Objetos elegíveis | Objetos protegidos |
-| :-- | --: | :-- |
-| Visão Geral | 4 cascas procedurais | pontos, conexões e pulsos |
-| Lâminas | 12 populações + relé + TRN | vias e pulsos |
-| Célula | somata e contorno | dendritos, halos e seleção |
-| Neurônio | soma | dendritos, axônio, correntes, nós e evento |
-| Eletricidade | substrato | grid, nós, vias, barras, anéis e evento |
-| Sinapse | botão, membrana e vesículas | fenda, nuvens, release/recapture e receptores |
+| Superfície | Roughness | Transmission | Thickness | Clearcoat | Clearcoat roughness | Sheen | Sheen roughness | Sheen color | IOR | Normal map / escala |
+| :-- | --: | --: | --: | --: | --: | --: | --: | :-- | --: | :-- |
+| membrane | 0,32 | 0,22 | 0,06 | 0,28 | 0,35 | 0,18 | 0,75 | `#e8d4c0` | 1,40 | membrane 0,15; vesicle 0,15 no reservatório |
+| tissue | 0,52 | 0,10 | 0,12 | 0,12 | 0,55 | 0,25 | 0,85 | `#d4a080` | 1,38 | cortical 0,30 |
+| substrate | 0,72 | 0 | 0 | 0,06 | 0,85 | 0 | 0 | `#000000` | 1,50 | nenhum |
 
-Não há atlas, imagem, normal map, textura anatômica ou asset externo novo. A
-materialidade é procedural e ilustrativa; não sustenta alegação clínica,
-anatômica calibrada ou biológica adicional.
+Todos preservam `metalness: 0`, cor/opacidade dinâmica, vertex colors quando a
+geometria os possui e o contrato de blending/depth/stencil/clipping/tone
+mapping do material original. Sombras permanecem desativadas.
 
-## Prova executável
+## Orçamento GPU medido
 
-| Gate | Resultado |
+Ambiente: Chromium headless, ANGLE/Vulkan, SwiftShader Device (Subzero), viewport
+1440×960. Esta é evidência funcional determinística, não baseline de GPU física.
+Os números incluem os dois passes do `SelectiveBloomPipeline`; portanto são
+comparáveis somente dentro desta auditoria.
+
+| Vista | Draws schematic | Draws realistic | Δ material | Triângulos realistic | Geometrias | Texturas |
+| :-- | --: | --: | --: | --: | --: | --: |
+| Visão Geral | 48 | 56 | +8 | 147.542 | 77 | 20 |
+| Lâminas | 92 | 98 | +6 | 13.630 | 68 | 20 |
+| Célula | 22 | 22 | 0 | 8.558 | 22 | 20 |
+| Neurônio | 32 | 32 | 0 | 4.662 | 77 | 20 |
+| Eletricidade | 34 | 34 | 0 | 2.386 | 32 | 20 |
+| Sinapse | 36 | 36 | 0 | 32.774 | 88 | 21 |
+
+O delta +8/+6 decorre dos materiais transparentes `DoubleSide` que Three.js
+renderiza em dois lados; não há geometria semântica nova. O perfil cria três
+normal maps RGBA 256² com mipmaps, estimados em 1.048.576 bytes no total. O
+PMREM auditado possui imagem interna 768×1024 HalfFloat, estimada em 6.291.456
+bytes; o total de texturas próprias estimado é 7.340.032 bytes. Um corte simples
+com quatro cap sources adiciona 9 draws; a laje permanece limitada a 18.
+
+## Capturas comparativas
+
+As 18 capturas e o relatório estruturado estão em
+[`artifacts/material-audit`](artifacts/material-audit/material-audit.json).
+O diff schematic→realistic alterou 27,15% dos pixels da captura canônica.
+
+| Cenário | Evidência |
 | :-- | :-- |
-| tipos | `npm run typecheck` aprovado |
-| renderer | 22 arquivos / 93 testes Vitest aprovados |
-| navegador Wasm | ABI 8, 37 buffers, seis vistas, 25 PBR, 9 draws de corte e lifecycle aprovados |
-| auditoria runtime | 107 amostras; captura `r09-f-realistic-coronal.png`; sonda com 98 vértices no frame auditado |
-| hashes | rede, córtico-talâmico, célula, química e eventos idênticos antes/depois de material/corte/opacidade |
-| fallback | alto contraste retorna `schematic` para todos os 25 objetos; teste unitário cobre perda de contexto |
-| cleanup | materiais PBR, materiais stencil, planos de tampa, render targets, luzes e listeners possuem owner/dispose |
-| GIF | gerador e manifesto schema 3 exigem película R09-F, corte coronal na Visão Geral e `externalAtlasAssets = 0` |
+| schematic | [`01-schematic.png`](artifacts/material-audit/01-schematic.png) |
+| realistic-illustrative | [`02-realistic-illustrative.png`](artifacts/material-audit/02-realistic-illustrative.png) |
+| realistic + corte coronal | [`03-realistic-coronal-clipping.png`](artifacts/material-audit/03-realistic-coronal-clipping.png) |
+| realistic + corte + raio-X | [`04-realistic-coronal-xray.png`](artifacts/material-audit/04-realistic-coronal-xray.png) |
+| realistic + corte + opacidade 50% | [`05-realistic-coronal-opacity-50.png`](artifacts/material-audit/05-realistic-coronal-opacity-50.png) |
+| realistic + corte + monocromia | [`06-realistic-coronal-monochrome.png`](artifacts/material-audit/06-realistic-coronal-monochrome.png) |
 
-O perfil headless usa Chromium/SwiftShader e serve como prova funcional, não
-como baseline de GPU física. Na execução desta auditoria, o frame CPU p95 e a
-latência do Worker refletem o backend de software e não são promovidos como meta
-de hardware. O orçamento determinístico de R09-F é estrutural: 0 draws extras
-por troca material, 9 por plano simples e no máximo 18 por laje no catálogo
-atual.
+Também há pares schematic/realistic para Visão Geral, Lâminas, Célula,
+Neurônio, Eletricidade e Sinapse. A inspeção visual confirmou reflexão,
+transmissão, relevo procedural, corte/tampa, raio-X e redundância monocromática.
+
+## Hash invariância comprovada
+
+Com o relógio congelado, a auditoria aplicou perfil, corte, raio-X, opacidade e
+monocromia e comparou os cinco domínios após cada operação:
+
+| Domínio | Hash antes e depois |
+| :-- | :-- |
+| rede (`stateHash`) | `b342793f3d23c6ae` |
+| córtico-talâmico | `28cb2c021f56dbf7` |
+| patch celular | `cff663ed3fc20880` |
+| química | `d6f6b8dd06975c24` |
+| eventos celulares | `602d9181b8d246dc` |
+
+O relatório marca `hashInvariance.invariant = true` e
+`semanticGeometryChanges = 0`.
+
+## Dispose e fallback
+
+- cada `MeshPhysicalMaterial` é descartado exatamente uma vez;
+- o cache descarta os três `CanvasTexture` e recusa uso após dispose;
+- o PMREM gerado, `RoomEnvironment` intermediário e `PMREMGenerator` possuem
+  owner/cleanup explícitos;
+- materiais stencil e geometrias de cap são descartados sem tocar a geometria
+  fonte compartilhada;
+- render targets dos dois composers preservam depth/stencil e são descartados;
+- `PresentationMaterialEffects.afterRender()` restaura opacidade,
+  transparência e `depthWrite` exatamente;
+- falha parcial de material, shader, contexto ou alto contraste restaura a
+  vista inteira ao perfil esquemático.
 
 ## Comandos executados
 
@@ -80,40 +133,22 @@ atual.
 npm run typecheck
 npm run test -- --reporter=dot
 npm run build
-npm run test:wasm-browser
-npm run audit:runtime
-npm run check
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-npm run generate:brain-gif
-npm run stamp:brain-gif
-npm run verify:brain-gif
+npm run audit:material
 ```
 
-## Critérios de aceite
+Resultado desta revisão: TypeScript estrito aprovado; 23 arquivos/111 testes
+Vitest aprovados; build Vite aprovado; auditoria de material aprovada com 18
+capturas, 25 objetos elegíveis e zero erro de shader/página relevante.
 
-- [x] quatro orientações e laje determinísticas;
-- [x] clipping local opt-in e exclusão de overlay;
-- [x] tampa stencil sem ownership indevido da geometria científica;
-- [x] sonda limitada ao campo macroscópico publicado, com unidade e interpolação;
-- [x] teclado, ranges touch e reset de câmera;
-- [x] mesma geometria, IDs, bindings e eventos após a troca material;
-- [x] fallback esquemático atômico e alto contraste;
-- [x] `DECORATION` explícito para luzes, stencil e tampas;
-- [x] zero atlas externo;
-- [x] cinco hashes invariantes;
-- [x] dispose e teto de draw calls testados;
-- [x] README e GIF vinculados ao gerador/manifesto atualizado.
+## Limites e rollback
 
-## Limites aceitos e rollback
-
-- `MeshPhysicalMaterial` aproxima tecido/membrana; não implementa SSS físico nem
-  calibração histológica.
-- A unidade espacial do corte continua procedural, rotulada `u.c.`; não é mm.
-- A tampa é válida para as malhas fechadas listadas no manifesto. Linhas,
-  pontos e overlays são recortados quando opt-in, mas não recebem tampa.
-- Em perda de performance, `setClipping({ enabled: false })` remove planos e
-  passes auxiliares; opacidade/isolamento continuam disponíveis.
-- Em falha WebGL/alto contraste, todos os materiais voltam a `schematic` em uma
-  transação visual e a ciência segue no Worker sem alteração.
+- A aparência é realista-ilustrativa, não anatômica, histológica ou clínica.
+- “mm” na UI é somente escala orientativa: 1 unidade procedural = 40 mm. A nota
+  visível impede tratar a conversão como calibração anatômica.
+- O acabamento não implementa SSS físico; sheen + transmission + clearcoat são
+  aproximações perceptuais WebGL.
+- O orçamento é do backend/viewport registrados; GPU física exige baseline
+  separado.
+- Para rollback, `setClipping({ enabled: false })` remove planos/tampas e mantém
+  opacidade/isolamento. `setMaterialProfile("schematic")` remove PMREM/luzes do
+  uso ativo. Falha WebGL faz o rollback automaticamente sem tocar no Worker.
