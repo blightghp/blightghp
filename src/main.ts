@@ -10,6 +10,7 @@ import {
   auditVisualBindings,
   BrainRenderLayers,
   CellRenderLayer,
+  ClippingSystem,
   decodeStateColor,
   ElectricalBoardLayer,
   electricalBoardObservables,
@@ -22,18 +23,29 @@ import {
   neuronCellObservables,
   parseElectricalBoardDetail,
   parseCellId,
+  parseCutOrientation,
   parseLaminarLod,
   parseSimulationView,
   parseVisualColorMode,
   receptorCurrentTotals,
   auditRenderedStatePixels,
   SelectiveBloomPipeline,
+  PresentationMaterialEffects,
+  REALISTIC_ILLUSTRATIVE_MANIFEST,
+  RealisticIllustrativeMaterialManager,
+  sampleMacroscopicCutProbe,
   SynapseRenderLayer,
   VISUAL_COLORS,
   ACTIVITY_TRACE_STOPS,
   voltsToMillivolts,
 } from "./render";
-import type { SimulationView, VisualColorMode } from "./render";
+import type {
+  CutPlaneState,
+  MaterialProfileAudit,
+  SimulationView,
+  VisualColorMode,
+  VisualMaterialProfile,
+} from "./render";
 import type { ElectricalBoardTopologyObservables } from "./render";
 import { directNeuralStimulus } from "./direct-stimulus";
 import { BayesianObservationExperiment } from "./experiment";
@@ -100,6 +112,14 @@ declare global {
       }>;
       profile: () => RuntimeProfile;
       setColorMode: (mode: VisualColorMode) => void;
+      setMaterialProfile: (profile: VisualMaterialProfile) => VisualMaterialProfile;
+      setClipping: (state: Partial<CutPlaneState>) => CutPlaneState;
+      setPresentationEffects: (state: {
+        opacity?: number;
+        xray?: boolean;
+        isolateMatter?: boolean;
+      }) => void;
+      setHighContrast: (enabled: boolean) => VisualMaterialProfile;
       visualAudit: () => {
         colorMode: VisualColorMode;
         provenance: ReturnType<typeof auditVisualProvenance>;
@@ -111,6 +131,12 @@ declare global {
         SimulationView,
         ReturnType<typeof auditVisualMaterialReadiness>
       >;
+      presentationAudit: () => {
+        material: MaterialProfileAudit;
+        clipping: ReturnType<ClippingSystem["audit"]>;
+        effects: ReturnType<PresentationMaterialEffects["audit"]>;
+        probe: ReturnType<typeof sampleMacroscopicCutProbe>;
+      };
       renderedStateAudit: () => ReturnType<typeof auditRenderedStatePixels>;
       electricalBoardAudit: () => {
         detail: ReturnType<ElectricalBoardLayer["audit"]>["detail"];
@@ -144,6 +170,9 @@ let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let controls: OrbitControls;
 let renderPipeline: SelectiveBloomPipeline;
+let clippingSystem: ClippingSystem;
+let materialProfileManager: RealisticIllustrativeMaterialManager;
+let presentationEffects: PresentationMaterialEffects;
 let layers: BrainRenderLayers;
 let laminarLayer: LaminarRenderLayer;
 let cellLayer: CellRenderLayer;
@@ -169,11 +198,29 @@ let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
 let visualColorMode = parseVisualColorMode(
   new URLSearchParams(window.location.search).get("colorMode"),
 );
+let lastCutProbe: ReturnType<typeof sampleMacroscopicCutProbe> = {
+  available: false,
+  field: "field.waveActivity",
+  unit: "normalized field activity",
+  interpolation: "linear between adjacent published snapshots",
+  sampling: "mean on the cut-face band",
+  sampleCount: 0,
+  reason: "clipping is not initialized",
+};
+let applicationDisposed = false;
 
 const pendingResponses: Array<(event: EngineEvent) => void> = [];
 const activitySamples = Array.from({ length: 96 }, () => 0);
 const cellRaycaster = new THREE.Raycaster();
 const pointerCoordinates = new THREE.Vector2();
+const CUT_CAP_OBJECTS: Readonly<Record<SimulationView, readonly string[]>> = {
+  overview: ["leftHemi-shell", "rightHemi-shell", "cerebellum-shell", "stem-shell"],
+  laminar: ["thalamic-relay", "thalamic-reticular-nucleus"],
+  cell: ["adex-somata", "field-boundary"],
+  neuron: ["resolved-neuron-soma"],
+  electricity: ["electrical-board-surface"],
+  synapse: ["presynaptic-bouton", "postsynaptic-membrane"],
+};
 
 function element<T extends HTMLElement>(selector: string): T {
   const match = document.querySelector<T>(selector);
@@ -465,6 +512,99 @@ function materialProfileAuditReport(): Record<
   };
 }
 
+function renderRootForView(view: SimulationView): THREE.Group {
+  if (view === "overview") return layers.group;
+  if (view === "laminar") return laminarLayer.group;
+  if (view === "cell") return cellLayer.group;
+  if (view === "neuron") return neuronLayer.group;
+  if (view === "electricity") return electricalBoardLayer.group;
+  return synapseLayer.group;
+}
+
+function setMaterialProfile(profile: VisualMaterialProfile): VisualMaterialProfile {
+  const active = materialProfileManager.setProfile(profile);
+  clippingSystem.refresh();
+  const select = document.querySelector<HTMLSelectElement>("#material-profile");
+  if (select) select.value = active;
+  document.body.dataset.materialProfile = active;
+  return active;
+}
+
+function updateCutProbe(snapshot: NeuralSnapshot, alpha: number): void {
+  layers.group.updateWorldMatrix(true, false);
+  const worldPlane = clippingSystem.primaryPlane();
+  const localPlane = worldPlane?.applyMatrix4(
+    layers.group.matrixWorld.clone().invert(),
+  );
+  lastCutProbe = sampleMacroscopicCutProbe(
+    activeView,
+    brainData,
+    snapshot.field?.waveActivity,
+    previousSnapshot?.field?.waveActivity,
+    alpha,
+    localPlane,
+  );
+  const value = document.querySelector<HTMLElement>("#cut-probe-value");
+  const unit = document.querySelector<HTMLElement>("#cut-probe-unit");
+  const sampling = document.querySelector<HTMLElement>("#cut-probe-sampling");
+  if (value) {
+    value.textContent = lastCutProbe.available && lastCutProbe.value !== undefined
+      ? `${lastCutProbe.value.toFixed(4)} · n=${lastCutProbe.sampleCount}`
+      : lastCutProbe.reason ?? "indisponível";
+  }
+  if (unit) unit.textContent = lastCutProbe.unit;
+  if (sampling) sampling.textContent = lastCutProbe.sampling;
+}
+
+function resetCameraForCut(): void {
+  const state = clippingSystem.getState();
+  camera.up.set(0, 1, 0);
+  if (state.orientation === "sagittal") camera.position.set(4.82, 0.08, 0.01);
+  else if (state.orientation === "axial") {
+    camera.position.set(0.01, 4.82, 0.01);
+    camera.up.set(0, 0, -1);
+  } else if (state.orientation === "oblique") camera.position.set(3.45, 2.6, 3.45);
+  else camera.position.set(0.18, 0.08, 4.82);
+  controls.target.set(0, -0.05, 0);
+  camera.lookAt(controls.target);
+  controls.update();
+}
+
+function updatePresentationUi(state: CutPlaneState): void {
+  const panel = document.querySelector<HTMLElement>("#presentation-panel");
+  if (panel) {
+    panel.dataset.oblique = String(state.orientation === "oblique");
+    panel.dataset.slab = String(state.slab);
+  }
+  const orientation = document.querySelector<HTMLSelectElement>("#cut-orientation");
+  if (orientation) orientation.value = state.enabled ? state.orientation : "none";
+  const slab = document.querySelector<HTMLInputElement>("#cut-slab");
+  if (slab) slab.checked = state.slab;
+  const position = document.querySelector<HTMLInputElement>("#cut-position");
+  const thickness = document.querySelector<HTMLInputElement>("#cut-thickness");
+  const azimuth = document.querySelector<HTMLInputElement>("#cut-azimuth");
+  const elevation = document.querySelector<HTMLInputElement>("#cut-elevation");
+  if (position) position.value = String(state.position);
+  if (thickness) thickness.value = String(state.slabThickness);
+  if (azimuth) azimuth.value = String(state.obliqueAzimuthDegrees);
+  if (elevation) elevation.value = String(state.obliqueElevationDegrees);
+  const positionValue = document.querySelector<HTMLOutputElement>("#cut-position-val");
+  const thicknessValue = document.querySelector<HTMLOutputElement>("#cut-thickness-val");
+  const azimuthValue = document.querySelector<HTMLOutputElement>("#cut-azimuth-val");
+  const elevationValue = document.querySelector<HTMLOutputElement>("#cut-elevation-val");
+  if (positionValue) positionValue.textContent = `${state.position.toFixed(2)} u.c.`;
+  if (thicknessValue) thicknessValue.textContent = `${state.slabThickness.toFixed(2)} u.c.`;
+  if (azimuthValue) azimuthValue.textContent = `${state.obliqueAzimuthDegrees.toFixed(0)}°`;
+  if (elevationValue) elevationValue.textContent = `${state.obliqueElevationDegrees.toFixed(0)}°`;
+}
+
+function setCutPlaneState(update: Partial<CutPlaneState>): CutPlaneState {
+  const state = clippingSystem.setState(update);
+  updatePresentationUi(state);
+  if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+  return state;
+}
+
 function sendCommand(command: EngineCommand): Promise<EngineEvent> {
   return new Promise((resolve) => {
     pendingResponses.push(resolve);
@@ -539,10 +679,19 @@ function renderFrame(
     cellLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   }
 
+  materialProfileManager.sync();
+  scene.updateMatrixWorld(true);
+  clippingSystem.update();
+  updateCutProbe(snapshot, alpha);
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta);
   controls.update();
   renderer.info.reset();
-  renderPipeline.render();
+  presentationEffects.beforeRender(renderRootForView(activeView));
+  try {
+    renderPipeline.render();
+  } finally {
+    presentationEffects.afterRender();
+  }
   const memory = (performance as Performance & {
     memory?: { usedJSHeapSize: number };
   }).memory;
@@ -559,6 +708,7 @@ function renderFrame(
 }
 
 function animate(timestamp: number): void {
+  if (applicationDisposed) return;
   requestAnimationFrame(animate);
   if (captureMode) return;
   const frame = simulationClock.observe(timestamp, state.pulseSpeed);
@@ -651,6 +801,7 @@ function setActiveView(view: SimulationView): void {
   neuronLayer.setVisible(view === "neuron");
   electricalBoardLayer.setVisible(view === "electricity");
   synapseLayer.setVisible(view === "synapse");
+  clippingSystem.setActiveLayer(view);
   element("#overview-panel").hidden = view !== "overview";
   element("#laminar-panel").hidden = view !== "laminar";
   element("#cell-panel").hidden = view !== "cell";
@@ -789,6 +940,100 @@ function setupInterface(): void {
     setVisualColorMode(monochromeToggle.checked ? "monochrome" : "color");
   });
 
+  const materialSelect = element<HTMLSelectElement>("#material-profile");
+  materialSelect.value = materialProfileManager.profile();
+  materialSelect.addEventListener("change", () => {
+    const requested: VisualMaterialProfile = materialSelect.value === "realistic-illustrative"
+      ? "realistic-illustrative"
+      : "schematic";
+    setMaterialProfile(requested);
+  });
+
+  const orientationSelect = element<HTMLSelectElement>("#cut-orientation");
+  orientationSelect.addEventListener("change", () => {
+    const orientation = parseCutOrientation(orientationSelect.value);
+    if (!orientation) {
+      setCutPlaneState({ enabled: false });
+      return;
+    }
+    setCutPlaneState({ enabled: true, orientation });
+  });
+  const slabToggle = element<HTMLInputElement>("#cut-slab");
+  slabToggle.addEventListener("change", () => setCutPlaneState({ slab: slabToggle.checked }));
+  const bindCutRange = (
+    id: string,
+    update: (value: number) => Partial<CutPlaneState>,
+  ): void => {
+    const input = element<HTMLInputElement>(`#${id}`);
+    input.addEventListener("input", () => setCutPlaneState(update(Number(input.value))));
+  };
+  bindCutRange("cut-position", (position) => ({ position }));
+  bindCutRange("cut-thickness", (slabThickness) => ({ slabThickness }));
+  bindCutRange("cut-azimuth", (obliqueAzimuthDegrees) => ({ obliqueAzimuthDegrees }));
+  bindCutRange("cut-elevation", (obliqueElevationDegrees) => ({ obliqueElevationDegrees }));
+
+  const xrayToggle = element<HTMLInputElement>("#presentation-xray");
+  const isolationToggle = element<HTMLInputElement>("#presentation-isolate");
+  const opacityInput = element<HTMLInputElement>("#presentation-opacity");
+  const opacityOutput = element<HTMLOutputElement>("#presentation-opacity-val");
+  const applyEffects = (): void => {
+    const opacity = Number(opacityInput.value);
+    presentationEffects.setState({
+      opacity,
+      xray: xrayToggle.checked,
+      isolateMatter: isolationToggle.checked,
+    });
+    opacityOutput.textContent = `${Math.round(opacity * 100)}%`;
+    if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+  };
+  xrayToggle.addEventListener("change", applyEffects);
+  isolationToggle.addEventListener("change", applyEffects);
+  opacityInput.addEventListener("input", applyEffects);
+
+  const highContrastToggle = element<HTMLInputElement>("#high-contrast-mode");
+  const prefersHighContrast = window.matchMedia?.("(prefers-contrast: more)").matches ?? false;
+  highContrastToggle.checked = prefersHighContrast;
+  document.body.dataset.highContrast = String(prefersHighContrast);
+  materialProfileManager.setEnvironment({ highContrast: prefersHighContrast });
+  document.body.dataset.materialProfile = materialProfileManager.profile();
+  highContrastToggle.addEventListener("change", () => {
+    document.body.dataset.highContrast = String(highContrastToggle.checked);
+    materialProfileManager.setEnvironment({ highContrast: highContrastToggle.checked });
+    clippingSystem.refresh();
+    materialSelect.value = materialProfileManager.profile();
+    document.body.dataset.materialProfile = materialProfileManager.profile();
+    if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+  });
+  element<HTMLButtonElement>("#reset-cut-camera").addEventListener("click", resetCameraForCut);
+  updatePresentationUi(clippingSystem.getState());
+
+  document.addEventListener("keydown", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement ||
+        target instanceof HTMLTextAreaElement) return;
+    const order = ["coronal", "sagittal", "axial", "oblique"] as const;
+    if (event.code === "KeyC") {
+      const state = clippingSystem.getState();
+      const index = order.indexOf(state.orientation);
+      setCutPlaneState({ enabled: true, orientation: order[(index + 1) % order.length] });
+    } else if (event.code === "BracketLeft" || event.code === "BracketRight") {
+      const state = clippingSystem.getState();
+      const direction = event.code === "BracketLeft" ? -1 : 1;
+      setCutPlaneState({ enabled: true, position: state.position + direction * 0.04 });
+    } else if (event.code === "KeyX") {
+      xrayToggle.checked = !xrayToggle.checked;
+      applyEffects();
+    } else if (event.code === "KeyI") {
+      isolationToggle.checked = !isolationToggle.checked;
+      applyEffects();
+    } else if (event.code === "KeyR") {
+      resetCameraForCut();
+    } else {
+      return;
+    }
+    event.preventDefault();
+  });
+
   bindRange("rotation-speed", "rot-speed-val", "rotationSpeed", (value) => `${value.toFixed(1)}×`);
   bindRange("pulse-speed", "pulse-speed-val", "pulseSpeed", (value) => `${value.toFixed(1)}×`);
   bindRange("pulse-count", "pulse-count-val", "pulseCount", String);
@@ -873,6 +1118,39 @@ function onResize(): void {
   drawActivityTrace();
 }
 
+function onWebGlContextLost(event: Event): void {
+  event.preventDefault();
+  materialProfileManager?.failAtomic("webgl-context-lost");
+  clippingSystem?.disable();
+  document.body.dataset.materialProfile = "schematic";
+  const select = document.querySelector<HTMLSelectElement>("#material-profile");
+  if (select) select.value = "schematic";
+}
+
+function onWebGlContextRestored(): void {
+  materialProfileManager?.setEnvironment({ contextAvailable: true });
+  clippingSystem?.refresh();
+}
+
+function disposeApplication(): void {
+  if (applicationDisposed) return;
+  applicationDisposed = true;
+  worker?.terminate();
+  clippingSystem?.dispose();
+  materialProfileManager?.dispose();
+  renderPipeline?.dispose();
+  controls?.dispose();
+  layers?.dispose();
+  laminarLayer?.dispose();
+  cellLayer?.dispose();
+  neuronLayer?.dispose();
+  electricalBoardLayer?.dispose();
+  synapseLayer?.dispose();
+  renderer?.domElement.removeEventListener("webglcontextlost", onWebGlContextLost);
+  renderer?.domElement.removeEventListener("webglcontextrestored", onWebGlContextRestored);
+  renderer?.dispose();
+}
+
 async function init(): Promise<void> {
   setVisualColorMode(visualColorMode);
   scene = new THREE.Scene();
@@ -882,6 +1160,7 @@ async function init(): Promise<void> {
   renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true,
+    stencil: true,
     powerPreference: "high-performance",
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -892,6 +1171,8 @@ async function init(): Promise<void> {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
   element("#canvas-container").appendChild(renderer.domElement);
+  renderer.domElement.addEventListener("webglcontextlost", onWebGlContextLost, false);
+  renderer.domElement.addEventListener("webglcontextrestored", onWebGlContextRestored, false);
 
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
@@ -931,6 +1212,56 @@ async function init(): Promise<void> {
   synapseLayer = new SynapseRenderLayer();
   synapseLayer.setVisible(false);
   synapseLayer.mount(renderContext, renderTopology);
+
+  materialProfileManager = new RealisticIllustrativeMaterialManager(scene);
+  materialProfileManager.registerLayer(
+    "overview",
+    layers.group,
+    REALISTIC_ILLUSTRATIVE_MANIFEST.overview,
+  );
+  materialProfileManager.registerLayer(
+    "laminar",
+    laminarLayer.group,
+    REALISTIC_ILLUSTRATIVE_MANIFEST.laminar,
+  );
+  materialProfileManager.registerLayer(
+    "cell",
+    cellLayer.group,
+    REALISTIC_ILLUSTRATIVE_MANIFEST.cell,
+  );
+  materialProfileManager.registerLayer(
+    "neuron",
+    neuronLayer.group,
+    REALISTIC_ILLUSTRATIVE_MANIFEST.neuron,
+  );
+  materialProfileManager.registerLayer(
+    "electricity",
+    electricalBoardLayer.group,
+    REALISTIC_ILLUSTRATIVE_MANIFEST.electricity,
+  );
+  materialProfileManager.registerLayer(
+    "synapse",
+    synapseLayer.group,
+    REALISTIC_ILLUSTRATIVE_MANIFEST.synapse,
+  );
+  presentationEffects = new PresentationMaterialEffects();
+  clippingSystem = new ClippingSystem(renderer, scene);
+  for (const view of [
+    "overview",
+    "laminar",
+    "cell",
+    "neuron",
+    "electricity",
+    "synapse",
+  ] as const) {
+    clippingSystem.registerLayer({
+      id: view,
+      root: renderRootForView(view),
+      optIn: true,
+      capObjectNames: CUT_CAP_OBJECTS[view],
+    });
+  }
+  clippingSystem.setActiveLayer(activeView);
 
   worker = new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = (event: MessageEvent<EngineEvent>) => {
@@ -1082,11 +1413,48 @@ async function init(): Promise<void> {
       setVisualColorMode(mode);
       if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
     },
+    setMaterialProfile(profile) {
+      return setMaterialProfile(
+        profile === "realistic-illustrative" ? "realistic-illustrative" : "schematic",
+      );
+    },
+    setClipping(update) {
+      return setCutPlaneState(update);
+    },
+    setPresentationEffects(update) {
+      presentationEffects.setState(update);
+      const effects = presentationEffects.audit();
+      element<HTMLInputElement>("#presentation-xray").checked = effects.xray;
+      element<HTMLInputElement>("#presentation-isolate").checked = effects.isolateMatter;
+      element<HTMLInputElement>("#presentation-opacity").value = String(effects.opacity);
+      element<HTMLOutputElement>("#presentation-opacity-val").textContent =
+        `${Math.round(effects.opacity * 100)}%`;
+      if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+    },
+    setHighContrast(enabled) {
+      document.body.dataset.highContrast = String(enabled);
+      element<HTMLInputElement>("#high-contrast-mode").checked = enabled;
+      materialProfileManager.setEnvironment({ highContrast: enabled });
+      clippingSystem.refresh();
+      const profile = materialProfileManager.profile();
+      element<HTMLSelectElement>("#material-profile").value = profile;
+      document.body.dataset.materialProfile = profile;
+      if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+      return profile;
+    },
     visualAudit() {
       return visualAuditReport();
     },
     materialProfileAudit() {
       return materialProfileAuditReport();
+    },
+    presentationAudit() {
+      return {
+        material: materialProfileManager.audit(),
+        clipping: clippingSystem.audit(),
+        effects: presentationEffects.audit(),
+        probe: lastCutProbe,
+      };
     },
     renderedStateAudit() {
       return auditRenderedStatePixels(renderer);
@@ -1110,6 +1478,7 @@ async function init(): Promise<void> {
   };
 
   window.addEventListener("resize", onResize);
+  window.addEventListener("beforeunload", disposeApplication, { once: true });
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && !captureMode) simulationClock.rebase(performance.now());
   });

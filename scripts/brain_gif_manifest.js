@@ -4,7 +4,7 @@ const COMMIT_PATTERN = /^[0-9a-f]{40}$/i;
 const HASH_PATTERN = /^[0-9a-f]{16}$/i;
 const MINIMUM_PROFILE_ABI_SCHEMA_VERSION = 6;
 
-export const BRAIN_GIF_MANIFEST_SCHEMA_VERSION = 2;
+export const BRAIN_GIF_MANIFEST_SCHEMA_VERSION = 3;
 export const BRAIN_GIF_VIEW_FRAMES = Object.freeze({
   overview: 15,
   laminar: 9,
@@ -48,6 +48,17 @@ function validateCapture(capture) {
     if (framesByView[view] !== BRAIN_GIF_VIEW_FRAMES[view]) {
       throw new Error(`GIF capture uses an invalid frame allocation for ${view}`);
     }
+  }
+  const presentation = capture.presentation;
+  if (
+    presentation?.materialProfile !== "realistic-illustrative" ||
+    presentation?.clipping?.view !== "overview" ||
+    presentation?.clipping?.orientation !== "coronal" ||
+    presentation?.clipping?.slab !== false ||
+    presentation?.clipping?.frames !== BRAIN_GIF_VIEW_FRAMES.overview ||
+    presentation?.externalAtlasAssets !== 0
+  ) {
+    throw new Error("GIF capture must declare the canonical R09-F presentation profile");
   }
 }
 

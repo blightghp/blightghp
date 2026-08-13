@@ -22,7 +22,7 @@ artefato de promoção.
 | eventos celulares R09-B | fixture exata, ABI/Worker e renderer | `cell-spike-events-v1.json` + auditoria de lifecycle | IDs/offsets carimbados pelo Rust; limite e backpressure provados |
 | Prancha Elétrica R09-C | observáveis puros, scene graph, DOM e auditoria | [auditoria R09-C](AUDIT_0.9_R09_C.md) | 10/11 draws, equivalente textual, hashes invariantes e zero objeto sem proveniência |
 | seleção/vista Neurônio R09-D | seleção convergente, geometria determinística, bindings e auditoria | [auditoria R09-D](AUDIT_0.9_R09_D.md) | 10 draws, 8 valores, zero rebuild/frame, foco restaurado e cinco hashes invariantes |
-| preparação da película 3D | contrato, inventário por vista e cobertura do GIF | [auditoria de prontidão](AUDIT_0.9_VISUAL_MATERIAL_READINESS.md) | seis vistas sem proveniência/binding ausente; perfil realista ainda não fabricado |
+| materialidade e planos de corte R09-F | manifesto PBR, clipping/stencil, sonda, fallback, hash e GIF | [auditoria R09-F](AUDIT_0.9_R09_F.md) | 25 materiais elegíveis, 9/18 draws de corte, zero geometria/binding alterado e cinco hashes invariantes |
 
 O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
@@ -51,6 +51,7 @@ ambiente e dos envelopes registrados.
 | QA-092 | Prancha Elétrica prova origem/unidade, scene graph separado, orçamento, acessibilidade e invariância dos cinco hashes |
 | QA-093 | seleção e vista Neurônio provam convergência de ID, teclado/foco, geometria determinística, evento carimbado e invariância dos cinco hashes |
 | QA-094 | película 3D prova cobertura das seis vistas, elegibilidade por passe, fallback atômico, acessibilidade, custo e invariância antes da promoção |
+| QA-101 | corte prova quatro eixos/laje, opt-in local, tampa stencil, sonda com unidade/domínio, teclado/touch, orçamento e cleanup |
 
 ## Camadas de evidência
 
@@ -412,14 +413,18 @@ um artefato versionado em cada linha:
 | orçamento | teste nativo mede 12 células abaixo de `1 ms/subpasso`; navegador confirma lifecycle e ABI sem buffer duplicado |
 | rollback | `CellPatchModel::LegacySingleDendriteV1` preserva o solver/fixture v1; a ABI/UI permanece v8 |
 
-### Prontidão da futura película 3D
+### R09-F · película 3D e planos de corte
 
-`materialProfileAudit()` deve retornar exatamente as seis vistas, perfil ativo
-`schematic`, ao menos um objeto renderizável por vista, zero objeto sem
-proveniência e zero binding de `STATE` ausente. Esse resultado fecha somente a
-prontidão estrutural. A fabricação de cada perfil `realistic-illustrative` ainda
-exige, para a própria vista, manifesto de assets, inspeção de UV/normal/tangente,
-capturas comparativas, teclado/texto, monocromia, movimento reduzido, orçamento
+`materialProfileAudit()` retorna exatamente as seis vistas, ao menos um objeto
+renderizável por vista, zero objeto sem proveniência e zero binding `STATE`
+ausente. `presentationAudit()` acrescenta o perfil ativo, 25 elegíveis/PBR,
+contagem de transmissão, zero troca geométrica, clipping e sonda.
+
+O gate executa: quatro normais canônicas e laje; opt-in/exclusão local;
+compartilhamento de geometria e descarte de materiais/geometrias auxiliares;
+fallback atômico em alto contraste/perda de contexto; equivalente textual;
+invariância dos cinco hashes com o relógio congelado; manifesto GIF schema 3;
+captura comparativa, teclado/touch, monocromia, movimento reduzido e orçamento
 GPU e cinco hashes invariantes. Qualquer falha mantém ou restaura o esquemático.
 
 Os contratos executáveis atuais são:
@@ -593,7 +598,8 @@ O workflow de perfil valida o shell, usa captura determinística, atualiza
 
 - captura nasce do mesmo entry point publicado;
 - seed, tempo, câmera, viewport e número de frames são fixos;
-- manifesto schema 2 cobre as seis vistas atuais e reserva quadros explícitos para `neuron`;
+- manifesto schema 3 cobre as seis vistas, reserva quadros para `neuron` e
+  declara película/corte R09-F sem atlas externo;
 - GIF permanece abaixo do orçamento de tamanho;
 - commit contém somente GIF e referência do README;
 - falha de captura nunca substitui o último GIF válido.

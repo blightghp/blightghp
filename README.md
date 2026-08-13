@@ -93,10 +93,10 @@ publicado neste repositório.
 <div align="center">
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=bca317e2f420" width="760" alt="BRAIN PRO percorrendo seis vistas: Visão Geral, Lâminas, Célula, Neurônio, Eletricidade e Sinapse" />
+  <img src="assets/brain.gif?v=51be03c5713b" width="760" alt="BRAIN PRO com película realista-ilustrativa e corte coronal tampado, percorrendo Visão Geral, Lâminas, Célula, Neurônio, Eletricidade e Sinapse" />
 </a>
 
-<sub>▲ Captura das seis vistas do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI, aos cinco hashes do motor e à cobertura por vista.</sub>
+<sub>▲ Captura R09-F das seis vistas, com película realista-ilustrativa e corte coronal tampado na Visão Geral. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI, aos cinco hashes do motor, ao perfil visual e à cobertura por vista.</sub>
 
 </div>
 
@@ -125,16 +125,19 @@ estão no [ROADMAP canônico](ROADMAP.md) e na
 [auditoria de promoção](AUDIT_0.8_PROMOTION.md).
 
 A 0.9 mantém essa baseline e avança por gates independentes. R09-A isolou o
-modelo de tarefa; R09-B publicou eventos celulares carimbados pelo Rust, sem
-pedir ao renderer que deduza spikes ausentes entre snapshots; R09-C criou uma
-Prancha Elétrica própria sem tocar na ABI ou no motor; R09-D acrescentou seleção
-local das 12 células e uma vista Neurônio de geometria determinística.
+modelo de tarefa; R09-B publicou eventos celulares carimbados pelo Rust; R09-C
+criou uma Prancha Elétrica própria; R09-D acrescentou seleção das 12 células;
+R09-E publicou soma/proximal/distal; e R09-F concluiu materialidade e cortes sem
+tocar na ABI ou no motor.
 
-A base das seis vistas está preparada para uma futura película de materialidade
-3D realista-ilustrativa: o inventário executável separa matéria e emissão,
-verifica proveniência e bindings e preserva o perfil esquemático como fallback.
-Os materiais, a iluminação e os assets realistas ainda pertencem ao gate R09-F;
-aparência não será apresentada como evidência biológica.
+As seis vistas agora alternam atomicamente entre `schematic` e
+`realistic-illustrative` no mesmo scene graph. Apenas 25 objetos de matéria com
+proveniência, normal e envelope declarados recebem PBR/transmission; emissão,
+linhas, pontos, labels e overlays preservam o pipeline auditado. Cortes coronal,
+sagital, axial, oblíquo e em laje usam clipping local e tampas stencil. A sonda
+da Visão Geral lê somente `field.waveActivity` publicado, com unidade e regra de
+interpolação; nenhum atlas externo foi incorporado e aparência não é evidência
+biológica.
 
 ### O que consigo explorar hoje
 
@@ -162,6 +165,11 @@ aparência não será apresentada como evidência biológica.
   canônica, 12 bytes por evento e teto de 4.096 eventos por snapshot;
 - pipeline visual com matéria, emissão e composição; bloom restrito ao que
   realmente emite e proveniência declarada por objeto;
+- película `realistic-illustrative` com 25 objetos PBR elegíveis, três luzes
+  decorativas, fallback esquemático atômico e zero troca de geometria/binding;
+- planos coronal, sagital, axial e oblíquo, laje, tampas stencil, raio-X,
+  opacidade, isolamento e sonda textual do campo cortical; 9 draws adicionais
+  no corte simples e teto de 18 na laje;
 - corrente receptora média com sinal, halos orientados para entrada, saída e
   shunt, além de forma redundante para leitura sem depender de matiz;
 - gates automáticos de ABI, lifecycle, rampa pura, saturação, modo
@@ -254,7 +262,8 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-12 | fecho R09-C com Prancha Elétrica própria, V/A/S rastreáveis, eventos publicados, fallback tabular e teto de 11 draws |
 | 2026-08-13 | fecho R09-D com seleção convergente, vista Neurônio determinística, evento carimbado, foco restaurado e cinco hashes invariantes |
 | 2026-08-13 | fecho R09-E com cabo soma/proximal/distal implícito, replay v1/v2, ABI v8, 37 buffers e gradiente auditável |
-| 2026-08-13 | preparo as seis vistas para uma futura película 3D com inventário executável, fallback esquemático e manifesto GIF schema 2 |
+| 2026-08-13 | preparo as seis vistas para a película 3D com inventário executável e fallback esquemático |
+| 2026-08-13 | fecho R09-F com 25 materiais PBR limitados, quatro cortes/laje, tampas stencil, sonda macroscópica, cinco hashes invariantes e manifesto GIF schema 3 |
 
 O histórico da base está em
 [`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
@@ -269,8 +278,9 @@ histórica dos achados; o fechamento executável da ABI está em
 [AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md) e o veredito final em
 [AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md). As etapas encerradas da 0.9
 estão registradas nas auditorias [R09-A](AUDIT_0.9_R09_A.md),
-[R09-B](AUDIT_0.9_R09_B.md), [R09-C](AUDIT_0.9_R09_C.md) e
-[R09-D](AUDIT_0.9_R09_D.md). A fronteira para a futura materialidade está na
+[R09-B](AUDIT_0.9_R09_B.md), [R09-C](AUDIT_0.9_R09_C.md),
+[R09-D](AUDIT_0.9_R09_D.md), [R09-E](AUDIT_0.9_R09_E.md) e
+[R09-F](AUDIT_0.9_R09_F.md). A fronteira original da película permanece na
 [auditoria de prontidão visual](AUDIT_0.9_VISUAL_MATERIAL_READINESS.md).
 
 ### Executar e conferir
@@ -305,7 +315,8 @@ npm run verify:brain-gif
 ```
 
 O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v8,
-registra os cinco hashes independentes, a cobertura das seis vistas e o SHA-256 do GIF em
+aplica a película R09-F e o corte coronal à Visão Geral, registra zero atlas
+externo, os cinco hashes independentes, a cobertura das seis vistas e o SHA-256 do GIF em
 [`assets/brain-gif.json`](assets/brain-gif.json), carimba o README com o commit
 de origem e só então publica os artefatos. O GitHub ainda pode levar alguns
 minutos para invalidar o cache do perfil.

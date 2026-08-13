@@ -24,6 +24,7 @@ do Worker. Não regula equações nem materiais 3D.
 | UI-020 | Prancha Elétrica possui scene graph próprio, níveis apenas de apresentação, teclado e equivalente tabular com unidade/origem. |
 | UI-021 | seleção celular por raycast e lista converge no mesmo ID; `Tab` percorre, `Enter` amplia, `Escape` retorna o foco e nenhuma ação cruza o protocolo científico. |
 | UI-022 | perfil de material é preferência de apresentação com fallback esquemático; não altera texto, foco, seleção, snapshot ou hashes. |
+| UI-024 | plano de corte possui controles por teclado/touch, feedback numérico, unidade/interpolação da sonda e indisponibilidade explícita fora do domínio válido. |
 | UX-001 | ampliar muda enquadramento/resolução mostrada, não equação por câmera. |
 | UX-002 | cada vista mostra “o que vejo”, modelo, unidade, hipótese e limite. |
 
@@ -61,7 +62,7 @@ custo aceitável de bundle/migração. Não há evidência atual para fazê-la.
 | Classe | Exemplos atuais/alvo | Dono | Persistência | Pode alterar ciência? |
 | :-- | :-- | :-- | :-- | :-- |
 | científico | snapshot, hashes, tick, preset | Rust/Worker | replay versionado | é a ciência |
-| apresentação | bloom, monocromia, LOD, visibilidade e perfil de material | UI/renderer | preferências | não |
+| apresentação | bloom, monocromia, LOD, visibilidade, material, corte, raio-X, opacidade e isolamento | UI/renderer | preferências | não |
 | seleção | região/célula/sinapse escolhida | app state | opcional | não |
 | navegação | aba, câmera, escala, breadcrumbs | app state | opcional | não |
 | configuração científica | seed, preset e parâmetros permitidos | contrato de experimento | projeto/replay | sim, explicitamente |
@@ -96,14 +97,20 @@ visual. Novas funções exigem teste e não podem furar a validação do protoco
 | Eletricidade | patch, eventos e topologia macro rotulada | Prancha Elétrica com V/A/S, atenuação, direção e origem | esquema didático; atraso/ganho macro não pertencem ao patch |
 | Sinapse | química v6 | vesícula, fenda, ocupação/remoção | microdomínio representativo |
 
-### Perfil de material futuro
+### Materialidade e planos de corte
 
-O estado atual usa somente o perfil `schematic`. R09-F poderá acrescentar
-`realistic-illustrative` como preferência visual global, aplicada por vista sem
-remontar o scene graph. A troca deve conservar o equivalente textual, a ordem de
-foco, o alvo de picking, o modo monocromático e movimento reduzido. Falha de
-asset, shader, iluminação ou orçamento retorna atomicamente ao perfil
-esquemático; nenhum fallback visual é enviado ao Worker.
+R09-F acrescenta `realistic-illustrative` como preferência visual global,
+aplicada por vista sem remontar o scene graph. A troca conserva equivalente
+textual, ordem de foco, alvo de picking, modo monocromático e movimento reduzido.
+Falha de contexto/material ou alto contraste retorna atomicamente a
+`schematic`; nenhum fallback visual é enviado ao Worker.
+
+O painel `R09-F · apresentação local` oferece coronal, sagital, axial, oblíquo,
+laje, posição, espessura, azimute/elevação, raio-X, opacidade, isolamento e reset
+de câmera. `C`, `[`, `]`, `X`, `I` e `R` são equivalentes de teclado; selects,
+checkboxes e ranges são operáveis por touch. A live region da sonda enuncia
+campo, valor, unidade e regra de amostragem. Fora da Visão Geral, ela informa que
+não existe mapeamento macroscópico em vez de inferir química microscópica.
 
 ## Modos de uso alvo
 

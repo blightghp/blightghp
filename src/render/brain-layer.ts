@@ -238,22 +238,26 @@ export class BrainRenderLayers implements RenderLayer {
         opacity: { value: region === "cerebellum" ? 0.12 : 0.085 },
       },
       vertexShader: `
+        #include <clipping_planes_pars_vertex>
         varying vec3 vNormal;
         varying vec3 vViewDirection;
         void main() {
-          vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           vNormal = normalize(normalMatrix * normal);
-          vViewDirection = normalize(-viewPosition.xyz);
-          gl_Position = projectionMatrix * viewPosition;
+          vViewDirection = normalize(-mvPosition.xyz);
+          gl_Position = projectionMatrix * mvPosition;
+          #include <clipping_planes_vertex>
         }
       `,
       fragmentShader: `
+        #include <clipping_planes_pars_fragment>
         uniform vec3 shellColor;
         uniform float activity;
         uniform float opacity;
         varying vec3 vNormal;
         varying vec3 vViewDirection;
         void main() {
+          #include <clipping_planes_fragment>
           float rim = pow(1.0 - abs(dot(vNormal, vViewDirection)), 2.4);
           float pulse = 0.7 + activity * 1.8;
           vec3 color = shellColor * (0.22 + rim * 1.55 + activity * 0.8);
@@ -264,8 +268,10 @@ export class BrainRenderLayers implements RenderLayer {
       depthWrite: true,
       side: THREE.DoubleSide,
       blending: THREE.NormalBlending,
+      clipping: true,
     });
     const shell = new THREE.Mesh(geometry, material);
+    shell.name = `${region}-shell`;
     shell.renderOrder = -1;
     declareVisual(shell, "matter", "state", {
       field: `mean(activations[region=${region}])`,

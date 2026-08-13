@@ -26,13 +26,14 @@ const frameCount = BRAIN_GIF_FRAME_COUNT;
 const frameDelay = 120;
 const loopDuration = (frameCount * frameDelay) / 1000;
 const transparentKey = 0x000000;
+const backgroundKeyThreshold = 18;
 
 function keyOutBackground(png) {
   for (let offset = 0; offset < png.data.length; offset += 4) {
     const red = png.data[offset];
     const green = png.data[offset + 1];
     const blue = png.data[offset + 2];
-    if (Math.max(red, green, blue) <= 68) {
+    if (Math.max(red, green, blue) <= backgroundKeyThreshold) {
       png.data[offset] = 0;
       png.data[offset + 1] = 0;
       png.data[offset + 2] = 0;
@@ -62,6 +63,14 @@ async function generateGif() {
     await page.goto("http://127.0.0.1:4178/", { waitUntil: "networkidle0" });
     await page.waitForFunction(() => Boolean(window.__BRAIN_ENGINE__));
     await page.evaluate(() => window.__BRAIN_ENGINE__.setCaptureMode(true));
+    await page.evaluate(() => {
+      window.__BRAIN_ENGINE__.setMaterialProfile("realistic-illustrative");
+      window.__BRAIN_ENGINE__.setPresentationEffects({
+        opacity: 0.82,
+        xray: false,
+        isolateMatter: false,
+      });
+    });
 
     const encoder = new GIFEncoder(width, height, "neuquant", true, frameCount);
     encoder.start();
@@ -76,6 +85,16 @@ async function generateGif() {
       await page.evaluate(
         async ({ time, rotation, view }) => {
           window.__BRAIN_ENGINE__.setView(view);
+          window.__BRAIN_ENGINE__.setClipping(
+            view === "overview"
+              ? {
+                  enabled: true,
+                  orientation: "coronal",
+                  slab: false,
+                  position: 0.06,
+                }
+              : { enabled: false, slab: false },
+          );
           await window.__BRAIN_ENGINE__.capture(time, rotation);
         },
         {
@@ -110,6 +129,16 @@ async function generateGif() {
         frameDelayMilliseconds: frameDelay,
         loopDurationSeconds: loopDuration,
         framesByView: { ...BRAIN_GIF_VIEW_FRAMES },
+        presentation: {
+          materialProfile: "realistic-illustrative",
+          clipping: {
+            view: "overview",
+            orientation: "coronal",
+            slab: false,
+            frames: BRAIN_GIF_VIEW_FRAMES.overview,
+          },
+          externalAtlasAssets: 0,
+        },
       },
     });
     fs.writeFileSync(outputPath, gif);

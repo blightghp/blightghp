@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 2,
-  "sourceCommit": "bca317e2f420674127de23ea109de24f844ab685",
-  "gifSha256": "918d2baa062cd828285f9f034afe03e7987e2136fde7c8d61a928c5eb8390e08",
+  "schemaVersion": 3,
+  "sourceCommit": "51be03c5713bbffab9fc2fad8bb26c74532c24e9",
+  "gifSha256": "9af4615abf6dd6dfa92f967ecf56b309d0754a64284ef9ab4310d8dfed2c10c7",
   "engine": {
     "runtime": "rust-wasm",
     "abiSchemaVersion": 8,
@@ -25,6 +25,16 @@
       "neuron": 9,
       "electricity": 9,
       "synapse": 9
+    },
+    "presentation": {
+      "materialProfile": "realistic-illustrative",
+      "clipping": {
+        "view": "overview",
+        "orientation": "coronal",
+        "slab": false,
+        "frames": 15
+      },
+      "externalAtlasAssets": 0
     }
   }
 }
