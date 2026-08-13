@@ -1,6 +1,6 @@
 # Especificação matemática e epistemológica · BRAIN PRO
 
-**Revisão:** 2 · produto observado 0.9.0 · modelos com schema próprio
+**Revisão:** 3 · produto observado 0.9.0 · modelos com schema próprio
 
 Esta é a fonte canônica das perguntas, variáveis, equações, métodos, hipóteses e
 limites do motor. Ela não transforma a fisiologia em algo que o código ainda não
@@ -14,6 +14,7 @@ calcula: cada modelo declara estado, unidade, regime, prova e classificação.
 - Índices de unidade, sinapse, vértice e região não são intercambiáveis.
 - O tempo do motor é um tick inteiro. O valor físico é `tick * dt`.
 - Posições atuais estão em coordenadas procedurais sem unidade anatômica. Velocidade de condução física só será introduzida quando a geometria tiver escala declarada.
+- Perfil de material, iluminação, textura e acabamento 3D são apresentação; não acrescentam variável, compartimento, evento, unidade ou evidência ao modelo.
 
 ## Classificação epistemológica
 
@@ -29,6 +30,10 @@ calcula: cada modelo declara estado, unidade, regime, prova e classificação.
 | EXPERIMENTAL | implementação ou hipótese ainda sem promoção |
 
 Geometria 3D não altera esta classe.
+Fotorealismo, PBR, translucidez ou SSS também não alteram esta classe. Quando a
+película visual sugerir espessura, propagação ou microestrutura não calculadas,
+a legenda deve negar explicitamente essa leitura e o fallback esquemático
+permanece a referência.
 
 ## Registro dos modelos atuais
 

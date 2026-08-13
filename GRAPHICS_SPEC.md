@@ -1,6 +1,6 @@
 # Especificação gráfica e de proveniência · BRAIN PRO
 
-**Revisão:** 3 · baseline Three.js/WebGL · produto 0.9.0
+**Revisão:** 4 · baseline Three.js/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
 preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
@@ -22,6 +22,13 @@ fidelidade entre estado calculado e estado mostrado.
 | GFX-009 | movimento reduzido mantém equivalente estático. |
 | GFX-010 | vínculo estado→objeto é estruturado e auditável, não comentário informal. |
 | GFX-050 | a vista Neurônio possui scene graph próprio, geometria determinística e evento visual autorizado exclusivamente pelo lote carimbado. |
+| GFX-069 | materialidade realista-ilustrativa troca materiais, nunca geometria semântica, IDs, bindings ou eventos. |
+| GFX-070 | somente objetos `matter` elegíveis recebem PBR; emissão, linhas, pontos, labels e overlays mantêm codificação auditada. |
+| GFX-071 | cada vista possui manifesto de perfil, licença/fonte, escala, UV/normal/tangente, espaço de cor, luz, custo e fallback. |
+| GFX-072 | aparência realista permanece `DECORATION` ou `TOPOLOGY` conforme a proveniência e nunca eleva classe epistemológica. |
+| GFX-073 | perfil realista preserva contraste, monocromia, movimento reduzido, picking, equivalente textual e cinco hashes. |
+| GFX-074 | falha parcial de asset/shader não mistura perfis: a vista retorna atomicamente ao esquemático. |
+| GFX-075 | fabricação por vista exige captura comparativa, orçamento GPU e auditoria `materialProfileAudit()` sem lacunas. |
 | AST-001 | anatomia detalhada não implica validação biológica. |
 | AST-002 | estrutura entra por função, orientação decorativa ou proveniência topológica declarada. |
 | AST-010 | morfologia procedural declara seed, stream, hash e limite ilustrativo; não afirma tipo celular real. |
@@ -127,6 +134,30 @@ backend e versão fallback. WebGPU não é requisito da baseline.
 Uma malha mais detalhada continua `DECORATION` até haver proveniência. Material
 “médico” não transforma o projeto em visualização clínica.
 
+### Película de materialidade por vista
+
+A película é um perfil substituível sobre o scene graph existente, não uma
+textura única aplicada cegamente ao canvas. O perfil atual é `schematic`; o alvo
+futuro `realistic-illustrative` só pode substituir materiais de `matter` que
+tenham geometria e proveniência declaradas. Emissão e sinais permanecem no passe
+auditado para que o acabamento não esconda causalidade visual.
+
+| Vista | Base preservada | Materialidade futura permitida | Alegação proibida |
+| :-- | :-- | :-- | :-- |
+| Visão Geral | rede, campo, pulsos e superfície procedural | casca/tecido ilustrativos com escala e custo | atlas, anatomia clínica ou atividade em estrutura sem estado |
+| Lâminas | L1–L6, vias, relé e TRN didáticos | volume e rugosidade que preservem formas redundantes | espessura anatômica calibrada |
+| Célula | 12 somas, dendritos, correntes e seleção | membrana/superfície ilustrativa por lote | compartimentos ou canais não publicados |
+| Neurônio | geometria determinística por `seed + cellId` | soma, dendrito e axônio ilustrativos sem mudar o hash geométrico | tipo celular, mielinização funcional ou propagação |
+| Eletricidade | nós, setas, V/A/S, eventos e tabela | substrato de prancha e relevo orientativo | circuito físico equivalente ao tecido biológico |
+| Sinapse | membranas, vesículas, fenda, receptores e recaptura | transmissão/SSS ilustrativos com escala exagerada rotulada | ultraestrutura medida ou concentração volumétrica ausente |
+
+Antes da fabricação, cada vista registra: lista de objetos elegíveis e
+protegidos; origem/licença/hash dos assets; unidades e transformação; UV,
+normais, tangentes e espaço de cor; iluminação/tone mapping; orçamento de draws,
+texturas e memória; fallback esquemático; capturas colorida, monocromática,
+movimento reduzido e viewport móvel. O inventário executável atual reporta
+`contractReady` por vista, mas não declara que o perfil realista já foi produzido.
+
 ## Pilha anatômica progressiva
 
 | Camada | Por que existe | Classe antes/depois da fonte | Entrada | Interação/limite |
@@ -141,7 +172,7 @@ Uma malha mais detalhada continua `DECORATION` até haver proveniência. Materia
 | cerebelo/tronco | orientação procedural | TOPOLOGY procedural | existente na visão geral | fora do campo cortical atual |
 | ventrículos | orientação | DECORATION/TOPOLOGY | opcional | sem fluxo de LCR sem modelo |
 | vascular | orientação/fluxo futuro | TOPOLOGY; STATE somente com hemodinâmica | 0.10+ | ver VAS-001 |
-| patch/neurônio/sinapse | escalas científicas | STATE + TOPOLOGY | patch/sinapse atuais; neurônio futuro | selo de resolução obrigatório |
+| patch/neurônio/sinapse | escalas científicas | STATE + TOPOLOGY | três vistas atuais; compartimentos do neurônio futuros | selo de resolução obrigatório |
 
 Cada camada define opacidade, raio-X, recorte, material, LOD, custo, picking,
 fonte e nível de evidência. Estruturas sem função podem existir apenas como

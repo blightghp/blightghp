@@ -93,10 +93,10 @@ publicado neste repositório.
 <div align="center">
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=76ae76c67d0d" width="760" alt="BRAIN PRO com rede cerebral, coluna L1–L6 e patch celular com correntes assinadas" />
+  <img src="assets/brain.gif?v=76ae76c67d0d" width="760" alt="BRAIN PRO percorrendo seis vistas: Visão Geral, Lâminas, Célula, Neurônio, Eletricidade e Sinapse" />
 </a>
 
-<sub>▲ Captura do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI e aos cinco hashes do motor.</sub>
+<sub>▲ Captura das seis vistas do simulador publicado. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI, aos cinco hashes do motor e à cobertura por vista.</sub>
 
 </div>
 
@@ -129,6 +129,12 @@ modelo de tarefa; R09-B publicou eventos celulares carimbados pelo Rust, sem
 pedir ao renderer que deduza spikes ausentes entre snapshots; R09-C criou uma
 Prancha Elétrica própria sem tocar na ABI ou no motor; R09-D acrescentou seleção
 local das 12 células e uma vista Neurônio de geometria determinística.
+
+A base das seis vistas está preparada para uma futura película de materialidade
+3D realista-ilustrativa: o inventário executável separa matéria e emissão,
+verifica proveniência e bindings e preserva o perfil esquemático como fallback.
+Os materiais, a iluminação e os assets realistas ainda pertencem ao gate R09-F;
+aparência não será apresentada como evidência biológica.
 
 ### O que consigo explorar hoje
 
@@ -246,6 +252,8 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-12 | fecho R09-A com fronteira de experimento versionada, replay e controle nulo; a posterior de tarefa deixa de influenciar o estímulo neural direto |
 | 2026-08-12 | fecho R09-B com eventos celulares carimbados no Rust, replay exato, ABI v7, 36 buffers e quinto hash independente |
 | 2026-08-12 | fecho R09-C com Prancha Elétrica própria, V/A/S rastreáveis, eventos publicados, fallback tabular e teto de 11 draws |
+| 2026-08-13 | fecho R09-D com seleção convergente, vista Neurônio determinística, evento carimbado, foco restaurado e cinco hashes invariantes |
+| 2026-08-13 | preparo as seis vistas para uma futura película 3D com inventário executável, fallback esquemático e manifesto GIF schema 2 |
 
 O histórico da base está em
 [`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
@@ -261,7 +269,8 @@ histórica dos achados; o fechamento executável da ABI está em
 [AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md). As etapas encerradas da 0.9
 estão registradas nas auditorias [R09-A](AUDIT_0.9_R09_A.md),
 [R09-B](AUDIT_0.9_R09_B.md), [R09-C](AUDIT_0.9_R09_C.md) e
-[R09-D](AUDIT_0.9_R09_D.md).
+[R09-D](AUDIT_0.9_R09_D.md). A fronteira para a futura materialidade está na
+[auditoria de prontidão visual](AUDIT_0.9_VISUAL_MATERIAL_READINESS.md).
 
 ### Executar e conferir
 
@@ -295,7 +304,7 @@ npm run verify:brain-gif
 ```
 
 O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v7,
-registra os cinco hashes independentes e o SHA-256 do GIF em
+registra os cinco hashes independentes, a cobertura das seis vistas e o SHA-256 do GIF em
 [`assets/brain-gif.json`](assets/brain-gif.json), carimba o README com o commit
 de origem e só então publica os artefatos. O GitHub ainda pode levar alguns
 minutos para invalidar o cache do perfil.

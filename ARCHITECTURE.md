@@ -1,6 +1,6 @@
 # Arquitetura canônica · BRAIN PRO
 
-**Documento:** revisão 2 · 13 de agosto de 2026
+**Documento:** revisão 3 · 13 de agosto de 2026
 
 **Produto observado:** 0.9.0
 
@@ -30,6 +30,7 @@ como planejada e nunca é descrita como implementada.
 | ARC-013 | fallback é diagnóstico e inerte | aceita | substituição por falha explícita, nunca por motor TS |
 | ARC-014 | modelos de tarefa atravessam adaptadores explícitos | aceita em R09-A | mudar schema/identidade do experimento |
 | ARC-015 | Prancha Elétrica é projeção de apresentação com scene graph próprio | aceita em R09-C | novo observável científico exige contrato/ABI antes do renderer |
+| ARC-016 | materialidade realista-ilustrativa é perfil substituível sobre o mesmo scene graph | aceita como preparação de R09-F | somente evidência de que a troca exige nova semântica científica |
 
 ## Contexto do sistema
 
@@ -256,6 +257,14 @@ Proveniência atual é declarada por objeto como domínio visual (`matter` ou
 `emission`) e origem (`state`, `topology`, `decoration`). Todo efeito de estado
 aponta por binding estruturado para campo, unidade, transformação e pistas
 redundantes.
+
+Uma futura película de materialidade 3D não cria uma segunda cena nem duplica
+estado. Ela troca apenas materiais de objetos elegíveis do passe `matter`; linhas,
+pontos, emissão, labels e equivalentes textuais preservam o perfil esquemático.
+O hook de auditoria `materialProfileAudit()` inventaria as seis vistas e bloqueia
+a preparação quando encontra proveniência ou binding de `STATE` ausente. Perfil,
+luz, textura, câmera e pós-processamento continuam fora do snapshot, da ABI e dos
+cinco hashes.
 
 ## Introdução de uma nova grandeza
 

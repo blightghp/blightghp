@@ -1,6 +1,6 @@
 # Especificação do motor · BRAIN PRO
 
-**Revisão:** 2 · produto 0.9.0 · ABI/snapshot 7
+**Revisão:** 3 · produto 0.9.0 · ABI/snapshot 7
 
 Este é o manual de implementação do motor científico e de sua fronteira de
 execução. A matemática pertence a [MODEL_SPEC.md](MODEL_SPEC.md); este documento
@@ -20,6 +20,7 @@ define ownership, ordem, memória, falha, ABI e procedimento de evolução.
 | ENG-008 | `f64` interno e quantização `f32` precisam de contrato por bloco. |
 | ENG-009 | hashes são detectores de regressão, não autenticação criptográfica. |
 | ENG-010 | renderer/FPS/LOD nunca alteram solver ou `dt`. |
+| ENG-019 | perfil de material, iluminação, textura, clipping e pós-processamento nunca entram em comando, snapshot, replay ou hash científico. |
 | ABI-001 | protocolo, ABI e snapshot são eixos distintos, ainda que hoje valham 7. |
 | ABI-002 | mudança de layout, unidade, ordem ou significado exige decisão de compatibilidade. |
 | ABI-003 | arrays paralelos têm comprimento/ordem validados antes do uso. |
@@ -345,5 +346,14 @@ interpolate continuous published values only
 render events only from published event records
 never write back into snapshot arrays
 ```
+
+### Fronteira da futura materialidade 3D
+
+O motor não recebe conhecimento de PBR, normal map, SSS, transmissão, luz ou
+película visual. A futura fabricação gráfica reutiliza IDs e bindings já
+publicados e deve demonstrar os mesmos cinco hashes antes/depois de cada troca de
+perfil. Se uma aparência exigir espessura, compartimento, condução, concentração
+ou evento ainda ausente, primeiro entra um modelo e uma ABI próprios; o renderer
+não pode preencher essa lacuna.
 
 Os critérios de prova e promoção estão em [VALIDATION.md](VALIDATION.md).

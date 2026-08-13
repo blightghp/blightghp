@@ -1,6 +1,6 @@
 # Especificação da aplicação e UX · BRAIN PRO
 
-**Revisão:** 3 · produto observado 0.9.0
+**Revisão:** 4 · produto observado 0.9.0
 
 Este documento regula o shell TypeScript, DOM, fluxos, acessibilidade e consumo
 do Worker. Não regula equações nem materiais 3D.
@@ -23,6 +23,7 @@ do Worker. Não regula equações nem materiais 3D.
 | UI-012 | experimentos usam `ExperimentEncoder`/`ExperimentDecoder` explícitos. |
 | UI-020 | Prancha Elétrica possui scene graph próprio, níveis apenas de apresentação, teclado e equivalente tabular com unidade/origem. |
 | UI-021 | seleção celular por raycast e lista converge no mesmo ID; `Tab` percorre, `Enter` amplia, `Escape` retorna o foco e nenhuma ação cruza o protocolo científico. |
+| UI-022 | perfil de material é preferência de apresentação com fallback esquemático; não altera texto, foco, seleção, snapshot ou hashes. |
 | UX-001 | ampliar muda enquadramento/resolução mostrada, não equação por câmera. |
 | UX-002 | cada vista mostra “o que vejo”, modelo, unidade, hipótese e limite. |
 
@@ -33,7 +34,7 @@ DOMContentLoaded
   └─ main.ts:init
       ├─ cria scene/camera/renderer/pipeline
       ├─ generateBrainData()
-      ├─ monta cinco RenderLayers
+      ├─ monta seis RenderLayers
       ├─ cria simulation.worker.ts
       ├─ initialize → ready/fallback
       ├─ liga DOM e controles
@@ -60,7 +61,7 @@ custo aceitável de bundle/migração. Não há evidência atual para fazê-la.
 | Classe | Exemplos atuais/alvo | Dono | Persistência | Pode alterar ciência? |
 | :-- | :-- | :-- | :-- | :-- |
 | científico | snapshot, hashes, tick, preset | Rust/Worker | replay versionado | é a ciência |
-| apresentação | bloom, monocromia, LOD, visibilidade | UI/renderer | preferências | não |
+| apresentação | bloom, monocromia, LOD, visibilidade e perfil de material | UI/renderer | preferências | não |
 | seleção | região/célula/sinapse escolhida | app state | opcional | não |
 | navegação | aba, câmera, escala, breadcrumbs | app state | opcional | não |
 | configuração científica | seed, preset e parâmetros permitidos | contrato de experimento | projeto/replay | sim, explicitamente |
@@ -94,6 +95,15 @@ visual. Novas funções exigem teste e não podem furar a validação do protoco
 | Neurônio | uma célula do patch e seus eventos carimbados | soma, dendrito único, adaptação e quatro correntes | morfologia ilustrativa; sem gradiente, condução ou tipo celular real |
 | Eletricidade | patch, eventos e topologia macro rotulada | Prancha Elétrica com V/A/S, direção e origem | esquema didático; atraso/ganho macro não pertencem ao patch |
 | Sinapse | química v6 | vesícula, fenda, ocupação/remoção | microdomínio representativo |
+
+### Perfil de material futuro
+
+O estado atual usa somente o perfil `schematic`. R09-F poderá acrescentar
+`realistic-illustrative` como preferência visual global, aplicada por vista sem
+remontar o scene graph. A troca deve conservar o equivalente textual, a ordem de
+foco, o alvo de picking, o modo monocromático e movimento reduzido. Falha de
+asset, shader, iluminação ou orçamento retorna atomicamente ao perfil
+esquemático; nenhum fallback visual é enviado ao Worker.
 
 ## Modos de uso alvo
 

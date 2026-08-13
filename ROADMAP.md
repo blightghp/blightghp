@@ -76,6 +76,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | eventos celulares carimbados | IMPLEMENTADO E VALIDADO EM R09-B | `cell_patch`, `simulation`, ABI/Worker | fixture, hash próprio, browser e lifecycle | lote limitado a 4.096; cenário padrão pode legitimamente produzir lote vazio |
 | Prancha Elétrica | IMPLEMENTADA E VALIDADA EM R09-C | `ElectricalBoardLayer`, DOM e auditoria | testes estruturais, orçamento e navegador | esquema do patch; atraso/ganho macro aparecem separados e não são atribuídos às células |
 | seleção e vista Neurônio | IMPLEMENTADAS E VALIDADAS EM R09-D | `CellRenderLayer`, `NeuronRenderLayer`, DOM e auditoria | raycast/lista, teclado, hash geométrico, navegador e invariância | árvore ilustrativa usa um único valor dendrítico; sem propagação ou tipo celular real |
+| prontidão para película 3D por vista | CONTRATO E INVENTÁRIO IMPLEMENTADOS; PELÍCULA NÃO FABRICADA | `src/render`, seis `RenderLayer`s e specs | auditoria por vista, proveniência, bindings, fallback e matriz de limites | materiais/iluminação/assets realistas pertencem a R09-F |
 | cortes, vascular e atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
 
 ## Histórico verificável
@@ -265,16 +266,22 @@ proximal/distal ao Rust, novo preset/schema e gradiente autorizado.
 - **Risco:** escopo numérico alto. **Rollback:** preset pontual permanece
   suportado e a UI rotula compartimento único. **Complexidade/confiança:** alta / média.
 
-### R09-F · películas e planos de corte
+### R09-F · materialidade, películas e planos de corte
 
 Implementa isolamento, opacidade, raio-X e corte coronal/sagital/axial/oblíquo
 com tampa e sonda. Camadas sem fonte são `DECORATION`; a sonda só mostra campos
 publicados.
 
+Também fabrica, uma vista por vez, o perfil `realistic-illustrative` sobre o
+mesmo scene graph. A preparação contratual e o inventário das seis vistas estão
+concluídos; materiais, iluminação e assets ainda não estão implementados e não
+podem ser descritos como realismo científico.
+
 - **Estado:** planejada; **IDs:** GFX-060..068, AST-020, UI-024, QA-101.
 - **Assets:** nenhum atlas é incluído neste corte.
-- **Aceite:** hash invariante a câmera/corte/LOD, operação por teclado/touch,
-  legenda de unidade e custo de clipping medido.
+- **Aceite:** hash invariante a câmera/corte/LOD/material, operação por
+  teclado/touch, legenda de unidade, fallback esquemático atômico, manifesto por
+  vista e custos de clipping/material medidos.
 - **Rollback:** desabilitar clipping e manter isolamento. **Complexidade/confiança:** alta / média.
 
 ## 0.10 · anatomia com proveniência e transmissão de volume
