@@ -73,7 +73,7 @@ export function receptorCurrentTotals(snapshot: NeuralSnapshot): ReceptorCurrent
   };
 }
 
-function setCellPosition(target: THREE.Vector3, index: number): THREE.Vector3 {
+export function setCellPosition(target: THREE.Vector3, index: number): THREE.Vector3 {
   const row = Math.floor(index / 4);
   const column = index % 4;
   return target.set(
@@ -89,6 +89,7 @@ export class CellRenderLayer implements RenderLayer {
   private readonly electricHalos: THREE.InstancedMesh;
   private readonly dendrites: THREE.LineSegments;
   private readonly boundary: THREE.Mesh;
+  private readonly selectionHalo: THREE.Mesh;
   private readonly matrix = new THREE.Matrix4();
   private readonly color = new THREE.Color();
   private readonly position = new THREE.Vector3();
@@ -193,7 +194,37 @@ export class CellRenderLayer implements RenderLayer {
       redundancy: ["position", "label"],
     });
     this.group.add(this.boundary);
+
+    this.selectionHalo = new THREE.Mesh(
+      new THREE.TorusGeometry(0.25, 0.024, 8, 36),
+      new THREE.MeshBasicMaterial({
+        color: VISUAL_COLORS.hot,
+        transparent: true,
+        opacity: 0.88,
+        blending: THREE.NormalBlending,
+        depthWrite: true,
+      }),
+    );
+    this.selectionHalo.name = "cell-selection-halo";
+    declareVisual(this.selectionHalo, "matter", "decoration");
+    this.group.add(this.selectionHalo);
+    this.setSelectedCell(0);
     this.setMode("cell");
+  }
+
+  setSelectedCell(cellId: number): void {
+    if (!Number.isInteger(cellId) || cellId < 0 || cellId >= this.cellCount) {
+      throw new Error("cellId fora do patch celular");
+    }
+    setCellPosition(this.selectionHalo.position, cellId);
+    this.selectionHalo.position.z += 0.04;
+  }
+
+  pickCell(raycaster: THREE.Raycaster): number | undefined {
+    const hit = raycaster.intersectObject(this.somata, false)[0];
+    return hit?.instanceId !== undefined && hit.instanceId < this.cellCount
+      ? hit.instanceId
+      : undefined;
   }
 
   setMode(mode: CellLayerMode): void {

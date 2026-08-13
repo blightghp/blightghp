@@ -1,6 +1,6 @@
 # Arquitetura canônica · BRAIN PRO
 
-**Documento:** revisão 1 · 12 de agosto de 2026
+**Documento:** revisão 2 · 13 de agosto de 2026
 
 **Produto observado:** 0.9.0
 
@@ -242,9 +242,12 @@ schema separado de presets/replays científicos.
 
 ## Arquitetura da apresentação
 
-`main.ts` compõe cinco implementações de `RenderLayer`: cérebro, lâminas,
-célula, Prancha Elétrica e sinapse. A prancha consome o patch publicado e
-topologia macro rotulada, sem compartilhar cena com `CellRenderLayer`.
+`main.ts` compõe seis implementações de `RenderLayer`: cérebro, lâminas,
+célula, Neurônio, Prancha Elétrica e sinapse. A prancha consome o patch
+publicado e topologia macro rotulada, sem compartilhar cena com
+`CellRenderLayer`. `NeuronRenderLayer` lê somente a célula endereçada pelo estado
+de seleção local; sua morfologia usa seed/stream de apresentação e hash próprio,
+sem entrar em snapshot, ABI ou hashes científicos.
 `SelectiveBloomPipeline` separa emissão do restante e compõe o resultado.
 `visual-tokens.ts` centraliza identidades; `visual-encoding.ts` transforma
 grandezas publicadas em cor/forma/direção.

@@ -16,7 +16,11 @@ import {
   encodeStateColor,
   LaminarRenderLayer,
   mean,
+  NEURON_CELL_COUNT,
+  NeuronRenderLayer,
+  neuronCellObservables,
   parseElectricalBoardDetail,
+  parseCellId,
   parseLaminarLod,
   parseSimulationView,
   parseVisualColorMode,
@@ -61,6 +65,7 @@ declare global {
       capture: (time: number, rotation: number) => Promise<void>;
       setCaptureMode: (enabled: boolean) => Promise<void>;
       setCameraRotation: (rotation: number) => void;
+      setSelectedCell: (cellId: number) => void;
       setView: (view: SimulationView) => void;
       schedule: (inputs: ScheduledEngineInput[]) => Promise<number>;
       diagnostics: () => {
@@ -107,6 +112,7 @@ declare global {
         cost: ReturnType<ElectricalBoardLayer["audit"]>["cost"];
         topology: ElectricalBoardTopologyObservables;
       };
+      neuronAudit: () => ReturnType<NeuronRenderLayer["audit"]>;
       createAuditWorker: () => Worker;
       createAuditTopology: () => BrainData;
     };
@@ -137,6 +143,7 @@ let layers: BrainRenderLayers;
 let laminarLayer: LaminarRenderLayer;
 let cellLayer: CellRenderLayer;
 let electricalBoardLayer: ElectricalBoardLayer;
+let neuronLayer: NeuronRenderLayer;
 let synapseLayer: SynapseRenderLayer;
 let brainData: BrainData;
 let electricalTopology: ElectricalBoardTopologyObservables;
@@ -151,6 +158,8 @@ let captureTime = 0;
 let metricAccumulator = 0;
 let currentFocusRegion: BrainRegion | "all" = "all";
 let activeView: SimulationView = "overview";
+let selectedCellId = 0;
+let selectionReturnFocus: HTMLElement | undefined;
 let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
 let visualColorMode = parseVisualColorMode(
   new URLSearchParams(window.location.search).get("colorMode"),
@@ -158,6 +167,8 @@ let visualColorMode = parseVisualColorMode(
 
 const pendingResponses: Array<(event: EngineEvent) => void> = [];
 const activitySamples = Array.from({ length: 96 }, () => 0);
+const cellRaycaster = new THREE.Raycaster();
+const pointerCoordinates = new THREE.Vector2();
 
 function element<T extends HTMLElement>(selector: string): T {
   const match = document.querySelector<T>(selector);
@@ -194,6 +205,40 @@ function drawActivityTrace(): void {
     else context.lineTo(x, y);
   });
   context.stroke();
+}
+
+function signedPicoamperes(amperes: number): string {
+  const value = amperesToPicoamperes(amperes);
+  return `${value > 0 ? "+" : ""}${value.toFixed(1)} pA`;
+}
+
+function updateNeuronMetrics(snapshot: NeuralSnapshot): void {
+  const observable = neuronCellObservables(snapshot, selectedCellId);
+  element("#neuron-soma").textContent =
+    `${voltsToMillivolts(observable.membraneVolts).toFixed(1)} mV`;
+  element("#neuron-dendrite").textContent =
+    `${voltsToMillivolts(observable.dendriteVolts).toFixed(1)} mV`;
+  element("#neuron-adaptation").textContent = signedPicoamperes(
+    observable.adaptationAmperes,
+  );
+  element("#neuron-kind").textContent = observable.kind === "excitatory"
+    ? "E · excitatória"
+    : "I · inibitória";
+  element("#neuron-ampa").textContent = signedPicoamperes(observable.ampaAmperes);
+  element("#neuron-nmda").textContent = signedPicoamperes(observable.nmdaAmperes);
+  element("#neuron-gabaa").textContent = signedPicoamperes(observable.gabaaAmperes);
+  element("#neuron-gabab").textContent = signedPicoamperes(observable.gababAmperes);
+  element("#neuron-events").textContent = observable.stampedEventOffsetsSeconds.length === 1
+    ? "1 evento"
+    : `${observable.stampedEventOffsetsSeconds.length} eventos`;
+  element("#neuron-event-window").textContent =
+    observable.stampedEventOffsetsSeconds.length === 0
+      ? "—"
+      : observable.stampedEventOffsetsSeconds
+        .slice(-3)
+        .map((offset) => `${(offset * 1_000).toFixed(2)} ms`)
+        .join(" · ");
+  element("#neuron-geometry-hash").textContent = neuronLayer.selection().geometryHash;
 }
 
 function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
@@ -241,10 +286,6 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
         : "reversal";
   }
   const electrical = electricalBoardObservables(snapshot);
-  const signedPicoamperes = (amperes: number): string => {
-    const value = amperesToPicoamperes(amperes);
-    return `${value > 0 ? "+" : ""}${value.toFixed(1)} pA`;
-  };
   element("#board-voltage").textContent =
     `${voltsToMillivolts(electrical.meanMembraneVolts).toFixed(1)} mV`;
   element("#board-net-current").textContent = signedPicoamperes(
@@ -285,6 +326,7 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
     element(`#synapse-${receptor}-occupancy`).textContent =
       `${((snapshot.chemical.receptorOccupancyFraction[index] ?? 0) * 100).toFixed(1)}%`;
   }
+  updateNeuronMetrics(snapshot);
 
   const spikeElement = document.querySelector("#spike-count");
   if (spikeElement) spikeElement.textContent = `${snapshot.spikes} spk`;
@@ -379,6 +421,7 @@ function visualAuditReport() {
       overview: "pulsos E/I usam diâmetros distintos e legenda textual",
       laminar: "excitação é cilindro; inibição e TRN são toros",
       cell: "somata E/I usam razões de aspecto opostas",
+      neuron: "soma E/I muda de forma; correntes usam direção, tamanho, posição e tabela",
       electricity: "setas preservam sentido; nós E/I usam círculo/quadrado e shunt usa anel",
       synapse: "vesículas, transmissores, receptores e recaptura têm formas e posições distintas",
     },
@@ -435,6 +478,8 @@ function renderFrame(
   cellLayer.group.rotation.y = rotation * 0.42;
   cellLayer.group.rotation.x = -0.04 + Math.sin(time * 0.11) * 0.02;
   electricalBoardLayer.group.rotation.set(0, 0, 0);
+  neuronLayer.group.rotation.y = rotation * 0.12;
+  neuronLayer.group.rotation.x = -0.04;
   synapseLayer.group.rotation.y = rotation * 0.34;
   synapseLayer.group.rotation.x = -0.08;
 
@@ -449,6 +494,8 @@ function renderFrame(
     laminarLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else if (activeView === "electricity") {
     electricalBoardLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
+  } else if (activeView === "neuron") {
+    neuronLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else if (activeView === "synapse") {
     synapseLayer.update({ current: snapshot, previous: previousSnapshot, alpha });
   } else {
@@ -521,16 +568,56 @@ function showInference(update: BayesianExperimentView): void {
   element("#stimulus-val").textContent = `${Math.round(update.observation * 100)}%`;
 }
 
+function selectCell(cellId: number): void {
+  const parsed = parseCellId(cellId);
+  if (parsed === undefined) throw new Error("célula fora do patch de 12 células");
+  selectedCellId = parsed;
+  cellLayer.setSelectedCell(parsed);
+  neuronLayer.setSelectedCell(parsed);
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-cell-id]")) {
+    const selected = Number(button.dataset.cellId) === parsed;
+    button.setAttribute("aria-pressed", String(selected));
+  }
+  const humanIndex = String(parsed + 1).padStart(2, "0");
+  element("#tab-neuron").textContent = `NEURÔNIO · ${humanIndex}`;
+  element("#neuron-title-index").textContent = humanIndex;
+  element("#cell-selection-status").textContent =
+    `Célula ${humanIndex} selecionada. Pressione Enter para ampliar.`;
+  if (latestSnapshot) {
+    updateNeuronMetrics(latestSnapshot);
+    renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+  }
+}
+
+function enterNeuron(cellId: number, returnFocus?: HTMLElement): void {
+  selectionReturnFocus = returnFocus;
+  selectCell(cellId);
+  setActiveView("neuron");
+  requestAnimationFrame(() => element<HTMLButtonElement>("#neuron-back").focus());
+}
+
+function leaveNeuron(): void {
+  if (activeView !== "neuron") return;
+  setActiveView("cell");
+  const target = selectionReturnFocus ??
+    document.querySelector<HTMLElement>(`[data-cell-id="${selectedCellId}"]`) ??
+    element<HTMLElement>("#tab-cell");
+  selectionReturnFocus = undefined;
+  requestAnimationFrame(() => target.focus());
+}
+
 function setActiveView(view: SimulationView): void {
   activeView = view;
   layers.setVisible(view === "overview");
   laminarLayer.setVisible(view === "laminar");
   cellLayer.setVisible(view === "cell");
+  neuronLayer.setVisible(view === "neuron");
   electricalBoardLayer.setVisible(view === "electricity");
   synapseLayer.setVisible(view === "synapse");
   element("#overview-panel").hidden = view !== "overview";
   element("#laminar-panel").hidden = view !== "laminar";
   element("#cell-panel").hidden = view !== "cell";
+  element("#neuron-panel").hidden = view !== "neuron";
   element("#electricity-panel").hidden = view !== "electricity";
   element("#synapse-panel").hidden = view !== "synapse";
   element("#bayesian-hud").hidden = view !== "overview";
@@ -548,13 +635,64 @@ function setupInterface(): void {
   element("#node-count").textContent = formatCount(brainData.nodes.length);
   element("#synapse-count").textContent = formatCount(brainData.synapses.length);
 
+  const cellSelector = element<HTMLDivElement>("#cell-selector");
+  for (let cellId = 0; cellId < NEURON_CELL_COUNT; cellId += 1) {
+    const button = document.createElement("button");
+    const humanIndex = String(cellId + 1).padStart(2, "0");
+    button.type = "button";
+    button.id = `cell-select-${cellId}`;
+    button.dataset.cellId = String(cellId);
+    button.textContent = humanIndex;
+    button.setAttribute("aria-label", `Selecionar célula ${humanIndex}`);
+    button.setAttribute("aria-pressed", String(cellId === selectedCellId));
+    button.addEventListener("focus", () => selectCell(cellId));
+    button.addEventListener("click", () => enterNeuron(cellId, button));
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "Tab") return;
+      const nextCellId = cellId + (event.shiftKey ? -1 : 1);
+      if (nextCellId < 0 || nextCellId >= NEURON_CELL_COUNT) return;
+      event.preventDefault();
+      element<HTMLButtonElement>(`#cell-select-${nextCellId}`).focus();
+    });
+    cellSelector.appendChild(button);
+  }
+  element<HTMLButtonElement>("#neuron-back").addEventListener("click", leaveNeuron);
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || activeView !== "neuron") return;
+    event.preventDefault();
+    leaveNeuron();
+  });
+
+  let pointerStart: { x: number; y: number } | undefined;
+  renderer.domElement.addEventListener("pointerdown", (event) => {
+    if (activeView === "cell" && event.button === 0) {
+      pointerStart = { x: event.clientX, y: event.clientY };
+    }
+  });
+  renderer.domElement.addEventListener("pointerup", (event) => {
+    if (activeView !== "cell" || !pointerStart || event.button !== 0) return;
+    const moved = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
+    pointerStart = undefined;
+    if (moved > 5) return;
+    const bounds = renderer.domElement.getBoundingClientRect();
+    pointerCoordinates.set(
+      ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+      -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
+    );
+    cellRaycaster.setFromCamera(pointerCoordinates, camera);
+    const cellId = cellLayer.pickCell(cellRaycaster);
+    if (cellId !== undefined) enterNeuron(cellId, element("#tab-cell"));
+  });
+
   const tabButtons = Array.from(
     document.querySelectorAll<HTMLButtonElement>("[role='tab']"),
   );
   for (const button of tabButtons) {
     button.addEventListener("click", () => {
       const view = parseSimulationView(button.dataset.view);
-      if (view) setActiveView(view);
+      if (!view) return;
+      if (view === "neuron") selectionReturnFocus = button;
+      setActiveView(view);
     });
     button.addEventListener("keydown", (event) => {
       const currentIndex = tabButtons.indexOf(button);
@@ -570,6 +708,7 @@ function setupInterface(): void {
       const nextButton = tabButtons[nextIndex];
       const view = parseSimulationView(nextButton.dataset.view);
       if (!view) return;
+      if (view === "neuron") selectionReturnFocus = nextButton;
       setActiveView(view);
       nextButton.focus();
     });
@@ -663,6 +802,7 @@ function setupInterface(): void {
     registerObservation();
   });
   registerObservation();
+  selectCell(selectedCellId);
 }
 
 async function resolveRuntime(): Promise<void> {
@@ -745,6 +885,9 @@ async function init(): Promise<void> {
   cellLayer = new CellRenderLayer();
   cellLayer.setVisible(false);
   cellLayer.mount(renderContext, renderTopology);
+  neuronLayer = new NeuronRenderLayer(brainData.seed);
+  neuronLayer.setVisible(false);
+  neuronLayer.mount(renderContext, renderTopology);
   electricalBoardLayer = new ElectricalBoardLayer();
   electricalBoardLayer.setVisible(false);
   electricalBoardLayer.mount(renderContext, renderTopology);
@@ -825,6 +968,9 @@ async function init(): Promise<void> {
       if (latestSnapshot) {
         renderFrame(latestSnapshot, simulationClock.renderTimeSeconds, rotation);
       }
+    },
+    setSelectedCell(cellId) {
+      selectCell(cellId);
     },
     diagnostics() {
       return {
@@ -907,6 +1053,9 @@ async function init(): Promise<void> {
     },
     electricalBoardAudit() {
       return { ...electricalBoardLayer.audit(), topology: electricalTopology };
+    },
+    neuronAudit() {
+      return neuronLayer.audit();
     },
     createAuditWorker() {
       return new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });

@@ -115,6 +115,27 @@ try {
   if (cell.hidden || !cell.membrane?.endsWith("mV") || !cell.rate?.endsWith("Hz")) {
     throw new Error(`aba celular inválida: ${JSON.stringify(cell)}`);
   }
+  await page.click("#cell-select-3");
+  await page.waitForFunction(
+    () => document.querySelector("#tab-neuron")?.getAttribute("aria-selected") === "true",
+  );
+  const neuron = await page.evaluate(() => ({
+    soma: document.querySelector("#neuron-soma")?.textContent,
+    dendrite: document.querySelector("#neuron-dendrite")?.textContent,
+    adaptation: document.querySelector("#neuron-adaptation")?.textContent,
+    hidden: document.querySelector("#neuron-panel")?.hidden,
+    audit: window.__BRAIN_ENGINE__.neuronAudit(),
+  }));
+  if (
+    neuron.hidden ||
+    !neuron.soma?.endsWith("mV") ||
+    !neuron.dendrite?.endsWith("mV") ||
+    !neuron.adaptation?.endsWith("pA") ||
+    neuron.audit.selectedCellId !== 3 ||
+    !/^[0-9a-f]{16}$/.test(neuron.audit.geometryHash)
+  ) {
+    throw new Error(`aba Neurônio inválida: ${JSON.stringify(neuron)}`);
+  }
   await page.click("#tab-electricity");
   const electricity = await page.evaluate(() => ({
     ampa: document.querySelector("#ampa-current")?.textContent,
@@ -149,7 +170,7 @@ try {
   const lifecycle = await auditWorkerLifecycle(page);
   console.log(
     `Worker Wasm verificado no navegador: schema ${diagnostics.schemaVersion}, ` +
-      `${abi.buffers.length} buffers, cinco hashes, reset/dispose/reinit e cinco abas operantes ` +
+      `${abi.buffers.length} buffers, cinco hashes, reset/dispose/reinit e seis abas operantes ` +
       `(replay ${lifecycle.hashes.chemical})`,
   );
 } finally {

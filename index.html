@@ -28,6 +28,7 @@
       <button id="tab-overview" type="button" role="tab" aria-selected="true" aria-controls="overview-panel" data-view="overview">VISÃO GERAL</button>
       <button id="tab-laminar" type="button" role="tab" aria-selected="false" aria-controls="laminar-panel" data-view="laminar">LÂMINAS</button>
       <button id="tab-cell" type="button" role="tab" aria-selected="false" aria-controls="cell-panel" data-view="cell" tabindex="-1">CÉLULA</button>
+      <button id="tab-neuron" type="button" role="tab" aria-selected="false" aria-controls="neuron-panel" data-view="neuron" tabindex="-1">NEURÔNIO · 01</button>
       <button id="tab-electricity" type="button" role="tab" aria-selected="false" aria-controls="electricity-panel" data-view="electricity" tabindex="-1">ELETRICIDADE</button>
       <button id="tab-synapse" type="button" role="tab" aria-selected="false" aria-controls="synapse-panel" data-view="synapse" tabindex="-1">SINAPSE</button>
     </nav>
@@ -181,6 +182,9 @@
           <div><dt>Passo interno</dt><dd>83.3 µs</dd></div>
           <div><dt>Blend microscópico</dt><dd>100%</dd></div>
         </dl>
+        <div class="section-heading cell-selector-heading"><span>SELEÇÃO</span><span>TAB · ENTER</span></div>
+        <div id="cell-selector" class="cell-selector" aria-label="Selecionar uma das 12 células"></div>
+        <p id="cell-selection-status" class="selection-status" aria-live="polite">Célula 01 selecionada. Pressione Enter para ampliar.</p>
       </section>
 
       <section>
@@ -189,6 +193,43 @@
       </section>
 
       <p class="model-caveat">Escala didática: valores internos em volts, amperes, siemens e segundos; a interface converte apenas para mV, pA e ms.</p>
+    </aside>
+
+    <aside class="glass-panel control-panel neuron-panel" id="neuron-panel" role="tabpanel" aria-labelledby="tab-neuron" hidden>
+      <button id="neuron-back" class="back-button" type="button">← PATCH · ESC</button>
+      <div class="eyebrow">NEURÔNIO <span id="neuron-title-index">01</span> · ABI V7</div>
+      <h1>Uma célula.<br /><span>Mesmo motor.</span></h1>
+      <p class="lede">A vista amplia uma célula selecionada sem mudar equações, passo ou estado. A árvore é ilustrativa e usa um único potencial dendrítico em todos os ramos.</p>
+
+      <div class="metric-strip neuron-metrics" aria-label="Grandezas da célula selecionada">
+        <div><strong id="neuron-soma">−70.0 mV</strong><span>SOMA</span></div>
+        <div><strong id="neuron-dendrite">−70.0 mV</strong><span>DENDRITO</span></div>
+        <div><strong id="neuron-adaptation">0.0 pA</strong><span>ADAPTAÇÃO</span></div>
+      </div>
+
+      <section aria-labelledby="neuron-table-heading">
+        <div class="section-heading" id="neuron-table-heading"><span>EQUIVALENTE TEXTUAL</span><span>VALOR · ORIGEM</span></div>
+        <table class="electrical-table neuron-table">
+          <caption>Leitura tabular da célula selecionada</caption>
+          <tbody>
+            <tr><th scope="row">Classe</th><td id="neuron-kind">E · excitatória</td><td><code>cellPatch.kinds[i]</code></td></tr>
+            <tr><th scope="row">AMPA</th><td id="neuron-ampa">0.0 pA</td><td><code>cellPatch.ampaAmperes[i]</code></td></tr>
+            <tr><th scope="row">NMDA</th><td id="neuron-nmda">0.0 pA</td><td><code>cellPatch.nmdaAmperes[i]</code></td></tr>
+            <tr><th scope="row">GABA-A</th><td id="neuron-gabaa">0.0 pA</td><td><code>cellPatch.gabaaAmperes[i]</code></td></tr>
+            <tr><th scope="row">GABA-B</th><td id="neuron-gabab">0.0 pA</td><td><code>cellPatch.gababAmperes[i]</code></td></tr>
+            <tr><th scope="row">Eventos</th><td id="neuron-events">0 eventos</td><td><code>cellSpikeEvents.cellIds</code></td></tr>
+            <tr><th scope="row">Tempos</th><td id="neuron-event-window">—</td><td><code>timeOffsetsSeconds</code></td></tr>
+            <tr><th scope="row">Geometria</th><td id="neuron-geometry-hash">—</td><td><code>seed + cellId + stream</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-heading"><span>LEITURA VISUAL</span><span>SEM GRADIENTE</span></div>
+        <p class="model-copy">A forma do soma distingue E/I; as setas distinguem receptor, magnitude e sentido. O anel âmbar lê adaptação. Um marcador axonal só aparece para evento carimbado da célula selecionada.</p>
+      </section>
+
+      <p class="model-caveat">Morfologia procedural não identifica tipo celular real. Axônio e nós são topologia ilustrativa; o marcador é estático e não reivindica velocidade de condução. Compartimentos proximal/distal pertencem ao gate R09-E.</p>
     </aside>
 
     <aside class="glass-panel control-panel electricity-panel" id="electricity-panel" role="tabpanel" aria-labelledby="tab-electricity" hidden>

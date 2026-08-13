@@ -1,6 +1,6 @@
 # Estratégia canônica de validação · BRAIN PRO
 
-**Revisão:** 5 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A/R09-B/R09-C validadas
+**Revisão:** 6 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A/R09-B/R09-C/R09-D validadas
 
 Quatro perguntas permanecem separadas: o cálculo é reproduzível, respeita
 limites, converge e produz o fenômeno definido pelo experimento? Uma única
@@ -21,6 +21,7 @@ artefato de promoção.
 | experimento de tarefa R09-A | schema/adapters, controle nulo, fixture e replay | `bayesian-observation-v1.json` | posterior isolada do drive; contexto interativo nulo |
 | eventos celulares R09-B | fixture exata, ABI/Worker e renderer | `cell-spike-events-v1.json` + auditoria de lifecycle | IDs/offsets carimbados pelo Rust; limite e backpressure provados |
 | Prancha Elétrica R09-C | observáveis puros, scene graph, DOM e auditoria | [auditoria R09-C](AUDIT_0.9_R09_C.md) | 10/11 draws, equivalente textual, hashes invariantes e zero objeto sem proveniência |
+| seleção/vista Neurônio R09-D | seleção convergente, geometria determinística, bindings e auditoria | [auditoria R09-D](AUDIT_0.9_R09_D.md) | 10 draws, 8 valores, zero rebuild/frame, foco restaurado e cinco hashes invariantes |
 
 O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
@@ -47,6 +48,7 @@ ambiente e dos envelopes registrados.
 | QA-090 | modelo de tarefa tem schema, owner, limite, controle nulo e replay; não atravessa a fronteira científica implicitamente |
 | QA-091 | evento celular tem carimbo temporal, ordem canônica, teto, hash próprio e transporte sem inferência visual |
 | QA-092 | Prancha Elétrica prova origem/unidade, scene graph separado, orçamento, acessibilidade e invariância dos cinco hashes |
+| QA-093 | seleção e vista Neurônio provam convergência de ID, teclado/foco, geometria determinística, evento carimbado e invariância dos cinco hashes |
 
 ## Camadas de evidência
 
@@ -374,6 +376,21 @@ um artefato versionado em cada linha:
 | orçamento | 12 bytes por evento; teto teórico de 49.152 bytes por snapshot |
 | lote vazio | é válido no cenário integrado padrão; a fixture não vazia prova separadamente geração, ordenação e replay |
 
+### R09-D · seleção e vista Neurônio
+
+| Gate | Evidência executável |
+| :-- | :-- |
+| seleção fechada | parser aceita somente IDs inteiros `0..11`; raycast e lista endereçam o mesmo `selectedCellId` |
+| teclado e foco | `Tab` percorre a lista sem prender as extremidades; `Enter` amplia; `Escape` retorna à célula e restaura o foco de origem |
+| geometria | repetição de `seed + cellId + stream` reproduz arrays e hash FNV-1a de 64 bits; outro ID muda o hash |
+| morfologia honesta | toda a árvore usa somente `dendriteVolts[i]`; não existe gradiente proximal/distal nem alegação de tipo celular |
+| evento visual | marcador estático aparece somente se `cellSpikeEvents.cellIds` contém a seleção; `cellPatch.spiked` isolado não o autoriza |
+| observáveis | soma, dendrito, adaptação e quatro correntes têm unidade, caminho de origem e equivalente tabular |
+| invariância | seleção `1 → 4 → 1`, vista e câmera preservam os cinco hashes com relógio congelado |
+| orçamento | 10 draws, 8 valores publicados por snapshot e zero reconstrução geométrica por frame |
+| acessibilidade visual | seis tabs, 12 controles celulares, captura colorida/monocromática e viewport móvel passam no navegador real |
+| rollback | desabilitar a sexta vista mantém o patch de 12 células e não exige migração de ABI ou estado |
+
 Os contratos executáveis atuais são:
 
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
@@ -432,7 +449,9 @@ erro e estabilidade no regime em que será usado.
 | ABI-001..004/012 | schema 7, 36 buffers, ordens/unidades, eventos e compatibilidade v5 | Cargo, Vitest, Wasm browser |
 | WRK-001..003 | fila serial, cotas, backpressure, fallback inerte, reset/dispose | Vitest + navegador forçando falha |
 | UI-001..010 | estado, unidades, controles e acessibilidade | unitário/DOM/E2E |
+| UI-021/QA-093 | seleção celular, `Tab`/`Enter`/`Escape`, foco e hashes invariantes | Vitest + auditoria de navegador |
 | GFX-001..010 | hash invariável, proveniência e estado→pixel | testes estruturais + render target + capturas |
+| GFX-050/AST-010 | geometria determinística, origem visual e ausência de evento inventado | Vitest + auditoria de navegador |
 | AST/VAS | fonte/licença/sem animação sem estado | manifesto de asset + auditoria visual |
 | SEC | inputs/cotas/CSP/dependências/import | unitário, fuzz/property, SCA e revisão |
 | PERF | custo por subsistema/ambiente | relatório versionado |

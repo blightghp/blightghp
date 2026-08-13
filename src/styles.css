@@ -163,11 +163,54 @@ a:focus-visible {
 
 .laminar-panel .lede { max-width: 250px; }
 .laminar-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.cell-panel .lede, .electricity-panel .lede { max-width: 255px; }
+.cell-panel .lede, .neuron-panel .lede, .electricity-panel .lede { max-width: 255px; }
 .cell-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .cell-metrics strong { white-space: nowrap; }
+.neuron-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.neuron-metrics strong { font-size: 9px; white-space: nowrap; }
 .electrical-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .electrical-metrics strong { font-size: 9px; white-space: nowrap; }
+
+.cell-selector-heading { margin-top: 16px; }
+.cell-selector {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+.cell-selector button,
+.back-button {
+  border: 1px solid rgba(73, 157, 229, .24);
+  border-radius: 6px;
+  color: #7895b0;
+  background: rgba(7, 24, 43, .64);
+  font: 600 8px/1 "JetBrains Mono", monospace;
+  letter-spacing: .08em;
+  cursor: pointer;
+}
+.cell-selector button { min-height: 28px; }
+.cell-selector button[aria-pressed="true"] {
+  color: #eafcff;
+  border-color: #6dccff;
+  background: rgba(35, 146, 238, .28);
+  box-shadow: inset 0 0 0 1px rgba(142, 223, 255, .16);
+}
+.selection-status {
+  min-height: 2.6em;
+  margin: 9px 0 0;
+  color: #5f809e;
+  font-size: 8px;
+  line-height: 1.35;
+}
+.back-button {
+  min-height: 28px;
+  margin-bottom: 14px;
+  padding: 0 10px;
+}
+.back-button:hover,
+.cell-selector button:hover { border-color: #6dccff; color: #bde9ff; }
+.neuron-table td:nth-child(2) { overflow-wrap: anywhere; white-space: normal; }
+.neuron-table tr:last-child td:nth-child(2) { font-size: 7px; }
 
 .model-copy {
   margin: 0;

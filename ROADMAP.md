@@ -1,14 +1,14 @@
 # Roadmap canônico · BRAIN PRO
 
-**Estado documental:** vigente desde 12 de agosto de 2026
+**Estado documental:** vigente desde 13 de agosto de 2026
 
 **Produto declarado nos manifests:** `0.9.0`
 
 **Estado de promoção:** 0.8 promovida em 12 de agosto de 2026
 
-**Estado de desenvolvimento:** 0.9 em construção; R09-A, R09-B e R09-C concluídas
+**Estado de desenvolvimento:** 0.9 em construção; R09-A, R09-B, R09-C e R09-D concluídas
 
-**Próximo gate:** `R09-D` · seleção e vista Neurônio
+**Próximo gate:** `R09-E` · dendrito multicompartimental
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -45,7 +45,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 10. A equipe pequena é um requisito arquitetural: uma fonte por assunto, poucos
     contratos e rollback explícito.
 
-## Estado real em 12 de agosto de 2026
+## Estado real em 13 de agosto de 2026
 
 | Eixo | Valor verdadeiro | Evidência | Observação |
 | :-- | :-- | :-- | :-- |
@@ -75,7 +75,8 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | inferência Bayesiana de tarefa | EXPERIMENTAL E ISOLADA | `experiment.ts`, `inference.ts` | schema 1, fixture, controle nulo e replay | posterior é apenas apresentada; estímulo interativo exige contexto nulo |
 | eventos celulares carimbados | IMPLEMENTADO E VALIDADO EM R09-B | `cell_patch`, `simulation`, ABI/Worker | fixture, hash próprio, browser e lifecycle | lote limitado a 4.096; cenário padrão pode legitimamente produzir lote vazio |
 | Prancha Elétrica | IMPLEMENTADA E VALIDADA EM R09-C | `ElectricalBoardLayer`, DOM e auditoria | testes estruturais, orçamento e navegador | esquema do patch; atraso/ganho macro aparecem separados e não são atribuídos às células |
-| neurônio resolvido, cortes, vascular, atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
+| seleção e vista Neurônio | IMPLEMENTADAS E VALIDADAS EM R09-D | `CellRenderLayer`, `NeuronRenderLayer`, DOM e auditoria | raycast/lista, teclado, hash geométrico, navegador e invariância | árvore ilustrativa usa um único valor dendrítico; sem propagação ou tipo celular real |
+| cortes, vascular e atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
 
 ## Histórico verificável
 
@@ -241,10 +242,17 @@ Seleciona uma das 12 células por clique e teclado e apresenta soma, dendrito
 único, adaptação e correntes publicadas. A geometria inicial é ilustrativa e o
 dendrito inteiro usa um único valor; nenhum gradiente é inventado.
 
-- **Estado:** planejada; **IDs:** UI-021, GFX-050, AST-010, QA-093.
+- **Estado:** concluída em 13 de agosto de 2026; **IDs:** UI-021, GFX-050,
+  AST-010, QA-093; **evidência:** [auditoria R09-D](AUDIT_0.9_R09_D.md).
 - **Aceite:** seleção não muta motor; `Tab`/`Enter`/`Escape`; hash de geometria
   determinístico; evento visual consome exclusivamente o lote carimbado em R09-B.
 - **Rollback:** voltar ao patch de 12 células. **Complexidade/confiança:** média / alta.
+
+O corte fechou com seleção local por raycast e lista de 12 células, navegação
+`Tab`/`Enter`/`Escape`, foco restaurado e scene graph próprio. A morfologia usa
+stream de apresentação, `seed + cellId` e hash FNV-1a de 64 bits. A vista custa
+10 draws, lê oito valores celulares por snapshot e mantém um marcador estático
+somente quando o lote carimbado contém a célula; nenhum hash científico muda.
 
 ### R09-E · dendrito multicompartimental
 

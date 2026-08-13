@@ -1,6 +1,6 @@
 # Especificação gráfica e de proveniência · BRAIN PRO
 
-**Revisão:** 2 · baseline Three.js/WebGL · produto 0.9.0
+**Revisão:** 3 · baseline Three.js/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
 preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
@@ -21,8 +21,10 @@ fidelidade entre estado calculado e estado mostrado.
 | GFX-008 | animação discreta nasce de evento publicado. |
 | GFX-009 | movimento reduzido mantém equivalente estático. |
 | GFX-010 | vínculo estado→objeto é estruturado e auditável, não comentário informal. |
+| GFX-050 | a vista Neurônio possui scene graph próprio, geometria determinística e evento visual autorizado exclusivamente pelo lote carimbado. |
 | AST-001 | anatomia detalhada não implica validação biológica. |
 | AST-002 | estrutura entra por função, orientação decorativa ou proveniência topológica declarada. |
+| AST-010 | morfologia procedural declara seed, stream, hash e limite ilustrativo; não afirma tipo celular real. |
 | VAS-001 | fluxo/perfusão/oxigenação só animam com estado/modelo correspondente. |
 | ELE-001 | Prancha Elétrica mostra grandezas com unidade e origem operacional. |
 | ELE-002 | Prancha Elétrica possui scene graph próprio e não reutiliza a cena Célula. |
@@ -201,7 +203,7 @@ num corte encefálico como se fosse campo volumétrico.
 | região | cm | campo por vértice | incorporada à Visão Geral |
 | coluna | mm | L1–L6 + relé/TRN | implementada |
 | patch | centenas de µm | 12 células | implementada |
-| neurônio | dezenas de µm | uma célula/compartimentos | planejada |
+| neurônio | dezenas de µm | uma célula/compartimentos | implementada em R09-D |
 | sinapse | µm | microdomínio químico | implementada com escala exagerada rotulada |
 
 ### Seleção
@@ -216,12 +218,16 @@ Gradiente só é autorizado após o motor publicar compartimentos proximal/dista
 com convergência. Morfologia procedural usa seed/fluxo próprios e hash de
 geometria; não afirma tipo celular real.
 
+R09-D materializa essa regra em `NeuronRenderLayer`: `seed + cellId` endereçam
+um stream exclusivo de apresentação e o hash FNV-1a de 64 bits cobre dendritos,
+axônio e nós. A geometria só é reconstruída ao trocar a seleção, nunca por frame.
+
 ### Propagação
 
-Só começa após evento celular com timestamp publicado. A velocidade visual é
-metadado de apresentação se o motor continuar pontual e deve ser rotulada como
-tal. Sem timestamp, a propagação é desabilitada; a flag por tick não autoriza
-inventar fase entre snapshots.
+Propagação permanece desabilitada: R09-D mostra apenas um marcador estático no
+axônio quando `cellSpikeEvents.cellIds` contém a célula selecionada e lista os
+offsets publicados no equivalente textual. Não deriva fase da flag instantânea,
+não anima velocidade e não reivindica condução.
 
 ### Elementos
 
