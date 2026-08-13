@@ -38,6 +38,9 @@ try {
   );
   const diagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   const abi = await page.evaluate(() => window.__BRAIN_ENGINE__.abiEvidence());
+  const materialProfiles = await page.evaluate(
+    () => window.__BRAIN_ENGINE__.materialProfileAudit(),
+  );
   if (
     diagnostics.runtime !== "rust-wasm" ||
     diagnostics.schemaVersion !== 7 ||
@@ -61,6 +64,29 @@ try {
     Object.values(abi.hashes).some((hash) => !/^[0-9a-f]{16}$/.test(hash))
   ) {
     throw new Error(`layout ABI inesperado: ${JSON.stringify(abi)}`);
+  }
+  const expectedViews = [
+    "overview",
+    "laminar",
+    "cell",
+    "neuron",
+    "electricity",
+    "synapse",
+  ];
+  if (
+    JSON.stringify(Object.keys(materialProfiles)) !== JSON.stringify(expectedViews) ||
+    Object.values(materialProfiles).some((report) =>
+      report.activeProfile !== "schematic" ||
+      report.totalRenderableObjects <= 0 ||
+      report.matterObjects + report.emissionObjects !== report.totalRenderableObjects ||
+      report.undeclaredObjects !== 0 ||
+      report.missingStateBindings !== 0 ||
+      !report.contractReady
+    )
+  ) {
+    throw new Error(
+      `prontidão de materialidade inesperada: ${JSON.stringify(materialProfiles)}`,
+    );
   }
   if (faults.length > 0) {
     throw new Error(`erros no navegador: ${faults.join(" | ")}`);
@@ -171,7 +197,7 @@ try {
   console.log(
     `Worker Wasm verificado no navegador: schema ${diagnostics.schemaVersion}, ` +
       `${abi.buffers.length} buffers, cinco hashes, reset/dispose/reinit e seis abas operantes ` +
-      `(replay ${lifecycle.hashes.chemical})`,
+      `(replay ${lifecycle.hashes.chemical}; materialidade ${Object.keys(materialProfiles).length}/6)`,
   );
 } finally {
   await browser?.close();
