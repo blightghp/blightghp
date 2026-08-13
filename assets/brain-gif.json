@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
-  "sourceCommit": "76ae76c67d0d2693c43656ba6155ad0420a3f3b3",
-  "gifSha256": "7cc2852705767e6c44d71d90844039de2188ab67da8086434a219ec90c80810b",
+  "schemaVersion": 2,
+  "sourceCommit": "4f873b4d51f038532df52b7beb56736a5b64d685",
+  "gifSha256": "b2b14ee2381cf1217392c8e74a8f60091ff4a2b4d2c818ae5ebf0d69bf9909ff",
   "engine": {
     "runtime": "rust-wasm",
     "abiSchemaVersion": 7,
@@ -19,11 +19,12 @@
     "frameDelayMilliseconds": 120,
     "loopDurationSeconds": 7.2,
     "framesByView": {
-      "overview": 18,
-      "laminar": 10,
-      "cell": 10,
-      "electricity": 10,
-      "synapse": 12
+      "overview": 15,
+      "laminar": 9,
+      "cell": 9,
+      "neuron": 9,
+      "electricity": 9,
+      "synapse": 9
     }
   }
 }
