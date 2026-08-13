@@ -1,6 +1,6 @@
 # Estratégia canônica de validação · BRAIN PRO
 
-**Revisão:** 7 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A/R09-B/R09-C/R09-D validadas
+**Revisão:** 8 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A..R09-F/R10-A validadas
 
 Quatro perguntas permanecem separadas: o cálculo é reproduzível, respeita
 limites, converge e produz o fenômeno definido pelo experimento? Uma única
@@ -23,6 +23,7 @@ artefato de promoção.
 | Prancha Elétrica R09-C | observáveis puros, scene graph, DOM e auditoria | [auditoria R09-C](AUDIT_0.9_R09_C.md) | 10/11 draws, equivalente textual, hashes invariantes e zero objeto sem proveniência |
 | seleção/vista Neurônio R09-D | seleção convergente, geometria determinística, bindings e auditoria | [auditoria R09-D](AUDIT_0.9_R09_D.md) | 10 draws, 8 valores, zero rebuild/frame, foco restaurado e cinco hashes invariantes |
 | materialidade e planos de corte R09-F | manifesto PBR, clipping/stencil, sonda, fallback, hash e GIF | [auditoria R09-F](AUDIT_0.9_R09_F.md) | 25 materiais elegíveis, 9/18 draws de corte, zero geometria/binding alterado e cinco hashes invariantes |
+| catálogo anatômico R10-A | schema/import, hierarquia, bindings de cena, busca, árvore/picking e navegador | [auditoria R10-A](AUDIT_0.10_R10_A.md) | 32 entradas, 98 objetos cobertos, zero asset externo/custo gráfico e cinco hashes invariantes |
 
 O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
@@ -52,6 +53,8 @@ ambiente e dos envelopes registrados.
 | QA-093 | seleção e vista Neurônio provam convergência de ID, teclado/foco, geometria determinística, evento carimbado e invariância dos cinco hashes |
 | QA-094 | película 3D prova cobertura das seis vistas, elegibilidade por passe, fallback atômico, acessibilidade, custo e invariância antes da promoção |
 | QA-101 | corte prova quatro eixos/laje, opt-in local, tampa stencil, sonda com unidade/domínio, teclado/touch, orçamento e cleanup |
+| QA-110 | catálogo anatômico prova schema/cotas, unicidade/hierarquia, fonte/licença/transformação/evidência, cobertura por objeto, busca/picking/acessibilidade, custo e invariância |
+| SEC-020 | import de catálogo rejeita JSON malformado, campos desconhecidos, excesso de 256 KiB, referências quebradas e asset externo sem SHA-256 |
 
 ## Camadas de evidência
 
@@ -428,6 +431,27 @@ invariância dos cinco hashes com o relógio congelado; manifesto GIF schema 3;
 captura comparativa, teclado/touch, monocromia, movimento reduzido e orçamento
 GPU e cinco hashes invariantes. Qualquer falha mantém ou restaura o esquemático.
 
+### R10-A · catálogo anatômico com proveniência
+
+O gate executa schema 1 estrito, cota de 256 KiB, IDs únicos, raiz única,
+hierarquia acíclica, referências fechadas de fonte/licença/transformação e
+SHA-256 obrigatório para eventual asset externo. O artefato embutido possui 32
+entradas, cinco fontes internas, cinco transformações, zero asset externo e
+fingerprint FNV-1a `c7ae661e5b2570cb`.
+
+Nas seis vistas, `anatomyCatalogAudit()` percorre 98 objetos renderizáveis: 58
+possuem binding direto e 40 declaram explicitamente que são estado/overlay não
+anatômico. Zero objeto fica sem declaração, ID conhecido, afirmação permitida ou
+limitação. Busca acento-insensível, árvore, breadcrumbs, API de auditoria e
+picking convergem no mesmo ID.
+
+O navegador real testa seleção entre Visão Geral, Lâminas, Neurônio e Sinapse,
+live region, viewport `390×844`, ausência de overflow e cinco hashes congelados.
+O catálogo não cria geometria, material, textura, render target ou draw call; o
+relatório exige delta zero antes/depois. Evidência versionada:
+[AUDIT_0.10_R10_A.md](AUDIT_0.10_R10_A.md) e
+`artifacts/anatomy-audit/anatomy-audit.json`.
+
 Os contratos executáveis atuais são:
 
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
@@ -493,6 +517,7 @@ erro e estabilidade no regime em que será usado.
 | GFX-050/AST-010 | geometria determinística, origem visual e ausência de evento inventado | Vitest + auditoria de navegador |
 | MOD-100/ENG-025/QA-100 | cabo de três compartimentos, conservação, convergência, determinismo e orçamento | Cargo + replay + auditoria R09-E |
 | AST/VAS | fonte/licença/sem animação sem estado | manifesto de asset + auditoria visual |
+| AST-030..034/UI-030/SEC-020/QA-110 | catálogo, binding/exclusão, busca/picking, import seguro, custo e invariância | Vitest + `npm run audit:anatomy` + auditoria R10-A |
 | SEC | inputs/cotas/CSP/dependências/import | unitário, fuzz/property, SCA e revisão |
 | PERF | custo por subsistema/ambiente | relatório versionado |
 

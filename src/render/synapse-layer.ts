@@ -1,5 +1,10 @@
 import * as THREE from "three";
+import { ANATOMY_IDS } from "../anatomy";
 import type { NeuralSnapshot } from "../protocol";
+import {
+  declareAnatomicalBinding,
+  declareNonAnatomical,
+} from "./anatomical-provenance";
 import {
   declareVisual,
   disposeObjectTree,
@@ -106,6 +111,7 @@ export class SynapseRenderLayer implements RenderLayer {
     this.bouton.name = "presynaptic-bouton";
     this.bouton.position.y = 0.34;
     declareVisual(this.bouton, "matter", "topology");
+    declareAnatomicalBinding(this.bouton, ANATOMY_IDS.presynapticBouton);
     this.group.add(this.bouton);
 
     this.postsynapticMembrane = new THREE.Mesh(
@@ -121,6 +127,10 @@ export class SynapseRenderLayer implements RenderLayer {
     this.postsynapticMembrane.name = "postsynaptic-membrane";
     this.postsynapticMembrane.position.y = -0.5;
     declareVisual(this.postsynapticMembrane, "matter", "topology");
+    declareAnatomicalBinding(
+      this.postsynapticMembrane,
+      ANATOMY_IDS.postsynapticMembrane,
+    );
     this.group.add(this.postsynapticMembrane);
 
     this.cleftRim = new THREE.Mesh(
@@ -137,6 +147,7 @@ export class SynapseRenderLayer implements RenderLayer {
     this.cleftRim.rotation.x = Math.PI / 2;
     this.cleftRim.position.y = -0.41;
     declareVisual(this.cleftRim, "matter", "topology");
+    declareAnatomicalBinding(this.cleftRim, ANATOMY_IDS.synapticCleft);
     this.group.add(this.cleftRim);
 
     this.vesicles = new THREE.InstancedMesh(
@@ -157,6 +168,7 @@ export class SynapseRenderLayer implements RenderLayer {
       transform: "available fraction to visible vesicle count",
       redundancy: ["size", "position", "label"],
     });
+    declareAnatomicalBinding(this.vesicles, ANATOMY_IDS.vesicleReserve);
     this.group.add(this.vesicles);
 
     for (let transmitter = 0; transmitter < TRANSMITTER_COUNT; transmitter += 1) {
@@ -179,6 +191,10 @@ export class SynapseRenderLayer implements RenderLayer {
         transform: "concentration to particle count/scale by transmitter",
         redundancy: ["size", "position", "label"],
       });
+      declareNonAnatomical(
+        cloud,
+        "Transmitter concentration is published chemical state, not anatomy.",
+      );
       this.transmitterClouds.push(cloud);
       this.group.add(cloud);
 
@@ -201,6 +217,10 @@ export class SynapseRenderLayer implements RenderLayer {
         transform: "latest event amount to release-ring opacity/scale",
         redundancy: ["position", "size", "label"],
       });
+      declareNonAnatomical(
+        releaseSite,
+        "Release is a published chemical event marker, not anatomy.",
+      );
       this.releaseSites.push(releaseSite);
       this.group.add(releaseSite);
 
@@ -223,6 +243,10 @@ export class SynapseRenderLayer implements RenderLayer {
         transform: "cleared delta to lateral recapture ring",
         redundancy: ["position", "orientation", "label"],
       });
+      declareNonAnatomical(
+        recapture,
+        "Recapture is a published removal-state indicator, not anatomy.",
+      );
       this.recaptureSites.push(recapture);
       this.group.add(recapture);
     }
@@ -245,6 +269,7 @@ export class SynapseRenderLayer implements RenderLayer {
       transform: "receptor family and occupancy to position/scale",
       redundancy: ["position", "size", "label"],
     });
+    declareAnatomicalBinding(this.receptorSites, ANATOMY_IDS.receptorSite);
     this.group.add(this.receptorSites);
   }
 

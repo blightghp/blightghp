@@ -1,8 +1,13 @@
 import * as THREE from "three";
 import { ConvexGeometry } from "three/examples/jsm/geometries/ConvexGeometry.js";
+import { ANATOMY_IDS } from "../anatomy";
 import type { BrainData, BrainRegion } from "../brain";
 import type { NeuralSnapshot } from "../protocol";
 import type { BrainSettings } from "../schema";
+import {
+  declareAnatomicalBinding,
+  declareNonAnatomical,
+} from "./anatomical-provenance";
 import {
   declareVisual,
   disposeObjectTree,
@@ -53,6 +58,13 @@ const MAX_VISIBLE_SIGNALS = 300;
 export const PALETTE = COLOR_TOKENS;
 
 export const REGION_COLORS: Record<BrainRegion, THREE.Color> = REGION_COLOR_TOKENS;
+
+export const REGION_ANATOMY_IDS: Readonly<Record<BrainRegion, string>> = {
+  leftHemi: ANATOMY_IDS.leftHemisphere,
+  rightHemi: ANATOMY_IDS.rightHemisphere,
+  cerebellum: ANATOMY_IDS.cerebellum,
+  stem: ANATOMY_IDS.brainstem,
+};
 
 export function interpolatePublishedValue(
   current: number,
@@ -138,6 +150,7 @@ export class BrainRenderLayers implements RenderLayer {
           depthWrite: false,
         }),
       );
+      points.name = `${region}-activity-points`;
       this.pointVisuals.push({ nodeIndices, geometry, baseColor: REGION_COLORS[region].clone() });
       declareVisual(points, "emission", "state", {
         field: `activations[region=${region}]`,
@@ -145,6 +158,7 @@ export class BrainRenderLayers implements RenderLayer {
         transform: "base-to-white color ramp and point opacity",
         redundancy: ["position", "size"],
       });
+      declareAnatomicalBinding(points, REGION_ANATOMY_IDS[region]);
       this.addRegionObject(region, points);
       this.createShell(region, pointsForRegion);
     }
@@ -188,12 +202,17 @@ export class BrainRenderLayers implements RenderLayer {
           depthWrite: true,
         }),
       );
+      lines.name = `network-connections-${regions.join("-")}`;
       declareVisual(lines, "matter", "state", {
         field: "weights[synapse]",
         unit: "model weight",
         transform: "absolute weight to line opacity",
         redundancy: ["position"],
       });
+      declareAnatomicalBinding(
+        lines,
+        regions.length === 1 ? REGION_ANATOMY_IDS[regions[0]] : ANATOMY_IDS.encephalon,
+      );
       this.connectionVisuals.push({ records, regions, lines, geometry, baseColor });
       this.group.add(lines);
     }
@@ -211,12 +230,17 @@ export class BrainRenderLayers implements RenderLayer {
       MAX_VISIBLE_SIGNALS * TRAIL_LENGTH,
     );
     this.pulseMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.pulseMesh.name = "published-network-signals";
     declareVisual(this.pulseMesh, "emission", "state", {
       field: "signals.{progress,strength,inhibitory}",
       unit: "fraction/model strength/class",
       transform: "path position, scale, diameter class and color token",
       redundancy: ["position", "size", "label"],
     });
+    declareNonAnatomical(
+      this.pulseMesh,
+      "Published network events are state signals, not anatomical structures.",
+    );
     this.group.add(this.pulseMesh);
   }
 
@@ -279,6 +303,7 @@ export class BrainRenderLayers implements RenderLayer {
       transform: "regional mean to shell opacity",
       redundancy: ["position", "shape"],
     });
+    declareAnatomicalBinding(shell, REGION_ANATOMY_IDS[region]);
     this.shellVisuals.push({ region, material });
     this.addRegionObject(region, shell);
   }

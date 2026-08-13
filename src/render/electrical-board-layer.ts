@@ -1,6 +1,11 @@
 import * as THREE from "three";
+import { ANATOMY_IDS } from "../anatomy";
 import type { BrainData } from "../brain";
 import type { NeuralSnapshot } from "../protocol";
+import {
+  declareAnatomicalBinding,
+  declareNonAnatomical,
+} from "./anatomical-provenance";
 import {
   declareVisual,
   disposeObjectTree,
@@ -278,6 +283,7 @@ export class ElectricalBoardLayer implements RenderLayer {
     board.name = "electrical-board-surface";
     board.position.z = -0.08;
     declareVisual(board, "matter", "decoration");
+    declareNonAnatomical(board, "The electrical board is a didactic presentation substrate.");
     this.group.add(board);
 
     const grid = new THREE.LineSegments(
@@ -292,6 +298,7 @@ export class ElectricalBoardLayer implements RenderLayer {
     );
     grid.name = "electrical-board-grid";
     declareVisual(grid, "matter", "decoration");
+    declareNonAnatomical(grid, "The electrical grid is a didactic presentation guide.");
     this.group.add(grid);
 
     this.excitatoryNodes = new THREE.InstancedMesh(
@@ -312,6 +319,7 @@ export class ElectricalBoardLayer implements RenderLayer {
       transform: "excitatory class to circle; membrane voltage to radius and luminance",
       redundancy: ["shape", "size", "label"],
     });
+    declareAnatomicalBinding(this.excitatoryNodes, ANATOMY_IDS.soma);
     this.group.add(this.excitatoryNodes);
 
     this.inhibitoryNodes = new THREE.InstancedMesh(
@@ -332,6 +340,7 @@ export class ElectricalBoardLayer implements RenderLayer {
       transform: "inhibitory class to square; membrane voltage to radius and luminance",
       redundancy: ["shape", "size", "label"],
     });
+    declareAnatomicalBinding(this.inhibitoryNodes, ANATOMY_IDS.soma);
     this.group.add(this.inhibitoryNodes);
 
     this.voltageBars = new THREE.InstancedMesh(
@@ -353,6 +362,10 @@ export class ElectricalBoardLayer implements RenderLayer {
       transform: "rest-to-threshold interval to anchored bar height",
       redundancy: ["size", "position", "label"],
     });
+    declareNonAnatomical(
+      this.voltageBars,
+      "Voltage bars are quantitative state gauges, not anatomical structures.",
+    );
     this.group.add(this.voltageBars);
 
     this.conductanceRings = new THREE.InstancedMesh(
@@ -373,6 +386,10 @@ export class ElectricalBoardLayer implements RenderLayer {
       transform: "effective conductance to ring radius; GABA-A reversal proximity to shunt token",
       redundancy: ["size", "shape", "label"],
     });
+    declareNonAnatomical(
+      this.conductanceRings,
+      "Effective-conductance rings are derived state gauges, not anatomy.",
+    );
     this.group.add(this.conductanceRings);
 
     const arrowGeometry = makeArrowGeometry();
@@ -402,6 +419,10 @@ export class ElectricalBoardLayer implements RenderLayer {
           transform: "signed current to arrow direction; magnitude to arrow thickness and luminance",
           redundancy: ["orientation", "size", "position", "label"],
         });
+        declareNonAnatomical(
+          mesh,
+          "Signed receptor-current paths are model-state projections, not anatomy.",
+        );
         this.group.add(mesh);
         return { name, field, reversalVolts, color, side, yOffset, mesh };
       },
@@ -427,6 +448,10 @@ export class ElectricalBoardLayer implements RenderLayer {
       transform: "stamped event membership to static ring marker; refreshed only on event hash change",
       redundancy: ["shape", "size", "label"],
     });
+    declareNonAnatomical(
+      this.eventMarkers,
+      "Stamped-event markers are published event indicators, not anatomy.",
+    );
     this.group.add(this.eventMarkers);
     this.setBoardDetail("cellular");
   }

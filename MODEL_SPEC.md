@@ -1,6 +1,6 @@
 # Especificação matemática e epistemológica · BRAIN PRO
 
-**Revisão:** 3 · produto observado 0.9.0 · modelos com schema próprio
+**Revisão:** 4 · produto observado 0.9.0 · modelos com schema próprio · R10-A sem modelo novo
 
 Esta é a fonte canônica das perguntas, variáveis, equações, métodos, hipóteses e
 limites do motor. Ela não transforma a fisiologia em algo que o código ainda não
@@ -34,6 +34,12 @@ Fotorealismo, PBR, translucidez ou SSS também não alteram esta classe. Quando 
 película visual sugerir espessura, propagação ou microestrutura não calculadas,
 a legenda deve negar explicitamente essa leitura e o fallback esquemático
 permanece a referência.
+
+O catálogo anatômico R10-A reutiliza esses rótulos como metadados de evidência,
+mas não registra um novo modelo, variável ou observável. `MODEL_BOUND` significa
+apenas que a entrada visual aponta para um objeto já publicado pelo modelo; não
+eleva a geometria procedural a evidência anatômica. Seu fingerprint não integra
+nenhum dos cinco domínios científicos.
 
 ## Registro dos modelos atuais
 

@@ -1,6 +1,11 @@
 import * as THREE from "three";
+import { ANATOMY_IDS } from "../anatomy";
 import type { NeuralSnapshot } from "../protocol";
 import { interpolatePublishedValue } from "./brain-layer";
+import {
+  declareAnatomicalBinding,
+  declareNonAnatomical,
+} from "./anatomical-provenance";
 import {
   declareVisual,
   disposeObjectTree,
@@ -341,6 +346,7 @@ export class NeuronRenderLayer implements RenderLayer {
       transform: "cell class to aspect ratio; membrane voltage to scale and luminance",
       redundancy: ["shape", "size", "label"],
     });
+    declareAnatomicalBinding(this.soma, ANATOMY_IDS.soma);
     this.group.add(this.soma);
 
     this.dendrites = new THREE.LineSegments(
@@ -363,6 +369,7 @@ export class NeuronRenderLayer implements RenderLayer {
         "piecewise-linear soma-to-proximal-to-distal voltage interpolation over deterministic path coordinates",
       redundancy: ["label"],
     });
+    declareAnatomicalBinding(this.dendrites, ANATOMY_IDS.dendrite);
     this.group.add(this.dendrites);
 
     this.axon = new THREE.Line(
@@ -377,6 +384,7 @@ export class NeuronRenderLayer implements RenderLayer {
     );
     this.axon.name = "resolved-neuron-illustrative-axon";
     declareVisual(this.axon, "matter", "topology");
+    declareAnatomicalBinding(this.axon, ANATOMY_IDS.axon);
     this.group.add(this.axon);
 
     this.ranvierNodes = new THREE.InstancedMesh(
@@ -392,6 +400,7 @@ export class NeuronRenderLayer implements RenderLayer {
     );
     this.ranvierNodes.name = "resolved-neuron-illustrative-nodes";
     declareVisual(this.ranvierNodes, "matter", "topology");
+    declareAnatomicalBinding(this.ranvierNodes, ANATOMY_IDS.ranvierNode);
     this.group.add(this.ranvierNodes);
 
     this.adaptationRing = new THREE.Mesh(
@@ -412,6 +421,10 @@ export class NeuronRenderLayer implements RenderLayer {
       transform: "absolute adaptation current to ring radius and opacity",
       redundancy: ["size", "shape", "label"],
     });
+    declareNonAnatomical(
+      this.adaptationRing,
+      "Adaptation current is a published state indicator, not anatomy.",
+    );
     this.group.add(this.adaptationRing);
 
     const arrowGeometry = makeArrowGeometry();
@@ -440,6 +453,10 @@ export class NeuronRenderLayer implements RenderLayer {
         transform: "signed receptor current to arrow direction; magnitude to arrow scale",
         redundancy: ["orientation", "size", "position", "label"],
       });
+      declareNonAnatomical(
+        mesh,
+        "Signed receptor current is a published state arrow, not anatomy.",
+      );
       this.group.add(mesh);
       return { name, mesh, basePosition, color };
     });
@@ -463,6 +480,10 @@ export class NeuronRenderLayer implements RenderLayer {
       transform: "stamped event membership for selected cell to a static axon-node marker",
       redundancy: ["shape", "position", "label"],
     });
+    declareNonAnatomical(
+      this.eventMarker,
+      "The stamped spike marker is an event indicator, not anatomy.",
+    );
     this.group.add(this.eventMarker);
     this.applyMorphology();
     this.updateDendriteGradient(RESTING_VOLTS, RESTING_VOLTS, RESTING_VOLTS);

@@ -34,7 +34,7 @@
     </nav>
 
     <aside class="glass-panel presentation-panel" id="presentation-panel" aria-labelledby="presentation-title">
-      <div class="eyebrow" id="presentation-title">R09-F · APRESENTAÇÃO LOCAL</div>
+      <div class="eyebrow" id="presentation-title">R10-A · EXPLORADOR LOCAL</div>
       <details>
         <summary>PELÍCULA & CORTE</summary>
         <div class="control-group compact">
@@ -89,6 +89,30 @@
           <div><dt>AMOSTRA</dt><dd id="cut-probe-sampling">somente campo cortical macroscópico</dd></div>
         </dl>
         <p class="cut-shortcuts">Teclado: C alterna orientação; [ e ] movem; X raio-X; I isolamento; R câmera. Controles deslizantes aceitam toque.</p>
+      </details>
+      <details id="anatomy-explorer" open>
+        <summary>CATÁLOGO ANATÔMICO</summary>
+        <div class="control-group compact anatomy-search-control">
+          <label for="anatomy-search"><span>Buscar estrutura</span><output id="anatomy-result-count">—</output></label>
+          <input id="anatomy-search" type="search" maxlength="80" autocomplete="off" spellcheck="false" placeholder="nome, sinônimo ou ID" aria-label="Buscar no catálogo anatômico" aria-controls="anatomy-results" />
+        </div>
+        <ul id="anatomy-results" class="anatomy-results" role="tree" aria-label="Estruturas do catálogo anatômico"></ul>
+        <nav id="anatomy-breadcrumb" class="anatomy-breadcrumb" aria-label="Hierarquia da estrutura selecionada"></nav>
+        <section class="anatomy-details" aria-labelledby="anatomy-selected-title">
+          <h2 id="anatomy-selected-title">Encéfalo procedural</h2>
+          <dl>
+            <div><dt>ID</dt><dd id="anatomy-selected-id">brain-pro:anatomy/encephalon</dd></div>
+            <div><dt>LADO</dt><dd id="anatomy-selected-laterality">bilateral</dd></div>
+            <div><dt>EVIDÊNCIA</dt><dd id="anatomy-selected-evidence">PROCEDURAL</dd></div>
+            <div><dt>FONTE</dt><dd id="anatomy-selected-source">src/brain.ts#generateBrainData</dd></div>
+            <div><dt>LICENÇA</dt><dd id="anatomy-selected-license">LicenseRef-BRAIN-PRO-INTERNAL</dd></div>
+            <div><dt>TRANSFORMAÇÃO</dt><dd id="anatomy-selected-transform">coordenadas procedurais</dd></div>
+            <div><dt>LIMITE</dt><dd id="anatomy-selected-limitation">Não é atlas parcelado.</dd></div>
+          </dl>
+        </section>
+        <p id="anatomy-selection-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+        <button id="anatomy-reset" class="presentation-reset" type="button">RESTAURAR CATÁLOGO</button>
+        <p class="cut-shortcuts">Árvore, busca e picking usam o mesmo ID. Setas percorrem os resultados; a seleção é somente apresentação.</p>
       </details>
     </aside>
 

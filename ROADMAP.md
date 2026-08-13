@@ -6,9 +6,9 @@
 
 **Estado de promoção:** 0.8 promovida em 12 de agosto de 2026
 
-**Estado de desenvolvimento:** 0.9 em construção; R09-A a R09-F concluídas
+**Estado de desenvolvimento:** 0.10 em construção; R09-A a R09-F e R10-A concluídas
 
-**Próximo gate:** `R10-A` · catálogo anatômico com proveniência
+**Próximo gate:** `R10-B` · vascular topológico
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -77,7 +77,8 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | Prancha Elétrica | IMPLEMENTADA E VALIDADA EM R09-C | `ElectricalBoardLayer`, DOM e auditoria | testes estruturais, orçamento e navegador | esquema do patch; atraso/ganho macro aparecem separados e não são atribuídos às células |
 | seleção e vista Neurônio | IMPLEMENTADAS E VALIDADAS EM R09-E | `CellRenderLayer`, `NeuronRenderLayer`, DOM e auditoria | seleção, gradiente soma/proximal/distal, navegador e invariância | morfologia continua ilustrativa; sem condução ativa ou tipo celular real |
 | película 3D e planos de corte | IMPLEMENTADOS E VALIDADOS EM R09-F | `material-profile`, `clipping`, seis `RenderLayer`s | [auditoria R09-F](AUDIT_0.9_R09_F.md), navegador e manifesto GIF schema 3 | acabamento ilustrativo procedural; sem atlas, calibração anatômica ou nova ciência |
-| vascular e atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de catálogo, fonte/licença e estado/proveniência |
+| catálogo anatômico | IMPLEMENTADO E VALIDADO EM R10-A | `src/anatomy`, bindings dos seis `RenderLayer`s e explorador DOM | [auditoria R10-A](AUDIT_0.10_R10_A.md), schema 1, navegador e invariância | 32 entradas sobre estruturas existentes; zero atlas/asset externo; sem calibração anatômica |
+| vascular e atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | vascular depende do catálogo R10-A; atlas continua dependente de fonte/licença própria |
 
 ## Histórico verificável
 
@@ -301,7 +302,7 @@ científico.
 
 | Corte | Estado | Contrato e dependências | Aceite principal | Risco/rollback |
 | :-- | :-- | :-- | :-- | :-- |
-| R10-A · catálogo anatômico | planejada | IDs semânticos, hierarquia, busca, lado, fonte, licença e transformação; depende de GRAPHICS/REFERENCES | cada objeto possui proveniência e nível de evidência | asset/licença; rejeitar importação e manter procedural |
+| R10-A · catálogo anatômico | implementada e validada em 13 de agosto de 2026 | schema 1 com 32 IDs semânticos, hierarquia, busca, lado, fonte, licença, transformação e evidência; IDs AST-030..034, UI-030, SEC-020, QA-110 | 98 objetos renderizáveis ligados ao catálogo ou excluídos explicitamente; árvore/picking convergem; cinco hashes invariantes; [auditoria R10-A](AUDIT_0.10_R10_A.md) | zero asset externo; import estrito e limitado; rollback remove explorador/bindings e mantém cenas procedurais |
 | R10-B · vascular topológico | planejada | artérias/veias/capilares somente como topologia educacional | isolamento, direção e orçamento; sem fluxo inventado | aparência clínica; rotular `TOPOLOGY/ILUSTRATIVO` |
 | R10-C · núcleos funcionais | pesquisa | origem/alvo/receptor antes de qualquer pluma | circuito, controle nulo e observável publicados | excesso de escopo; não renderizar fonte ausente |
 | R10-D · reação–difusão | pesquisa | contrato matemático, domínio com unidade, IMEX/implícito, positividade e massa | solução simples, convergência e custo | rigidez; manter apenas química local |
