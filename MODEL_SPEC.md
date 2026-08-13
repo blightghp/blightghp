@@ -159,7 +159,7 @@ portanto, não representa um spindle biológico.
 | :-- | :-- | :-- | :-- |
 | campo cortical | kernel atrasado; futura PDE na superfície | histórico discreto; futuro FEM/cotangente e IMEX | atual com convergência; troca reabre prova |
 | população laminar | E/I saturante | relaxação exponencial | implementado; estabilidade/conectividade |
-| célula pontual | AdEx híbrido | subpasso fixo + evento/reset | implementado; tempo de spike/corrente |
+| célula multicompartimental | AdEx no soma + cabo passivo proximal/distal | subpasso fixo; matriz tridiagonal implícita + evento/reset | implementado em R09-E; convergência, carga e replay |
 | receptores | condutância e força motriz | decaimentos exatos | implementado; pico/integral/paridade |
 | química local | ação de massa compartimental | mapas exatos + splitting Strang adaptativo | implementado no regime didático; massa/positividade/convergência |
 | reação–difusão de volume | futura | implícito/IMEX após contrato espacial | pesquisa; solução simples e massa |
@@ -200,33 +200,53 @@ Assim, a região microscópica substitui gradualmente a macroscópica, em vez de
 
 ## Unidade microscópica
 
-O patch promovido na 0.7 usa Adaptive Exponential Integrate-and-Fire:
+Desde R09-E, o patch padrão usa três compartimentos em cadeia: soma AdEx,
+dendrito proximal passivo e dendrito distal passivo. Em unidades SI:
 
 $$
-C\frac{dV_i}{dt} = -g_L(V_i-E_L)
-+ g_L\Delta_T\exp\!\left(\frac{V_i-V_T}{\Delta_T}\right)
-- w_i + I_i^{\mathrm{syn}} + I_i^{\mathrm{ext}} + I_i^{\eta},
+C_s \frac{dV_s}{dt} = -g_{L,s}(V_s-E_L)
++ g_{L,s}\Delta_T\exp\!\left(\frac{V_s-V_T}{\Delta_T}\right)
+- w + I_{\mathrm{inj}} + g_{sp}(V_p-V_s) + I_{\mathrm{GABA-B}},
 $$
 
 $$
-\tau_w\frac{dw_i}{dt}=a(V_i-E_L)-w_i.
+C_p \frac{dV_p}{dt} = -g_{L,p}(V_p-E_L)
++ g_{sp}(V_s-V_p) + g_{pd}(V_d-V_p) + I_{\mathrm{GABA-A}},
 $$
 
-Ao cruzar o limiar de evento, registra-se um spike, aplica-se `V ← V_reset` e `w ← w + b`. O modelo reproduz diferentes padrões de disparo, mas o evento continua sendo um limiar seguido de reset; ele não produz a forma completa de um potencial de ação.
+$$
+C_d \frac{dV_d}{dt} = -g_{L,d}(V_d-E_L)
++ g_{pd}(V_p-V_d) + I_{\mathrm{AMPA}} + I_{\mathrm{NMDA}},
+$$
 
-Classes celulares são presets multiparamétricos. Capacitância, fuga, limiar, inclinação exponencial, adaptação e reset participam da classificação; `a` e `b` não bastam isoladamente para definir uma célula piramidal ou fast-spiking.
+$$
+\tau_w\frac{dw}{dt}=a(V_s-E_L)-w.
+$$
 
+Os parâmetros passivos são `Cs = 200 pF`, `Cp = 60 pF`, `Cd = 40 pF`,
+`gL,s = 10 nS`, `gL,p = 4 nS`, `gL,d = 2 nS`, `gsp = 6 nS` e `gpd = 4 nS`.
+O roteamento é parte do modelo: AMPA/NMDA usam a força motriz distal, GABA-A
+usa a proximal e GABA-B usa a somática. Cada par de correntes axiais aparece
+com sinais opostos nos compartimentos adjacentes, portanto a soma interna é
+zero antes das fugas e correntes de membrana.
+
+Fuga e acoplamento são resolvidos juntos por Euler implícito em uma matriz
+tridiagonal fixa de 3×3. Exponencial AdEx, adaptação, injeção e correntes
+receptoras são avaliadas no início do subpasso. O passo microscópico permanece
+`1/12000 s = 83,3 µs`; cada tick macro de `1/60 s` executa exatamente 200
+subpassos. `V_s`, `V_p` e `V_d` ficam em `[−120,+60] mV`.
+
+Ao cruzar `−30 mV`, registra-se um spike, aplica-se `Vs ← Vreset` e `w ← w+b`.
 O preset contém 8 células excitatórias e 4 inibitórias. Para E/I,
-respectivamente: `C = 200/100 pF`, `gL = 10/12 nS`, `ΔT = 2/0,5 mV`,
-`a = 2/0 nS`, `b = 40/0 pA`, `τw = 200/30 ms` e reset em `−58/−55 mV`.
-O repouso é `−70 mV`, o limiar exponencial `−50 mV` e o evento é registrado em
-`−30 mV`. O passo microscópico fixo é `1/12000 s = 83,3 µs`; cada tick macro de
-`1/60 s` executa exatamente 200 subpassos e o envelope rejeita mais de 4.096.
+respectivamente: `ΔT = 2/0,5 mV`, `a = 2/0 nS`, `b = 40/0 pA`,
+`τw = 200/30 ms` e reset em `−58/−55 mV`. O repouso é `−70 mV` e o limiar
+exponencial `−50 mV`. O modelo não produz a forma completa de um potencial de
+ação nem canais dendríticos ativos.
 
-Cada célula possui um compartimento dendrítico passivo (`C = 100 pF`,
-`gL = 5 nS`) acoplado ao soma por `4 nS`. Ele não representa árvore morfológica,
-propagação de cabo ou canais dendríticos; sua função é separar o ponto de entrada
-sináptica do compartimento de disparo.
+`CellPatchModel::LegacySingleDendriteV1` conserva o solver anterior somente
+para replay/rollback; `MultiCompartmentV2` é o padrão científico. Fixtures v1
+e v2 são testadas bit a bit e os hashes v2 separam soma, proximal e distal por
+tags e comprimentos próprios.
 
 O ruído colorido pode ser representado por Ornstein–Uhlenbeck:
 
@@ -575,7 +595,7 @@ O primeiro LFP será um pseudo-LFP. Modelos pontuais não oferecem a geometria d
 
 | Domínio | Classificação de programa | Condição mínima |
 | :-- | :-- | :-- |
-| neurônio multicompartimental/propagação dendrítica | necessário para gradiente na vista Neurônio; pré-1.0 se essa vista for promovida | pergunta, cabo, contorno, convergência e ABI |
+| canais dendríticos ativos/árvore espacial detalhada | pesquisa posterior ao cabo passivo de R09-E | pergunta que três compartimentos passivos não resolvam, dados, estabilidade e ABI |
 | timestamp/condução axonal | pré-1.0 para propagação visual causal | evento compacto, unidade, limite e replay |
 | canais iônicos detalhados | pesquisa/pós-1.0 | pergunta que AdEx não resolve + fonte/calibração |
 | plasticidade de longo prazo | pós-1.0/pesquisa | escala temporal, estabilidade e controle nulo |

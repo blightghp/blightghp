@@ -6,9 +6,9 @@
 
 **Estado de promoção:** 0.8 promovida em 12 de agosto de 2026
 
-**Estado de desenvolvimento:** 0.9 em construção; R09-A, R09-B, R09-C e R09-D concluídas
+**Estado de desenvolvimento:** 0.9 em construção; R09-A, R09-B, R09-C, R09-D e R09-E concluídas
 
-**Próximo gate:** `R09-E` · dendrito multicompartimental
+**Próximo gate:** `R09-F` · materialidade, películas e planos de corte
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -50,12 +50,12 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | Eixo | Valor verdadeiro | Evidência | Observação |
 | :-- | :-- | :-- | :-- |
 | produto npm/Cargo/Tauri | `0.9.0` | manifests | versão corrente em desenvolvimento |
-| protocolo Worker | `7` | `src/protocol.ts` | hoje acoplado ao schema da ABI |
-| ABI Wasm | `7` | `SIMULATION_SCHEMA_VERSION` | rejeição por igualdade no host |
-| snapshot | `7` | `NeuralSnapshot.schemaVersion` | 36 buffers transferíveis |
+| protocolo Worker | `8` | `src/protocol.ts` | hoje acoplado ao schema da ABI |
+| ABI Wasm | `8` | `SIMULATION_SCHEMA_VERSION` | rejeição por igualdade no host |
+| snapshot | `8` | `NeuralSnapshot.schemaVersion` | 37 buffers transferíveis |
 | schema do host Tauri | `1` | `ENGINE_SCHEMA_VERSION` | não é a ABI da simulação |
-| modelos | schemas `1` por subsistema | constantes Rust | patch, STP, fenda, solver e trilha química |
-| fixtures | `v1` por artefato | `fixtures/` | não implica produto 1.0 |
+| modelos | patch schema `2`; demais schemas `1` | constantes Rust | evolução independente por domínio |
+| fixtures | `v1`/`v2` celulares; demais `v1` | `fixtures/` | v1 celular permanece congelada para rollback |
 | hashes | cinco domínios | snapshot/fixtures | rede, corticotalâmico, célula, química e eventos celulares |
 | auditoria runtime versionada | schema `2`, captura ABI v6 | `runtime-audit.json` | comprova P2 em Chromium headless/SwiftShader; não é baseline em GPU física |
 | baseline gráfico físico | schema `2`, Intel UHD 770/D3D11 | `artifacts/hardware-audit` | comprova P3 no hardware/driver registrados |
@@ -67,7 +67,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | relógio, RNG, CSR, fila e replay | IMPLEMENTADO E VALIDADO | `brain-engine` | fixtures discretos/entrada | RNG repete após `2^32` ticks |
 | campo E/I e acoplamento unilateral | IMPLEMENTADO E VALIDADO | `field`, `simulation` | fixture campo/observáveis | grafo procedural, retorno micro→macro desligado |
 | coluna L1–L6, relé e TRN | IMPLEMENTADO E VALIDADO | `lib`, `corticothalamic` | testes e auditoria 0.6 | fenomenológico, sem canais tipo T |
-| patch AdEx e quatro correntes | IMPLEMENTADO E VALIDADO | `cell_patch` | replay/convergência 0.7 | um dendrito passivo, sem morfologia |
+| patch AdEx e quatro correntes | IMPLEMENTADO E VALIDADO EM R09-E | `cell_patch` | replay v1/v2, convergência e conservação | soma + proximal + distal passivos; sem canais dendríticos ativos |
 | recursos e STP | IMPLEMENTADO E VALIDADO NO CONTRATO | `chemical_contract`, `short_term_plasticity` | testes e fixture v1 | preset didático não calibrado |
 | fenda, ocupação e solver | IMPLEMENTADO E VALIDADO NO REGIME TESTADO | `cleft_occupancy`, `chemical_solver` | replays e convergência | microdomínio representativo, não população de fendas |
 | ABI v6 e aba Sinapse | IMPLEMENTADO, VALIDADO E PROMOVIDO | `brain-wasm`, Worker, `SynapseRenderLayer` | [auditoria de promoção](AUDIT_0.8_PROMOTION.md) | validade restrita ao contrato 0.8 declarado |
@@ -75,7 +75,7 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | inferência Bayesiana de tarefa | EXPERIMENTAL E ISOLADA | `experiment.ts`, `inference.ts` | schema 1, fixture, controle nulo e replay | posterior é apenas apresentada; estímulo interativo exige contexto nulo |
 | eventos celulares carimbados | IMPLEMENTADO E VALIDADO EM R09-B | `cell_patch`, `simulation`, ABI/Worker | fixture, hash próprio, browser e lifecycle | lote limitado a 4.096; cenário padrão pode legitimamente produzir lote vazio |
 | Prancha Elétrica | IMPLEMENTADA E VALIDADA EM R09-C | `ElectricalBoardLayer`, DOM e auditoria | testes estruturais, orçamento e navegador | esquema do patch; atraso/ganho macro aparecem separados e não são atribuídos às células |
-| seleção e vista Neurônio | IMPLEMENTADAS E VALIDADAS EM R09-D | `CellRenderLayer`, `NeuronRenderLayer`, DOM e auditoria | raycast/lista, teclado, hash geométrico, navegador e invariância | árvore ilustrativa usa um único valor dendrítico; sem propagação ou tipo celular real |
+| seleção e vista Neurônio | IMPLEMENTADAS E VALIDADAS EM R09-E | `CellRenderLayer`, `NeuronRenderLayer`, DOM e auditoria | seleção, gradiente soma/proximal/distal, navegador e invariância | morfologia continua ilustrativa; sem condução ativa ou tipo celular real |
 | prontidão para película 3D por vista | CONTRATO E INVENTÁRIO IMPLEMENTADOS; PELÍCULA NÃO FABRICADA | `src/render`, seis `RenderLayer`s e specs | auditoria por vista, proveniência, bindings, fallback e matriz de limites | materiais/iluminação/assets realistas pertencem a R09-F |
 | cortes, vascular e atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
 
@@ -257,14 +257,18 @@ somente quando o lote carimbado contém a célula; nenhum hash científico muda.
 
 ### R09-E · dendrito multicompartimental
 
-Somente após pergunta científica e convergência de cabo, acrescenta estados
-proximal/distal ao Rust, novo preset/schema e gradiente autorizado.
+Acrescenta ao Rust estados somático, proximal e distal, cabo passivo acoplado,
+roteamento receptor por compartimento, schema/fixtures v2 e gradiente autorizado.
 
-- **Estado:** planejada; **IDs:** MOD-100, ENG-025, ABI-020, QA-100.
+- **Estado:** concluída em 13 de agosto de 2026; **IDs:** MOD-100, ENG-025,
+  ABI-020, QA-100; **evidência:** [auditoria R09-E](AUDIT_0.9_R09_E.md).
 - **Aceite:** unidades/condições de contorno, referência refinada, invariantes,
   sensibilidade, replay e orçamento de 12 células.
-- **Risco:** escopo numérico alto. **Rollback:** preset pontual permanece
-  suportado e a UI rotula compartimento único. **Complexidade/confiança:** alta / média.
+- **Resultado:** matriz tridiagonal implícita; 200 subpassos/tick; replay v1/v2;
+  hash celular com domínios soma/proximal/distal; ABI v8 com 37 buffers; 10 draws
+  na vista Neurônio e rótulos redundantes em monocromia.
+- **Rollback:** `CellPatchModel::LegacySingleDendriteV1` permanece suportado para
+  replay/diagnóstico sem alterar a UI. **Complexidade/confiança:** alta / alta.
 
 ### R09-F · materialidade, películas e planos de corte
 

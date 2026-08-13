@@ -44,6 +44,9 @@ export interface ElectricalBoardCost {
 
 export interface ElectricalBoardObservables {
   readonly meanMembraneVolts: number;
+  readonly meanProximalVolts: number;
+  readonly meanDistalVolts: number;
+  readonly meanProximalDistalDeltaVolts: number;
   readonly netCurrentAmperes: number;
   readonly excitatoryCurrentAmperes: number;
   readonly inhibitoryCurrentAmperes: number;
@@ -86,7 +89,7 @@ export function electricalBoardCost(detail: ElectricalBoardDetail): ElectricalBo
     receptorDrawCalls,
     eventDrawCalls,
     totalDrawCalls: 6 + receptorDrawCalls + eventDrawCalls,
-    stateValuesPerSnapshot: ELECTRICAL_BOARD_CELL_COUNT * 8,
+    stateValuesPerSnapshot: ELECTRICAL_BOARD_CELL_COUNT * 9,
     eventUpdates: "only-when-cellSpikeEventHash-changes",
   };
 }
@@ -99,7 +102,9 @@ function safeMean(values: Float32Array): number {
 }
 
 export function effectiveCellConductanceSiemens(
-  dendriteVolts: number,
+  somaVolts: number,
+  proximalVolts: number,
+  distalVolts: number,
   ampaAmperes: number,
   nmdaAmperes: number,
   gabaaAmperes: number,
@@ -108,19 +113,19 @@ export function effectiveCellConductanceSiemens(
   return estimateConductanceSiemens(
     ampaAmperes,
     EXCITATORY_REVERSAL_VOLTS,
-    dendriteVolts,
+    distalVolts,
   ) + estimateConductanceSiemens(
     nmdaAmperes,
     EXCITATORY_REVERSAL_VOLTS,
-    dendriteVolts,
+    distalVolts,
   ) + estimateConductanceSiemens(
     gabaaAmperes,
     GABAA_REVERSAL_VOLTS,
-    dendriteVolts,
+    proximalVolts,
   ) + estimateConductanceSiemens(
     gababAmperes,
     GABAB_REVERSAL_VOLTS,
-    dendriteVolts,
+    somaVolts,
   );
 }
 
@@ -139,23 +144,27 @@ export function electricalBoardObservables(
     const nmda = patch.nmdaAmperes[index] ?? 0;
     const gabaa = patch.gabaaAmperes[index] ?? 0;
     const gabab = patch.gababAmperes[index] ?? 0;
-    const dendrite = patch.dendriteVolts[index] ?? RESTING_VOLTS;
+    const soma = patch.membraneVolts[index] ?? RESTING_VOLTS;
+    const proximal = patch.dendriteProximalVolts[index] ?? RESTING_VOLTS;
+    const distal = patch.dendriteDistalVolts[index] ?? RESTING_VOLTS;
     const gabaaConductance = estimateConductanceSiemens(
       gabaa,
       GABAA_REVERSAL_VOLTS,
-      dendrite,
+      proximal,
     );
     excitatoryCurrentAmperes += ampa + nmda;
     inhibitoryCurrentAmperes += gabaa + gabab;
     netCurrentAmperes += ampa + nmda + gabaa + gabab;
     effectiveConductance += effectiveCellConductanceSiemens(
-      dendrite,
+      soma,
+      proximal,
+      distal,
       ampa,
       nmda,
       gabaa,
       gabab,
     );
-    if (gabaaConductance >= 10e-12 && Math.abs(dendrite - GABAA_REVERSAL_VOLTS) <= 0.003) {
+    if (gabaaConductance >= 10e-12 && Math.abs(proximal - GABAA_REVERSAL_VOLTS) <= 0.003) {
       shuntingCells += 1;
     }
   }
@@ -163,6 +172,10 @@ export function electricalBoardObservables(
   const offsets = snapshot.cellSpikeEvents.timeOffsetsSeconds;
   return {
     meanMembraneVolts: safeMean(patch.membraneVolts),
+    meanProximalVolts: safeMean(patch.dendriteProximalVolts),
+    meanDistalVolts: safeMean(patch.dendriteDistalVolts),
+    meanProximalDistalDeltaVolts:
+      safeMean(patch.dendriteProximalVolts) - safeMean(patch.dendriteDistalVolts),
     netCurrentAmperes: netCurrentAmperes / divisor,
     excitatoryCurrentAmperes: excitatoryCurrentAmperes / divisor,
     inhibitoryCurrentAmperes: inhibitoryCurrentAmperes / divisor,
@@ -355,7 +368,7 @@ export class ElectricalBoardLayer implements RenderLayer {
     this.conductanceRings.name = "electrical-effective-conductance";
     this.conductanceRings.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     declareVisual(this.conductanceRings, "emission", "state", {
-      field: "derived Σ Iᵣ/(Eᵣ−Vd) from cellPatch receptor currents and dendriteVolts",
+      field: "derived Σ Iᵣ/(Eᵣ−Vcompartment) from routed cellPatch receptor currents",
       unit: "S",
       transform: "effective conductance to ring radius; GABA-A reversal proximity to shunt token",
       redundancy: ["size", "shape", "label"],
@@ -481,13 +494,16 @@ export class ElectricalBoardLayer implements RenderLayer {
       this.matrix.compose(this.position, this.quaternion.identity(), this.scale);
       this.voltageBars.setMatrixAt(index, this.matrix);
 
-      const dendrite = snapshot.cellPatch.dendriteVolts[index] ?? RESTING_VOLTS;
+      const proximal = snapshot.cellPatch.dendriteProximalVolts[index] ?? RESTING_VOLTS;
+      const distal = snapshot.cellPatch.dendriteDistalVolts[index] ?? RESTING_VOLTS;
       const ampa = snapshot.cellPatch.ampaAmperes[index] ?? 0;
       const nmda = snapshot.cellPatch.nmdaAmperes[index] ?? 0;
       const gabaa = snapshot.cellPatch.gabaaAmperes[index] ?? 0;
       const gabab = snapshot.cellPatch.gababAmperes[index] ?? 0;
       const conductance = effectiveCellConductanceSiemens(
-        dendrite,
+        membrane,
+        proximal,
+        distal,
         ampa,
         nmda,
         gabaa,
@@ -505,10 +521,10 @@ export class ElectricalBoardLayer implements RenderLayer {
       const gabaaConductance = estimateConductanceSiemens(
         gabaa,
         GABAA_REVERSAL_VOLTS,
-        dendrite,
+        proximal,
       );
       const shunting = gabaaConductance >= 10e-12 &&
-        Math.abs(dendrite - GABAA_REVERSAL_VOLTS) <= 0.003;
+        Math.abs(proximal - GABAA_REVERSAL_VOLTS) <= 0.003;
       this.conductanceRings.setColorAt(
         index,
         shunting ? COLOR_TOKENS.shunting : COLOR_TOKENS.featured,

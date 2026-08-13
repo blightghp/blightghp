@@ -74,7 +74,7 @@ prova que o campo declarado pintou o pixel correto.
 | :-- | :-- | :-- | :-- |
 | `BrainRenderLayers` | pontos, cascas convexas, conexões e pulsos | rede/campo/topologia procedural | aloca array interpolado e limpa 900 instâncias por frame |
 | `LaminarRenderLayer` | L1–L6 E/I, vias, relé e TRN | snapshot corticotalâmico | coluna didática, não anatomia |
-| `CellRenderLayer` | 12 somas, dendritos, halos e contorno | patch | vista Célula; dendrito único |
+| `CellRenderLayer` | 12 somas, dendritos, halos e contorno | patch | vista Célula; soma/proximal/distal publicados |
 | `ElectricalBoardLayer` | 12 nós, barras V, anéis S, vias e eventos | patch + topologia macro rotulada | esquema próprio; 6/10/11 draws conforme detalhe |
 | `SynapseRenderLayer` | membranas, vesículas, nuvens, receptores e recaptura | química v6 | microdomínio representativo; escalas exageradas |
 
@@ -146,8 +146,8 @@ auditado para que o acabamento não esconda causalidade visual.
 | :-- | :-- | :-- | :-- |
 | Visão Geral | rede, campo, pulsos e superfície procedural | casca/tecido ilustrativos com escala e custo | atlas, anatomia clínica ou atividade em estrutura sem estado |
 | Lâminas | L1–L6, vias, relé e TRN didáticos | volume e rugosidade que preservem formas redundantes | espessura anatômica calibrada |
-| Célula | 12 somas, dendritos, correntes e seleção | membrana/superfície ilustrativa por lote | compartimentos ou canais não publicados |
-| Neurônio | geometria determinística por `seed + cellId` | soma, dendrito e axônio ilustrativos sem mudar o hash geométrico | tipo celular, mielinização funcional ou propagação |
+| Célula | 12 somas, dendritos proximal/distal, correntes e seleção | membrana/superfície ilustrativa por lote | canais dendríticos ativos não publicados |
+| Neurônio | geometria determinística por `seed + cellId` | soma, gradiente proximal/distal e axônio ilustrativo sem mudar o hash geométrico | tipo celular, mielinização funcional ou propagação ativa |
 | Eletricidade | nós, setas, V/A/S, eventos e tabela | substrato de prancha e relevo orientativo | circuito físico equivalente ao tecido biológico |
 | Sinapse | membranas, vesículas, fenda, receptores e recaptura | transmissão/SSS ilustrativos com escala exagerada rotulada | ultraestrutura medida ou concentração volumétrica ausente |
 
@@ -172,7 +172,7 @@ movimento reduzido e viewport móvel. O inventário executável atual reporta
 | cerebelo/tronco | orientação procedural | TOPOLOGY procedural | existente na visão geral | fora do campo cortical atual |
 | ventrículos | orientação | DECORATION/TOPOLOGY | opcional | sem fluxo de LCR sem modelo |
 | vascular | orientação/fluxo futuro | TOPOLOGY; STATE somente com hemodinâmica | 0.10+ | ver VAS-001 |
-| patch/neurônio/sinapse | escalas científicas | STATE + TOPOLOGY | três vistas atuais; compartimentos do neurônio futuros | selo de resolução obrigatório |
+| patch/neurônio/sinapse | escalas científicas | STATE + TOPOLOGY | compartimentos passivos publicados; morfologia fina continua ilustrativa | selo de resolução obrigatório |
 
 Cada camada define opacidade, raio-X, recorte, material, LOD, custo, picking,
 fonte e nível de evidência. Estruturas sem função podem existir apenas como
@@ -244,12 +244,15 @@ amplia e `Escape` retorna. Seleção/câmera não cruzam o protocolo científico
 
 ### Morfologia honesta
 
-No estado atual, toda árvore ilustrativa recebe um único `dendriteVolts[i]`.
-Gradiente só é autorizado após o motor publicar compartimentos proximal/distal
-com convergência. Morfologia procedural usa seed/fluxo próprios e hash de
-geometria; não afirma tipo celular real.
+O estado atual publica `membraneVolts[i]`, `dendriteProximalVolts[i]` e
+`dendriteDistalVolts[i]`. A árvore interpola esses três valores sobre uma
+coordenada de caminho determinística; nenhuma extrapolação temporal ou espacial
+é usada além dessa interpolação declarada. Rótulos soma/proximal/distal e tabela
+preservam a discriminação em monocromia. Morfologia procedural usa seed/fluxo
+próprios e hash de geometria; não afirma tipo celular real.
 
-R09-D materializa essa regra em `NeuronRenderLayer`: `seed + cellId` endereçam
+R09-D materializa a geometria em `NeuronRenderLayer`; R09-E autoriza o gradiente:
+`seed + cellId` endereçam
 um stream exclusivo de apresentação e o hash FNV-1a de 64 bits cobre dendritos,
 axônio e nós. A geometria só é reconstruída ao trocar a seleção, nunca por frame.
 

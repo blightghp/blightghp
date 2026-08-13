@@ -36,19 +36,21 @@ describe("R09-C electrical board", () => {
     expect(electricalBoardCost("summary").totalDrawCalls).toBe(6);
     expect(electricalBoardCost("cellular").totalDrawCalls).toBe(10);
     expect(electricalBoardCost("events").totalDrawCalls).toBe(11);
-    expect(electricalBoardCost("events").stateValuesPerSnapshot).toBe(96);
+    expect(electricalBoardCost("events").stateValuesPerSnapshot).toBe(108);
   });
 
   it("derives effective conductance only from published current and driving force", () => {
     const conductance = effectiveCellConductanceSiemens(
+      -0.05,
       -0.06,
+      -0.065,
       12e-12,
       6e-12,
       -1e-12,
       -3e-12,
     );
     expect(conductance).toBeCloseTo(
-      12e-12 / 0.06 + 6e-12 / 0.06 + -1e-12 / -0.01 + -3e-12 / -0.03,
+      12e-12 / 0.065 + 6e-12 / 0.065 + -1e-12 / -0.01 + -3e-12 / -0.04,
       14,
     );
   });
@@ -56,7 +58,8 @@ describe("R09-C electrical board", () => {
   it("publishes a textual-equivalent observable set with units supplied by the UI", () => {
     const { host, snapshot } = fallbackSnapshot();
     snapshot.cellPatch.membraneVolts = Float32Array.from([-0.06, -0.05]);
-    snapshot.cellPatch.dendriteVolts = Float32Array.from([-0.069, -0.06]);
+    snapshot.cellPatch.dendriteProximalVolts = Float32Array.from([-0.069, -0.06]);
+    snapshot.cellPatch.dendriteDistalVolts = Float32Array.from([-0.071, -0.065]);
     snapshot.cellPatch.ampaAmperes = Float32Array.from([12e-12, 8e-12]);
     snapshot.cellPatch.nmdaAmperes = Float32Array.from([4e-12, 2e-12]);
     snapshot.cellPatch.gabaaAmperes = Float32Array.from([-20e-12, -1e-12]);
@@ -65,6 +68,9 @@ describe("R09-C electrical board", () => {
     snapshot.cellSpikeEvents.timeOffsetsSeconds = Float64Array.from([0.001, 0.004]);
     const observables = electricalBoardObservables(snapshot);
     expect(observables.meanMembraneVolts).toBeCloseTo(-0.055, 6);
+    expect(observables.meanProximalVolts).toBeCloseTo(-0.0645, 6);
+    expect(observables.meanDistalVolts).toBeCloseTo(-0.068, 6);
+    expect(observables.meanProximalDistalDeltaVolts).toBeCloseTo(0.0035, 6);
     expect(observables.excitatoryCurrentAmperes).toBeCloseTo(13e-12, 18);
     expect(observables.inhibitoryCurrentAmperes).toBeCloseTo(-13.5e-12, 18);
     expect(observables.netCurrentAmperes).toBeCloseTo(-0.5e-12, 18);

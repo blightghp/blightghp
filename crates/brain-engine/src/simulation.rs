@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::synaptic::decay_conductance;
 use crate::{
-    mean_absolute_weight, random_unit, CellPatch, CellPatchConfig, CellPatchDrive,
+    mean_absolute_weight, random_unit, CellPatch, CellPatchConfig, CellPatchDrive, CellPatchModel,
     CellPatchSnapshot, ChemicalSignal, ChemicalTrack, ChemicalTrackError, CorticothalamicConfig,
     CorticothalamicDrive, CorticothalamicEngine, DeterministicInputQueue, FieldConfig,
     FieldSnapshot, FieldTopology, InputQueueError, LaminarConfig, NeuronKind, PopulationField,
@@ -11,7 +11,7 @@ use crate::{
     LAYER_COUNT, MAX_SAFE_TICK,
 };
 
-pub const SIMULATION_SCHEMA_VERSION: u32 = 7;
+pub const SIMULATION_SCHEMA_VERSION: u32 = 8;
 const MIN_EXCITATORY_WEIGHT: f64 = 0.12;
 const MAX_EXCITATORY_WEIGHT: f64 = 0.92;
 const MAX_SIGNALS_IN_FLIGHT: usize = 900;
@@ -34,6 +34,7 @@ pub struct SimulationSynapse {
 pub struct SimulationConfig {
     pub seed: u32,
     pub fixed_step: Seconds,
+    pub cell_patch_model: CellPatchModel,
     pub neuron_kinds: Vec<NeuronKind>,
     pub synapses: Vec<SimulationSynapse>,
     pub cortical_nodes: Vec<u32>,
@@ -236,8 +237,15 @@ impl NeuralSimulation {
         .map_err(SimulationError::Corticothalamic)?;
         let resolution =
             ResolutionMap::learning_patch(Some(0)).map_err(SimulationError::CellPatch)?;
-        let cell_patch = CellPatch::new(config.seed, CellPatchConfig::default(), resolution)
-            .map_err(SimulationError::CellPatch)?;
+        let cell_patch = CellPatch::new(
+            config.seed,
+            CellPatchConfig {
+                model: config.cell_patch_model,
+                ..CellPatchConfig::default()
+            },
+            resolution,
+        )
+        .map_err(SimulationError::CellPatch)?;
         let chemical_track = ChemicalTrack::learning_preset();
         let thresholds = thresholds(config.seed, node_count);
         let firing_rate_observable = PopulationFiringRate::new(
@@ -1084,6 +1092,7 @@ mod tests {
         NeuralSimulation::new(SimulationConfig {
             seed: 91,
             fixed_step: Seconds::try_new(1.0 / 60.0).unwrap(),
+            cell_patch_model: CellPatchModel::MultiCompartmentV2,
             neuron_kinds: vec![NeuronKind::Excitatory],
             synapses: Vec::new(),
             cortical_nodes: vec![0],
@@ -1116,6 +1125,31 @@ mod tests {
         let first = cell_spike_event_batch(0, 1, &[], &[]);
         let second = cell_spike_event_batch(1, 2, &[], &[]);
         assert_ne!(first.state_hash, second.state_hash);
+    }
+
+    #[test]
+    fn identical_runs_match_tick_by_tick_in_all_five_hash_domains() {
+        let mut first = minimal_simulation();
+        let mut second = minimal_simulation();
+        for tick in 1..=60 {
+            let stimulus = NeuralStimulus {
+                intensity: 0.64,
+                confidence: 0.0,
+            };
+            let left = first.advance_to(tick, stimulus).unwrap();
+            let right = second.advance_to(tick, stimulus).unwrap();
+            assert_eq!(left.state_hash, right.state_hash);
+            assert_eq!(
+                left.corticothalamic.state_hash,
+                right.corticothalamic.state_hash
+            );
+            assert_eq!(left.cell_patch.state_hash, right.cell_patch.state_hash);
+            assert_eq!(left.chemical.state_hash, right.chemical.state_hash);
+            assert_eq!(
+                left.cell_spike_events.state_hash,
+                right.cell_spike_events.state_hash
+            );
+        }
     }
 
     #[test]

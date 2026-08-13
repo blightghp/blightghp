@@ -1,9 +1,9 @@
 #![forbid(unsafe_code)]
 
 use brain_engine::{
-    CorticalLayer, FieldTopology, LaminarConfig, LaminarEngine, NeuralSimulation, NeuralStimulus,
-    NeuronKind, Seconds, SimulationConfig, SimulationInput, SimulationSnapshot, SimulationSynapse,
-    ENGINE_SCHEMA_VERSION, LAYER_COUNT, SIMULATION_SCHEMA_VERSION,
+    CellPatchModel, CorticalLayer, FieldTopology, LaminarConfig, LaminarEngine, NeuralSimulation,
+    NeuralStimulus, NeuronKind, Seconds, SimulationConfig, SimulationInput, SimulationSnapshot,
+    SimulationSynapse, ENGINE_SCHEMA_VERSION, LAYER_COUNT, SIMULATION_SCHEMA_VERSION,
 };
 use wasm_bindgen::prelude::*;
 
@@ -122,6 +122,7 @@ impl WasmNeuralEngine {
         let config = SimulationConfig {
             seed,
             fixed_step: Seconds::try_new(dt_seconds).map_err(js_error)?,
+            cell_patch_model: CellPatchModel::MultiCompartmentV2,
             neuron_kinds,
             synapses,
             cortical_nodes,
@@ -386,8 +387,13 @@ impl WasmNeuralEngine {
     }
 
     #[must_use]
-    pub fn cell_dendrite_volts(&self) -> Vec<f32> {
-        self.snapshot.cell_patch.dendrite_volts.clone()
+    pub fn cell_dendrite_proximal_volts(&self) -> Vec<f32> {
+        self.snapshot.cell_patch.dendrite_proximal_volts.clone()
+    }
+
+    #[must_use]
+    pub fn cell_dendrite_distal_volts(&self) -> Vec<f32> {
+        self.snapshot.cell_patch.dendrite_distal_volts.clone()
     }
 
     #[must_use]

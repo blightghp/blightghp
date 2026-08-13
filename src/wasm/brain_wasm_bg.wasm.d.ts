@@ -16,7 +16,8 @@ export const wasmneuralengine_advance_to: (a: number, b: number, c: number, d: n
 export const wasmneuralengine_cell_adaptation_amperes: (a: number) => [number, number];
 export const wasmneuralengine_cell_ampa_amperes: (a: number) => [number, number];
 export const wasmneuralengine_cell_blend: (a: number) => number;
-export const wasmneuralengine_cell_dendrite_volts: (a: number) => [number, number];
+export const wasmneuralengine_cell_dendrite_distal_volts: (a: number) => [number, number];
+export const wasmneuralengine_cell_dendrite_proximal_volts: (a: number) => [number, number];
 export const wasmneuralengine_cell_excitatory_inhibitory_ratio: (a: number) => number;
 export const wasmneuralengine_cell_field_vertex: (a: number) => number;
 export const wasmneuralengine_cell_firing_rate_hz: (a: number) => number;

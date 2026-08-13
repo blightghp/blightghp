@@ -131,7 +131,7 @@ try {
   if (
     electricalBoardGate.detail !== "cellular" ||
     electricalBoardGate.cost.totalDrawCalls !== 10 ||
-    electricalBoardGate.cost.stateValuesPerSnapshot !== 96 ||
+    electricalBoardGate.cost.stateValuesPerSnapshot !== 108 ||
     electricalBoardGate.topology.synapseCount <= 0 ||
     electricalBoardGate.topology.meanDelaySeconds <= 0 ||
     electricalBoardGate.topology.meanAbsoluteGain <= 0
@@ -142,7 +142,9 @@ try {
     neuronGate.selectedCellId !== 0 ||
     !/^[0-9a-f]{16}$/.test(neuronGate.geometryHash) ||
     neuronGate.cost.totalDrawCalls !== 10 ||
-    neuronGate.cost.stateValuesPerSnapshot !== 8 ||
+    neuronGate.cost.stateValuesPerSnapshot !== 9 ||
+    neuronGate.gradientVertexCount <= 0 ||
+    neuronGate.compartmentLabels.join("/") !== "soma/proximal/distal" ||
     neuronGate.cost.geometryRebuildsPerFrame !== 0
   ) {
     throw new Error(`orçamento/geometria da vista Neurônio inválidos: ${JSON.stringify(neuronGate)}`);
@@ -198,7 +200,8 @@ try {
     },
     neuron: {
       soma: document.querySelector("#neuron-soma")?.textContent,
-      dendrite: document.querySelector("#neuron-dendrite")?.textContent,
+      proximal: document.querySelector("#neuron-proximal")?.textContent,
+      distal: document.querySelector("#neuron-distal")?.textContent,
       adaptation: document.querySelector("#neuron-adaptation")?.textContent,
       tableRows: document.querySelectorAll(".neuron-table tbody tr").length,
       selectorCount: document.querySelectorAll("#cell-selector [data-cell-id]").length,
@@ -211,9 +214,10 @@ try {
     !views.synapse.gaba?.endsWith("mol/m³") ||
     !views.synapse.occupancy?.endsWith("%") ||
     !views.neuron.soma?.endsWith("mV") ||
-    !views.neuron.dendrite?.endsWith("mV") ||
+    !views.neuron.proximal?.endsWith("mV") ||
+    !views.neuron.distal?.endsWith("mV") ||
     !views.neuron.adaptation?.endsWith("pA") ||
-    views.neuron.tableRows !== 8 ||
+    views.neuron.tableRows !== 13 ||
     views.neuron.selectorCount !== 12
   ) {
     throw new Error(`evidência das vistas Sinapse/Neurônio incompleta: ${JSON.stringify(views)}`);
@@ -272,7 +276,8 @@ try {
       other,
       replay,
       soma: document.querySelector("#neuron-soma")?.textContent,
-      dendrite: document.querySelector("#neuron-dendrite")?.textContent,
+      proximal: document.querySelector("#neuron-proximal")?.textContent,
+      distal: document.querySelector("#neuron-distal")?.textContent,
       geometry: document.querySelector("#neuron-geometry-hash")?.textContent,
     };
   });
@@ -284,7 +289,8 @@ try {
     neuronSelection.selected.geometryHash === neuronSelection.other.geometryHash ||
     neuronSelection.geometry !== neuronSelection.replay.geometryHash ||
     !neuronSelection.soma?.endsWith("mV") ||
-    !neuronSelection.dendrite?.endsWith("mV")
+    !neuronSelection.proximal?.endsWith("mV") ||
+    !neuronSelection.distal?.endsWith("mV")
   ) {
     throw new Error(`seleção/geometria Neurônio inválida: ${JSON.stringify(neuronSelection)}`);
   }

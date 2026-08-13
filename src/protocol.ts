@@ -1,5 +1,5 @@
 import type { BrainData } from "./brain";
-export const SIMULATION_PROTOCOL_VERSION = 7 as const;
+export const SIMULATION_PROTOCOL_VERSION = 8 as const;
 export const SIMULATION_STEP_SECONDS = 1 / 60;
 export const CELL_SPIKE_EVENT_SCHEMA_VERSION = 1 as const;
 export const MAX_CELL_SPIKE_EVENTS_PER_SNAPSHOT = 4_096;
@@ -52,7 +52,8 @@ export interface CorticothalamicSnapshot {
 export interface CellPatchSnapshot {
   kinds: Uint8Array;
   membraneVolts: Float32Array;
-  dendriteVolts: Float32Array;
+  dendriteProximalVolts: Float32Array;
+  dendriteDistalVolts: Float32Array;
   adaptationAmperes: Float32Array;
   ampaAmperes: Float32Array;
   nmdaAmperes: Float32Array;

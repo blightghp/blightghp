@@ -5,6 +5,7 @@ import { DiagnosticFallbackHost } from "../wasm-engine-host";
 import { CellRenderLayer, setCellPosition } from "./cell-layer";
 import {
   generateNeuronMorphology,
+  dendriteVoltageAtPathPosition,
   NeuronRenderLayer,
   neuronCellObservables,
   neuronViewCost,
@@ -45,9 +46,13 @@ describe("R09-D resolved neuron", () => {
     expect(first.hash).toMatch(/^[0-9a-f]{16}$/);
     expect(replay.hash).toBe(first.hash);
     expect([...replay.dendriteSegments]).toEqual([...first.dendriteSegments]);
+    expect([...replay.dendritePathPositions]).toEqual([...first.dendritePathPositions]);
     expect([...replay.axonPoints]).toEqual([...first.axonPoints]);
     expect(otherCell.hash).not.toBe(first.hash);
     expect(first.dendriteSegments.length).toBeGreaterThan(100);
+    expect(first.dendritePathPositions.length).toBe(first.dendriteSegments.length / 3);
+    expect(Math.min(...first.dendritePathPositions)).toBe(0);
+    expect(Math.max(...first.dendritePathPositions)).toBe(1);
     expect(first.ranvierNodes.length).toBe(24);
   });
 
@@ -55,7 +60,8 @@ describe("R09-D resolved neuron", () => {
     const { host, snapshot } = fallbackSnapshot();
     snapshot.cellPatch.kinds = Uint8Array.from([0, 1, 0]);
     snapshot.cellPatch.membraneVolts = Float32Array.from([-0.06, -0.05, -0.055]);
-    snapshot.cellPatch.dendriteVolts = Float32Array.from([-0.069, -0.061, -0.063]);
+    snapshot.cellPatch.dendriteProximalVolts = Float32Array.from([-0.067, -0.059, -0.061]);
+    snapshot.cellPatch.dendriteDistalVolts = Float32Array.from([-0.071, -0.065, -0.068]);
     snapshot.cellPatch.adaptationAmperes = Float32Array.from([1e-12, 22e-12, 3e-12]);
     snapshot.cellPatch.ampaAmperes = Float32Array.from([4e-12, 12e-12, 6e-12]);
     snapshot.cellPatch.nmdaAmperes = Float32Array.from([2e-12, 8e-12, 3e-12]);
@@ -70,11 +76,21 @@ describe("R09-D resolved neuron", () => {
     ]);
     const observable = neuronCellObservables(snapshot, 1);
     expect(observable.kind).toBe("inhibitory");
-    expect(observable.membraneVolts).toBeCloseTo(-0.05, 6);
+    expect(observable.somaVolts).toBeCloseTo(-0.05, 6);
+    expect(observable.dendriteProximalVolts).toBeCloseTo(-0.059, 6);
+    expect(observable.dendriteDistalVolts).toBeCloseTo(-0.065, 6);
     expect(observable.adaptationAmperes).toBeCloseTo(22e-12, 17);
     expect(observable.ampaAmperes).toBeCloseTo(12e-12, 17);
     expect(observable.stampedEventOffsetsSeconds).toEqual([0.002, 0.004]);
     host.dispose();
+  });
+
+  it("maps soma, proximal and distal voltages continuously onto the branch path", () => {
+    expect(dendriteVoltageAtPathPosition(-0.05, -0.06, -0.075, 0)).toBe(-0.05);
+    expect(dendriteVoltageAtPathPosition(-0.05, -0.06, -0.075, 0.5)).toBe(-0.06);
+    expect(dendriteVoltageAtPathPosition(-0.05, -0.06, -0.075, 1)).toBe(-0.075);
+    expect(dendriteVoltageAtPathPosition(-0.05, -0.06, -0.075, 0.25)).toBe(-0.055);
+    expect(dendriteVoltageAtPathPosition(-0.05, -0.06, -0.075, 0.75)).toBe(-0.0675);
   });
 
   it("keeps the event marker off for an unstamped selected cell", () => {
@@ -94,13 +110,35 @@ describe("R09-D resolved neuron", () => {
     layer.update({ current: snapshot, alpha: 1 });
     expect(layer.audit().eventMarkerVisible).toBe(true);
     expect(layer.audit().selectedEventCount).toBe(1);
+    expect(layer.audit().compartmentLabels).toEqual(["soma", "proximal", "distal"]);
+    expect(layer.audit().gradientVertexCount).toBeGreaterThan(0);
     expect(layer.group.getObjectByName("resolved-neuron-stamped-event")?.visible).toBe(true);
     expect(layer.audit().cost).toEqual(neuronViewCost());
+    expect(layer.audit().cost.totalDrawCalls).toBeLessThanOrEqual(10);
     let renderables = 0;
     layer.group.traverse((object) => {
       if ("material" in object) renderables += 1;
     });
     expect(renderables).toBe(neuronViewCost().totalDrawCalls);
+    layer.dispose();
+    host.dispose();
+  });
+
+  it("writes distinct per-vertex luminance from the three published voltages", () => {
+    const { host, snapshot, topology } = fallbackSnapshot();
+    snapshot.cellPatch.membraneVolts[0] = -0.04;
+    snapshot.cellPatch.dendriteProximalVolts[0] = -0.065;
+    snapshot.cellPatch.dendriteDistalVolts[0] = -0.09;
+    const layer = new NeuronRenderLayer(topology.seed);
+    layer.update({ current: snapshot, alpha: 1 });
+    const dendrite = layer.group.getObjectByName(
+      "resolved-neuron-multicompartment-dendrite",
+    ) as THREE.LineSegments;
+    const colors = dendrite.geometry.getAttribute("color") as THREE.BufferAttribute;
+    const first = new THREE.Color().fromBufferAttribute(colors, 0).getHex();
+    const last = new THREE.Color().fromBufferAttribute(colors, colors.count - 1).getHex();
+    expect(first).not.toBe(last);
+    expect(colors.count).toBe(layer.audit().gradientVertexCount);
     layer.dispose();
     host.dispose();
   });

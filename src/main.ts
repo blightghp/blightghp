@@ -219,10 +219,19 @@ function signedPicoamperes(amperes: number): string {
 
 function updateNeuronMetrics(snapshot: NeuralSnapshot): void {
   const observable = neuronCellObservables(snapshot, selectedCellId);
-  element("#neuron-soma").textContent =
-    `${voltsToMillivolts(observable.membraneVolts).toFixed(1)} mV`;
-  element("#neuron-dendrite").textContent =
-    `${voltsToMillivolts(observable.dendriteVolts).toFixed(1)} mV`;
+  const soma = `${voltsToMillivolts(observable.somaVolts).toFixed(1)} mV`;
+  const proximal = `${voltsToMillivolts(observable.dendriteProximalVolts).toFixed(1)} mV`;
+  const distal = `${voltsToMillivolts(observable.dendriteDistalVolts).toFixed(1)} mV`;
+  element("#neuron-soma").textContent = soma;
+  element("#neuron-proximal").textContent = proximal;
+  element("#neuron-distal").textContent = distal;
+  element("#neuron-soma-table").textContent = soma;
+  element("#neuron-proximal-table").textContent = proximal;
+  element("#neuron-distal-table").textContent = distal;
+  element("#neuron-attenuation").textContent =
+    `${voltsToMillivolts(
+      observable.dendriteProximalVolts - observable.dendriteDistalVolts,
+    ).toFixed(1)} mV`;
   element("#neuron-adaptation").textContent = signedPicoamperes(
     observable.adaptationAmperes,
   );
@@ -268,8 +277,10 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
     snapshot.corticothalamic.rebound.toFixed(3);
   element("#cell-membrane").textContent =
     `${voltsToMillivolts(mean(snapshot.cellPatch.membraneVolts)).toFixed(1)} mV`;
-  element("#cell-dendrite").textContent =
-    `${voltsToMillivolts(mean(snapshot.cellPatch.dendriteVolts)).toFixed(1)} mV`;
+  element("#cell-proximal").textContent =
+    `${voltsToMillivolts(mean(snapshot.cellPatch.dendriteProximalVolts)).toFixed(1)} mV`;
+  element("#cell-distal").textContent =
+    `${voltsToMillivolts(mean(snapshot.cellPatch.dendriteDistalVolts)).toFixed(1)} mV`;
   element("#cell-rate").textContent = `${snapshot.cellPatch.firingRateHz.toFixed(1)} Hz`;
   element("#cell-ei-ratio").textContent = snapshot.cellPatch.excitatoryInhibitoryRatio.toFixed(2);
   element("#adaptation-current").textContent =
@@ -304,6 +315,12 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
   element("#board-inhibition").textContent = signedPicoamperes(
     electrical.inhibitoryCurrentAmperes,
   );
+  element("#board-proximal").textContent =
+    `${voltsToMillivolts(electrical.meanProximalVolts).toFixed(1)} mV`;
+  element("#board-distal").textContent =
+    `${voltsToMillivolts(electrical.meanDistalVolts).toFixed(1)} mV`;
+  element("#board-attenuation").textContent =
+    `${voltsToMillivolts(electrical.meanProximalDistalDeltaVolts).toFixed(1)} mV`;
   element("#board-shunt").textContent =
     `${electrical.shuntingCells} / ${snapshot.cellPatch.membraneVolts.length} células`;
   element("#board-events").textContent = electrical.eventCount === 0
@@ -426,7 +443,8 @@ function visualAuditReport() {
       overview: "pulsos E/I usam diâmetros distintos e legenda textual",
       laminar: "excitação é cilindro; inibição e TRN são toros",
       cell: "somata E/I usam razões de aspecto opostas",
-      neuron: "soma E/I muda de forma; correntes usam direção, tamanho, posição e tabela",
+      neuron:
+        "soma E/I muda de forma; soma/proximal/distal têm luminância e rótulos textuais independentes",
       electricity: "setas preservam sentido; nós E/I usam círculo/quadrado e shunt usa anel",
       synapse: "vesículas, transmissores, receptores e recaptura têm formas e posições distintas",
     },

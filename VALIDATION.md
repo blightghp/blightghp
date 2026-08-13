@@ -393,6 +393,25 @@ um artefato versionado em cada linha:
 | acessibilidade visual | seis tabs, 12 controles celulares, captura colorida/monocromática e viewport móvel passam no navegador real |
 | rollback | desabilitar a sexta vista mantém o patch de 12 células e não exige migração de ABI ou estado |
 
+### R09-E · dendrito multicompartimental e ABI v8
+
+| Gate | Evidência executável |
+| :-- | :-- |
+| equações/unidades | Rust integra `Vs/Vp/Vd` em V com `Cs/Cp/Cd` em F e fuga/acoplamento em S; envelope `[−120,+60] mV` |
+| estabilidade/convergência | fuga e acoplamentos usam matriz tridiagonal implícita; erro de `dt=1/12000 s` cai contra referência `1/96000 s` |
+| conservação de carga | correntes `gsp(Vp−Vs)` e `gpd(Vd−Vp)` somam zero entre os três compartimentos antes das correntes de membrana |
+| roteamento | AMPA/NMDA usam `Vd`, GABA-A usa `Vp` e GABA-B usa `Vs`, com teste de força motriz por receptor |
+| replay | `cell-patch-v1.json` e `cell-spike-events-v1.json` permanecem exatos em `LegacySingleDendriteV1`; fixtures v2 congelam o padrão multicompartimental |
+| determinismo | duas simulações com mesma semente igualam tick a tick os hashes de rede, corticotalâmico, célula, química e eventos |
+| hash celular | schema/tag/comprimento separam soma, proximal e distal; perturbar qualquer compartimento muda um domínio distinto de bytes |
+| ABI/Worker | schema 8 substitui o dendrito único por `dendriteProximalVolts` e `dendriteDistalVolts`; 37 buffers são transferidos uma vez cada |
+| renderer | `NeuronRenderLayer` interpola por coordenada de caminho determinística, mantém 10 draws e não reconstrói geometria por frame |
+| Prancha Elétrica | condutância usa a força motriz do compartimento roteado e a tabela publica V proximal, V distal e `Δ prox→dist` com origem |
+| acessibilidade | soma/proximal/distal aparecem como rótulos independentes e equivalentes tabulares no modo monocromático |
+| invariância visual | câmera, detalhe elétrico, seleção e modo visual preservam os cinco hashes com relógio congelado |
+| orçamento | teste nativo mede 12 células abaixo de `1 ms/subpasso`; navegador confirma lifecycle e ABI sem buffer duplicado |
+| rollback | `CellPatchModel::LegacySingleDendriteV1` preserva o solver/fixture v1; a ABI/UI permanece v8 |
+
 ### Prontidão da futura película 3D
 
 `materialProfileAudit()` deve retornar exatamente as seis vistas, perfil ativo
@@ -410,8 +429,9 @@ Os contratos executáveis atuais são:
   buffers `f32`, peso absoluto médio e taxa populacional em janela;
 - `input-queue-v1.json`: entradas deliberadamente fora de ordem e a ordem
   canônica esperada por `(tick, sequence)`;
-- `cell-patch-v1.json`: replay de 60 intervalos macro do patch, com quatro
-  checkpoints exatos e gerador Rust versionado em `examples/`;
+- `cell-patch-v1.json`: replay legado de 60 intervalos macro do patch de um
+  dendrito; `cell-patch-v2.json` congela soma/proximal/distal e o hash v2 em
+  quatro checkpoints exatos;
 - `short-term-plasticity-v1.json`, `cleft-occupancy-v1.json` e
   `chemical-solver-v1.json`: trilha química congelada em três fronteiras
   independentes antes de sua composição na ABI v6;
@@ -420,8 +440,9 @@ Os contratos executáveis atuais são:
 - `abi-v5-hash-preservation-v1.json`: registra os três hashes da captura 0.8 no
   cenário de entrada congelado; capturas de outro cenário validam proveniência e
   seus quatro hashes próprios, sem comparação entre entradas distintas;
-- `cell-spike-events-v1.json`: congela três intervalos não vazios, 55 eventos,
-  IDs, offsets, ticks e hashes; o gerador Rust vive em `examples/`;
+- `cell-spike-events-v1.json`: congela três intervalos legados não vazios;
+  `cell-spike-events-v2.json` congela os lotes do modelo multicompartimental;
+  ambos com IDs, offsets e ticks exatos e gerador Rust em `examples/`;
 - `scripts/shadow_replay.js`: recompõe o replay no Wasm e exige os hashes do
   oráculo congelado e o SHA-256 auditado do fixture;
 - testes Cargo: reproduzem o artefato, inclusive o replay neural completo, e
@@ -458,12 +479,13 @@ erro e estabilidade no regime em que será usado.
 | ENG-004/010 tempo independente do frame | relógio, captura e hash sob LOD/câmera | Vitest + teste de integração |
 | ENG-005/QA-009 atomicidade | snapshot/hash idênticos após falha | Cargo por solver |
 | ENG-006 determinismo | repetição, fixture e ordem empatada | Cargo + replay |
-| ABI-001..004/012 | schema 7, 36 buffers, ordens/unidades, eventos e compatibilidade v5 | Cargo, Vitest, Wasm browser |
+| ABI-001..004/012/020 | schema 8, 37 buffers, ordens/unidades, eventos e fixtures celulares v1/v2 | Cargo, Vitest, Wasm browser |
 | WRK-001..003 | fila serial, cotas, backpressure, fallback inerte, reset/dispose | Vitest + navegador forçando falha |
 | UI-001..010 | estado, unidades, controles e acessibilidade | unitário/DOM/E2E |
 | UI-021/QA-093 | seleção celular, `Tab`/`Enter`/`Escape`, foco e hashes invariantes | Vitest + auditoria de navegador |
 | GFX-001..010 | hash invariável, proveniência e estado→pixel | testes estruturais + render target + capturas |
 | GFX-050/AST-010 | geometria determinística, origem visual e ausência de evento inventado | Vitest + auditoria de navegador |
+| MOD-100/ENG-025/QA-100 | cabo de três compartimentos, conservação, convergência, determinismo e orçamento | Cargo + replay + auditoria R09-E |
 | AST/VAS | fonte/licença/sem animação sem estado | manifesto de asset + auditoria visual |
 | SEC | inputs/cotas/CSP/dependências/import | unitário, fuzz/property, SCA e revisão |
 | PERF | custo por subsistema/ambiente | relatório versionado |

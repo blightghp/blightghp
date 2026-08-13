@@ -388,7 +388,8 @@ export class WasmEngineHost {
       cellPatch: {
         kinds: engine.cell_kinds(),
         membraneVolts: engine.cell_membrane_volts(),
-        dendriteVolts: engine.cell_dendrite_volts(),
+        dendriteProximalVolts: engine.cell_dendrite_proximal_volts(),
+        dendriteDistalVolts: engine.cell_dendrite_distal_volts(),
         adaptationAmperes: engine.cell_adaptation_amperes(),
         ampaAmperes: engine.cell_ampa_amperes(),
         nmdaAmperes: engine.cell_nmda_amperes(),
@@ -478,7 +479,8 @@ export class DiagnosticFallbackHost {
         cellPatch: {
           kinds: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]),
           membraneVolts: new Float32Array(12),
-          dendriteVolts: new Float32Array(12),
+          dendriteProximalVolts: new Float32Array(12),
+          dendriteDistalVolts: new Float32Array(12),
           adaptationAmperes: new Float32Array(12),
           ampaAmperes: new Float32Array(12),
           nmdaAmperes: new Float32Array(12),

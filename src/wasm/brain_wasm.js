@@ -159,8 +159,17 @@ export class WasmNeuralEngine {
     /**
      * @returns {Float32Array}
      */
-    cell_dendrite_volts() {
-        const ret = wasm.wasmneuralengine_cell_dendrite_volts(this.__wbg_ptr);
+    cell_dendrite_distal_volts() {
+        const ret = wasm.wasmneuralengine_cell_dendrite_distal_volts(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    cell_dendrite_proximal_volts() {
+        const ret = wasm.wasmneuralengine_cell_dendrite_proximal_volts(this.__wbg_ptr);
         var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;

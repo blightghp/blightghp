@@ -43,7 +43,7 @@ try {
   );
   if (
     diagnostics.runtime !== "rust-wasm" ||
-    diagnostics.schemaVersion !== 7 ||
+    diagnostics.schemaVersion !== 8 ||
     diagnostics.degraded ||
     !/^[0-9a-f]{16}$/.test(diagnostics.stateHash) ||
     !/^[0-9a-f]{16}$/.test(diagnostics.corticothalamicHash) ||
@@ -54,9 +54,9 @@ try {
     throw new Error(`diagnóstico inesperado: ${JSON.stringify(diagnostics)}`);
   }
   if (
-    abi.schemaVersion !== 7 ||
-    abi.buffers.length !== 36 ||
-    new Set(abi.buffers.map(({ name }) => name)).size !== 36 ||
+    abi.schemaVersion !== 8 ||
+    abi.buffers.length !== 37 ||
+    new Set(abi.buffers.map(({ name }) => name)).size !== 37 ||
     abi.cellSpikeEvents.bytesPerEvent !== 12 ||
     abi.cellSpikeEvents.maximumEvents !== 4_096 ||
     abi.cellSpikeEvents.count > abi.cellSpikeEvents.maximumEvents ||
@@ -147,7 +147,8 @@ try {
   );
   const neuron = await page.evaluate(() => ({
     soma: document.querySelector("#neuron-soma")?.textContent,
-    dendrite: document.querySelector("#neuron-dendrite")?.textContent,
+    proximal: document.querySelector("#neuron-proximal")?.textContent,
+    distal: document.querySelector("#neuron-distal")?.textContent,
     adaptation: document.querySelector("#neuron-adaptation")?.textContent,
     hidden: document.querySelector("#neuron-panel")?.hidden,
     audit: window.__BRAIN_ENGINE__.neuronAudit(),
@@ -155,7 +156,8 @@ try {
   if (
     neuron.hidden ||
     !neuron.soma?.endsWith("mV") ||
-    !neuron.dendrite?.endsWith("mV") ||
+    !neuron.proximal?.endsWith("mV") ||
+    !neuron.distal?.endsWith("mV") ||
     !neuron.adaptation?.endsWith("pA") ||
     neuron.audit.selectedCellId !== 3 ||
     !/^[0-9a-f]{16}$/.test(neuron.audit.geometryHash)

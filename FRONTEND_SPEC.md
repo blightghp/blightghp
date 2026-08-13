@@ -91,9 +91,9 @@ visual. Novas funções exigem teste e não podem furar a validação do protoco
 | :-- | :-- | :-- | :-- |
 | Visão Geral | rede, campo, sinais e hashes | orientação macro e saúde | topologia procedural, não atlas |
 | Lâminas | L1–L6, relé, TRN, rebote | circuito didático | massa neural fenomenológica |
-| Célula | patch, contorno e eventos carimbados | 12 células e compartimentos | um dendrito passivo |
-| Neurônio | uma célula do patch e seus eventos carimbados | soma, dendrito único, adaptação e quatro correntes | morfologia ilustrativa; sem gradiente, condução ou tipo celular real |
-| Eletricidade | patch, eventos e topologia macro rotulada | Prancha Elétrica com V/A/S, direção e origem | esquema didático; atraso/ganho macro não pertencem ao patch |
+| Célula | patch, contorno e eventos carimbados | 12 células × soma/proximal/distal | cabo passivo; sem canais dendríticos ativos |
+| Neurônio | uma célula do patch e seus eventos carimbados | soma, proximal, distal, adaptação e quatro correntes | morfologia ilustrativa; sem condução ativa ou tipo celular real |
+| Eletricidade | patch, eventos e topologia macro rotulada | Prancha Elétrica com V/A/S, atenuação, direção e origem | esquema didático; atraso/ganho macro não pertencem ao patch |
 | Sinapse | química v6 | vesícula, fenda, ocupação/remoção | microdomínio representativo |
 
 ### Perfil de material futuro
@@ -182,8 +182,9 @@ pendente resolver sobre uma instância nova.
 A vista própria implementada em R09-C oferece:
 
 - esquema abstrato do patch em scene graph distinto da vista Célula;
-- 12 nós E/I, quatro vias receptoras, direção, V, A, S efetiva, excitação,
-  inibição, shunt e eventos celulares carimbados;
+- 12 nós E/I, quatro vias receptoras, direção, V somático/proximal/distal, A,
+  S efetiva, atenuação proximal→distal, excitação, inibição, shunt e eventos
+  celulares carimbados;
 - atraso e ganho médios da rede em linhas próprias, rotulados como topologia
   macro para não fingir que são atributos das células do patch;
 - níveis agregado, celular e eventos, além de equivalente tabular com caminho

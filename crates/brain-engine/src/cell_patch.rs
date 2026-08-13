@@ -2,7 +2,8 @@ use core::fmt;
 
 use crate::{random_unit, Seconds};
 
-pub const CELL_PATCH_SCHEMA_VERSION: u32 = 1;
+pub const CELL_PATCH_SCHEMA_VERSION: u32 = 2;
+pub const LEGACY_CELL_PATCH_SCHEMA_VERSION: u32 = 1;
 pub const CELL_SPIKE_EVENT_SCHEMA_VERSION: u32 = 1;
 pub const CELL_COUNT: usize = 12;
 pub const EXCITATORY_CELL_COUNT: usize = 8;
@@ -23,6 +24,17 @@ const NMDA_TAU_SECONDS: f64 = 0.080;
 const GABAA_TAU_SECONDS: f64 = 0.010;
 const GABAB_TAU_SECONDS: f64 = 0.150;
 const SPIKE_THRESHOLD_VOLTS: f64 = -0.030;
+const RESTING_VOLTS: f64 = -0.070;
+const MIN_COMPARTMENT_VOLTS: f64 = -0.120;
+const MAX_COMPARTMENT_VOLTS: f64 = 0.060;
+const SOMA_CAPACITANCE_FARADS: f64 = 200.0e-12;
+const PROXIMAL_CAPACITANCE_FARADS: f64 = 60.0e-12;
+const DISTAL_CAPACITANCE_FARADS: f64 = 40.0e-12;
+const SOMA_LEAK_SIEMENS: f64 = 10.0e-9;
+const PROXIMAL_LEAK_SIEMENS: f64 = 4.0e-9;
+const DISTAL_LEAK_SIEMENS: f64 = 2.0e-9;
+const SOMA_PROXIMAL_COUPLING_SIEMENS: f64 = 6.0e-9;
+const PROXIMAL_DISTAL_COUPLING_SIEMENS: f64 = 4.0e-9;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
@@ -32,8 +44,15 @@ pub enum PatchCellKind {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+pub enum CellPatchModel {
+    LegacySingleDendriteV1,
+    MultiCompartmentV2,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CellPatchConfig {
     pub dt: Seconds,
+    pub model: CellPatchModel,
 }
 
 impl Default for CellPatchConfig {
@@ -41,6 +60,17 @@ impl Default for CellPatchConfig {
         Self {
             dt: Seconds::try_new(DEFAULT_CELL_STEP_SECONDS)
                 .expect("the default cell step is positive and finite"),
+            model: CellPatchModel::MultiCompartmentV2,
+        }
+    }
+}
+
+impl CellPatchConfig {
+    #[must_use]
+    pub const fn legacy_v1(dt: Seconds) -> Self {
+        Self {
+            dt,
+            model: CellPatchModel::LegacySingleDendriteV1,
         }
     }
 }
@@ -154,7 +184,8 @@ pub struct CellPatchSnapshot {
     pub time_seconds: f64,
     pub kinds: Vec<u8>,
     pub membrane_volts: Vec<f32>,
-    pub dendrite_volts: Vec<f32>,
+    pub dendrite_proximal_volts: Vec<f32>,
+    pub dendrite_distal_volts: Vec<f32>,
     pub adaptation_amperes: Vec<f32>,
     pub ampa_amperes: Vec<f32>,
     pub nmda_amperes: Vec<f32>,
@@ -177,8 +208,9 @@ pub struct CellPatch {
     seed: u32,
     tick: u64,
     kinds: [PatchCellKind; CELL_COUNT],
-    membrane_volts: [f64; CELL_COUNT],
-    dendrite_volts: [f64; CELL_COUNT],
+    v_soma: [f64; CELL_COUNT],
+    v_proximal: [f64; CELL_COUNT],
+    v_distal: [f64; CELL_COUNT],
     adaptation_amperes: [f64; CELL_COUNT],
     ampa_siemens: [f64; CELL_COUNT],
     nmda_siemens: [f64; CELL_COUNT],
@@ -224,8 +256,9 @@ impl CellPatch {
             seed,
             tick: 0,
             kinds,
-            membrane_volts: [-0.070; CELL_COUNT],
-            dendrite_volts: [-0.070; CELL_COUNT],
+            v_soma: [RESTING_VOLTS; CELL_COUNT],
+            v_proximal: [RESTING_VOLTS; CELL_COUNT],
+            v_distal: [RESTING_VOLTS; CELL_COUNT],
             adaptation_amperes: [0.0; CELL_COUNT],
             ampa_siemens: [0.0; CELL_COUNT],
             nmda_siemens: [0.0; CELL_COUNT],
@@ -308,8 +341,9 @@ impl CellPatch {
             self.seed = seed;
         }
         self.tick = 0;
-        self.membrane_volts.fill(-0.070);
-        self.dendrite_volts.fill(-0.070);
+        self.v_soma.fill(RESTING_VOLTS);
+        self.v_proximal.fill(RESTING_VOLTS);
+        self.v_distal.fill(RESTING_VOLTS);
         self.adaptation_amperes.fill(0.0);
         self.ampa_siemens.fill(0.0);
         self.nmda_siemens.fill(0.0);
@@ -351,23 +385,40 @@ impl CellPatch {
         } else {
             excitatory / inhibitory
         };
-        let state_hash = patch_hash(
-            self.tick,
-            &self.membrane_volts,
-            &self.dendrite_volts,
-            &self.adaptation_amperes,
-            &self.ampa_siemens,
-            &self.nmda_siemens,
-            &self.gabaa_siemens,
-            &self.gabab_siemens,
-        );
+        let state_hash = match self.config.model {
+            CellPatchModel::LegacySingleDendriteV1 => patch_hash_v1(
+                self.tick,
+                &self.v_soma,
+                &self.v_proximal,
+                &self.adaptation_amperes,
+                &self.ampa_siemens,
+                &self.nmda_siemens,
+                &self.gabaa_siemens,
+                &self.gabab_siemens,
+            ),
+            CellPatchModel::MultiCompartmentV2 => patch_hash_v2(
+                self.tick,
+                &self.v_soma,
+                &self.v_proximal,
+                &self.v_distal,
+                &self.adaptation_amperes,
+                &self.ampa_siemens,
+                &self.nmda_siemens,
+                &self.gabaa_siemens,
+                &self.gabab_siemens,
+            ),
+        };
         CellPatchSnapshot {
-            schema_version: CELL_PATCH_SCHEMA_VERSION,
+            schema_version: match self.config.model {
+                CellPatchModel::LegacySingleDendriteV1 => LEGACY_CELL_PATCH_SCHEMA_VERSION,
+                CellPatchModel::MultiCompartmentV2 => CELL_PATCH_SCHEMA_VERSION,
+            },
             tick: self.tick,
             time_seconds: tick_to_f64(self.tick) * self.config.dt.get(),
             kinds: self.kinds.iter().map(|kind| *kind as u8).collect(),
-            membrane_volts: self.membrane_volts.map(quantize_f32).to_vec(),
-            dendrite_volts: self.dendrite_volts.map(quantize_f32).to_vec(),
+            membrane_volts: self.v_soma.map(quantize_f32).to_vec(),
+            dendrite_proximal_volts: self.v_proximal.map(quantize_f32).to_vec(),
+            dendrite_distal_volts: self.v_distal.map(quantize_f32).to_vec(),
             adaptation_amperes: self.adaptation_amperes.map(quantize_f32).to_vec(),
             ampa_amperes: self.ampa_amperes.map(quantize_f32).to_vec(),
             nmda_amperes: self.nmda_amperes.map(quantize_f32).to_vec(),
@@ -418,24 +469,52 @@ impl CellPatch {
 
         for cell in 0..CELL_COUNT {
             self.update_currents(cell);
-            self.integrate_cell(cell, drive.boundary_current_amperes, dt, spike_event_limit)?;
+            match self.config.model {
+                CellPatchModel::LegacySingleDendriteV1 => self.integrate_legacy_cell(
+                    cell,
+                    drive.boundary_current_amperes,
+                    dt,
+                    spike_event_limit,
+                )?,
+                CellPatchModel::MultiCompartmentV2 => self.integrate_multicompartment_cell(
+                    cell,
+                    drive.boundary_current_amperes,
+                    dt,
+                    spike_event_limit,
+                )?,
+            }
         }
         self.propagate_spikes();
+        if self.config.model == CellPatchModel::MultiCompartmentV2 {
+            for cell in 0..CELL_COUNT {
+                self.update_currents(cell);
+            }
+        }
         self.tick = next_tick;
         Ok(())
     }
 
     fn update_currents(&mut self, cell: usize) {
-        let dendrite = self.dendrite_volts[cell];
-        self.ampa_amperes[cell] = self.ampa_siemens[cell] * (EXCITATORY_REVERSAL_VOLTS - dendrite);
+        let soma = self.v_soma[cell];
+        let proximal = self.v_proximal[cell];
+        let distal = match self.config.model {
+            CellPatchModel::LegacySingleDendriteV1 => proximal,
+            CellPatchModel::MultiCompartmentV2 => self.v_distal[cell],
+        };
+        self.ampa_amperes[cell] = self.ampa_siemens[cell] * (EXCITATORY_REVERSAL_VOLTS - distal);
         self.nmda_amperes[cell] = self.nmda_siemens[cell]
-            * nmda_magnesium_block(dendrite)
-            * (EXCITATORY_REVERSAL_VOLTS - dendrite);
-        self.gabaa_amperes[cell] = self.gabaa_siemens[cell] * (GABAA_REVERSAL_VOLTS - dendrite);
-        self.gabab_amperes[cell] = self.gabab_siemens[cell] * (GABAB_REVERSAL_VOLTS - dendrite);
+            * nmda_magnesium_block(distal)
+            * (EXCITATORY_REVERSAL_VOLTS - distal);
+        self.gabaa_amperes[cell] = self.gabaa_siemens[cell] * (GABAA_REVERSAL_VOLTS - proximal);
+        let gabab_voltage = match self.config.model {
+            CellPatchModel::LegacySingleDendriteV1 => proximal,
+            CellPatchModel::MultiCompartmentV2 => soma,
+        };
+        self.gabab_amperes[cell] =
+            self.gabab_siemens[cell] * (GABAB_REVERSAL_VOLTS - gabab_voltage);
     }
 
-    fn integrate_cell(
+    fn integrate_legacy_cell(
         &mut self,
         cell: usize,
         boundary_current: f64,
@@ -449,14 +528,14 @@ impl CellPatch {
         let adaptation_a = if excitatory { 2.0e-9 } else { 0.0 };
         let adaptation_b = if excitatory { 40.0e-12 } else { 0.0 };
         let adaptation_tau = if excitatory { 0.200 } else { 0.030 };
-        let rest = -0.070;
+        let rest = RESTING_VOLTS;
         let threshold = -0.050;
         let reset_voltage = if excitatory { -0.058 } else { -0.055 };
         let coupling = 4.0e-9;
         let dendrite_capacitance = 100.0e-12;
         let dendrite_leak = 5.0e-9;
-        let soma = self.membrane_volts[cell];
-        let dendrite = self.dendrite_volts[cell];
+        let soma = self.v_soma[cell];
+        let dendrite = self.v_proximal[cell];
         let synaptic = self.ampa_amperes[cell]
             + self.nmda_amperes[cell]
             + self.gabaa_amperes[cell]
@@ -471,38 +550,134 @@ impl CellPatch {
             / capacitance;
         let adaptation_derivative =
             (adaptation_a * (soma - rest) - self.adaptation_amperes[cell]) / adaptation_tau;
-        self.dendrite_volts[cell] = (dendrite + dt * dendrite_derivative).clamp(-0.110, 0.020);
-        self.membrane_volts[cell] = (soma + dt * soma_derivative).clamp(-0.110, 0.020);
+        self.v_proximal[cell] = (dendrite + dt * dendrite_derivative).clamp(-0.110, 0.020);
+        self.v_distal[cell] = self.v_proximal[cell];
+        self.v_soma[cell] = (soma + dt * soma_derivative).clamp(-0.110, 0.020);
         self.adaptation_amperes[cell] =
             (self.adaptation_amperes[cell] + dt * adaptation_derivative).max(0.0);
-        if self.membrane_volts[cell] >= SPIKE_THRESHOLD_VOLTS {
-            self.membrane_volts[cell] = reset_voltage;
-            self.adaptation_amperes[cell] += adaptation_b;
-            self.spiked[cell] = 1;
-            self.interval_spikes = self
-                .interval_spikes
-                .checked_add(1)
-                .ok_or(CellPatchError::SpikeOverflow)?;
-            if self.interval_spike_events.len() >= spike_event_limit {
-                return Err(CellPatchError::SpikeEventLimitExceeded);
-            }
-            self.interval_spike_events.push(CellSpikeEvent {
-                cell_id: u32::try_from(cell).map_err(|_| CellPatchError::CellOverflow)?,
-                time_offset_seconds: tick_to_f64(
-                    self.tick
-                        .checked_sub(self.interval_start_tick)
-                        .ok_or(CellPatchError::TickOverflow)?,
-                ) * dt,
-            });
-            if self.first_spike_seconds.is_none() {
-                self.first_spike_seconds = Some(tick_to_f64(self.tick) * dt);
-            }
-        }
-        if !self.membrane_volts[cell].is_finite()
-            || !self.dendrite_volts[cell].is_finite()
+        self.register_spike_if_needed(cell, reset_voltage, adaptation_b, dt, spike_event_limit)?;
+        if !self.v_soma[cell].is_finite()
+            || !self.v_proximal[cell].is_finite()
+            || !self.v_distal[cell].is_finite()
             || !self.adaptation_amperes[cell].is_finite()
         {
             return Err(CellPatchError::NonFiniteState);
+        }
+        Ok(())
+    }
+
+    fn integrate_multicompartment_cell(
+        &mut self,
+        cell: usize,
+        boundary_current: f64,
+        dt: f64,
+        spike_event_limit: usize,
+    ) -> Result<(), CellPatchError> {
+        let excitatory = self.kinds[cell] == PatchCellKind::Excitatory;
+        let slope = if excitatory { 2.0e-3 } else { 0.5e-3 };
+        let adaptation_a = if excitatory { 2.0e-9 } else { 0.0 };
+        let adaptation_b = if excitatory { 40.0e-12 } else { 0.0 };
+        let adaptation_tau = if excitatory { 0.200 } else { 0.030 };
+        let threshold = -0.050;
+        let reset_voltage = if excitatory { -0.058 } else { -0.055 };
+        let soma = self.v_soma[cell];
+        let proximal = self.v_proximal[cell];
+        let distal = self.v_distal[cell];
+
+        // Passive leak and axial coupling are solved implicitly as one fixed
+        // tridiagonal system. AdEx, adaptation, injection and receptor currents
+        // remain explicit at the beginning of the microscopic step.
+        let soma_diagonal =
+            SOMA_CAPACITANCE_FARADS / dt + SOMA_LEAK_SIEMENS + SOMA_PROXIMAL_COUPLING_SIEMENS;
+        let proximal_diagonal = PROXIMAL_CAPACITANCE_FARADS / dt
+            + PROXIMAL_LEAK_SIEMENS
+            + SOMA_PROXIMAL_COUPLING_SIEMENS
+            + PROXIMAL_DISTAL_COUPLING_SIEMENS;
+        let distal_diagonal =
+            DISTAL_CAPACITANCE_FARADS / dt + DISTAL_LEAK_SIEMENS + PROXIMAL_DISTAL_COUPLING_SIEMENS;
+        let soma_to_proximal = -SOMA_PROXIMAL_COUPLING_SIEMENS;
+        let proximal_to_distal = -PROXIMAL_DISTAL_COUPLING_SIEMENS;
+        let exponential = SOMA_LEAK_SIEMENS * slope * ((soma - threshold) / slope).min(20.0).exp();
+        let soma_rhs =
+            SOMA_CAPACITANCE_FARADS / dt * soma + SOMA_LEAK_SIEMENS * RESTING_VOLTS + exponential
+                - self.adaptation_amperes[cell]
+                + boundary_current
+                + self.gabab_amperes[cell];
+        let proximal_rhs = PROXIMAL_CAPACITANCE_FARADS / dt * proximal
+            + PROXIMAL_LEAK_SIEMENS * RESTING_VOLTS
+            + self.gabaa_amperes[cell];
+        let distal_rhs = DISTAL_CAPACITANCE_FARADS / dt * distal
+            + DISTAL_LEAK_SIEMENS * RESTING_VOLTS
+            + self.ampa_amperes[cell]
+            + self.nmda_amperes[cell];
+
+        let upper_soma = soma_to_proximal / soma_diagonal;
+        let rhs_soma = soma_rhs / soma_diagonal;
+        let proximal_pivot = proximal_diagonal - soma_to_proximal * upper_soma;
+        let upper_proximal = proximal_to_distal / proximal_pivot;
+        let rhs_proximal = (proximal_rhs - soma_to_proximal * rhs_soma) / proximal_pivot;
+        let distal_pivot = distal_diagonal - proximal_to_distal * upper_proximal;
+        if !proximal_pivot.is_finite()
+            || !distal_pivot.is_finite()
+            || proximal_pivot <= 0.0
+            || distal_pivot <= 0.0
+        {
+            return Err(CellPatchError::NonFiniteState);
+        }
+        let next_distal = (distal_rhs - proximal_to_distal * rhs_proximal) / distal_pivot;
+        let next_proximal = rhs_proximal - upper_proximal * next_distal;
+        let next_soma = rhs_soma - upper_soma * next_proximal;
+        let adaptation_derivative = (adaptation_a * (soma - RESTING_VOLTS)
+            - self.adaptation_amperes[cell])
+            / adaptation_tau;
+
+        self.v_soma[cell] = next_soma.clamp(MIN_COMPARTMENT_VOLTS, MAX_COMPARTMENT_VOLTS);
+        self.v_proximal[cell] = next_proximal.clamp(MIN_COMPARTMENT_VOLTS, MAX_COMPARTMENT_VOLTS);
+        self.v_distal[cell] = next_distal.clamp(MIN_COMPARTMENT_VOLTS, MAX_COMPARTMENT_VOLTS);
+        self.adaptation_amperes[cell] =
+            (self.adaptation_amperes[cell] + dt * adaptation_derivative).max(0.0);
+        self.register_spike_if_needed(cell, reset_voltage, adaptation_b, dt, spike_event_limit)?;
+        if !self.v_soma[cell].is_finite()
+            || !self.v_proximal[cell].is_finite()
+            || !self.v_distal[cell].is_finite()
+            || !self.adaptation_amperes[cell].is_finite()
+        {
+            return Err(CellPatchError::NonFiniteState);
+        }
+        Ok(())
+    }
+
+    fn register_spike_if_needed(
+        &mut self,
+        cell: usize,
+        reset_voltage: f64,
+        adaptation_increment: f64,
+        dt: f64,
+        spike_event_limit: usize,
+    ) -> Result<(), CellPatchError> {
+        if self.v_soma[cell] < SPIKE_THRESHOLD_VOLTS {
+            return Ok(());
+        }
+        self.v_soma[cell] = reset_voltage;
+        self.adaptation_amperes[cell] += adaptation_increment;
+        self.spiked[cell] = 1;
+        self.interval_spikes = self
+            .interval_spikes
+            .checked_add(1)
+            .ok_or(CellPatchError::SpikeOverflow)?;
+        if self.interval_spike_events.len() >= spike_event_limit {
+            return Err(CellPatchError::SpikeEventLimitExceeded);
+        }
+        self.interval_spike_events.push(CellSpikeEvent {
+            cell_id: u32::try_from(cell).map_err(|_| CellPatchError::CellOverflow)?,
+            time_offset_seconds: tick_to_f64(
+                self.tick
+                    .checked_sub(self.interval_start_tick)
+                    .ok_or(CellPatchError::TickOverflow)?,
+            ) * dt,
+        });
+        if self.first_spike_seconds.is_none() {
+            self.first_spike_seconds = Some(tick_to_f64(self.tick) * dt);
         }
         Ok(())
     }
@@ -548,7 +723,7 @@ fn nmda_magnesium_block(volts: f64) -> f64 {
     clippy::similar_names,
     reason = "the state hash names every independent receptor array explicitly"
 )]
-fn patch_hash(
+fn patch_hash_v1(
     tick: u64,
     membrane: &[f64],
     dendrite: &[f64],
@@ -574,6 +749,64 @@ fn patch_hash(
         hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
     }
     hash
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    clippy::similar_names,
+    reason = "the v2 state hash names every independent compartment and receptor array"
+)]
+fn patch_hash_v2(
+    tick: u64,
+    soma: &[f64],
+    proximal: &[f64],
+    distal: &[f64],
+    adaptation: &[f64],
+    ampa: &[f64],
+    nmda: &[f64],
+    gabaa: &[f64],
+    gabab: &[f64],
+) -> u64 {
+    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+    hash_tagged_bytes(
+        &mut hash,
+        b"brain.cell.patch",
+        &CELL_PATCH_SCHEMA_VERSION.to_le_bytes(),
+    );
+    hash_tagged_bytes(&mut hash, b"tick", &tick.to_le_bytes());
+    for (tag, values) in [
+        (b"soma".as_slice(), soma),
+        (b"proximal".as_slice(), proximal),
+        (b"distal".as_slice(), distal),
+        (b"adaptation".as_slice(), adaptation),
+        (b"ampa".as_slice(), ampa),
+        (b"nmda".as_slice(), nmda),
+        (b"gabaa".as_slice(), gabaa),
+        (b"gabab".as_slice(), gabab),
+    ] {
+        let length = u32::try_from(values.len()).unwrap_or(u32::MAX);
+        hash_tagged_bytes(&mut hash, tag, &length.to_le_bytes());
+        for value in values {
+            hash_bytes(&mut hash, &value.to_bits().to_le_bytes());
+        }
+    }
+    hash
+}
+
+fn hash_tagged_bytes(hash: &mut u64, tag: &[u8], bytes: &[u8]) {
+    hash_bytes(
+        hash,
+        &u32::try_from(tag.len()).unwrap_or(u32::MAX).to_le_bytes(),
+    );
+    hash_bytes(hash, tag);
+    hash_bytes(hash, bytes);
+}
+
+fn hash_bytes(hash: &mut u64, bytes: &[u8]) {
+    for &byte in bytes {
+        *hash ^= u64::from(byte);
+        *hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
 }
 
 #[expect(
@@ -638,6 +871,7 @@ mod tests {
             seed,
             CellPatchConfig {
                 dt: Seconds::try_new(dt).unwrap(),
+                model: CellPatchModel::MultiCompartmentV2,
             },
             ResolutionMap::learning_patch(Some(0)).unwrap(),
         )
@@ -675,7 +909,8 @@ mod tests {
             assert!(left
                 .membrane_volts
                 .iter()
-                .chain(&left.dendrite_volts)
+                .chain(&left.dendrite_proximal_volts)
+                .chain(&left.dendrite_distal_volts)
                 .chain(&left.ampa_amperes)
                 .chain(&left.nmda_amperes)
                 .chain(&left.gabaa_amperes)
@@ -684,7 +919,9 @@ mod tests {
             assert!(left
                 .membrane_volts
                 .iter()
-                .all(|value| (-0.12..=0.03).contains(value)));
+                .chain(&left.dendrite_proximal_volts)
+                .chain(&left.dendrite_distal_volts)
+                .all(|value| (-0.12..=0.06).contains(value)));
             assert!(left.ampa_amperes.iter().all(|value| *value >= 0.0));
             assert!(left.gabab_amperes.iter().all(|value| *value <= 0.0));
         }
@@ -730,6 +967,135 @@ mod tests {
         let medium_error = (times[1] - times[2]).abs();
         assert!(medium_error <= coarse_error);
         assert!(medium_error <= 0.000_25);
+    }
+
+    #[test]
+    fn passive_cable_refinement_reduces_voltage_error() {
+        fn response(dt: f64, steps: usize) -> [f64; 3] {
+            let mut engine = patch(dt, 7);
+            engine.v_soma[0] = -0.045;
+            engine.v_proximal[0] = -0.065;
+            engine.v_distal[0] = -0.085;
+            for _ in 0..steps {
+                engine
+                    .integrate_multicompartment_cell(0, 0.0, dt, usize::MAX)
+                    .unwrap();
+            }
+            [engine.v_soma[0], engine.v_proximal[0], engine.v_distal[0]]
+        }
+
+        fn error(sample: [f64; 3], reference: [f64; 3]) -> f64 {
+            sample
+                .into_iter()
+                .zip(reference)
+                .map(|(left, right)| (left - right).abs())
+                .sum()
+        }
+
+        let coarse = response(1.0 / 6_000.0, 24);
+        let medium = response(1.0 / 12_000.0, 48);
+        let reference = response(1.0 / 96_000.0, 384);
+        assert!(error(medium, reference) < error(coarse, reference));
+    }
+
+    #[test]
+    fn passive_cable_attenuates_a_subthreshold_somatic_drive() {
+        let mut engine = patch(DEFAULT_CELL_STEP_SECONDS, 9);
+        for _ in 0..24 {
+            engine
+                .integrate_multicompartment_cell(
+                    0,
+                    100.0e-12,
+                    DEFAULT_CELL_STEP_SECONDS,
+                    usize::MAX,
+                )
+                .unwrap();
+        }
+        assert!(engine.v_soma[0] > engine.v_proximal[0]);
+        assert!(engine.v_proximal[0] > engine.v_distal[0]);
+        assert!(engine.v_distal[0] > RESTING_VOLTS);
+    }
+
+    #[test]
+    fn coupling_currents_conserve_charge_and_receptors_use_declared_compartments() {
+        let soma = -0.050;
+        let proximal = -0.065;
+        let distal = -0.080;
+        let soma_current = SOMA_PROXIMAL_COUPLING_SIEMENS * (proximal - soma);
+        let proximal_current = SOMA_PROXIMAL_COUPLING_SIEMENS * (soma - proximal)
+            + PROXIMAL_DISTAL_COUPLING_SIEMENS * (distal - proximal);
+        let distal_current = PROXIMAL_DISTAL_COUPLING_SIEMENS * (proximal - distal);
+        assert!((soma_current + proximal_current + distal_current).abs() <= f64::EPSILON);
+
+        let mut engine = patch(DEFAULT_CELL_STEP_SECONDS, 11);
+        engine.v_soma[0] = soma;
+        engine.v_proximal[0] = proximal;
+        engine.v_distal[0] = distal;
+        engine.ampa_siemens[0] = 1.0e-9;
+        engine.nmda_siemens[0] = 1.0e-9;
+        engine.gabaa_siemens[0] = 1.0e-9;
+        engine.gabab_siemens[0] = 1.0e-9;
+        engine.update_currents(0);
+        assert!(
+            (engine.ampa_amperes[0] - 1.0e-9 * (EXCITATORY_REVERSAL_VOLTS - distal)).abs()
+                <= f64::EPSILON
+        );
+        assert!(
+            (engine.gabaa_amperes[0] - 1.0e-9 * (GABAA_REVERSAL_VOLTS - proximal)).abs()
+                <= f64::EPSILON
+        );
+        assert!(
+            (engine.gabab_amperes[0] - 1.0e-9 * (GABAB_REVERSAL_VOLTS - soma)).abs()
+                <= f64::EPSILON
+        );
+        assert!(
+            (engine.nmda_amperes[0]
+                - 1.0e-9 * nmda_magnesium_block(distal) * (EXCITATORY_REVERSAL_VOLTS - distal))
+                .abs()
+                <= f64::EPSILON
+        );
+    }
+
+    #[test]
+    fn v2_hash_domain_separates_proximal_and_distal_state() {
+        let engine = patch(DEFAULT_CELL_STEP_SECONDS, 17);
+        let baseline = engine.snapshot().state_hash;
+        let mut proximal_changed = engine.clone();
+        proximal_changed.v_proximal[0] += 1.0e-6;
+        let mut distal_changed = engine;
+        distal_changed.v_distal[0] += 1.0e-6;
+        assert_ne!(baseline, proximal_changed.snapshot().state_hash);
+        assert_ne!(baseline, distal_changed.snapshot().state_hash);
+        assert_ne!(
+            proximal_changed.snapshot().state_hash,
+            distal_changed.snapshot().state_hash
+        );
+    }
+
+    #[test]
+    fn twelve_cell_batch_stays_within_the_substep_budget() {
+        let mut engine = patch(DEFAULT_CELL_STEP_SECONDS, 29);
+        let interval = Seconds::try_new(1.0 / 60.0).unwrap();
+        let drive = CellPatchDrive {
+            excitatory_rate_hz: 62.0,
+            inhibitory_rate_hz: 28.0,
+            boundary_current_amperes: 420.0e-12,
+        };
+        let intervals = 20_u32;
+        let started = std::time::Instant::now();
+        for _ in 0..intervals {
+            engine.advance_interval(interval, drive).unwrap();
+        }
+        let elapsed_per_substep = started.elapsed().as_secs_f64()
+            / (f64::from(intervals) * interval.get() / DEFAULT_CELL_STEP_SECONDS);
+        eprintln!(
+            "R09-E 12-cell integration baseline: {:.3} us/substep",
+            elapsed_per_substep * 1.0e6
+        );
+        assert!(
+            elapsed_per_substep < 0.001,
+            "{elapsed_per_substep} s/substep"
+        );
     }
 
     #[test]

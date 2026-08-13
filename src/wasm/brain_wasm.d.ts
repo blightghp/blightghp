@@ -50,7 +50,8 @@ export class WasmNeuralEngine {
     cell_adaptation_amperes(): Float32Array;
     cell_ampa_amperes(): Float32Array;
     cell_blend(): number;
-    cell_dendrite_volts(): Float32Array;
+    cell_dendrite_distal_volts(): Float32Array;
+    cell_dendrite_proximal_volts(): Float32Array;
     cell_excitatory_inhibitory_ratio(): number;
     cell_field_vertex(): number;
     cell_firing_rate_hz(): number;
@@ -155,7 +156,8 @@ export interface InitOutput {
     readonly wasmneuralengine_cell_adaptation_amperes: (a: number) => [number, number];
     readonly wasmneuralengine_cell_ampa_amperes: (a: number) => [number, number];
     readonly wasmneuralengine_cell_blend: (a: number) => number;
-    readonly wasmneuralengine_cell_dendrite_volts: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_dendrite_distal_volts: (a: number) => [number, number];
+    readonly wasmneuralengine_cell_dendrite_proximal_volts: (a: number) => [number, number];
     readonly wasmneuralengine_cell_excitatory_inhibitory_ratio: (a: number) => number;
     readonly wasmneuralengine_cell_field_vertex: (a: number) => number;
     readonly wasmneuralengine_cell_firing_rate_hz: (a: number) => number;

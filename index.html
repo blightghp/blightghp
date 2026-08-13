@@ -170,14 +170,15 @@
 
       <div class="metric-strip cell-metrics">
         <div><strong id="cell-membrane">−70.0 mV</strong><span>SOMA</span></div>
-        <div><strong id="cell-dendrite">−70.0 mV</strong><span>DENDRITO</span></div>
-        <div><strong id="cell-rate">0.0 Hz</strong><span>DISPAROS</span></div>
+        <div><strong id="cell-proximal">−70.0 mV</strong><span>PROXIMAL</span></div>
+        <div><strong id="cell-distal">−70.0 mV</strong><span>DISTAL</span></div>
       </div>
 
       <section>
         <div class="section-heading"><span>RESOLUTION MAP</span><span>UNILATERAL</span></div>
         <dl class="runtime-profile" aria-label="Contrato do patch celular">
           <div><dt>Composição E/I</dt><dd>8 / 4</dd></div>
+          <div><dt>Taxa de disparos</dt><dd id="cell-rate">0.0 Hz</dd></div>
           <div><dt>Razão E/I observada</dt><dd id="cell-ei-ratio">0.00</dd></div>
           <div><dt>Passo interno</dt><dd>83.3 µs</dd></div>
           <div><dt>Blend microscópico</dt><dd>100%</dd></div>
@@ -188,8 +189,8 @@
       </section>
 
       <section>
-        <div class="section-heading"><span>MODELO</span><span>AdEx + DENDRITO</span></div>
-        <p class="model-copy">O soma integra capacitância, fuga exponencial e adaptação. O compartimento dendrítico passivo recebe as condutâncias e acopla corrente ao soma.</p>
+        <div class="section-heading"><span>MODELO</span><span>AdEx + CABO PASSIVO</span></div>
+        <p class="model-copy">O soma AdEx acopla-se a dendritos proximal e distal. AMPA/NMDA entram no distal, GABA-A no proximal e GABA-B no soma.</p>
       </section>
 
       <p class="model-caveat">Escala didática: valores internos em volts, amperes, siemens e segundos; a interface converte apenas para mV, pA e ms.</p>
@@ -197,14 +198,14 @@
 
     <aside class="glass-panel control-panel neuron-panel" id="neuron-panel" role="tabpanel" aria-labelledby="tab-neuron" hidden>
       <button id="neuron-back" class="back-button" type="button">← PATCH · ESC</button>
-      <div class="eyebrow">NEURÔNIO <span id="neuron-title-index">01</span> · ABI V7</div>
+      <div class="eyebrow">NEURÔNIO <span id="neuron-title-index">01</span> · ABI V8</div>
       <h1>Uma célula.<br /><span>Mesmo motor.</span></h1>
-      <p class="lede">A vista amplia uma célula selecionada sem mudar equações, passo ou estado. A árvore é ilustrativa e usa um único potencial dendrítico em todos os ramos.</p>
+      <p class="lede">A vista amplia uma célula selecionada sem mudar equações, passo ou estado. A árvore ilustra o gradiente publicado pelo cabo soma → proximal → distal.</p>
 
       <div class="metric-strip neuron-metrics" aria-label="Grandezas da célula selecionada">
         <div><strong id="neuron-soma">−70.0 mV</strong><span>SOMA</span></div>
-        <div><strong id="neuron-dendrite">−70.0 mV</strong><span>DENDRITO</span></div>
-        <div><strong id="neuron-adaptation">0.0 pA</strong><span>ADAPTAÇÃO</span></div>
+        <div><strong id="neuron-proximal">−70.0 mV</strong><span>PROXIMAL</span></div>
+        <div><strong id="neuron-distal">−70.0 mV</strong><span>DISTAL</span></div>
       </div>
 
       <section aria-labelledby="neuron-table-heading">
@@ -213,6 +214,11 @@
           <caption>Leitura tabular da célula selecionada</caption>
           <tbody>
             <tr><th scope="row">Classe</th><td id="neuron-kind">E · excitatória</td><td><code>cellPatch.kinds[i]</code></td></tr>
+            <tr><th scope="row">Soma</th><td id="neuron-soma-table">−70.0 mV</td><td><code>cellPatch.membraneVolts[i]</code></td></tr>
+            <tr><th scope="row">Proximal</th><td id="neuron-proximal-table">−70.0 mV</td><td><code>dendriteProximalVolts[i]</code></td></tr>
+            <tr><th scope="row">Distal</th><td id="neuron-distal-table">−70.0 mV</td><td><code>dendriteDistalVolts[i]</code></td></tr>
+            <tr><th scope="row">Δ prox→dist</th><td id="neuron-attenuation">0.0 mV</td><td><code>Vprox−Vdist</code></td></tr>
+            <tr><th scope="row">Adaptação</th><td id="neuron-adaptation">0.0 pA</td><td><code>adaptationAmperes[i]</code></td></tr>
             <tr><th scope="row">AMPA</th><td id="neuron-ampa">0.0 pA</td><td><code>cellPatch.ampaAmperes[i]</code></td></tr>
             <tr><th scope="row">NMDA</th><td id="neuron-nmda">0.0 pA</td><td><code>cellPatch.nmdaAmperes[i]</code></td></tr>
             <tr><th scope="row">GABA-A</th><td id="neuron-gabaa">0.0 pA</td><td><code>cellPatch.gabaaAmperes[i]</code></td></tr>
@@ -225,15 +231,15 @@
       </section>
 
       <section>
-        <div class="section-heading"><span>LEITURA VISUAL</span><span>SEM GRADIENTE</span></div>
-        <p class="model-copy">A forma do soma distingue E/I; as setas distinguem receptor, magnitude e sentido. O anel âmbar lê adaptação. Um marcador axonal só aparece para evento carimbado da célula selecionada.</p>
+        <div class="section-heading"><span>LEITURA VISUAL</span><span>3 COMPARTIMENTOS</span></div>
+        <p class="model-copy">Luminância interpola continuamente soma, proximal e distal; os rótulos tabulares preservam a leitura no modo monocromático. Setas distinguem receptor, magnitude e sentido.</p>
       </section>
 
-      <p class="model-caveat">Morfologia procedural não identifica tipo celular real. Axônio e nós são topologia ilustrativa; o marcador é estático e não reivindica velocidade de condução. Compartimentos proximal/distal pertencem ao gate R09-E.</p>
+      <p class="model-caveat">Morfologia procedural não identifica tipo celular real. O gradiente usa apenas os três potenciais publicados pelo Rust; axônio e nós permanecem topologia ilustrativa.</p>
     </aside>
 
     <aside class="glass-panel control-panel electricity-panel" id="electricity-panel" role="tabpanel" aria-labelledby="tab-electricity" hidden>
-      <div class="eyebrow">PRANCHA ELÉTRICA · ABI V7</div>
+      <div class="eyebrow">PRANCHA ELÉTRICA · ABI V8</div>
       <h1>Fluxo<br /><span>com origem.</span></h1>
       <p class="lede">O esquema lê o patch publicado e separa nós, vias, sentido, potencial, corrente e condutância efetiva. A prancha não calcula o circuito nem altera o motor.</p>
 
@@ -279,7 +285,10 @@
           <tbody>
             <tr><th scope="row">Excitação</th><td id="board-excitation">0.0 pA</td><td><code>cellPatch.ampa/nmda</code></td></tr>
             <tr><th scope="row">Inibição</th><td id="board-inhibition">0.0 pA</td><td><code>cellPatch.gabaa/gabab</code></td></tr>
-            <tr><th scope="row">Shunt GABA-A</th><td id="board-shunt">0 / 12 células</td><td><code>I/(E−Vd)</code></td></tr>
+            <tr><th scope="row">V proximal</th><td id="board-proximal">−70.0 mV</td><td><code>dendriteProximalVolts</code></td></tr>
+            <tr><th scope="row">V distal</th><td id="board-distal">−70.0 mV</td><td><code>dendriteDistalVolts</code></td></tr>
+            <tr><th scope="row">Δ prox→dist</th><td id="board-attenuation">0.0 mV</td><td><code>mean(Vprox)−mean(Vdist)</code></td></tr>
+            <tr><th scope="row">Shunt GABA-A</th><td id="board-shunt">0 / 12 células</td><td><code>I/(E−Vprox)</code></td></tr>
             <tr><th scope="row">Eventos</th><td id="board-events">0 eventos</td><td><code>cellSpikeEvents</code></td></tr>
             <tr><th scope="row">Primeiro disparo</th><td id="first-spike">—</td><td><code>cellPatch.firstSpikeSeconds</code></td></tr>
             <tr><th scope="row">Adaptação média</th><td id="adaptation-current">0.0 pA</td><td><code>cellPatch.adaptationAmperes</code></td></tr>

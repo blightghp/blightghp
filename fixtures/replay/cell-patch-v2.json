@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 2,
+  "seed": 1592590343,
+  "macroStepSeconds": 0.016666666666666666,
+  "drive": {
+    "excitatoryRateHz": 62.0,
+    "inhibitoryRateHz": 28.0,
+    "boundaryCurrentAmperes": 4.2e-10
+  },
+  "checkpoints": [
+    {
+      "macroTick": 1,
+      "microTick": 200,
+      "stateHashHex": "32a9b5b32fad3017",
+      "membraneVolts0": -0.049223572,
+      "dendriteProximalVolts0": -0.06222079,
+      "dendriteDistalVolts0": -0.06684835,
+      "firingRateHz": 0.0,
+      "firstSpikeSeconds": null
+    },
+    {
+      "macroTick": 10,
+      "microTick": 2000,
+      "stateHashHex": "d3837f5edc832afa",
+      "membraneVolts0": -0.054521665,
+      "dendriteProximalVolts0": -0.06324143,
+      "dendriteDistalVolts0": -0.06426073,
+      "firingRateHz": 20.0,
+      "firstSpikeSeconds": 0.018583333333333334
+    },
+    {
+      "macroTick": 30,
+      "microTick": 6000,
+      "stateHashHex": "45fe11aa567c24c2",
+      "membraneVolts0": -0.051977612,
+      "dendriteProximalVolts0": -0.06134101,
+      "dendriteDistalVolts0": -0.059096713,
+      "firingRateHz": 35.0,
+      "firstSpikeSeconds": 0.018583333333333334
+    },
+    {
+      "macroTick": 60,
+      "microTick": 12000,
+      "stateHashHex": "8ad5dfc3d5cb0de3",
+      "membraneVolts0": -0.053235512,
+      "dendriteProximalVolts0": -0.06279166,
+      "dendriteDistalVolts0": -0.064425886,
+      "firingRateHz": 30.0,
+      "firstSpikeSeconds": 0.018583333333333334
+    }
+  ]
+}
