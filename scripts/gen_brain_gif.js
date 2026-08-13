@@ -62,6 +62,14 @@ async function generateGif() {
     await page.goto("http://127.0.0.1:4178/", { waitUntil: "networkidle0" });
     await page.waitForFunction(() => Boolean(window.__BRAIN_ENGINE__));
     await page.evaluate(() => window.__BRAIN_ENGINE__.setCaptureMode(true));
+    await page.evaluate(() => {
+      window.__BRAIN_ENGINE__.setMaterialProfile("realistic-illustrative");
+      window.__BRAIN_ENGINE__.setPresentationEffects({
+        opacity: 0.82,
+        xray: false,
+        isolateMatter: false,
+      });
+    });
 
     const encoder = new GIFEncoder(width, height, "neuquant", true, frameCount);
     encoder.start();
@@ -76,6 +84,16 @@ async function generateGif() {
       await page.evaluate(
         async ({ time, rotation, view }) => {
           window.__BRAIN_ENGINE__.setView(view);
+          window.__BRAIN_ENGINE__.setClipping(
+            view === "overview"
+              ? {
+                  enabled: true,
+                  orientation: "coronal",
+                  slab: false,
+                  position: 0.06,
+                }
+              : { enabled: false, slab: false },
+          );
           await window.__BRAIN_ENGINE__.capture(time, rotation);
         },
         {
@@ -110,6 +128,16 @@ async function generateGif() {
         frameDelayMilliseconds: frameDelay,
         loopDurationSeconds: loopDuration,
         framesByView: { ...BRAIN_GIF_VIEW_FRAMES },
+        presentation: {
+          materialProfile: "realistic-illustrative",
+          clipping: {
+            view: "overview",
+            orientation: "coronal",
+            slab: false,
+            frames: BRAIN_GIF_VIEW_FRAMES.overview,
+          },
+          externalAtlasAssets: 0,
+        },
       },
     });
     fs.writeFileSync(outputPath, gif);

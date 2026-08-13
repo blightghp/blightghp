@@ -88,6 +88,68 @@ try {
       `prontidão de materialidade inesperada: ${JSON.stringify(materialProfiles)}`,
     );
   }
+  const r09f = await page.evaluate(() => {
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    window.__BRAIN_ENGINE__.setView("overview");
+    const activeProfile = window.__BRAIN_ENGINE__.setMaterialProfile(
+      "realistic-illustrative",
+    );
+    window.__BRAIN_ENGINE__.setClipping({
+      enabled: true,
+      orientation: "coronal",
+      slab: false,
+      position: 0.08,
+    });
+    window.__BRAIN_ENGINE__.setPresentationEffects({
+      opacity: 0.72,
+      xray: true,
+      isolateMatter: true,
+    });
+    const active = window.__BRAIN_ENGINE__.presentationAudit();
+    const after = window.__BRAIN_ENGINE__.diagnostics();
+    const highContrastProfile = window.__BRAIN_ENGINE__.setHighContrast(true);
+    const fallback = window.__BRAIN_ENGINE__.presentationAudit();
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    window.__BRAIN_ENGINE__.setMaterialProfile("schematic");
+    window.__BRAIN_ENGINE__.setClipping({ enabled: false, slab: false });
+    window.__BRAIN_ENGINE__.setPresentationEffects({
+      opacity: 1,
+      xray: false,
+      isolateMatter: false,
+    });
+    return {
+      before,
+      after,
+      activeProfile,
+      highContrastProfile,
+      active,
+      fallback,
+      probeUnit: document.querySelector("#cut-probe-unit")?.textContent,
+    };
+  });
+  const hashFields = [
+    "stateHash",
+    "corticothalamicHash",
+    "cellPatchHash",
+    "chemicalHash",
+    "cellSpikeEventHash",
+  ];
+  if (
+    r09f.activeProfile !== "realistic-illustrative" ||
+    r09f.highContrastProfile !== "schematic" ||
+    r09f.active.material.physicalMaterialObjects !== 25 ||
+    r09f.active.material.semanticGeometryChanges !== 0 ||
+    r09f.active.clipping.planeCount !== 1 ||
+    r09f.active.clipping.capSources !== 4 ||
+    r09f.active.clipping.estimatedAdditionalDrawCalls >
+      r09f.active.clipping.maximumAdditionalDrawCalls ||
+    !r09f.active.probe.available ||
+    r09f.active.probe.unit !== "normalized field activity" ||
+    r09f.fallback.material.fallbackReason !== "high-contrast-requires-schematic" ||
+    hashFields.some((field) => r09f.before[field] !== r09f.after[field])
+  ) {
+    throw new Error(`gate R09-F inesperado: ${JSON.stringify(r09f)}`);
+  }
   if (faults.length > 0) {
     throw new Error(`erros no navegador: ${faults.join(" | ")}`);
   }
@@ -200,6 +262,7 @@ try {
     `Worker Wasm verificado no navegador: schema ${diagnostics.schemaVersion}, ` +
       `${abi.buffers.length} buffers, cinco hashes, reset/dispose/reinit e seis abas operantes ` +
       `(replay ${lifecycle.hashes.chemical}; materialidade ${Object.keys(materialProfiles).length}/6)`,
+      `R09-F ${r09f.active.material.physicalMaterialObjects} materiais/${r09f.active.clipping.estimatedAdditionalDrawCalls} draws de corte`,
   );
 } finally {
   await browser?.close();

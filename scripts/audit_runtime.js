@@ -168,6 +168,77 @@ try {
     throw new Error(`teto de bloom excedido: ${JSON.stringify(saturatedCaptures)}`);
   }
 
+  const r09fGate = await page.evaluate(() => {
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    window.__BRAIN_ENGINE__.setView("overview");
+    window.__BRAIN_ENGINE__.setMaterialProfile("realistic-illustrative");
+    window.__BRAIN_ENGINE__.setClipping({
+      enabled: true,
+      orientation: "coronal",
+      slab: false,
+      position: 0.06,
+    });
+    window.__BRAIN_ENGINE__.setPresentationEffects({
+      opacity: 0.78,
+      xray: false,
+      isolateMatter: false,
+    });
+    const active = window.__BRAIN_ENGINE__.presentationAudit();
+    const after = window.__BRAIN_ENGINE__.diagnostics();
+    return {
+      before,
+      after,
+      active,
+      text: {
+        field: document.querySelector("#cut-probe-field")?.textContent,
+        value: document.querySelector("#cut-probe-value")?.textContent,
+        unit: document.querySelector("#cut-probe-unit")?.textContent,
+        sampling: document.querySelector("#cut-probe-sampling")?.textContent,
+      },
+    };
+  });
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  await page.screenshot({ path: path.join(outputDirectory, "r09-f-realistic-coronal.png") });
+  const r09fHashFields = [
+    "stateHash",
+    "corticothalamicHash",
+    "cellPatchHash",
+    "chemicalHash",
+    "cellSpikeEventHash",
+  ];
+  if (
+    r09fGate.active.material.activeProfile !== "realistic-illustrative" ||
+    r09fGate.active.material.physicalMaterialObjects !== 25 ||
+    r09fGate.active.material.semanticGeometryChanges !== 0 ||
+    r09fGate.active.clipping.planeCount !== 1 ||
+    r09fGate.active.clipping.capSources !== 4 ||
+    r09fGate.active.clipping.estimatedAdditionalDrawCalls >
+      r09fGate.active.clipping.maximumAdditionalDrawCalls ||
+    !r09fGate.active.probe.available ||
+    r09fGate.text.field !== "field.waveActivity" ||
+    r09fGate.text.unit !== "normalized field activity" ||
+    !r09fGate.text.value?.includes("n=") ||
+    !r09fGate.text.sampling?.includes("published cortical vertices") ||
+    r09fHashFields.some((field) => r09fGate.before[field] !== r09fGate.after[field])
+  ) {
+    throw new Error(`gate de materialidade/corte inválido: ${JSON.stringify(r09fGate)}`);
+  }
+  const r09fFallback = await page.evaluate(() => {
+    const active = window.__BRAIN_ENGINE__.setHighContrast(true);
+    const report = window.__BRAIN_ENGINE__.presentationAudit();
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    window.__BRAIN_ENGINE__.setMaterialProfile("schematic");
+    window.__BRAIN_ENGINE__.setClipping({ enabled: false, slab: false });
+    window.__BRAIN_ENGINE__.setPresentationEffects({ opacity: 1, xray: false });
+    return { active, report };
+  });
+  if (
+    r09fFallback.active !== "schematic" ||
+    r09fFallback.report.material.fallbackReason !== "high-contrast-requires-schematic"
+  ) {
+    throw new Error(`fallback R09-F inválido: ${JSON.stringify(r09fFallback)}`);
+  }
+
   await page.evaluate(() => window.__BRAIN_ENGINE__.setColorMode("monochrome"));
   const monochrome = {};
   for (const view of ["overview", "laminar", "cell", "neuron", "electricity", "synapse"]) {
@@ -419,6 +490,7 @@ try {
       "neuron-desktop.png",
       "electricity-desktop.png",
       "synapse-desktop.png",
+      "r09-f-realistic-coronal.png",
       "overview-mobile.png",
       ...Object.values(monochrome),
     ],
@@ -431,6 +503,16 @@ try {
     electricalBoardGate,
     neuronGate,
     neuronSelection,
+    r09f: {
+      materialityAndClipping: r09fGate.active,
+      textualProbe: r09fGate.text,
+      fallback: r09fFallback,
+      hashInvariance: {
+        fields: r09fHashFields,
+        before: r09fGate.before,
+        after: r09fGate.after,
+      },
+    },
     neuronHashInvariance: {
       fields: hashFields,
       before: hashesBeforeElectricalControls,

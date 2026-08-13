@@ -55,12 +55,28 @@ export interface VisualBindingAudit {
 
 export type VisualMaterialProfile = "schematic" | "realistic-illustrative";
 
+export type VisualMaterialSurface = "tissue" | "membrane" | "substrate";
+
+export interface VisualMaterialEligibility {
+  /** Stable manifest identifier; it is presentation metadata, never a scientific binding. */
+  readonly id: string;
+  readonly surface: VisualMaterialSurface;
+  /** Explicit local-space envelope used to reject an accidentally substituted geometry. */
+  readonly maximumLocalRadius: number;
+  readonly opacityRange: readonly [number, number];
+  readonly source: "procedural-scene-graph";
+}
+
+export type VisualClippingParticipation = "include" | "exclude";
+
 export interface VisualMaterialReadinessReport {
   activeProfile: VisualMaterialProfile;
   totalRenderableObjects: number;
   matterObjects: number;
   emissionObjects: number;
   pbrCandidateMeshes: number;
+  boundedPbrObjects: number;
+  physicalMaterialObjects: number;
   schematicOnlyObjects: number;
   undeclaredObjects: number;
   missingStateBindings: number;
@@ -70,6 +86,10 @@ export interface VisualMaterialReadinessReport {
 const PASS_KEY = "visualPass";
 const PROVENANCE_KEY = "visualProvenance";
 const BINDING_KEY = "visualSemanticBinding";
+const MATERIAL_PROFILE_KEY = "visualMaterialProfile";
+const MATERIAL_ELIGIBILITY_KEY = "visualMaterialEligibility";
+const CLIPPING_PARTICIPATION_KEY = "visualClippingParticipation";
+const BLOOM_EXCLUSION_KEY = "selectiveBloomExcluded";
 
 export function declareVisual(
   object: THREE.Object3D,
@@ -110,6 +130,78 @@ export function visualProvenanceOf(object: THREE.Object3D): VisualProvenance | u
   return value === "state" || value === "topology" || value === "decoration"
     ? value
     : undefined;
+}
+
+export function declareMaterialEligibility(
+  object: THREE.Object3D,
+  eligibility: VisualMaterialEligibility,
+): void {
+  const [minimumOpacity, maximumOpacity] = eligibility.opacityRange;
+  if (
+    !eligibility.id ||
+    !Number.isFinite(eligibility.maximumLocalRadius) ||
+    eligibility.maximumLocalRadius <= 0 ||
+    !Number.isFinite(minimumOpacity) ||
+    !Number.isFinite(maximumOpacity) ||
+    minimumOpacity < 0 ||
+    maximumOpacity > 1 ||
+    minimumOpacity > maximumOpacity
+  ) {
+    throw new Error("invalid realistic material eligibility declaration");
+  }
+  object.userData[MATERIAL_ELIGIBILITY_KEY] = eligibility;
+}
+
+export function visualMaterialEligibilityOf(
+  object: THREE.Object3D,
+): VisualMaterialEligibility | undefined {
+  const value: unknown = object.userData[MATERIAL_ELIGIBILITY_KEY];
+  if (!value || typeof value !== "object") return undefined;
+  const candidate = value as Partial<VisualMaterialEligibility>;
+  if (
+    typeof candidate.id !== "string" ||
+    (candidate.surface !== "tissue" &&
+      candidate.surface !== "membrane" &&
+      candidate.surface !== "substrate") ||
+    typeof candidate.maximumLocalRadius !== "number" ||
+    !Array.isArray(candidate.opacityRange) ||
+    candidate.source !== "procedural-scene-graph"
+  ) return undefined;
+  return candidate as VisualMaterialEligibility;
+}
+
+export function setVisualMaterialProfileMetadata(
+  root: THREE.Object3D,
+  profile: VisualMaterialProfile,
+): void {
+  root.userData[MATERIAL_PROFILE_KEY] = profile;
+}
+
+export function visualMaterialProfileOf(root: THREE.Object3D): VisualMaterialProfile {
+  return root.userData[MATERIAL_PROFILE_KEY] === "realistic-illustrative"
+    ? "realistic-illustrative"
+    : "schematic";
+}
+
+export function declareClippingParticipation(
+  object: THREE.Object3D,
+  participation: VisualClippingParticipation,
+): void {
+  object.userData[CLIPPING_PARTICIPATION_KEY] = participation;
+}
+
+export function visualClippingParticipationOf(
+  object: THREE.Object3D,
+): VisualClippingParticipation {
+  return object.userData[CLIPPING_PARTICIPATION_KEY] === "exclude" ? "exclude" : "include";
+}
+
+export function excludeFromSelectiveBloom(object: THREE.Object3D): void {
+  object.userData[BLOOM_EXCLUSION_KEY] = true;
+}
+
+export function isExcludedFromSelectiveBloom(object: THREE.Object3D): boolean {
+  return object.userData[BLOOM_EXCLUSION_KEY] === true;
 }
 
 export function auditVisualProvenance(root: THREE.Object3D): VisualProvenanceReport {
@@ -158,11 +250,13 @@ export function auditVisualMaterialReadiness(
   const provenance = auditVisualProvenance(root);
   const bindings = auditVisualBindings(root);
   const report: VisualMaterialReadinessReport = {
-    activeProfile: "schematic",
+    activeProfile: visualMaterialProfileOf(root),
     totalRenderableObjects: 0,
     matterObjects: 0,
     emissionObjects: 0,
     pbrCandidateMeshes: 0,
+    boundedPbrObjects: 0,
+    physicalMaterialObjects: 0,
     schematicOnlyObjects: 0,
     undeclaredObjects: provenance.undeclared,
     missingStateBindings: bindings.missingBindings.length,
@@ -178,10 +272,23 @@ export function auditVisualMaterialReadiness(
     }
     report.matterObjects += 1;
     const renderable = object as THREE.Object3D & { geometry?: THREE.BufferGeometry };
-    if (object instanceof THREE.Mesh && renderable.geometry?.getAttribute("normal")) {
+    const eligibility = visualMaterialEligibilityOf(object);
+    if (
+      object instanceof THREE.Mesh &&
+      renderable.geometry?.getAttribute("normal") &&
+      eligibility
+    ) {
       report.pbrCandidateMeshes += 1;
+      report.boundedPbrObjects += 1;
     } else {
       report.schematicOnlyObjects += 1;
+    }
+    const material = (object as THREE.Mesh).material;
+    if (
+      material instanceof THREE.MeshPhysicalMaterial ||
+      (Array.isArray(material) && material.some((entry) => entry instanceof THREE.MeshPhysicalMaterial))
+    ) {
+      report.physicalMaterialObjects += 1;
     }
   });
   report.contractReady = report.totalRenderableObjects > 0 &&

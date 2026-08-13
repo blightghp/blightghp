@@ -21,6 +21,16 @@ const diagnostics = {
 const capture = {
   frameCount: BRAIN_GIF_FRAME_COUNT,
   framesByView: { ...BRAIN_GIF_VIEW_FRAMES },
+  presentation: {
+    materialProfile: "realistic-illustrative",
+    clipping: {
+      view: "overview",
+      orientation: "coronal",
+      slab: false,
+      frames: BRAIN_GIF_VIEW_FRAMES.overview,
+    },
+    externalAtlasAssets: 0,
+  },
 };
 
 describe("brain GIF provenance manifest", () => {
@@ -41,6 +51,8 @@ describe("brain GIF provenance manifest", () => {
       cellPatchHash: diagnostics.cellPatchHash,
       chemicalHash: diagnostics.chemicalHash,
     });
+    expect(manifest.schemaVersion).toBe(3);
+    expect(manifest.capture.presentation).toEqual(capture.presentation);
     const nextAbi = createBrainGifManifest({
       sourceCommit,
       gifBytes,
@@ -109,6 +121,18 @@ describe("brain GIF provenance manifest", () => {
       diagnostics,
       capture: { frameCount: BRAIN_GIF_FRAME_COUNT, framesByView: withoutNeuron },
     })).toThrow(/six current views/);
+  });
+
+  it("rejects a GIF without the canonical R09-F material and cut declaration", () => {
+    expect(() => createBrainGifManifest({
+      sourceCommit,
+      gifBytes: Buffer.from("GIF89a-test"),
+      diagnostics,
+      capture: {
+        ...capture,
+        presentation: { ...capture.presentation, externalAtlasAssets: 1 },
+      },
+    })).toThrow(/R09-F presentation profile/);
   });
 
   it("compares legacy hashes only inside the same frozen input scenario", () => {

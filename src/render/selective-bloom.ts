@@ -3,7 +3,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { visualPassOf } from "./render-types";
+import { isExcludedFromSelectiveBloom, visualPassOf } from "./render-types";
 import { VISUAL_COLORS } from "./visual-tokens";
 
 type MaterialObject = THREE.Object3D & {
@@ -54,6 +54,7 @@ export class SelectiveBloomPipeline {
     side: THREE.DoubleSide,
   });
   private readonly savedMaterials = new Map<MaterialObject, THREE.Material | THREE.Material[]>();
+  private readonly savedVisibilities = new Map<THREE.Object3D, boolean>();
 
   constructor(
     renderer: THREE.WebGLRenderer,
@@ -64,7 +65,13 @@ export class SelectiveBloomPipeline {
     radius: number,
   ) {
     this.bloomPass = new UnrealBloomPass(size, strength, radius, 0.12);
-    this.bloomComposer = new EffectComposer(renderer);
+    const createStencilTarget = (): THREE.WebGLRenderTarget =>
+      new THREE.WebGLRenderTarget(size.x, size.y, {
+        type: THREE.HalfFloatType,
+        depthBuffer: true,
+        stencilBuffer: true,
+      });
+    this.bloomComposer = new EffectComposer(renderer, createStencilTarget());
     this.bloomComposer.renderToScreen = false;
     this.bloomComposer.addPass(new RenderPass(scene, camera));
     this.bloomComposer.addPass(this.bloomPass);
@@ -82,13 +89,18 @@ export class SelectiveBloomPipeline {
       "baseTexture",
     );
     finalPass.needsSwap = true;
-    this.finalComposer = new EffectComposer(renderer);
+    this.finalComposer = new EffectComposer(renderer, createStencilTarget());
     this.finalComposer.addPass(new RenderPass(scene, camera));
     this.finalComposer.addPass(finalPass);
   }
 
   render(): void {
     this.scene.traverse((object) => {
+      if (isExcludedFromSelectiveBloom(object)) {
+        this.savedVisibilities.set(object, object.visible);
+        object.visible = false;
+        return;
+      }
       if (!hasMaterial(object) || visualPassOf(object) === "emission") return;
       this.savedMaterials.set(object, object.material);
       object.material = this.depthMaskMaterial;
@@ -98,6 +110,8 @@ export class SelectiveBloomPipeline {
     } finally {
       for (const [object, material] of this.savedMaterials) object.material = material;
       this.savedMaterials.clear();
+      for (const [object, visible] of this.savedVisibilities) object.visible = visible;
+      this.savedVisibilities.clear();
     }
     this.finalComposer.render();
   }

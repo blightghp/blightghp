@@ -33,6 +33,64 @@
       <button id="tab-synapse" type="button" role="tab" aria-selected="false" aria-controls="synapse-panel" data-view="synapse" tabindex="-1">SINAPSE</button>
     </nav>
 
+    <aside class="glass-panel presentation-panel" id="presentation-panel" aria-labelledby="presentation-title">
+      <div class="eyebrow" id="presentation-title">R09-F · APRESENTAÇÃO LOCAL</div>
+      <details>
+        <summary>PELÍCULA & CORTE</summary>
+        <div class="control-group compact">
+          <label for="material-profile"><span>Materialidade</span></label>
+          <select id="material-profile" class="glass-select">
+            <option value="schematic" selected>Esquemática · fallback</option>
+            <option value="realistic-illustrative">Realista-ilustrativa</option>
+          </select>
+        </div>
+        <div class="control-group compact">
+          <label for="cut-orientation"><span>Plano de corte</span></label>
+          <select id="cut-orientation" class="glass-select">
+            <option value="none" selected>Desativado</option>
+            <option value="coronal">Coronal</option>
+            <option value="sagittal">Sagital</option>
+            <option value="axial">Axial</option>
+            <option value="oblique">Oblíquo</option>
+          </select>
+        </div>
+        <div class="toggle-grid presentation-toggles">
+          <label><input type="checkbox" id="cut-slab" /><span></span>Laje</label>
+          <label><input type="checkbox" id="presentation-xray" /><span></span>Raio-X</label>
+          <label><input type="checkbox" id="presentation-isolate" /><span></span>Isolar matéria</label>
+          <label><input type="checkbox" id="high-contrast-mode" /><span></span>Alto contraste</label>
+        </div>
+        <div class="control-group compact">
+          <label for="cut-position"><span>Posição do corte</span><output id="cut-position-val">0.00 u.c.</output></label>
+          <input type="range" id="cut-position" min="-2.4" max="2.4" step="0.02" value="0" />
+        </div>
+        <div class="control-group compact">
+          <label for="cut-thickness"><span>Espessura da laje</span><output id="cut-thickness-val">0.42 u.c.</output></label>
+          <input type="range" id="cut-thickness" min="0.04" max="4.8" step="0.02" value="0.42" />
+        </div>
+        <div class="control-group compact oblique-control">
+          <label for="cut-azimuth"><span>Azimute oblíquo</span><output id="cut-azimuth-val">38°</output></label>
+          <input type="range" id="cut-azimuth" min="-180" max="180" step="1" value="38" />
+        </div>
+        <div class="control-group compact oblique-control">
+          <label for="cut-elevation"><span>Elevação oblíqua</span><output id="cut-elevation-val">24°</output></label>
+          <input type="range" id="cut-elevation" min="-89" max="89" step="1" value="24" />
+        </div>
+        <div class="control-group compact">
+          <label for="presentation-opacity"><span>Opacidade da matéria</span><output id="presentation-opacity-val">100%</output></label>
+          <input type="range" id="presentation-opacity" min="0.08" max="1" step="0.01" value="1" />
+        </div>
+        <button id="reset-cut-camera" class="presentation-reset" type="button">RESETAR CÂMERA DO CORTE · R</button>
+        <dl class="cut-probe" aria-live="polite" aria-label="Sonda textual da face de corte">
+          <div><dt>CAMPO</dt><dd id="cut-probe-field">field.waveActivity</dd></div>
+          <div><dt>VALOR</dt><dd id="cut-probe-value">corte desativado</dd></div>
+          <div><dt>UNIDADE</dt><dd id="cut-probe-unit">atividade normalizada</dd></div>
+          <div><dt>AMOSTRA</dt><dd id="cut-probe-sampling">somente campo cortical macroscópico</dd></div>
+        </dl>
+        <p class="cut-shortcuts">Teclado: C alterna orientação; [ e ] movem; X raio-X; I isolamento; R câmera. Controles deslizantes aceitam toque.</p>
+      </details>
+    </aside>
+
     <aside class="glass-panel control-panel" id="overview-panel" role="tabpanel" aria-labelledby="tab-overview">
       <div class="eyebrow">RUST LEARNING LAB / 0.7</div>
       <h1>Aprender<br /><span>simulando.</span></h1>

@@ -6,9 +6,9 @@
 
 **Estado de promoção:** 0.8 promovida em 12 de agosto de 2026
 
-**Estado de desenvolvimento:** 0.9 em construção; R09-A, R09-B, R09-C, R09-D e R09-E concluídas
+**Estado de desenvolvimento:** 0.9 em construção; R09-A a R09-F concluídas
 
-**Próximo gate:** `R09-F` · materialidade, películas e planos de corte
+**Próximo gate:** `R10-A` · catálogo anatômico com proveniência
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -76,8 +76,8 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | eventos celulares carimbados | IMPLEMENTADO E VALIDADO EM R09-B | `cell_patch`, `simulation`, ABI/Worker | fixture, hash próprio, browser e lifecycle | lote limitado a 4.096; cenário padrão pode legitimamente produzir lote vazio |
 | Prancha Elétrica | IMPLEMENTADA E VALIDADA EM R09-C | `ElectricalBoardLayer`, DOM e auditoria | testes estruturais, orçamento e navegador | esquema do patch; atraso/ganho macro aparecem separados e não são atribuídos às células |
 | seleção e vista Neurônio | IMPLEMENTADAS E VALIDADAS EM R09-E | `CellRenderLayer`, `NeuronRenderLayer`, DOM e auditoria | seleção, gradiente soma/proximal/distal, navegador e invariância | morfologia continua ilustrativa; sem condução ativa ou tipo celular real |
-| prontidão para película 3D por vista | CONTRATO E INVENTÁRIO IMPLEMENTADOS; PELÍCULA NÃO FABRICADA | `src/render`, seis `RenderLayer`s e specs | auditoria por vista, proveniência, bindings, fallback e matriz de limites | materiais/iluminação/assets realistas pertencem a R09-F |
-| cortes, vascular e atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de estado/proveniência |
+| película 3D e planos de corte | IMPLEMENTADOS E VALIDADOS EM R09-F | `material-profile`, `clipping`, seis `RenderLayer`s | [auditoria R09-F](AUDIT_0.9_R09_F.md), navegador e manifesto GIF schema 3 | acabamento ilustrativo procedural; sem atlas, calibração anatômica ou nova ciência |
+| vascular e atlas | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro | especificações | depende de catálogo, fonte/licença e estado/proveniência |
 
 ## Histórico verificável
 
@@ -276,17 +276,23 @@ Implementa isolamento, opacidade, raio-X e corte coronal/sagital/axial/oblíquo
 com tampa e sonda. Camadas sem fonte são `DECORATION`; a sonda só mostra campos
 publicados.
 
-Também fabrica, uma vista por vez, o perfil `realistic-illustrative` sobre o
-mesmo scene graph. A preparação contratual e o inventário das seis vistas estão
-concluídos; materiais, iluminação e assets ainda não estão implementados e não
-podem ser descritos como realismo científico.
+Também fabrica o perfil `realistic-illustrative` sobre o mesmo scene graph das
+seis vistas, mantendo emissão, linhas, pontos e overlays no material esquemático.
+O acabamento é procedural e ilustrativo; não pode ser descrito como realismo
+científico.
 
-- **Estado:** planejada; **IDs:** GFX-060..068, AST-020, UI-024, QA-101.
+- **Estado:** concluída em 13 de agosto de 2026; **IDs:** GFX-060..075, AST-020,
+  UI-024, QA-101; **evidência:** [auditoria R09-F](AUDIT_0.9_R09_F.md).
 - **Assets:** nenhum atlas é incluído neste corte.
 - **Aceite:** hash invariante a câmera/corte/LOD/material, operação por
   teclado/touch, legenda de unidade, fallback esquemático atômico, manifesto por
   vista e custos de clipping/material medidos.
-- **Rollback:** desabilitar clipping e manter isolamento. **Complexidade/confiança:** alta / média.
+- **Resultado:** 25 objetos `matter` elegíveis recebem `MeshPhysicalMaterial`,
+  zero geometria/binding muda, um corte simples adiciona 9 draws e a laje fica
+  limitada a 18; a sonda usa apenas `field.waveActivity` macroscópico publicado.
+- **Rollback:** perda de contexto, alto contraste ou falha retornam a
+  `schematic`; clipping pode ser desativado mantendo opacidade/isolamento.
+  **Complexidade/confiança:** alta / alta no envelope auditado.
 
 ## 0.10 · anatomia com proveniência e transmissão de volume
 

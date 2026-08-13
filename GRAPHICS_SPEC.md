@@ -1,6 +1,6 @@
 # Especificação gráfica e de proveniência · BRAIN PRO
 
-**Revisão:** 4 · baseline Three.js/WebGL · produto 0.9.0
+**Revisão:** 5 · R09-F validado em Three.js 0.185/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
 preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
@@ -137,12 +137,26 @@ Uma malha mais detalhada continua `DECORATION` até haver proveniência. Materia
 ### Película de materialidade por vista
 
 A película é um perfil substituível sobre o scene graph existente, não uma
-textura única aplicada cegamente ao canvas. O perfil atual é `schematic`; o alvo
-futuro `realistic-illustrative` só pode substituir materiais de `matter` que
-tenham geometria e proveniência declaradas. Emissão e sinais permanecem no passe
-auditado para que o acabamento não esconda causalidade visual.
+textura única aplicada cegamente ao canvas. `schematic` é o fallback e
+`realistic-illustrative` substitui somente materiais de `matter` incluídos no
+manifesto executável, com normal, proveniência e envelope local declarados.
+Emissão, linhas, pontos, labels e overlays permanecem no passe auditado para que
+o acabamento não esconda causalidade visual.
 
-| Vista | Base preservada | Materialidade futura permitida | Alegação proibida |
+`RealisticIllustrativeMaterialManager` mantém o material esquemático original,
+aloca um `MeshPhysicalMaterial` por objeto elegível e troca apenas a referência
+`object.material`. UUID da geometria, nome, `userData`, binding e evento não são
+tocados. Tecido usa rugosidade 0,58/transmissão 0,08; membrana usa rugosidade
+0,38/transmissão 0,18; substrato usa rugosidade 0,78 e transmissão zero. Três
+luzes `DECORATION` formam a iluminação ilustrativa, sem atlas, mapa externo ou
+textura. A transmissão pode acrescentar um passe de refração, mas nenhum draw de
+objeto é acrescentado pela troca de material.
+
+Falha de criação, perda de contexto ou alto contraste restaura todos os
+materiais esquemáticos atomicamente. `dispose()` restaura o perfil, descarta os
+PBR próprios e remove a iluminação. O perfil não possui geometria própria.
+
+| Vista | Base preservada | Materialidade permitida em R09-F | Alegação proibida |
 | :-- | :-- | :-- | :-- |
 | Visão Geral | rede, campo, pulsos e superfície procedural | casca/tecido ilustrativos com escala e custo | atlas, anatomia clínica ou atividade em estrutura sem estado |
 | Lâminas | L1–L6, vias, relé e TRN didáticos | volume e rugosidade que preservem formas redundantes | espessura anatômica calibrada |
@@ -151,12 +165,12 @@ auditado para que o acabamento não esconda causalidade visual.
 | Eletricidade | nós, setas, V/A/S, eventos e tabela | substrato de prancha e relevo orientativo | circuito físico equivalente ao tecido biológico |
 | Sinapse | membranas, vesículas, fenda, receptores e recaptura | transmissão/SSS ilustrativos com escala exagerada rotulada | ultraestrutura medida ou concentração volumétrica ausente |
 
-Antes da fabricação, cada vista registra: lista de objetos elegíveis e
+Cada vista registra: lista de objetos elegíveis e
 protegidos; origem/licença/hash dos assets; unidades e transformação; UV,
 normais, tangentes e espaço de cor; iluminação/tone mapping; orçamento de draws,
 texturas e memória; fallback esquemático; capturas colorida, monocromática,
-movimento reduzido e viewport móvel. O inventário executável atual reporta
-`contractReady` por vista, mas não declara que o perfil realista já foi produzido.
+movimento reduzido e viewport móvel. O inventário executável reporta
+`contractReady`, objetos limitados e materiais físicos ativos por vista.
 
 ## Pilha anatômica progressiva
 
@@ -213,7 +227,7 @@ modelo hemodinâmico.
 ## Planos de corte
 
 Quatro orientações: coronal, sagital, axial e oblíqua, além de laje entre dois
-planos.
+planos, são implementadas por `ClippingSystem` e `StencilCapPass`.
 
 - clipping local por camada opt-in;
 - tampa por stencil para evitar casca visualmente oca;
@@ -222,9 +236,27 @@ planos.
 - teclado/touch alteram posição/orientação com feedback numérico;
 - qualquer operação mantém hashes do motor.
 
+O plano simples usa um `THREE.Plane`; a laje usa duas meias-regiões opostas com
+`clipIntersection = false`, preservando apenas o intervalo. Cada `RenderLayer`
+faz opt-in e cada objeto pode declarar exclusão. Para as malhas fechadas do
+manifesto de tampa, duas cópias rasas compartilham a geometria original e
+incrementam/decrementam o stencil em `BackSide`/`FrontSide`; um plano
+`DECORATION` desenha apenas onde o stencil é diferente de zero e o limpa após o
+pass. Os render targets de composição possuem depth e stencil explícitos.
+
+O teto é 18 draws adicionais: 9 no corte encefálico simples (quatro cascas ×
+dois lados + tampa) e 18 na laje. Geometria de origem nunca é descartada pelo
+pass; materiais stencil, geometrias das tampas e render targets têm owner e
+`dispose()` explícitos. O rollback desliga o clipping e conserva isolamento e
+opacidade.
+
 Uma face pode mostrar campo, atividade laminar ou concentração somente quando a
 transformação posição→domínio é válida. Não se amostra química de sinapse local
-num corte encefálico como se fosse campo volumétrico.
+num corte encefálico como se fosse campo volumétrico. Em R09-F, a única sonda
+habilitada está na Visão Geral: média dos vértices de `field.waveActivity` em uma
+faixa ±0,08 unidade procedural da face, interpolada linearmente entre snapshots
+publicados e rotulada como `normalized field activity`. Nas cinco vistas sem
+mapeamento macroscópico posição→campo ela responde explicitamente indisponível.
 
 ## Escada de escalas e vista Neurônio
 
