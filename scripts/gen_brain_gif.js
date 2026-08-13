@@ -26,13 +26,14 @@ const frameCount = BRAIN_GIF_FRAME_COUNT;
 const frameDelay = 120;
 const loopDuration = (frameCount * frameDelay) / 1000;
 const transparentKey = 0x000000;
+const backgroundKeyThreshold = 18;
 
 function keyOutBackground(png) {
   for (let offset = 0; offset < png.data.length; offset += 4) {
     const red = png.data[offset];
     const green = png.data[offset + 1];
     const blue = png.data[offset + 2];
-    if (Math.max(red, green, blue) <= 68) {
+    if (Math.max(red, green, blue) <= backgroundKeyThreshold) {
       png.data[offset] = 0;
       png.data[offset + 1] = 0;
       png.data[offset + 2] = 0;

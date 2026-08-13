@@ -50,10 +50,10 @@ const LAMINAR_MATTER = Array.from({ length: 6 }, (_, index) => [
  */
 export const REALISTIC_ILLUSTRATIVE_MANIFEST: RealisticIllustrativeManifest = {
   overview: [
-    entry("leftHemi-shell", "tissue", 2.2, [0.02, 0.45]),
-    entry("rightHemi-shell", "tissue", 2.2, [0.02, 0.45]),
-    entry("cerebellum-shell", "tissue", 1.2, [0.02, 0.45]),
-    entry("stem-shell", "tissue", 1.2, [0.02, 0.45]),
+    entry("leftHemi-shell", "tissue", 2.2, [0.22, 0.5]),
+    entry("rightHemi-shell", "tissue", 2.2, [0.22, 0.5]),
+    entry("cerebellum-shell", "tissue", 1.2, [0.22, 0.5]),
+    entry("stem-shell", "tissue", 1.2, [0.22, 0.5]),
   ],
   laminar: [
     ...LAMINAR_MATTER,
