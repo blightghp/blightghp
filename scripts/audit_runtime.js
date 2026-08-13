@@ -83,6 +83,12 @@ try {
   await page.screenshot({ path: path.join(outputDirectory, "cell-desktop.png") });
   await page.keyboard.press("ArrowRight");
   await page.waitForFunction(
+    () => document.activeElement?.id === "tab-neuron" &&
+      document.querySelector("#tab-neuron")?.getAttribute("aria-selected") === "true",
+  );
+  await page.screenshot({ path: path.join(outputDirectory, "neuron-desktop.png") });
+  await page.keyboard.press("ArrowRight");
+  await page.waitForFunction(
     () => document.activeElement?.id === "tab-electricity" &&
       document.querySelector("#tab-electricity")?.getAttribute("aria-selected") === "true",
   );
@@ -106,6 +112,7 @@ try {
   const visualGate = await page.evaluate(() => window.__BRAIN_ENGINE__.visualAudit());
   const renderedStateGate = await page.evaluate(() => window.__BRAIN_ENGINE__.renderedStateAudit());
   const electricalBoardGate = await page.evaluate(() => window.__BRAIN_ENGINE__.electricalBoardAudit());
+  const neuronGate = await page.evaluate(() => window.__BRAIN_ENGINE__.neuronAudit());
   if (
     visualGate.provenance.total <= 0 ||
     visualGate.provenance.undeclared !== 0 ||
@@ -131,11 +138,21 @@ try {
   ) {
     throw new Error(`orçamento/origem da Prancha Elétrica inválidos: ${JSON.stringify(electricalBoardGate)}`);
   }
+  if (
+    neuronGate.selectedCellId !== 0 ||
+    !/^[0-9a-f]{16}$/.test(neuronGate.geometryHash) ||
+    neuronGate.cost.totalDrawCalls !== 10 ||
+    neuronGate.cost.stateValuesPerSnapshot !== 8 ||
+    neuronGate.cost.geometryRebuildsPerFrame !== 0
+  ) {
+    throw new Error(`orçamento/geometria da vista Neurônio inválidos: ${JSON.stringify(neuronGate)}`);
+  }
 
   const colorCaptures = [
     "overview-desktop.png",
     "laminar-desktop.png",
     "cell-desktop.png",
+    "neuron-desktop.png",
     "electricity-desktop.png",
     "synapse-desktop.png",
   ];
@@ -151,7 +168,7 @@ try {
 
   await page.evaluate(() => window.__BRAIN_ENGINE__.setColorMode("monochrome"));
   const monochrome = {};
-  for (const view of ["overview", "laminar", "cell", "electricity", "synapse"]) {
+  for (const view of ["overview", "laminar", "cell", "neuron", "electricity", "synapse"]) {
     await page.evaluate((nextView) => window.__BRAIN_ENGINE__.setView(nextView), view);
     await new Promise((resolve) => setTimeout(resolve, 80));
     const filename = `${view}-monochrome.png`;
@@ -179,15 +196,27 @@ try {
       gaba: document.querySelector("#synapse-gaba")?.textContent,
       occupancy: document.querySelector("#synapse-ampa-occupancy")?.textContent,
     },
+    neuron: {
+      soma: document.querySelector("#neuron-soma")?.textContent,
+      dendrite: document.querySelector("#neuron-dendrite")?.textContent,
+      adaptation: document.querySelector("#neuron-adaptation")?.textContent,
+      tableRows: document.querySelectorAll(".neuron-table tbody tr").length,
+      selectorCount: document.querySelectorAll("#cell-selector [data-cell-id]").length,
+    },
   }));
   if (
-    views.tabCount !== 5 ||
+    views.tabCount !== 6 ||
     !views.synapse.selected ||
     !views.synapse.glutamate?.endsWith("mol/m³") ||
     !views.synapse.gaba?.endsWith("mol/m³") ||
-    !views.synapse.occupancy?.endsWith("%")
+    !views.synapse.occupancy?.endsWith("%") ||
+    !views.neuron.soma?.endsWith("mV") ||
+    !views.neuron.dendrite?.endsWith("mV") ||
+    !views.neuron.adaptation?.endsWith("pA") ||
+    views.neuron.tableRows !== 8 ||
+    views.neuron.selectorCount !== 12
   ) {
-    throw new Error(`evidência da aba Sinapse incompleta: ${JSON.stringify(views)}`);
+    throw new Error(`evidência das vistas Sinapse/Neurônio incompleta: ${JSON.stringify(views)}`);
   }
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("electricity"));
   await page.evaluate(() => window.__BRAIN_ENGINE__.setCaptureMode(true));
@@ -231,7 +260,63 @@ try {
   ) {
     throw new Error(`equivalente textual da Prancha Elétrica incompleto: ${JSON.stringify(electricalView)}`);
   }
+  const neuronSelection = await page.evaluate(() => {
+    window.__BRAIN_ENGINE__.setSelectedCell(1);
+    const selected = window.__BRAIN_ENGINE__.neuronAudit();
+    window.__BRAIN_ENGINE__.setSelectedCell(4);
+    const other = window.__BRAIN_ENGINE__.neuronAudit();
+    window.__BRAIN_ENGINE__.setSelectedCell(1);
+    const replay = window.__BRAIN_ENGINE__.neuronAudit();
+    return {
+      selected,
+      other,
+      replay,
+      soma: document.querySelector("#neuron-soma")?.textContent,
+      dendrite: document.querySelector("#neuron-dendrite")?.textContent,
+      geometry: document.querySelector("#neuron-geometry-hash")?.textContent,
+    };
+  });
+  if (
+    neuronSelection.selected.selectedCellId !== 1 ||
+    neuronSelection.other.selectedCellId !== 4 ||
+    neuronSelection.replay.selectedCellId !== 1 ||
+    neuronSelection.selected.geometryHash !== neuronSelection.replay.geometryHash ||
+    neuronSelection.selected.geometryHash === neuronSelection.other.geometryHash ||
+    neuronSelection.geometry !== neuronSelection.replay.geometryHash ||
+    !neuronSelection.soma?.endsWith("mV") ||
+    !neuronSelection.dendrite?.endsWith("mV")
+  ) {
+    throw new Error(`seleção/geometria Neurônio inválida: ${JSON.stringify(neuronSelection)}`);
+  }
+  const hashesAfterNeuronSelection = await page.evaluate(
+    () => window.__BRAIN_ENGINE__.diagnostics(),
+  );
+  if (hashFields.some((field) => hashesBeforeElectricalControls[field] !== hashesAfterNeuronSelection[field])) {
+    throw new Error(
+      `seleção celular alterou hashes: ${JSON.stringify({ hashesBeforeElectricalControls, hashesAfterNeuronSelection })}`,
+    );
+  }
   await page.evaluate(() => window.__BRAIN_ENGINE__.setCaptureMode(false));
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("cell"));
+  await page.focus("#cell-select-0");
+  await page.keyboard.press("Tab");
+  const tabSelection = await page.evaluate(() => ({
+    focused: document.activeElement?.id,
+    selected: document.querySelector("#cell-select-1")?.getAttribute("aria-pressed"),
+  }));
+  if (tabSelection.focused !== "cell-select-1" || tabSelection.selected !== "true") {
+    throw new Error(`Tab não percorreu células: ${JSON.stringify(tabSelection)}`);
+  }
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() =>
+    document.querySelector("#tab-neuron")?.getAttribute("aria-selected") === "true" &&
+    document.activeElement?.id === "neuron-back"
+  );
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() =>
+    document.querySelector("#tab-cell")?.getAttribute("aria-selected") === "true" &&
+    document.activeElement?.id === "cell-select-1"
+  );
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
 
   const colors = await page.evaluate(() => {
@@ -325,17 +410,26 @@ try {
       "overview-desktop.png",
       "laminar-desktop.png",
       "cell-desktop.png",
+      "neuron-desktop.png",
       "electricity-desktop.png",
       "synapse-desktop.png",
       "overview-mobile.png",
       ...Object.values(monochrome),
     ],
     keyboard,
+    tabSelection,
     views,
     contrast,
     saturation,
     visualGate,
     electricalBoardGate,
+    neuronGate,
+    neuronSelection,
+    neuronHashInvariance: {
+      fields: hashFields,
+      before: hashesBeforeElectricalControls,
+      after: hashesAfterNeuronSelection,
+    },
     electricalView,
     electricalHashInvariance: {
       fields: hashFields,

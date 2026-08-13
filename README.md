@@ -127,7 +127,8 @@ estão no [ROADMAP canônico](ROADMAP.md) e na
 A 0.9 mantém essa baseline e avança por gates independentes. R09-A isolou o
 modelo de tarefa; R09-B publicou eventos celulares carimbados pelo Rust, sem
 pedir ao renderer que deduza spikes ausentes entre snapshots; R09-C criou uma
-Prancha Elétrica própria sem tocar na ABI ou no motor.
+Prancha Elétrica própria sem tocar na ABI ou no motor; R09-D acrescentou seleção
+local das 12 células e uma vista Neurônio de geometria determinística.
 
 ### O que consigo explorar hoje
 
@@ -137,8 +138,14 @@ Prancha Elétrica própria sem tocar na ABI ou no motor.
   relé talâmico, TRN e retorno corticotalâmico;
 - um patch com 12 células AdEx, dendrito passivo, adaptação e receptores AMPA,
   NMDA, GABA-A e GABA-B integrados a `83,3 µs`;
-- cinco vistas sincronizadas: **Visão Geral**, **Lâminas**, **Célula**,
-  **Eletricidade** e **Sinapse**;
+- seis vistas sincronizadas: **Visão Geral**, **Lâminas**, **Célula**,
+  **Neurônio**, **Eletricidade** e **Sinapse**;
+- seleção celular por raycast ou lista, com `Tab`/`Enter`/`Escape`, foco
+  restaurado e uma vista de célula única que lê soma, dendrito, adaptação,
+  correntes e apenas os eventos carimbados daquela célula;
+- morfologia ilustrativa determinística por `seed + cellId`, hash geométrico de
+  64 bits, 10 draws e zero reconstrução por frame; toda a árvore usa um único
+  potencial dendrítico e não reivindica condução ou tipo celular real;
 - Prancha Elétrica com 12 nós, vias direcionais, V/A/S, excitação, inibição,
   shunt, eventos e equivalente tabular com unidade/origem; níveis de detalhe
   custam 6, 10 ou 11 draws e não alteram os cinco hashes;
@@ -253,7 +260,8 @@ histórica dos achados; o fechamento executável da ABI está em
 [AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md) e o veredito final em
 [AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md). As etapas encerradas da 0.9
 estão registradas nas auditorias [R09-A](AUDIT_0.9_R09_A.md),
-[R09-B](AUDIT_0.9_R09_B.md) e [R09-C](AUDIT_0.9_R09_C.md).
+[R09-B](AUDIT_0.9_R09_B.md), [R09-C](AUDIT_0.9_R09_C.md) e
+[R09-D](AUDIT_0.9_R09_D.md).
 
 ### Executar e conferir
 

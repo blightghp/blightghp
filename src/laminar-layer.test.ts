@@ -30,6 +30,7 @@ describe("laminar presentation contract", () => {
     expect(parseLaminarLod("maximum")).toBeUndefined();
     expect(parseSimulationView("laminar")).toBe("laminar");
     expect(parseSimulationView("cell")).toBe("cell");
+    expect(parseSimulationView("neuron")).toBe("neuron");
     expect(parseSimulationView("electricity")).toBe("electricity");
     expect(parseSimulationView("synapse")).toBe("synapse");
     expect(parseSimulationView("layers")).toBeUndefined();

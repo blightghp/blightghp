@@ -1,6 +1,6 @@
 # Especificação da aplicação e UX · BRAIN PRO
 
-**Revisão:** 2 · produto observado 0.9.0
+**Revisão:** 3 · produto observado 0.9.0
 
 Este documento regula o shell TypeScript, DOM, fluxos, acessibilidade e consumo
 do Worker. Não regula equações nem materiais 3D.
@@ -22,6 +22,7 @@ do Worker. Não regula equações nem materiais 3D.
 | UI-011 | UI modular/DOM direto permanece enquanto for testável e compreensível. |
 | UI-012 | experimentos usam `ExperimentEncoder`/`ExperimentDecoder` explícitos. |
 | UI-020 | Prancha Elétrica possui scene graph próprio, níveis apenas de apresentação, teclado e equivalente tabular com unidade/origem. |
+| UI-021 | seleção celular por raycast e lista converge no mesmo ID; `Tab` percorre, `Enter` amplia, `Escape` retorna o foco e nenhuma ação cruza o protocolo científico. |
 | UX-001 | ampliar muda enquadramento/resolução mostrada, não equação por câmera. |
 | UX-002 | cada vista mostra “o que vejo”, modelo, unidade, hipótese e limite. |
 
@@ -90,6 +91,7 @@ visual. Novas funções exigem teste e não podem furar a validação do protoco
 | Visão Geral | rede, campo, sinais e hashes | orientação macro e saúde | topologia procedural, não atlas |
 | Lâminas | L1–L6, relé, TRN, rebote | circuito didático | massa neural fenomenológica |
 | Célula | patch, contorno e eventos carimbados | 12 células e compartimentos | um dendrito passivo |
+| Neurônio | uma célula do patch e seus eventos carimbados | soma, dendrito único, adaptação e quatro correntes | morfologia ilustrativa; sem gradiente, condução ou tipo celular real |
 | Eletricidade | patch, eventos e topologia macro rotulada | Prancha Elétrica com V/A/S, direção e origem | esquema didático; atraso/ganho macro não pertencem ao patch |
 | Sinapse | química v6 | vesícula, fenda, ocupação/remoção | microdomínio representativo |
 
@@ -151,6 +153,12 @@ elemento de origem. Zoom orbital isolado não troca modelo.
 - clique, teclado e touch produzem o mesmo resultado;
 - painel anuncia nome, classe de proveniência e nível de evidência;
 - seleção não altera motor; um preset científico separado pode, com confirmação.
+
+R09-D implementa o recorte celular: a lista de 12 botões e o raycast nos somata
+endereçam o mesmo `selectedCellId`. Foco sobre a lista seleciona; `Enter` abre a
+vista Neurônio; `Escape` retorna à vista Célula e ao elemento de origem. O estado
+fica em `main.ts`, atualiza apenas apresentação e é auditado contra os cinco
+hashes científicos com o relógio congelado.
 
 ### Erro
 

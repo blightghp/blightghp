@@ -5,6 +5,7 @@ import { DiagnosticFallbackHost } from "../wasm-engine-host";
 import { CellRenderLayer } from "./cell-layer";
 import { ElectricalBoardLayer } from "./electrical-board-layer";
 import { LaminarRenderLayer } from "./laminar-layer";
+import { NeuronRenderLayer } from "./neuron-layer";
 import { SynapseRenderLayer } from "./synapse-layer";
 import {
   auditVisualProvenance,
@@ -40,6 +41,7 @@ describe("render presentation contract", () => {
     for (const layer of [
       new LaminarRenderLayer(),
       new CellRenderLayer(),
+      new NeuronRenderLayer(7),
       new ElectricalBoardLayer(),
       new SynapseRenderLayer(),
     ]) {
@@ -69,6 +71,7 @@ describe("render presentation contract", () => {
     for (const layer of [
       new LaminarRenderLayer(),
       new CellRenderLayer(),
+      new NeuronRenderLayer(7),
       new ElectricalBoardLayer(),
       new SynapseRenderLayer(),
     ]) {
@@ -84,6 +87,7 @@ describe("render presentation contract", () => {
     for (const layer of [
       new LaminarRenderLayer(),
       new CellRenderLayer(),
+      new NeuronRenderLayer(7),
       new ElectricalBoardLayer(),
       new SynapseRenderLayer(),
     ]) {
@@ -183,10 +187,28 @@ describe("render presentation contract", () => {
       "RingGeometry",
     );
 
+    const neuron = new NeuronRenderLayer(7);
+    expect(neuron.group.getObjectByName("resolved-neuron-soma")).toHaveProperty(
+      "geometry.type",
+      "IcosahedronGeometry",
+    );
+    expect(
+      neuron.group.getObjectByName("resolved-neuron-single-compartment-dendrite"),
+    ).toHaveProperty("geometry.type", "BufferGeometry");
+    expect(neuron.group.getObjectByName("resolved-neuron-ampa-current")).toHaveProperty(
+      "geometry.type",
+      "ShapeGeometry",
+    );
+    expect(neuron.group.getObjectByName("resolved-neuron-stamped-event")).toHaveProperty(
+      "geometry.type",
+      "RingGeometry",
+    );
+
     laminar.dispose();
     synapse.dispose();
     cell.dispose();
     electrical.dispose();
+    neuron.dispose();
     fallback.dispose();
   });
 });
