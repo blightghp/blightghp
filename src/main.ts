@@ -1,10 +1,21 @@
 import * as THREE from "three";
 import { invoke } from "@tauri-apps/api/core";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import {
+  ANATOMY_IDS,
+  AnatomyExplorerController,
+  auditAnatomicalCatalog,
+  searchAnatomy as searchAnatomicalCatalog,
+} from "./anatomy";
+import type {
+  AnatomicalCatalogEntry,
+  AnatomySelectionOrigin,
+} from "./anatomy";
 import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
 import {
   amperesToPicoamperes,
+  auditAnatomicalScene,
   auditVisualMaterialReadiness,
   auditVisualProvenance,
   auditVisualBindings,
@@ -27,6 +38,7 @@ import {
   parseLaminarLod,
   parseSimulationView,
   parseVisualColorMode,
+  pickAnatomicalEntry,
   receptorCurrentTotals,
   auditRenderedStatePixels,
   SelectiveBloomPipeline,
@@ -79,6 +91,8 @@ declare global {
       setCaptureMode: (enabled: boolean) => Promise<void>;
       setCameraRotation: (rotation: number) => void;
       setSelectedCell: (cellId: number) => void;
+      setAnatomySelection: (entryId: string) => string;
+      searchAnatomy: (query: string) => readonly AnatomicalCatalogEntry[];
       setView: (view: SimulationView) => void;
       schedule: (inputs: ScheduledEngineInput[]) => Promise<number>;
       diagnostics: () => {
@@ -128,6 +142,7 @@ declare global {
         redundancy: Record<SimulationView, string>;
       };
       materialProfileAudit: () => ReturnType<typeof materialProfileAuditReport>;
+      anatomyCatalogAudit: () => ReturnType<typeof anatomyCatalogAuditReport>;
       presentationAudit: () => {
         material: MaterialProfileAudit;
         clipping: ReturnType<ClippingSystem["audit"]>;
@@ -176,6 +191,7 @@ let renderPipeline: SelectiveBloomPipeline;
 let clippingSystem: ClippingSystem;
 let materialProfileManager: RealisticIllustrativeMaterialManager;
 let presentationEffects: PresentationMaterialEffects;
+let anatomyExplorer: AnatomyExplorerController | undefined;
 let layers: BrainRenderLayers;
 let laminarLayer: LaminarRenderLayer;
 let cellLayer: CellRenderLayer;
@@ -520,6 +536,21 @@ function materialProfileAuditReport() {
   };
 }
 
+function anatomyCatalogAuditReport() {
+  return {
+    catalog: auditAnatomicalCatalog(),
+    explorer: anatomyExplorer?.audit(),
+    views: {
+      overview: auditAnatomicalScene(layers.group),
+      laminar: auditAnatomicalScene(laminarLayer.group),
+      cell: auditAnatomicalScene(cellLayer.group),
+      neuron: auditAnatomicalScene(neuronLayer.group),
+      electricity: auditAnatomicalScene(electricalBoardLayer.group),
+      synapse: auditAnatomicalScene(synapseLayer.group),
+    },
+  };
+}
+
 function updateMaterialProfileUi(profile: VisualMaterialProfile): void {
   const select = document.querySelector<HTMLSelectElement>("#material-profile");
   if (select) select.value = profile;
@@ -843,6 +874,34 @@ function selectCell(cellId: number): void {
   }
 }
 
+function overviewRegionForAnatomy(entryId: string): BrainRegion | "all" | undefined {
+  if (entryId === ANATOMY_IDS.leftHemisphere) return "leftHemi";
+  if (entryId === ANATOMY_IDS.rightHemisphere) return "rightHemi";
+  if (entryId === ANATOMY_IDS.cerebellum) return "cerebellum";
+  if (entryId === ANATOMY_IDS.brainstem) return "stem";
+  if (
+    entryId === ANATOMY_IDS.encephalon ||
+    entryId === ANATOMY_IDS.cerebrum ||
+    entryId === ANATOMY_IDS.neocortex
+  ) return "all";
+  return undefined;
+}
+
+function applyAnatomySelection(
+  entry: AnatomicalCatalogEntry,
+  _origin: AnatomySelectionOrigin,
+): void {
+  if (!entry.views.includes(activeView)) setActiveView(entry.views[0]);
+  const overviewRegion = overviewRegionForAnatomy(entry.id);
+  if (overviewRegion !== undefined) {
+    currentFocusRegion = overviewRegion;
+    const focus = document.querySelector<HTMLSelectElement>("#circuit-focus");
+    if (focus) focus.value = overviewRegion;
+    layers.updateVisibility(state, currentFocusRegion);
+  }
+  if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+}
+
 function enterNeuron(cellId: number, returnFocus?: HTMLElement): void {
   selectionReturnFocus = returnFocus;
   selectCell(cellId);
@@ -881,6 +940,7 @@ function setActiveView(view: SimulationView): void {
     button.setAttribute("aria-selected", String(selected));
     button.tabIndex = selected ? 0 : -1;
   }
+  anatomyExplorer?.setActiveView(view);
   if (latestSnapshot) {
     renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   }
@@ -889,6 +949,24 @@ function setActiveView(view: SimulationView): void {
 function setupInterface(): void {
   element("#node-count").textContent = formatCount(brainData.nodes.length);
   element("#synapse-count").textContent = formatCount(brainData.synapses.length);
+
+  anatomyExplorer = new AnatomyExplorerController({
+    search: element<HTMLInputElement>("#anatomy-search"),
+    resultCount: element("#anatomy-result-count"),
+    results: element<HTMLUListElement>("#anatomy-results"),
+    breadcrumb: element("#anatomy-breadcrumb"),
+    title: element("#anatomy-selected-title"),
+    stableId: element("#anatomy-selected-id"),
+    laterality: element("#anatomy-selected-laterality"),
+    evidence: element("#anatomy-selected-evidence"),
+    source: element("#anatomy-selected-source"),
+    license: element("#anatomy-selected-license"),
+    transform: element("#anatomy-selected-transform"),
+    limitation: element("#anatomy-selected-limitation"),
+    status: element("#anatomy-selection-status"),
+    reset: element<HTMLButtonElement>("#anatomy-reset"),
+  }, applyAnatomySelection);
+  anatomyExplorer.setActiveView(activeView);
 
   const cellSelector = element<HTMLDivElement>("#cell-selector");
   for (let cellId = 0; cellId < NEURON_CELL_COUNT; cellId += 1) {
@@ -920,12 +998,12 @@ function setupInterface(): void {
 
   let pointerStart: { x: number; y: number } | undefined;
   renderer.domElement.addEventListener("pointerdown", (event) => {
-    if (activeView === "cell" && event.button === 0) {
+    if (event.button === 0) {
       pointerStart = { x: event.clientX, y: event.clientY };
     }
   });
   renderer.domElement.addEventListener("pointerup", (event) => {
-    if (activeView !== "cell" || !pointerStart || event.button !== 0) return;
+    if (!pointerStart || event.button !== 0) return;
     const moved = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
     pointerStart = undefined;
     if (moved > 5) return;
@@ -935,8 +1013,15 @@ function setupInterface(): void {
       -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
     );
     cellRaycaster.setFromCamera(pointerCoordinates, camera);
-    const cellId = cellLayer.pickCell(cellRaycaster);
-    if (cellId !== undefined) enterNeuron(cellId, element("#tab-cell"));
+    if (activeView === "cell") {
+      const cellId = cellLayer.pickCell(cellRaycaster);
+      if (cellId !== undefined) {
+        enterNeuron(cellId, element("#tab-cell"));
+        return;
+      }
+    }
+    const entry = pickAnatomicalEntry(renderRootForView(activeView), cellRaycaster);
+    if (entry) anatomyExplorer?.select(entry.id, "scene");
   });
 
   const tabButtons = Array.from(
@@ -1210,6 +1295,8 @@ function disposeApplication(): void {
   if (applicationDisposed) return;
   applicationDisposed = true;
   worker?.terminate();
+  anatomyExplorer?.dispose();
+  anatomyExplorer = undefined;
   clippingSystem?.dispose();
   materialProfileManager?.dispose();
   renderPipeline?.dispose();
@@ -1370,6 +1457,13 @@ async function init(): Promise<void> {
       const parsed = parseSimulationView(view);
       if (!parsed) throw new Error("vista desconhecida");
       setActiveView(parsed);
+    },
+    setAnatomySelection(entryId) {
+      if (!anatomyExplorer) throw new Error("catálogo anatômico indisponível");
+      return anatomyExplorer.select(entryId, "api").id;
+    },
+    searchAnatomy(query) {
+      return searchAnatomicalCatalog(query);
     },
     async setCaptureMode(enabled) {
       captureMode = enabled;
@@ -1533,6 +1627,9 @@ async function init(): Promise<void> {
     },
     materialProfileAudit() {
       return materialProfileAuditReport();
+    },
+    anatomyCatalogAudit() {
+      return anatomyCatalogAuditReport();
     },
     presentationAudit() {
       return {

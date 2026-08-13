@@ -1,6 +1,6 @@
 # Especificação da aplicação e UX · BRAIN PRO
 
-**Revisão:** 4 · produto observado 0.9.0
+**Revisão:** 5 · produto observado 0.9.0 · R10-A validado
 
 Este documento regula o shell TypeScript, DOM, fluxos, acessibilidade e consumo
 do Worker. Não regula equações nem materiais 3D.
@@ -25,6 +25,7 @@ do Worker. Não regula equações nem materiais 3D.
 | UI-021 | seleção celular por raycast e lista converge no mesmo ID; `Tab` percorre, `Enter` amplia, `Escape` retorna o foco e nenhuma ação cruza o protocolo científico. |
 | UI-022 | perfil de material é preferência de apresentação com fallback esquemático; não altera texto, foco, seleção, snapshot ou hashes. |
 | UI-024 | plano de corte possui controles por teclado/touch, feedback numérico, unidade/interpolação da sonda e indisponibilidade explícita fora do domínio válido. |
+| UI-030 | busca, árvore, breadcrumbs, picking e hook de auditoria anatômica convergem no mesmo ID; o painel anuncia lado, evidência, fonte, licença, transformação e limite. |
 | UX-001 | ampliar muda enquadramento/resolução mostrada, não equação por câmera. |
 | UX-002 | cada vista mostra “o que vejo”, modelo, unidade, hipótese e limite. |
 
@@ -111,6 +112,20 @@ de câmera. `C`, `[`, `]`, `X`, `I` e `R` são equivalentes de teclado; selects,
 checkboxes e ranges são operáveis por touch. A live region da sonda enuncia
 campo, valor, unidade e regra de amostragem. Fora da Visão Geral, ela informa que
 não existe mapeamento macroscópico em vez de inferir química microscópica.
+
+### Explorador anatômico
+
+R10-A adiciona ao painel local uma busca de até 80 caracteres, árvore DOM por
+vista, breadcrumbs e ficha da seleção. A busca é acento-insensível e cobre IDs,
+nomes e sinônimos. Botões `treeitem` são operáveis por `Enter`/espaço; setas,
+`Home` e `End` percorrem resultados, com foco visível e live region. Picking nas
+seis cenas ignora overlays não anatômicos e converge no mesmo ID estável.
+
+Selecionar uma entrada pode mudar somente vista, foco visual e painel. Não envia
+mensagem ao Worker, não muda preset, `dt`, topologia, snapshot ou hashes. O hook
+de auditoria expõe busca, seleção e relatório de cobertura; ele não é API pública
+de persistência. O viewport `390×844` mantém busca e árvore disponíveis sem
+overflow horizontal. Nenhuma entrada usa HTML fornecido por usuário.
 
 ## Modos de uso alvo
 

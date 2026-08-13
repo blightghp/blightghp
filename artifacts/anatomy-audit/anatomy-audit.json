@@ -1,0 +1,384 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-13T22:56:14.725Z",
+  "source": {
+    "commit": "f32532f100f15f8574c2561f0d1ed4cb91816e72",
+    "worktreeDirty": true,
+    "productVersion": "0.9.0",
+    "command": "npm run audit:anatomy"
+  },
+  "environment": {
+    "browser": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
+      "platform": ""
+    },
+    "hardware": {
+      "logicalCores": 8,
+      "deviceMemoryGiB": 8,
+      "webglVendor": "Google Inc. (Google)",
+      "webglRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    "host": {
+      "cpu": "Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz",
+      "logicalCores": 8,
+      "memoryBytes": 8412778496,
+      "platform": "win32",
+      "release": "10.0.26200",
+      "architecture": "x64"
+    }
+  },
+  "hashInvariance": {
+    "fields": [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash"
+    ],
+    "baseline": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "final": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "invariant": true
+  },
+  "catalog": {
+    "schemaVersion": 1,
+    "catalogId": "brain-pro-anatomy",
+    "version": "1.0.0",
+    "hash": "c7ae661e5b2570cb",
+    "entries": 32,
+    "roots": 1,
+    "sources": 5,
+    "transforms": 5,
+    "externalAssets": 0,
+    "evidenceLevels": {
+      "PROCEDURAL": 6,
+      "ILLUSTRATIVE": 6,
+      "DIDACTIC": 12,
+      "FENOMENOLOGICAL": 2,
+      "MODEL_BOUND": 6,
+      "REFERENCE_GROUNDED": 0,
+      "CALIBRATED": 0
+    },
+    "issues": [],
+    "contractReady": true
+  },
+  "views": {
+    "overview": {
+      "totalRenderableObjects": 17,
+      "boundObjects": 16,
+      "explicitlyNonAnatomicalObjects": 1,
+      "catalogEntriesReferenced": 5,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "laminar": {
+      "totalRenderableObjects": 44,
+      "boundObjects": 29,
+      "explicitlyNonAnatomicalObjects": 15,
+      "catalogEntriesReferenced": 9,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "cell": {
+      "totalRenderableObjects": 5,
+      "boundObjects": 2,
+      "explicitlyNonAnatomicalObjects": 3,
+      "catalogEntriesReferenced": 2,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "neuron": {
+      "totalRenderableObjects": 10,
+      "boundObjects": 4,
+      "explicitlyNonAnatomicalObjects": 6,
+      "catalogEntriesReferenced": 4,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "electricity": {
+      "totalRenderableObjects": 11,
+      "boundObjects": 2,
+      "explicitlyNonAnatomicalObjects": 9,
+      "catalogEntriesReferenced": 1,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "synapse": {
+      "totalRenderableObjects": 11,
+      "boundObjects": 5,
+      "explicitlyNonAnatomicalObjects": 6,
+      "catalogEntriesReferenced": 5,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    }
+  },
+  "searchEvidence": {
+    "talamo": [
+      "brain-pro:anatomy/thalamus"
+    ],
+    "ranvier": [
+      "brain-pro:anatomy/ranvier-node"
+    ],
+    "cellBody": [
+      "brain-pro:anatomy/soma"
+    ]
+  },
+  "uiSearch": {
+    "count": 1,
+    "label": "Tálamo didático",
+    "activeDescendant": "brain-pro:anatomy/thalamus"
+  },
+  "uiSelection": {
+    "selectedId": "brain-pro:anatomy/thalamus",
+    "selectedTab": "laminar",
+    "liveRegion": "Tálamo didático selecionado; evidência DIDACTIC."
+  },
+  "selections": [
+    {
+      "name": "01-overview-left-hemisphere",
+      "entryId": "brain-pro:anatomy/cerebral-hemisphere-left",
+      "expectedView": "overview",
+      "capture": "01-overview-left-hemisphere.png",
+      "audit": {
+        "catalog": {
+          "schemaVersion": 1,
+          "catalogId": "brain-pro-anatomy",
+          "version": "1.0.0",
+          "hash": "c7ae661e5b2570cb",
+          "entries": 32,
+          "roots": 1,
+          "sources": 5,
+          "transforms": 5,
+          "externalAssets": 0,
+          "evidenceLevels": {
+            "PROCEDURAL": 6,
+            "ILLUSTRATIVE": 6,
+            "DIDACTIC": 12,
+            "FENOMENOLOGICAL": 2,
+            "MODEL_BOUND": 6,
+            "REFERENCE_GROUNDED": 0,
+            "CALIBRATED": 0
+          },
+          "issues": [],
+          "contractReady": true
+        },
+        "activeView": "overview",
+        "selectedId": "brain-pro:anatomy/cerebral-hemisphere-left",
+        "query": "",
+        "visibleResultIds": [
+          "brain-pro:anatomy/encephalon",
+          "brain-pro:anatomy/cerebrum",
+          "brain-pro:anatomy/cerebral-hemisphere-left",
+          "brain-pro:anatomy/cerebral-hemisphere-right",
+          "brain-pro:anatomy/cerebellum",
+          "brain-pro:anatomy/brainstem",
+          "brain-pro:anatomy/neocortex"
+        ]
+      }
+    },
+    {
+      "name": "02-laminar-thalamus",
+      "entryId": "brain-pro:anatomy/thalamus",
+      "expectedView": "laminar",
+      "capture": "02-laminar-thalamus.png",
+      "audit": {
+        "catalog": {
+          "schemaVersion": 1,
+          "catalogId": "brain-pro-anatomy",
+          "version": "1.0.0",
+          "hash": "c7ae661e5b2570cb",
+          "entries": 32,
+          "roots": 1,
+          "sources": 5,
+          "transforms": 5,
+          "externalAssets": 0,
+          "evidenceLevels": {
+            "PROCEDURAL": 6,
+            "ILLUSTRATIVE": 6,
+            "DIDACTIC": 12,
+            "FENOMENOLOGICAL": 2,
+            "MODEL_BOUND": 6,
+            "REFERENCE_GROUNDED": 0,
+            "CALIBRATED": 0
+          },
+          "issues": [],
+          "contractReady": true
+        },
+        "activeView": "laminar",
+        "selectedId": "brain-pro:anatomy/thalamus",
+        "query": "",
+        "visibleResultIds": [
+          "brain-pro:anatomy/encephalon",
+          "brain-pro:anatomy/cerebrum",
+          "brain-pro:anatomy/neocortex",
+          "brain-pro:anatomy/cortical-column",
+          "brain-pro:anatomy/cortical-layer-1",
+          "brain-pro:anatomy/cortical-layer-2",
+          "brain-pro:anatomy/cortical-layer-3",
+          "brain-pro:anatomy/cortical-layer-4",
+          "brain-pro:anatomy/cortical-layer-5",
+          "brain-pro:anatomy/cortical-layer-6",
+          "brain-pro:anatomy/thalamus",
+          "brain-pro:anatomy/thalamic-relay",
+          "brain-pro:anatomy/thalamic-reticular-nucleus",
+          "brain-pro:anatomy/corticothalamic-pathway"
+        ]
+      }
+    },
+    {
+      "name": "03-neuron-axon",
+      "entryId": "brain-pro:anatomy/axon",
+      "expectedView": "neuron",
+      "capture": "03-neuron-axon.png",
+      "audit": {
+        "catalog": {
+          "schemaVersion": 1,
+          "catalogId": "brain-pro-anatomy",
+          "version": "1.0.0",
+          "hash": "c7ae661e5b2570cb",
+          "entries": 32,
+          "roots": 1,
+          "sources": 5,
+          "transforms": 5,
+          "externalAssets": 0,
+          "evidenceLevels": {
+            "PROCEDURAL": 6,
+            "ILLUSTRATIVE": 6,
+            "DIDACTIC": 12,
+            "FENOMENOLOGICAL": 2,
+            "MODEL_BOUND": 6,
+            "REFERENCE_GROUNDED": 0,
+            "CALIBRATED": 0
+          },
+          "issues": [],
+          "contractReady": true
+        },
+        "activeView": "neuron",
+        "selectedId": "brain-pro:anatomy/axon",
+        "query": "",
+        "visibleResultIds": [
+          "brain-pro:anatomy/encephalon",
+          "brain-pro:anatomy/cerebrum",
+          "brain-pro:anatomy/neocortex",
+          "brain-pro:anatomy/cell-patch",
+          "brain-pro:anatomy/neuron",
+          "brain-pro:anatomy/soma",
+          "brain-pro:anatomy/dendrite",
+          "brain-pro:anatomy/dendrite-proximal",
+          "brain-pro:anatomy/dendrite-distal",
+          "brain-pro:anatomy/axon",
+          "brain-pro:anatomy/ranvier-node"
+        ]
+      }
+    },
+    {
+      "name": "04-synapse-receptors",
+      "entryId": "brain-pro:anatomy/receptor-site",
+      "expectedView": "synapse",
+      "capture": "04-synapse-receptors.png",
+      "audit": {
+        "catalog": {
+          "schemaVersion": 1,
+          "catalogId": "brain-pro-anatomy",
+          "version": "1.0.0",
+          "hash": "c7ae661e5b2570cb",
+          "entries": 32,
+          "roots": 1,
+          "sources": 5,
+          "transforms": 5,
+          "externalAssets": 0,
+          "evidenceLevels": {
+            "PROCEDURAL": 6,
+            "ILLUSTRATIVE": 6,
+            "DIDACTIC": 12,
+            "FENOMENOLOGICAL": 2,
+            "MODEL_BOUND": 6,
+            "REFERENCE_GROUNDED": 0,
+            "CALIBRATED": 0
+          },
+          "issues": [],
+          "contractReady": true
+        },
+        "activeView": "synapse",
+        "selectedId": "brain-pro:anatomy/receptor-site",
+        "query": "",
+        "visibleResultIds": [
+          "brain-pro:anatomy/encephalon",
+          "brain-pro:anatomy/cerebrum",
+          "brain-pro:anatomy/neocortex",
+          "brain-pro:anatomy/cell-patch",
+          "brain-pro:anatomy/neuron",
+          "brain-pro:anatomy/synapse",
+          "brain-pro:anatomy/presynaptic-bouton",
+          "brain-pro:anatomy/synaptic-cleft",
+          "brain-pro:anatomy/postsynaptic-membrane",
+          "brain-pro:anatomy/vesicle-reserve",
+          "brain-pro:anatomy/receptor-site"
+        ]
+      }
+    }
+  ],
+  "mobileLayout": {
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "searchVisible": true,
+    "resultTreeVisible": true
+  },
+  "sceneGraphCost": {
+    "baseline": {
+      "drawCalls": 48,
+      "triangles": 145778,
+      "geometries": 88,
+      "textures": 17
+    },
+    "final": {
+      "drawCalls": 48,
+      "triangles": 145778,
+      "geometries": 88,
+      "textures": 17
+    },
+    "delta": {
+      "drawCalls": 0,
+      "triangles": 0,
+      "geometries": 0,
+      "textures": 0
+    }
+  },
+  "captures": [
+    "01-overview-left-hemisphere.png",
+    "02-laminar-thalamus.png",
+    "03-neuron-axon.png",
+    "04-synapse-receptors.png",
+    "05-mobile-catalog.png"
+  ],
+  "browserErrors": []
+}

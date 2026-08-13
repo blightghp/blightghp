@@ -1,6 +1,6 @@
 # Especificação gráfica e de proveniência · BRAIN PRO
 
-**Revisão:** 6 · R09-F validado em Three.js 0.185/WebGL · produto 0.9.0
+**Revisão:** 7 · R10-A validado em Three.js 0.185/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
 preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
@@ -32,6 +32,11 @@ fidelidade entre estado calculado e estado mostrado.
 | AST-001 | anatomia detalhada não implica validação biológica. |
 | AST-002 | estrutura entra por função, orientação decorativa ou proveniência topológica declarada. |
 | AST-010 | morfologia procedural declara seed, stream, hash e limite ilustrativo; não afirma tipo celular real. |
+| AST-030 | estrutura catalogada possui ID semântico estável, pai válido, nome, sinônimos, lado, escala e vistas aplicáveis. |
+| AST-031 | toda entrada resolve fonte, licença e versão; asset externo exige manifesto e SHA-256 antes de ser aceito. |
+| AST-032 | toda entrada resolve sistema de coordenadas, unidade, escala, orientação e transformação, sem converter unidade procedural em calibração. |
+| AST-033 | nível de evidência, afirmação permitida e ao menos uma limitação são explícitos e não são elevados pela aparência. |
+| AST-034 | cada objeto renderizável aponta diretamente para uma entrada do catálogo ou declara por que não representa anatomia. |
 | VAS-001 | fluxo/perfusão/oxigenação só animam com estado/modelo correspondente. |
 | ELE-001 | Prancha Elétrica mostra grandezas com unidade e origem operacional. |
 | ELE-002 | Prancha Elétrica possui scene graph próprio e não reutiliza a cena Célula. |
@@ -181,6 +186,32 @@ movimento reduzido e viewport móvel. O inventário executável reporta
 `contractReady`, objetos limitados e materiais físicos ativos por vista.
 
 ## Pilha anatômica progressiva
+
+### Catálogo anatômico schema 1
+
+R10-A cataloga somente a anatomia/topologia já presente; não importa atlas nem
+altera os seis scene graphs. `src/anatomy/catalog-v1.json` contém 32 entradas,
+cinco fontes internas e cinco transformações. O fingerprint FNV-1a de 64 bits
+audita a serialização canônica do catálogo, mas é metadado de apresentação e
+não constitui um sexto hash científico.
+
+IDs usam o namespace `brain-pro:anatomy/`. A árvore possui uma raiz, pais sem
+ciclo e busca determinística acento-insensível em ID, nome e sinônimos. As
+classes `PROCEDURAL`, `ILLUSTRATIVE`, `DIDACTIC`, `FENOMENOLOGICAL` e
+`MODEL_BOUND` descrevem a força da evidência de cada item; nenhuma entrada é
+`CALIBRATED`. Fonte e transformação são referências fechadas no mesmo schema.
+
+`declareAnatomicalBinding()` marca estruturas; `declareNonAnatomical()` obriga
+overlays, estados e indicadores a explicar sua exclusão. A auditoria cobre 98
+objetos renderizáveis nas seis vistas: 58 ligados ao catálogo e 40 excluídos
+explicitamente, sem lacuna ou ID desconhecido. `pickAnatomicalEntry()` ignora
+overlays e entrega o mesmo ID usado pela árvore acessível. O catálogo não cria
+material, geometria, textura, render target ou draw call.
+
+Importações futuras passam pelo parser estrito com limite de 256 KiB, rejeição
+de campos desconhecidos, unicidade, integridade referencial e SHA-256 obrigatório
+para fontes externas. R10-A inclui zero asset externo; sua licença interna não
+autoriza incorporar um atlas de terceiros.
 
 | Camada | Por que existe | Classe antes/depois da fonte | Entrada | Interação/limite |
 | :-- | :-- | :-- | :-- | :-- |

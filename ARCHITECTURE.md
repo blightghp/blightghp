@@ -1,6 +1,6 @@
 # Arquitetura canônica · BRAIN PRO
 
-**Documento:** revisão 3 · 13 de agosto de 2026
+**Documento:** revisão 4 · 13 de agosto de 2026
 
 **Produto observado:** 0.9.0
 
@@ -32,6 +32,7 @@ como planejada e nunca é descrita como implementada.
 | ARC-015 | Prancha Elétrica é projeção de apresentação com scene graph próprio | aceita em R09-C | novo observável científico exige contrato/ABI antes do renderer |
 | ARC-016 | materialidade realista-ilustrativa é perfil substituível sobre o mesmo scene graph | implementada em R09-F | somente evidência de que a troca exige nova semântica científica |
 | ARC-017 | clipping, stencil, sonda, câmera e isolamento pertencem exclusivamente à apresentação | aceita em R09-F | um novo domínio amostrado exige campo publicado e mapeamento espacial validado |
+| ARC-018 | catálogo anatômico é registro versionado de metadados e seleção, separado do estado científico e da geometria | aceita em R10-A | entrada de atlas externo ou ID persistido exige migração/fonte/licença próprias |
 
 ## Contexto do sistema
 
@@ -272,6 +273,15 @@ campo cortical publicado apenas quando existe mapeamento posição→domínio. P
 luz, stencil, sonda, câmera e pós-processamento continuam fora do snapshot, da
 ABI, do Worker e dos cinco hashes.
 
+R10-A acrescenta um catálogo anatômico schema 1 puramente declarativo em
+`src/anatomy`. Os 32 IDs estáveis descrevem apenas estruturas já presentes:
+hierarquia, sinônimos, lateralidade, escala, fonte, licença, sistema de
+coordenadas, transformação, evidência e limitações. Cada objeto renderizável das
+seis vistas aponta diretamente para uma entrada ou declara por que é um overlay
+não anatômico. Busca, árvore, breadcrumbs e picking convergem no mesmo ID. O
+catálogo não adiciona geometria, buffer, comando Worker, estado ou hash; assets
+externos permanecem rejeitados sem manifesto e SHA-256.
+
 ## Introdução de uma nova grandeza
 
 ```mermaid
@@ -482,7 +492,8 @@ flowchart LR
     B --> D["R09-D Neuron"]
     D --> E["R09-E multicompartment"]
     D --> F["R09-F cuts/layers"]
-    F --> ATLAS["R10 anatomy"]
+    F --> CATALOG["R10-A catalog"]
+    CATALOG --> ATLAS["R10-B+ anatomy/assets"]
     A --> EXP["R11 experiments"]
 ```
 

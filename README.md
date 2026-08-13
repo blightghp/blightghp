@@ -130,6 +130,12 @@ criou uma Prancha Elétrica própria; R09-D acrescentou seleção das 12 célula
 R09-E publicou soma/proximal/distal; e R09-F concluiu materialidade e cortes sem
 tocar na ABI ou no motor.
 
+A 0.10 começou pelo gate R10-A: um catálogo anatômico schema 1 descreve as
+estruturas procedurais já existentes com IDs estáveis, hierarquia, sinônimos,
+lado, fonte, licença, transformação, evidência e limitações. Busca, árvore,
+breadcrumbs e picking convergem no mesmo ID. São 32 entradas e zero asset
+externo; o catálogo não cria anatomia, draw call ou estado científico.
+
 As seis vistas agora alternam atomicamente entre `schematic` e
 `realistic-illustrative` no mesmo scene graph. Apenas 25 objetos de matéria com
 proveniência, normal e envelope declarados recebem PBR/transmission; emissão,
@@ -170,6 +176,9 @@ biológica.
 - planos coronal, sagital, axial e oblíquo, laje, tampas stencil, raio-X,
   opacidade, isolamento e sonda textual do campo cortical; 9 draws adicionais
   no corte simples e teto de 18 na laje;
+- catálogo anatômico com 32 IDs estáveis, busca acento-insensível, árvore
+  acessível, breadcrumbs, ficha de proveniência e bindings/exclusões explícitos
+  para os 98 objetos renderizáveis das seis vistas;
 - corrente receptora média com sinal, halos orientados para entrada, saída e
   shunt, além de forma redundante para leitura sem depender de matiz;
 - gates automáticos de ABI, lifecycle, rampa pura, saturação, modo
@@ -294,6 +303,7 @@ Para repetir os gates:
 
 ```bash
 npm run check
+npm run audit:anatomy
 npm run verify:promotion-0.8
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings

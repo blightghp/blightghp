@@ -1,6 +1,11 @@
 import * as THREE from "three";
+import { ANATOMY_IDS } from "../anatomy";
 import type { NeuralSnapshot } from "../protocol";
 import { interpolatePublishedValue } from "./brain-layer";
+import {
+  declareAnatomicalBinding,
+  declareNonAnatomical,
+} from "./anatomical-provenance";
 import {
   declareVisual,
   disposeObjectTree,
@@ -121,6 +126,7 @@ export class CellRenderLayer implements RenderLayer {
       transform: "class to aspect ratio; voltage/spike to scale and luminance",
       redundancy: ["shape", "size", "label"],
     });
+    declareAnatomicalBinding(this.somata, ANATOMY_IDS.soma);
     this.group.add(this.somata);
 
     this.electricHalos = new THREE.InstancedMesh(
@@ -141,6 +147,10 @@ export class CellRenderLayer implements RenderLayer {
       transform: "signed current to ring plane; magnitude to scale",
       redundancy: ["orientation", "size", "label"],
     });
+    declareNonAnatomical(
+      this.electricHalos,
+      "Signed receptor-current halos encode published state, not anatomy.",
+    );
     this.group.add(this.electricHalos);
 
     const dendritePositions = new Float32Array(cellCount * 3 * 2 * 3);
@@ -173,6 +183,7 @@ export class CellRenderLayer implements RenderLayer {
     );
     this.dendrites.name = "passive-dendrites";
     declareVisual(this.dendrites, "matter", "topology");
+    declareAnatomicalBinding(this.dendrites, ANATOMY_IDS.dendrite);
     this.group.add(this.dendrites);
 
     this.boundary = new THREE.Mesh(
@@ -193,6 +204,10 @@ export class CellRenderLayer implements RenderLayer {
       transform: "patch activity/current magnitude to boundary opacity",
       redundancy: ["position", "label"],
     });
+    declareNonAnatomical(
+      this.boundary,
+      "The patch field boundary is a model-domain indicator, not an anatomical boundary.",
+    );
     this.group.add(this.boundary);
 
     this.selectionHalo = new THREE.Mesh(
@@ -207,6 +222,10 @@ export class CellRenderLayer implements RenderLayer {
     );
     this.selectionHalo.name = "cell-selection-halo";
     declareVisual(this.selectionHalo, "matter", "decoration");
+    declareNonAnatomical(
+      this.selectionHalo,
+      "Selection focus is an interaction overlay, not anatomy.",
+    );
     this.group.add(this.selectionHalo);
     this.setSelectedCell(0);
     this.setMode("cell");

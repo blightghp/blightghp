@@ -14,6 +14,13 @@ anatômico ou vascular externo está aprovado pelo simples fato de aparecer nest
 lista; sua entrada exige manifesto próprio definido em
 [GRAPHICS_SPEC.md](GRAPHICS_SPEC.md).
 
+R10-A aplica essa regra sem adicionar fonte externa: seu catálogo schema 1
+registra somente geradores e contratos internos já existentes, com licença,
+versão, transformação, nível de evidência e limitações por entrada. O catálogo
+não transforma as referências de estudo abaixo em atlas aprovado. Uma futura
+fonte anatômica externa ainda exigirá manifesto, licença compatível, versão,
+SHA-256 e pipeline reproduzível próprios.
+
 ## Percurso de aprendizagem desde 2025
 
 - Kandel, E. R.; Koester, J. D.; Mack, S. H.; Siegelbaum, S. A. (2021). [*Principles of Neural Science*, 6ª ed.](https://books.google.com/books/about/Principles_of_Neural_Science_Sixth_Editi.html?id=8yGq0QEACAAJ). O “Kandel” é meu projeto de leitura; enquanto o estudo, uso o BRAIN PRO para consolidar conceitos sem tratar o livro como calibração automática.

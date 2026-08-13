@@ -1,7 +1,15 @@
 import * as THREE from "three";
 import { describe, expect, it, vi } from "vitest";
 import { generateBrainData } from "../brain";
+import { ANATOMY_IDS } from "../anatomy";
 import { DiagnosticFallbackHost } from "../wasm-engine-host";
+import {
+  anatomicalDeclarationOf,
+  auditAnatomicalScene,
+  declareAnatomicalBinding,
+  declareNonAnatomical,
+  pickAnatomicalEntry,
+} from "./anatomical-provenance";
 import { CellRenderLayer } from "./cell-layer";
 import { ElectricalBoardLayer } from "./electrical-board-layer";
 import { LaminarRenderLayer } from "./laminar-layer";
@@ -123,6 +131,65 @@ describe("render presentation contract", () => {
       expect(report.state).toBeGreaterThan(0);
       layer.dispose();
     }
+  });
+
+  it("binds or explicitly excludes every renderable from the anatomical catalog", () => {
+    for (const layer of [
+      new LaminarRenderLayer(),
+      new CellRenderLayer(),
+      new NeuronRenderLayer(7),
+      new ElectricalBoardLayer(),
+      new SynapseRenderLayer(),
+    ]) {
+      const report = auditAnatomicalScene(layer.group);
+      expect(report.totalRenderableObjects).toBeGreaterThan(0);
+      expect(report.boundObjects).toBeGreaterThan(0);
+      expect(report.boundObjects + report.explicitlyNonAnatomicalObjects)
+        .toBe(report.totalRenderableObjects);
+      expect(report.missingDeclarations).toEqual([]);
+      expect(report.unknownEntryIds).toEqual([]);
+      expect(report.missingEvidence).toEqual([]);
+      expect(report.contractReady).toBe(true);
+      layer.dispose();
+    }
+  });
+
+  it("rejects unknown anatomy IDs and requires reasons for non-anatomical objects", () => {
+    const object = new THREE.Object3D();
+    expect(() => declareAnatomicalBinding(object, "brain-pro:anatomy/missing"))
+      .toThrow("unknown anatomical catalog entry");
+    expect(() => declareNonAnatomical(object, "  ")).toThrow("require a reason");
+    declareAnatomicalBinding(object, ANATOMY_IDS.soma);
+    expect(anatomicalDeclarationOf(object)).toEqual({
+      kind: "catalog-entry",
+      entryId: ANATOMY_IDS.soma,
+    });
+  });
+
+  it("converges raycast picking on the same stable catalog ID", () => {
+    const root = new THREE.Group();
+    const overlay = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.MeshBasicMaterial(),
+    );
+    overlay.position.z = 0.2;
+    declareNonAnatomical(overlay, "test overlay");
+    const soma = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 0.8, 0.8),
+      new THREE.MeshBasicMaterial(),
+    );
+    declareAnatomicalBinding(soma, ANATOMY_IDS.soma);
+    root.add(overlay, soma);
+    root.updateMatrixWorld(true);
+    const raycaster = new THREE.Raycaster(
+      new THREE.Vector3(0, 0, 2),
+      new THREE.Vector3(0, 0, -1),
+    );
+    expect(pickAnatomicalEntry(root, raycaster)?.id).toBe(ANATOMY_IDS.soma);
+    overlay.geometry.dispose();
+    overlay.material.dispose();
+    soma.geometry.dispose();
+    soma.material.dispose();
   });
 
   it("binds every state object to a field, unit, transform and non-color cue", () => {

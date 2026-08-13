@@ -1,4 +1,5 @@
 export * from "./brain-layer";
+export * from "./anatomical-provenance";
 export * from "./cell-layer";
 export * from "./clipping";
 export * from "./electrical-board-layer";

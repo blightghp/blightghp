@@ -1,6 +1,11 @@
 import * as THREE from "three";
+import { ANATOMY_IDS } from "../anatomy";
 import type { NeuralSnapshot } from "../protocol";
 import { interpolatePublishedValue } from "./brain-layer";
+import {
+  declareAnatomicalBinding,
+  declareNonAnatomical,
+} from "./anatomical-provenance";
 import {
   declareVisual,
   disposeObjectTree,
@@ -156,6 +161,7 @@ export class LaminarRenderLayer implements RenderLayer {
         transform: "activity to opacity on cylinder",
         redundancy: ["shape", "position", "label"],
       });
+      declareAnatomicalBinding(excitatory, ANATOMY_IDS.corticalLayers[index]);
       this.excitatoryMeshes.push(excitatory);
       this.group.add(excitatory);
 
@@ -178,6 +184,7 @@ export class LaminarRenderLayer implements RenderLayer {
         transform: "activity to opacity on torus",
         redundancy: ["shape", "position", "label"],
       });
+      declareAnatomicalBinding(inhibitory, ANATOMY_IDS.corticalLayers[index]);
       this.inhibitoryMeshes.push(inhibitory);
       this.group.add(inhibitory);
     }
@@ -200,6 +207,7 @@ export class LaminarRenderLayer implements RenderLayer {
           depthWrite: true,
         }),
       );
+      line.name = `laminar-${projection.kind}-${projection.source}-${projection.target}`;
       line.userData.kind = projection.kind;
       line.userData.source = projection.source;
       line.userData.target = projection.target;
@@ -209,6 +217,7 @@ export class LaminarRenderLayer implements RenderLayer {
         transform: "source/target curve and kind token",
         redundancy: ["position", "label"],
       });
+      declareAnatomicalBinding(line, ANATOMY_IDS.corticothalamicPathway);
       this.projectionLines.push(line);
       this.projectionCurves.push(curve);
       this.group.add(line);
@@ -230,6 +239,10 @@ export class LaminarRenderLayer implements RenderLayer {
         transform: "phase to curve position and scale",
         redundancy: ["position", "size"],
       });
+      declareNonAnatomical(
+        pulse,
+        "Published pathway phase is an activity marker, not an anatomical structure.",
+      );
       this.projectionPulses.push(pulse);
       this.group.add(pulse);
     }
@@ -252,6 +265,7 @@ export class LaminarRenderLayer implements RenderLayer {
       transform: "activity to icosahedron opacity/scale",
       redundancy: ["shape", "position", "label"],
     });
+    declareAnatomicalBinding(this.relayMesh, ANATOMY_IDS.thalamicRelay);
     this.group.add(this.relayMesh);
 
     this.trnMesh = new THREE.Mesh(
@@ -273,6 +287,7 @@ export class LaminarRenderLayer implements RenderLayer {
       transform: "activity to torus opacity/scale",
       redundancy: ["shape", "position", "label"],
     });
+    declareAnatomicalBinding(this.trnMesh, ANATOMY_IDS.thalamicReticularNucleus);
     this.group.add(this.trnMesh);
     this.setLod(this.lod);
   }
