@@ -8,6 +8,7 @@ import { LaminarRenderLayer } from "./laminar-layer";
 import { NeuronRenderLayer } from "./neuron-layer";
 import { SynapseRenderLayer } from "./synapse-layer";
 import {
+  auditVisualMaterialReadiness,
   auditVisualProvenance,
   auditVisualBindings,
   declareVisual,
@@ -104,6 +105,27 @@ describe("render presentation contract", () => {
         expect(binding?.transform).toBeTruthy();
         expect(binding?.redundancy.length).toBeGreaterThan(0);
       }
+      layer.dispose();
+    }
+  });
+
+  it("keeps every DOM-independent view ready for a material profile", () => {
+    for (const layer of [
+      new LaminarRenderLayer(),
+      new CellRenderLayer(),
+      new NeuronRenderLayer(7),
+      new ElectricalBoardLayer(),
+      new SynapseRenderLayer(),
+    ]) {
+      const report = auditVisualMaterialReadiness(layer.group);
+      expect(report.activeProfile).toBe("schematic");
+      expect(report.totalRenderableObjects).toBeGreaterThan(0);
+      expect(report.matterObjects + report.emissionObjects)
+        .toBe(report.totalRenderableObjects);
+      expect(report.pbrCandidateMeshes).toBeLessThanOrEqual(report.matterObjects);
+      expect(report.undeclaredObjects).toBe(0);
+      expect(report.missingStateBindings).toBe(0);
+      expect(report.contractReady).toBe(true);
       layer.dispose();
     }
   });

@@ -53,6 +53,20 @@ export interface VisualBindingAudit {
   missingRedundancy: string[];
 }
 
+export type VisualMaterialProfile = "schematic" | "realistic-illustrative";
+
+export interface VisualMaterialReadinessReport {
+  activeProfile: VisualMaterialProfile;
+  totalRenderableObjects: number;
+  matterObjects: number;
+  emissionObjects: number;
+  pbrCandidateMeshes: number;
+  schematicOnlyObjects: number;
+  undeclaredObjects: number;
+  missingStateBindings: number;
+  contractReady: boolean;
+}
+
 const PASS_KEY = "visualPass";
 const PROVENANCE_KEY = "visualProvenance";
 const BINDING_KEY = "visualSemanticBinding";
@@ -135,6 +149,44 @@ export function auditVisualBindings(root: THREE.Object3D): VisualBindingAudit {
     report.declaredBindings += 1;
     if (binding.redundancy.length === 0) report.missingRedundancy.push(name);
   });
+  return report;
+}
+
+export function auditVisualMaterialReadiness(
+  root: THREE.Object3D,
+): VisualMaterialReadinessReport {
+  const provenance = auditVisualProvenance(root);
+  const bindings = auditVisualBindings(root);
+  const report: VisualMaterialReadinessReport = {
+    activeProfile: "schematic",
+    totalRenderableObjects: 0,
+    matterObjects: 0,
+    emissionObjects: 0,
+    pbrCandidateMeshes: 0,
+    schematicOnlyObjects: 0,
+    undeclaredObjects: provenance.undeclared,
+    missingStateBindings: bindings.missingBindings.length,
+    contractReady: false,
+  };
+  root.traverse((object) => {
+    if (!("material" in object)) return;
+    report.totalRenderableObjects += 1;
+    if (visualPassOf(object) === "emission") {
+      report.emissionObjects += 1;
+      report.schematicOnlyObjects += 1;
+      return;
+    }
+    report.matterObjects += 1;
+    const renderable = object as THREE.Object3D & { geometry?: THREE.BufferGeometry };
+    if (object instanceof THREE.Mesh && renderable.geometry?.getAttribute("normal")) {
+      report.pbrCandidateMeshes += 1;
+    } else {
+      report.schematicOnlyObjects += 1;
+    }
+  });
+  report.contractReady = report.totalRenderableObjects > 0 &&
+    report.undeclaredObjects === 0 &&
+    report.missingStateBindings === 0;
   return report;
 }
 

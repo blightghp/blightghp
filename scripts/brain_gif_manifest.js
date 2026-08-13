@@ -4,6 +4,53 @@ const COMMIT_PATTERN = /^[0-9a-f]{40}$/i;
 const HASH_PATTERN = /^[0-9a-f]{16}$/i;
 const MINIMUM_PROFILE_ABI_SCHEMA_VERSION = 6;
 
+export const BRAIN_GIF_MANIFEST_SCHEMA_VERSION = 2;
+export const BRAIN_GIF_VIEW_FRAMES = Object.freeze({
+  overview: 15,
+  laminar: 9,
+  cell: 9,
+  neuron: 9,
+  electricity: 9,
+  synapse: 9,
+});
+export const BRAIN_GIF_VIEWS = Object.freeze(Object.keys(BRAIN_GIF_VIEW_FRAMES));
+export const BRAIN_GIF_FRAME_COUNT = Object.values(BRAIN_GIF_VIEW_FRAMES)
+  .reduce((total, frames) => total + frames, 0);
+
+export function brainGifViewAtFrame(frame) {
+  if (!Number.isSafeInteger(frame) || frame < 0 || frame >= BRAIN_GIF_FRAME_COUNT) {
+    throw new Error("GIF frame is outside the canonical capture schedule");
+  }
+  let boundary = 0;
+  for (const view of BRAIN_GIF_VIEWS) {
+    boundary += BRAIN_GIF_VIEW_FRAMES[view];
+    if (frame < boundary) return view;
+  }
+  throw new Error("GIF capture schedule is incomplete");
+}
+
+function validateCapture(capture) {
+  if (capture?.frameCount !== BRAIN_GIF_FRAME_COUNT) {
+    throw new Error(`GIF capture must contain ${BRAIN_GIF_FRAME_COUNT} frames`);
+  }
+  const framesByView = capture.framesByView;
+  if (!framesByView || typeof framesByView !== "object") {
+    throw new Error("GIF capture must declare framesByView");
+  }
+  const capturedViews = Object.keys(framesByView);
+  if (
+    capturedViews.length !== BRAIN_GIF_VIEWS.length ||
+    capturedViews.some((view) => !BRAIN_GIF_VIEWS.includes(view))
+  ) {
+    throw new Error("GIF capture must cover exactly the six current views");
+  }
+  for (const view of BRAIN_GIF_VIEWS) {
+    if (framesByView[view] !== BRAIN_GIF_VIEW_FRAMES[view]) {
+      throw new Error(`GIF capture uses an invalid frame allocation for ${view}`);
+    }
+  }
+}
+
 export function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
 }
@@ -32,9 +79,10 @@ export function createBrainGifManifest({ sourceCommit, gifBytes, diagnostics, ca
     throw new Error("GIF capture is missing a valid cellSpikeEventHash");
   }
   if (!gifBytes?.length) throw new Error("GIF bytes must not be empty");
+  validateCapture(capture);
 
   return {
-    schemaVersion: 1,
+    schemaVersion: BRAIN_GIF_MANIFEST_SCHEMA_VERSION,
     sourceCommit: sourceCommit.toLowerCase(),
     gifSha256: sha256(gifBytes),
     engine: {
@@ -54,7 +102,9 @@ export function createBrainGifManifest({ sourceCommit, gifBytes, diagnostics, ca
 }
 
 export function verifyBrainGifManifest(manifest, gifBytes, expectedSourceCommit) {
-  if (manifest?.schemaVersion !== 1) throw new Error("unknown GIF manifest schema");
+  if (manifest?.schemaVersion !== BRAIN_GIF_MANIFEST_SCHEMA_VERSION) {
+    throw new Error("unknown GIF manifest schema");
+  }
   if (!COMMIT_PATTERN.test(expectedSourceCommit ?? "")) {
     throw new Error("expected source commit must contain 40 characters");
   }
@@ -83,6 +133,7 @@ export function verifyBrainGifManifest(manifest, gifBytes, expectedSourceCommit)
   ) {
     throw new Error("GIF manifest contains an invalid cellSpikeEventHash");
   }
+  validateCapture(manifest.capture);
   return true;
 }
 

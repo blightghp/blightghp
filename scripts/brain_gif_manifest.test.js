@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  BRAIN_GIF_FRAME_COUNT,
+  BRAIN_GIF_VIEW_FRAMES,
+  brainGifViewAtFrame,
   createBrainGifManifest,
   verifyLegacyHashPreservation,
   verifyBrainGifManifest,
@@ -15,6 +18,10 @@ const diagnostics = {
   chemicalHash: "3123456789abcdef",
   degraded: false,
 };
+const capture = {
+  frameCount: BRAIN_GIF_FRAME_COUNT,
+  framesByView: { ...BRAIN_GIF_VIEW_FRAMES },
+};
 
 describe("brain GIF provenance manifest", () => {
   it("binds GIF bytes, source commit and all independent engine hashes", () => {
@@ -23,7 +30,7 @@ describe("brain GIF provenance manifest", () => {
       sourceCommit,
       gifBytes,
       diagnostics,
-      capture: { frameCount: 60 },
+      capture,
     });
     expect(verifyBrainGifManifest(manifest, gifBytes, sourceCommit)).toBe(true);
     expect(manifest.engine).toMatchObject({
@@ -42,7 +49,7 @@ describe("brain GIF provenance manifest", () => {
         schemaVersion: 7,
         cellSpikeEventHash: "4123456789abcdef",
       },
-      capture: { frameCount: 60 },
+      capture,
     });
     expect(verifyBrainGifManifest(nextAbi, gifBytes, sourceCommit)).toBe(true);
     expect(nextAbi.engine.abiSchemaVersion).toBe(7);
@@ -55,7 +62,7 @@ describe("brain GIF provenance manifest", () => {
       sourceCommit,
       gifBytes,
       diagnostics,
-      capture: {},
+      capture,
     });
     expect(() => verifyBrainGifManifest(manifest, Buffer.from("changed"), sourceCommit))
       .toThrow(/checksum/);
@@ -65,14 +72,43 @@ describe("brain GIF provenance manifest", () => {
       sourceCommit,
       gifBytes,
       diagnostics: { ...diagnostics, runtime: "diagnostic-fallback" },
-      capture: {},
+      capture,
     })).toThrow(/Rust\/Wasm/);
     expect(() => createBrainGifManifest({
       sourceCommit,
       gifBytes,
       diagnostics: { ...diagnostics, degraded: true },
-      capture: {},
+      capture,
     })).toThrow(/Rust\/Wasm/);
+  });
+
+  it("covers all six current views, including the neuron view", () => {
+    expect(BRAIN_GIF_FRAME_COUNT).toBe(60);
+    expect(Object.keys(BRAIN_GIF_VIEW_FRAMES)).toEqual([
+      "overview",
+      "laminar",
+      "cell",
+      "neuron",
+      "electricity",
+      "synapse",
+    ]);
+    expect(Array.from({ length: BRAIN_GIF_FRAME_COUNT }, (_, frame) => brainGifViewAtFrame(frame)))
+      .toEqual(Object.entries(BRAIN_GIF_VIEW_FRAMES).flatMap(
+        ([view, frames]) => Array.from({ length: frames }, () => view),
+      ));
+  });
+
+  it("rejects manifests that omit or misallocate a view", () => {
+    const gifBytes = Buffer.from("GIF89a-test");
+    const withoutNeuron = { ...BRAIN_GIF_VIEW_FRAMES };
+    delete withoutNeuron.neuron;
+    withoutNeuron.overview += BRAIN_GIF_VIEW_FRAMES.neuron;
+    expect(() => createBrainGifManifest({
+      sourceCommit,
+      gifBytes,
+      diagnostics,
+      capture: { frameCount: BRAIN_GIF_FRAME_COUNT, framesByView: withoutNeuron },
+    })).toThrow(/six current views/);
   });
 
   it("compares legacy hashes only inside the same frozen input scenario", () => {

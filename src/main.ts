@@ -5,6 +5,7 @@ import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
 import {
   amperesToPicoamperes,
+  auditVisualMaterialReadiness,
   auditVisualProvenance,
   auditVisualBindings,
   BrainRenderLayers,
@@ -106,6 +107,10 @@ declare global {
         invertibility: { samples: number; tolerance: number; maximumError: number };
         redundancy: Record<SimulationView, string>;
       };
+      materialProfileAudit: () => Record<
+        SimulationView,
+        ReturnType<typeof auditVisualMaterialReadiness>
+      >;
       renderedStateAudit: () => ReturnType<typeof auditRenderedStatePixels>;
       electricalBoardAudit: () => {
         detail: ReturnType<ElectricalBoardLayer["audit"]>["detail"];
@@ -425,6 +430,20 @@ function visualAuditReport() {
       electricity: "setas preservam sentido; nós E/I usam círculo/quadrado e shunt usa anel",
       synapse: "vesículas, transmissores, receptores e recaptura têm formas e posições distintas",
     },
+  };
+}
+
+function materialProfileAuditReport(): Record<
+  SimulationView,
+  ReturnType<typeof auditVisualMaterialReadiness>
+> {
+  return {
+    overview: auditVisualMaterialReadiness(layers.group),
+    laminar: auditVisualMaterialReadiness(laminarLayer.group),
+    cell: auditVisualMaterialReadiness(cellLayer.group),
+    neuron: auditVisualMaterialReadiness(neuronLayer.group),
+    electricity: auditVisualMaterialReadiness(electricalBoardLayer.group),
+    synapse: auditVisualMaterialReadiness(synapseLayer.group),
   };
 }
 
@@ -1047,6 +1066,9 @@ async function init(): Promise<void> {
     },
     visualAudit() {
       return visualAuditReport();
+    },
+    materialProfileAudit() {
+      return materialProfileAuditReport();
     },
     renderedStateAudit() {
       return auditRenderedStatePixels(renderer);

@@ -6,7 +6,12 @@ import path from "node:path";
 import { PNG } from "pngjs";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { createBrainGifManifest } from "./brain_gif_manifest.js";
+import {
+  BRAIN_GIF_FRAME_COUNT,
+  BRAIN_GIF_VIEW_FRAMES,
+  brainGifViewAtFrame,
+  createBrainGifManifest,
+} from "./brain_gif_manifest.js";
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(directory, "..");
@@ -17,7 +22,7 @@ const outputPath = path.join(outputDirectory, "brain.gif");
 const manifestPath = path.join(outputDirectory, "brain-gif.json");
 const width = 760;
 const height = 430;
-const frameCount = 60;
+const frameCount = BRAIN_GIF_FRAME_COUNT;
 const frameDelay = 120;
 const loopDuration = (frameCount * frameDelay) / 1000;
 const transparentKey = 0x000000;
@@ -67,15 +72,7 @@ async function generateGif() {
 
     for (let frame = 0; frame < frameCount; frame += 1) {
       const ratio = frame / frameCount;
-      const view = frame < 18
-        ? "overview"
-        : frame < 28
-          ? "laminar"
-          : frame < 38
-            ? "cell"
-            : frame < 48
-              ? "electricity"
-              : "synapse";
+      const view = brainGifViewAtFrame(frame);
       await page.evaluate(
         async ({ time, rotation, view }) => {
           window.__BRAIN_ENGINE__.setView(view);
@@ -112,13 +109,7 @@ async function generateGif() {
         frameCount,
         frameDelayMilliseconds: frameDelay,
         loopDurationSeconds: loopDuration,
-        framesByView: {
-          overview: 18,
-          laminar: 10,
-          cell: 10,
-          electricity: 10,
-          synapse: 12,
-        },
+        framesByView: { ...BRAIN_GIF_VIEW_FRAMES },
       },
     });
     fs.writeFileSync(outputPath, gif);
