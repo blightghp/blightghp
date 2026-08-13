@@ -1,5 +1,8 @@
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { SimulationView } from "./laminar-layer";
+import { ProceduralNormalMapCache } from "./procedural-textures";
+import type { ProceduralNormalMapProvider, ProceduralNormalMapType } from "./procedural-textures";
 import {
   declareMaterialEligibility,
   declareVisual,
@@ -75,12 +78,15 @@ export const REALISTIC_ILLUSTRATIVE_MANIFEST: RealisticIllustrativeManifest = {
 
 type MaterialMesh = THREE.Mesh & { material: THREE.Material };
 
-interface ManagedMaterial {
+interface PhysicalMaterialRecord {
   readonly view: SimulationView;
-  readonly root: THREE.Object3D;
   readonly object: MaterialMesh;
   readonly schematic: THREE.Material;
   readonly eligibility: VisualMaterialEligibility;
+}
+
+interface ManagedMaterial extends PhysicalMaterialRecord {
+  readonly root: THREE.Object3D;
   physical?: THREE.MeshPhysicalMaterial;
 }
 
@@ -94,7 +100,31 @@ export interface MaterialProfileAudit {
   readonly estimatedAdditionalObjectDraws: number;
   readonly estimatedTransmissionPasses: number;
   readonly lightCount: number;
+  readonly environmentMapActive: boolean;
+  readonly environmentMapWidth: number;
+  readonly environmentMapHeight: number;
+  readonly estimatedEnvironmentTextureBytes: number;
+  readonly proceduralNormalMapTextures: number;
+  readonly estimatedProceduralTextureBytes: number;
+  readonly estimatedOwnedTextureBytes: number;
+  readonly generatedPresentationUvAttributes: number;
   readonly fallbackReason?: string;
+}
+
+export interface MaterialProfileManagerOptions {
+  readonly renderer?: THREE.WebGLRenderer;
+  /** Test seam: externally owned resources are never disposed by the manager. */
+  readonly environmentTexture?: THREE.Texture;
+  readonly normalMapProvider?: ProceduralNormalMapProvider;
+  readonly physicalMaterialFactory?: (
+    record: Readonly<{
+      view: SimulationView;
+      object: MaterialMesh;
+      schematic: THREE.Material;
+      eligibility: VisualMaterialEligibility;
+    }>,
+    normalMapProvider: ProceduralNormalMapProvider,
+  ) => THREE.MeshPhysicalMaterial;
 }
 
 function materialColor(source: THREE.Material): THREE.Color {
@@ -115,19 +145,70 @@ function sourceOpacity(source: THREE.Material): number {
   return source.opacity;
 }
 
-function surfaceParameters(surface: VisualMaterialSurface): {
+interface SurfaceParams {
   roughness: number;
   transmission: number;
   thickness: number;
   clearcoat: number;
-} {
+  clearcoatRoughness: number;
+  sheen: number;
+  sheenRoughness: number;
+  sheenColor: number;
+  ior: number;
+}
+
+function sphericalUvAttribute(geometry: THREE.BufferGeometry): THREE.BufferAttribute {
+  const positions = geometry.getAttribute("position");
+  const values = new Float32Array(positions.count * 2);
+  for (let index = 0; index < positions.count; index += 1) {
+    const x = positions.getX(index);
+    const y = positions.getY(index);
+    const z = positions.getZ(index);
+    const radius = Math.max(Number.EPSILON, Math.sqrt(x * x + y * y + z * z));
+    values[index * 2] = Math.atan2(z, x) / (Math.PI * 2) + 0.5;
+    values[index * 2 + 1] = Math.asin(THREE.MathUtils.clamp(y / radius, -1, 1)) / Math.PI + 0.5;
+  }
+  return new THREE.BufferAttribute(values, 2);
+}
+
+export function surfaceParameters(surface: VisualMaterialSurface): SurfaceParams {
   if (surface === "membrane") {
-    return { roughness: 0.38, transmission: 0.18, thickness: 0.045, clearcoat: 0.22 };
+    return {
+      roughness: 0.32,
+      transmission: 0.22,
+      thickness: 0.06,
+      clearcoat: 0.28,
+      clearcoatRoughness: 0.35,
+      sheen: 0.18,
+      sheenRoughness: 0.75,
+      sheenColor: 0xe8d4c0,
+      ior: 1.4,
+    };
   }
   if (surface === "tissue") {
-    return { roughness: 0.58, transmission: 0.08, thickness: 0.09, clearcoat: 0.08 };
+    return {
+      roughness: 0.52,
+      transmission: 0.1,
+      thickness: 0.12,
+      clearcoat: 0.12,
+      clearcoatRoughness: 0.55,
+      sheen: 0.25,
+      sheenRoughness: 0.85,
+      sheenColor: 0xd4a080,
+      ior: 1.38,
+    };
   }
-  return { roughness: 0.78, transmission: 0, thickness: 0, clearcoat: 0.04 };
+  return {
+    roughness: 0.72,
+    transmission: 0,
+    thickness: 0,
+    clearcoat: 0.06,
+    clearcoatRoughness: 0.85,
+    sheen: 0,
+    sheenRoughness: 0,
+    sheenColor: 0x000000,
+    ior: 1.5,
+  };
 }
 
 function copyRenderContract(source: THREE.Material, target: THREE.MeshPhysicalMaterial): void {
@@ -160,8 +241,18 @@ function copyRenderContract(source: THREE.Material, target: THREE.MeshPhysicalMa
   target.needsUpdate = true;
 }
 
-function createPhysicalMaterial(record: ManagedMaterial): THREE.MeshPhysicalMaterial {
+function normalMapType(record: PhysicalMaterialRecord): ProceduralNormalMapType | undefined {
+  if (record.eligibility.surface === "tissue") return "cortical";
+  if (record.eligibility.surface === "substrate") return undefined;
+  return record.object.name === "vesicular-reserve" ? "vesicle" : "membrane";
+}
+
+function createPhysicalMaterial(
+  record: PhysicalMaterialRecord,
+  normalMapProvider: ProceduralNormalMapProvider,
+): THREE.MeshPhysicalMaterial {
   const parameters = surfaceParameters(record.eligibility.surface);
+  const textureType = normalMapType(record);
   const material = new THREE.MeshPhysicalMaterial({
     color: materialColor(record.schematic),
     roughness: parameters.roughness,
@@ -169,11 +260,19 @@ function createPhysicalMaterial(record: ManagedMaterial): THREE.MeshPhysicalMate
     transmission: parameters.transmission,
     thickness: parameters.thickness,
     clearcoat: parameters.clearcoat,
-    clearcoatRoughness: 0.62,
-    ior: 1.38,
+    clearcoatRoughness: parameters.clearcoatRoughness,
+    sheen: parameters.sheen,
+    sheenRoughness: parameters.sheenRoughness,
+    sheenColor: parameters.sheenColor,
+    ior: parameters.ior,
     attenuationColor: materialColor(record.schematic),
     attenuationDistance: 1.8,
     vertexColors: Boolean(record.object.geometry.getAttribute("color")),
+    normalMap: textureType ? normalMapProvider.get(textureType) : null,
+    normalScale: new THREE.Vector2(
+      record.eligibility.surface === "tissue" ? 0.3 : 0.15,
+      record.eligibility.surface === "tissue" ? 0.3 : 0.15,
+    ),
   });
   material.emissive.copy(material.color).multiplyScalar(0.035);
   material.emissiveIntensity = 0.18;
@@ -205,23 +304,40 @@ function copyDynamicState(
   target.needsUpdate = true;
 }
 
-function copyPhysicalStateToSchematic(
-  source: THREE.MeshPhysicalMaterial,
-  target: THREE.Material,
-): void {
-  const colored = target as THREE.Material & { color?: THREE.Color };
-  colored.color?.copy(source.color);
-  target.opacity = source.opacity;
-  target.transparent = source.transparent;
-  target.depthWrite = source.depthWrite;
-  target.needsUpdate = true;
+function textureDimensions(texture: THREE.Texture | undefined): { width: number; height: number } {
+  const image: unknown = texture?.image;
+  if (!image || typeof image !== "object") return { width: 0, height: 0 };
+  const candidate = image as { width?: unknown; height?: unknown };
+  return {
+    width: typeof candidate.width === "number" ? candidate.width : 0,
+    height: typeof candidate.height === "number" ? candidate.height : 0,
+  };
+}
+
+function estimatedTextureBytes(texture: THREE.Texture | undefined): number {
+  const { width, height } = textureDimensions(texture);
+  const bytesPerChannel = texture?.type === THREE.FloatType
+    ? 4
+    : texture?.type === THREE.HalfFloatType
+      ? 2
+      : 1;
+  return width * height * 4 * bytesPerChannel;
 }
 
 export class RealisticIllustrativeMaterialManager {
   private readonly managed: ManagedMaterial[] = [];
   private readonly roots = new Set<THREE.Object3D>();
   private readonly originalGeometryIds = new Map<THREE.Object3D, string>();
+  private readonly generatedUvAttributes = new Map<THREE.BufferGeometry, THREE.BufferAttribute>();
   private readonly lightRig = new THREE.Group();
+  private readonly environmentTexture: THREE.Texture | undefined;
+  private readonly ownsEnvironmentTexture: boolean;
+  private readonly normalMapProvider: ProceduralNormalMapProvider;
+  private readonly ownsNormalMapProvider: boolean;
+  private readonly physicalMaterialFactory: NonNullable<
+    MaterialProfileManagerOptions["physicalMaterialFactory"]
+  >;
+  private resourceFailureReason: string | undefined;
   private activeProfile: VisualMaterialProfile = "schematic";
   private requestedProfile: VisualMaterialProfile = "schematic";
   private contextAvailable = true;
@@ -229,7 +345,41 @@ export class RealisticIllustrativeMaterialManager {
   private fallbackReason: string | undefined;
   private disposed = false;
 
-  constructor(private readonly scene: THREE.Scene) {
+  constructor(
+    private readonly scene: THREE.Scene,
+    options: MaterialProfileManagerOptions = {},
+  ) {
+    this.normalMapProvider = options.normalMapProvider ?? new ProceduralNormalMapCache();
+    this.ownsNormalMapProvider = !options.normalMapProvider;
+    this.physicalMaterialFactory = options.physicalMaterialFactory ?? createPhysicalMaterial;
+    if (options.environmentTexture) {
+      this.environmentTexture = options.environmentTexture;
+      this.ownsEnvironmentTexture = false;
+    } else if (options.renderer) {
+      let generator: THREE.PMREMGenerator | undefined;
+      let room: RoomEnvironment | undefined;
+      let generated: THREE.Texture | undefined;
+      try {
+        generator = new THREE.PMREMGenerator(options.renderer);
+        room = new RoomEnvironment();
+        generated = generator.fromScene(room, 0.04).texture;
+        generated.name = "r09-f-room-environment-pmrem";
+      } catch (error) {
+        generated?.dispose();
+        this.resourceFailureReason = error instanceof Error
+          ? `environment-map-failure: ${error.message}`
+          : "environment-map-failure";
+      } finally {
+        room?.dispose();
+        generator?.dispose();
+      }
+      this.environmentTexture = generated;
+      this.ownsEnvironmentTexture = Boolean(generated);
+    } else {
+      this.environmentTexture = undefined;
+      this.ownsEnvironmentTexture = false;
+      this.resourceFailureReason = "environment-map-renderer-unavailable";
+    }
     this.lightRig.name = "realistic-illustrative-light-rig";
     this.lightRig.userData.epistemicClass = "DECORATION";
     const hemisphere = new THREE.HemisphereLight(0xd9efff, 0x07101c, 1.45);
@@ -287,6 +437,13 @@ export class RealisticIllustrativeMaterialManager {
       });
     }
     for (const record of pending) {
+      if (!record.object.geometry.getAttribute("uv")) {
+        const uv = sphericalUvAttribute(record.object.geometry);
+        record.object.geometry.setAttribute("uv", uv);
+        this.generatedUvAttributes.set(record.object.geometry, uv);
+      }
+      record.object.castShadow = false;
+      record.object.receiveShadow = false;
       declareMaterialEligibility(record.object, record.eligibility);
       this.originalGeometryIds.set(record.object, record.object.geometry.uuid);
       this.managed.push(record);
@@ -318,15 +475,7 @@ export class RealisticIllustrativeMaterialManager {
   sync(): void {
     if (this.activeProfile !== "realistic-illustrative") return;
     for (const record of this.managed) {
-      if (record.schematic instanceof THREE.ShaderMaterial && record.physical) {
-        copyDynamicState(record.schematic, record.physical, record.eligibility);
-      } else if (record.physical) {
-        record.physical.opacity = THREE.MathUtils.clamp(
-          record.physical.opacity,
-          record.eligibility.opacityRange[0],
-          record.eligibility.opacityRange[1],
-        );
-      }
+      if (record.physical) copyDynamicState(record.schematic, record.physical, record.eligibility);
     }
   }
 
@@ -334,27 +483,48 @@ export class RealisticIllustrativeMaterialManager {
     return this.activeProfile;
   }
 
-  audit(): MaterialProfileAudit {
-    const physical = this.managed.filter(
+  audit(view?: SimulationView): MaterialProfileAudit {
+    const records = view
+      ? this.managed.filter((record) => record.view === view)
+      : this.managed;
+    const physical = records.filter(
       (record) => record.object.material instanceof THREE.MeshPhysicalMaterial,
     );
+    const environmentSize = textureDimensions(this.environmentTexture);
+    const environmentBytes = estimatedTextureBytes(this.environmentTexture);
+    const normalMapBytes = this.normalMapProvider.estimatedBytes();
     return {
       activeProfile: this.activeProfile,
       requestedProfile: this.requestedProfile,
-      eligibleObjects: this.managed.filter((record) => visualMaterialEligibilityOf(record.object))
+      eligibleObjects: records.filter((record) => visualMaterialEligibilityOf(record.object))
         .length,
       physicalMaterialObjects: physical.length,
       transmissionObjects: physical.filter(
         (record) => (record.object.material as THREE.MeshPhysicalMaterial).transmission > 0,
       ).length,
-      semanticGeometryChanges: this.managed.filter(
+      semanticGeometryChanges: records.filter(
         (record) => this.originalGeometryIds.get(record.object) !== record.object.geometry.uuid,
       ).length,
-      estimatedAdditionalObjectDraws: 0,
+      estimatedAdditionalObjectDraws: physical.filter((record) => {
+        const material = record.object.material as THREE.MeshPhysicalMaterial;
+        return material.transparent && material.side === THREE.DoubleSide && !material.forceSinglePass;
+      }).length,
       estimatedTransmissionPasses: physical.some(
         (record) => (record.object.material as THREE.MeshPhysicalMaterial).transmission > 0,
       ) ? 1 : 0,
       lightCount: this.lightRig.children.length,
+      environmentMapActive: this.scene.environment === this.environmentTexture,
+      environmentMapWidth: environmentSize.width,
+      environmentMapHeight: environmentSize.height,
+      estimatedEnvironmentTextureBytes: environmentBytes,
+      proceduralNormalMapTextures: this.normalMapProvider.count(),
+      estimatedProceduralTextureBytes: normalMapBytes,
+      estimatedOwnedTextureBytes: environmentBytes + normalMapBytes,
+      generatedPresentationUvAttributes: new Set(
+        records
+          .map((record) => record.object.geometry)
+          .filter((geometry) => this.generatedUvAttributes.has(geometry)),
+      ).size,
       ...(this.fallbackReason ? { fallbackReason: this.fallbackReason } : {}),
     };
   }
@@ -363,10 +533,16 @@ export class RealisticIllustrativeMaterialManager {
     if (this.disposed) return;
     this.activateSchematic();
     for (const record of this.managed) record.physical?.dispose();
+    for (const [geometry, attribute] of this.generatedUvAttributes) {
+      if (geometry.getAttribute("uv") === attribute) geometry.deleteAttribute("uv");
+    }
+    this.generatedUvAttributes.clear();
     this.managed.length = 0;
     this.originalGeometryIds.clear();
     this.roots.clear();
     this.lightRig.removeFromParent();
+    if (this.ownsNormalMapProvider) this.normalMapProvider.dispose();
+    if (this.ownsEnvironmentTexture) this.environmentTexture?.dispose();
     this.disposed = true;
   }
 
@@ -392,9 +568,11 @@ export class RealisticIllustrativeMaterialManager {
   private activateRealisticIllustrative(): void {
     const created: THREE.MeshPhysicalMaterial[] = [];
     try {
+      if (this.resourceFailureReason) throw new Error(this.resourceFailureReason);
+      if (!this.environmentTexture) throw new Error("environment-map-unavailable");
       for (const record of this.managed) {
         if (!record.physical) {
-          record.physical = createPhysicalMaterial(record);
+          record.physical = this.physicalMaterialFactory(record, this.normalMapProvider);
           created.push(record.physical);
         }
       }
@@ -405,6 +583,7 @@ export class RealisticIllustrativeMaterialManager {
       }
       this.activeProfile = "realistic-illustrative";
       this.fallbackReason = undefined;
+      this.scene.environment = this.environmentTexture;
       this.lightRig.visible = true;
       for (const root of this.roots) {
         setVisualMaterialProfileMetadata(root, "realistic-illustrative");
@@ -424,13 +603,11 @@ export class RealisticIllustrativeMaterialManager {
   private activateSchematic(): void {
     for (const record of this.managed) {
       if (record.object.material === record.physical && record.physical) {
-        if (!(record.schematic instanceof THREE.ShaderMaterial)) {
-          copyPhysicalStateToSchematic(record.physical, record.schematic);
-        }
         record.object.material = record.schematic;
       }
     }
     this.activeProfile = "schematic";
+    this.scene.environment = null;
     this.lightRig.visible = false;
     for (const root of this.roots) setVisualMaterialProfileMetadata(root, "schematic");
   }

@@ -1,6 +1,6 @@
 # Especificação gráfica e de proveniência · BRAIN PRO
 
-**Revisão:** 5 · R09-F validado em Three.js 0.185/WebGL · produto 0.9.0
+**Revisão:** 6 · R09-F validado em Three.js 0.185/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
 preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
@@ -146,15 +146,23 @@ o acabamento não esconda causalidade visual.
 `RealisticIllustrativeMaterialManager` mantém o material esquemático original,
 aloca um `MeshPhysicalMaterial` por objeto elegível e troca apenas a referência
 `object.material`. UUID da geometria, nome, `userData`, binding e evento não são
-tocados. Tecido usa rugosidade 0,58/transmissão 0,08; membrana usa rugosidade
-0,38/transmissão 0,18; substrato usa rugosidade 0,78 e transmissão zero. Três
-luzes `DECORATION` formam a iluminação ilustrativa, sem atlas, mapa externo ou
-textura. A transmissão pode acrescentar um passe de refração, mas nenhum draw de
-objeto é acrescentado pela troca de material.
+tocados. Tecido usa rugosidade 0,52/transmissão 0,10/sheen 0,25; membrana usa
+rugosidade 0,32/transmissão 0,22/sheen 0,18; substrato usa rugosidade 0,72,
+transmissão e sheen zero. Três normal maps determinísticos de 256² (`cortical`,
+`membrane` e `vesicle`) são fabricados em canvas e compartilhados. Um
+`RoomEnvironment` procedural convertido por PMREM fornece reflexão/refração,
+sem atlas, download ou textura externa. Três luzes `DECORATION` completam a
+iluminação ilustrativa.
 
-Falha de criação, perda de contexto ou alto contraste restaura todos os
+Materiais transparentes `DoubleSide` podem exigir o segundo draw documentado
+pelo Three.js, e a transmissão pode exigir um passe de refração. A auditoria
+mede o delta real por vista; o manager também reporta estimativas separadas de
+dupla face e transmissão. Geometria, bindings e hashes continuam invariantes.
+
+Falha de criação, compilação de shader, perda de contexto ou alto contraste restaura todos os
 materiais esquemáticos atomicamente. `dispose()` restaura o perfil, descarta os
-PBR próprios e remove a iluminação. O perfil não possui geometria própria.
+PBR próprios, os três normal maps, o PMREM e remove a iluminação. O perfil não
+possui geometria própria.
 
 | Vista | Base preservada | Materialidade permitida em R09-F | Alegação proibida |
 | :-- | :-- | :-- | :-- |
