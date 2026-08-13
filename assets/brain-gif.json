@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "02475c95003e99313c1926621c02c2662c276d1d",
-  "gifSha256": "17fa026e74eed822b43b26bee1cf2207df073e8dc8f9abe7ccbd4dab28f4d918",
+  "sourceCommit": "76ae76c67d0d2693c43656ba6155ad0420a3f3b3",
+  "gifSha256": "7cc2852705767e6c44d71d90844039de2188ab67da8086434a219ec90c80810b",
   "engine": {
     "runtime": "rust-wasm",
     "abiSchemaVersion": 7,
