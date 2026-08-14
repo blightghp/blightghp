@@ -1,6 +1,6 @@
 # Estratégia canônica de validação · BRAIN PRO
 
-**Revisão:** 8 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A..R09-F/R10-A validadas
+**Revisão:** 9 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A..R09-F/R10-A/R10-B validadas
 
 Quatro perguntas permanecem separadas: o cálculo é reproduzível, respeita
 limites, converge e produz o fenômeno definido pelo experimento? Uma única
@@ -24,6 +24,7 @@ artefato de promoção.
 | seleção/vista Neurônio R09-D | seleção convergente, geometria determinística, bindings e auditoria | [auditoria R09-D](AUDIT_0.9_R09_D.md) | 10 draws, 8 valores, zero rebuild/frame, foco restaurado e cinco hashes invariantes |
 | materialidade e planos de corte R09-F | manifesto PBR, clipping/stencil, sonda, fallback, hash e GIF | [auditoria R09-F](AUDIT_0.9_R09_F.md) | 25 materiais elegíveis, 9/18 draws de corte, zero geometria/binding alterado e cinco hashes invariantes |
 | catálogo anatômico R10-A | schema/import, hierarquia, bindings de cena, busca, árvore/picking e navegador | [auditoria R10-A](AUDIT_0.10_R10_A.md) | 32 entradas, 98 objetos cobertos, zero asset externo/custo gráfico e cinco hashes invariantes |
+| vascular topológico R10-B | schema/import, invariantes de grafo, catálogo, cena estática, redundância, busca/picking/isolamento e navegador | [auditoria R10-B](AUDIT_0.10_R10_B.md) | 42 segmentos, 44 entradas, 12/17 draws, zero animação/asset externo e cinco hashes invariantes |
 
 O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
@@ -55,6 +56,8 @@ ambiente e dos envelopes registrados.
 | QA-101 | corte prova quatro eixos/laje, opt-in local, tampa stencil, sonda com unidade/domínio, teclado/touch, orçamento e cleanup |
 | QA-110 | catálogo anatômico prova schema/cotas, unicidade/hierarquia, fonte/licença/transformação/evidência, cobertura por objeto, busca/picking/acessibilidade, custo e invariância |
 | SEC-020 | import de catálogo rejeita JSON malformado, campos desconhecidos, excesso de 256 KiB, referências quebradas e asset externo sem SHA-256 |
+| QA-111 | vascular prova schema/cotas, invariantes de grafo, cobertura de catálogo por objeto, redundância sem cor, ausência de animação, orçamento e invariância dos cinco hashes |
+| SEC-021 | contrato vascular rejeita JSON malformado, campo desconhecido, acima de 128 KiB, referência quebrada e ID duplicado |
 
 ## Camadas de evidência
 
@@ -452,6 +455,30 @@ relatório exige delta zero antes/depois. Evidência versionada:
 [AUDIT_0.10_R10_A.md](AUDIT_0.10_R10_A.md) e
 `artifacts/anatomy-audit/anatomy-audit.json`.
 
+### R10-B · vascular topológico
+
+O gate valida `brain-pro-vascular` schema 1 sob cota de 128 KiB: IDs e referências
+únicos, relações montante/jusante simétricas, classes e ordens válidas, alcance
+arterial até capilar, alcance venoso até sumidouro e exatamente um ciclo
+conectado para a anastomose declarada. O artefato embutido contém 42 segmentos
+(21 arteriais, dois capilares e 19 venosos) e hash geométrico FNV-1a
+`46b9ddf9cd6510d4`.
+
+O catálogo 1.1.0 fecha com 76 entradas, das quais 44 são vasculares e
+`ILLUSTRATIVE`; não há asset externo. O módulo monta subgrupos estáticos nas seis
+raízes existentes e totaliza 12 draw calls contra teto 17, 6.600 triângulos e
+172.780 bytes de geometria própria. Auditorias estruturais exigem `matter`,
+`TOPOLOGY`, binding direto, clipping incluído, bloom excluído, construção única
+e zero objeto vascular animado.
+
+O navegador SwiftShader testa busca, seleção, `faceIndex`/`instanceId`, legenda
+redundante, modo esqueleto, monocromia e viewport `390×844`. Seis capturas e o
+relatório versionado ficam em `artifacts/vascular-audit`; os cinco hashes
+científicos permanecem exatamente iguais. A geometria é somente ilustrativa e
+não publica fluxo, perfusão, pulso ou oxigenação. Evidência versionada:
+[AUDIT_0.10_R10_B.md](AUDIT_0.10_R10_B.md) e
+`artifacts/vascular-audit/vascular-audit.json`.
+
 Os contratos executáveis atuais são:
 
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
@@ -518,6 +545,7 @@ erro e estabilidade no regime em que será usado.
 | MOD-100/ENG-025/QA-100 | cabo de três compartimentos, conservação, convergência, determinismo e orçamento | Cargo + replay + auditoria R09-E |
 | AST/VAS | fonte/licença/sem animação sem estado | manifesto de asset + auditoria visual |
 | AST-030..034/UI-030/SEC-020/QA-110 | catálogo, binding/exclusão, busca/picking, import seguro, custo e invariância | Vitest + `npm run audit:anatomy` + auditoria R10-A |
+| AST-036/VAS-002..008/SEC-021/QA-111 | catálogo vascular, grafo, cena estática, redundância, isolamento, custo e invariância | Vitest + `npm run audit:vascular` + auditoria R10-B |
 | SEC | inputs/cotas/CSP/dependências/import | unitário, fuzz/property, SCA e revisão |
 | PERF | custo por subsistema/ambiente | relatório versionado |
 

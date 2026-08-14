@@ -1,0 +1,654 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-14T01:18:35.921Z",
+  "source": {
+    "commit": "8267b97baec30894c376d1819f3a9f5c1e1cabec",
+    "worktreeDirty": true,
+    "productVersion": "0.9.0",
+    "command": "npm run audit:vascular"
+  },
+  "environment": {
+    "browser": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
+      "platform": ""
+    },
+    "hardware": {
+      "logicalCores": 8,
+      "deviceMemoryGiB": 8,
+      "webglVendor": "Google Inc. (Google)",
+      "webglRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    "host": {
+      "cpu": "Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz",
+      "logicalCores": 8,
+      "memoryBytes": 8412778496,
+      "platform": "win32",
+      "release": "10.0.26200",
+      "architecture": "x64"
+    }
+  },
+  "hashInvariance": {
+    "fields": [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash"
+    ],
+    "baseline": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "final": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "invariant": true
+  },
+  "catalog": {
+    "schemaVersion": 1,
+    "catalogId": "brain-pro-anatomy",
+    "version": "1.1.0",
+    "hash": "8ff191139a59e518",
+    "entries": 76,
+    "roots": 1,
+    "sources": 6,
+    "transforms": 6,
+    "externalAssets": 0,
+    "evidenceLevels": {
+      "PROCEDURAL": 6,
+      "ILLUSTRATIVE": 50,
+      "DIDACTIC": 12,
+      "FENOMENOLOGICAL": 2,
+      "MODEL_BOUND": 6,
+      "REFERENCE_GROUNDED": 0,
+      "CALIBRATED": 0
+    },
+    "issues": [],
+    "contractReady": true
+  },
+  "sceneCoverage": {
+    "overview": {
+      "totalRenderableObjects": 20,
+      "boundObjects": 19,
+      "explicitlyNonAnatomicalObjects": 1,
+      "catalogEntriesReferenced": 8,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "laminar": {
+      "totalRenderableObjects": 46,
+      "boundObjects": 31,
+      "explicitlyNonAnatomicalObjects": 15,
+      "catalogEntriesReferenced": 11,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "cell": {
+      "totalRenderableObjects": 7,
+      "boundObjects": 4,
+      "explicitlyNonAnatomicalObjects": 3,
+      "catalogEntriesReferenced": 4,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "neuron": {
+      "totalRenderableObjects": 11,
+      "boundObjects": 5,
+      "explicitlyNonAnatomicalObjects": 6,
+      "catalogEntriesReferenced": 5,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "electricity": {
+      "totalRenderableObjects": 11,
+      "boundObjects": 2,
+      "explicitlyNonAnatomicalObjects": 9,
+      "catalogEntriesReferenced": 1,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    },
+    "synapse": {
+      "totalRenderableObjects": 15,
+      "boundObjects": 9,
+      "explicitlyNonAnatomicalObjects": 6,
+      "catalogEntriesReferenced": 9,
+      "missingDeclarations": [],
+      "unknownEntryIds": [],
+      "missingEvidence": [],
+      "contractReady": true
+    }
+  },
+  "materialManifest": {
+    "total": 37,
+    "vascular": 12
+  },
+  "vascular": {
+    "topology": {
+      "schemaVersion": 1,
+      "contractId": "brain-pro-vascular",
+      "version": "1.0.0",
+      "geometryHash": "46b9ddf9cd6510d4",
+      "segments": 42,
+      "classes": {
+        "arterial": 21,
+        "capillary": 2,
+        "venous": 19
+      },
+      "views": {
+        "overview": 34,
+        "laminar": 4,
+        "cell": 4,
+        "neuron": 2,
+        "synapse": 2
+      },
+      "anastomosisSegments": 4,
+      "sinks": 2,
+      "maximumControlPoints": 4,
+      "issues": [],
+      "contractReady": true
+    },
+    "views": {
+      "overview": {
+        "drawCalls": 3,
+        "maximumDrawCalls": 6,
+        "triangles": 4800,
+        "geometryBytes": 125100,
+        "renderableObjects": 3,
+        "topologyObjects": 3,
+        "stateObjects": 0,
+        "animatedObjects": 0,
+        "contractReady": true
+      },
+      "laminar": {
+        "drawCalls": 2,
+        "maximumDrawCalls": 3,
+        "triangles": 112,
+        "geometryBytes": 3280,
+        "renderableObjects": 2,
+        "topologyObjects": 2,
+        "stateObjects": 0,
+        "animatedObjects": 0,
+        "contractReady": true
+      },
+      "cell": {
+        "drawCalls": 2,
+        "maximumDrawCalls": 2,
+        "triangles": 620,
+        "geometryBytes": 16200,
+        "renderableObjects": 2,
+        "topologyObjects": 2,
+        "stateObjects": 0,
+        "animatedObjects": 0,
+        "contractReady": true
+      },
+      "neuron": {
+        "drawCalls": 1,
+        "maximumDrawCalls": 1,
+        "triangles": 300,
+        "geometryBytes": 7944,
+        "renderableObjects": 1,
+        "topologyObjects": 1,
+        "stateObjects": 0,
+        "animatedObjects": 0,
+        "contractReady": true
+      },
+      "electricity": {
+        "drawCalls": 0,
+        "maximumDrawCalls": 0,
+        "triangles": 0,
+        "geometryBytes": 0,
+        "renderableObjects": 0,
+        "topologyObjects": 0,
+        "stateObjects": 0,
+        "animatedObjects": 0,
+        "contractReady": true
+      },
+      "synapse": {
+        "drawCalls": 4,
+        "maximumDrawCalls": 5,
+        "triangles": 768,
+        "geometryBytes": 20256,
+        "renderableObjects": 4,
+        "topologyObjects": 4,
+        "stateObjects": 0,
+        "animatedObjects": 0,
+        "contractReady": true
+      }
+    },
+    "totalDrawCalls": 12,
+    "maximumTotalDrawCalls": 17,
+    "geometryBuilds": 12,
+    "skeletonMode": true,
+    "contractReady": true
+  },
+  "searchEvidence": {
+    "middle": [
+      "brain-pro:anatomy/middle-cerebral-artery-left",
+      "brain-pro:anatomy/middle-cerebral-artery-right"
+    ],
+    "sagittal": [
+      "brain-pro:anatomy/superior-sagittal-sinus",
+      "brain-pro:anatomy/inferior-sagittal-sinus"
+    ],
+    "pericyte": [
+      "brain-pro:anatomy/pericyte"
+    ]
+  },
+  "selections": [
+    {
+      "entryId": "brain-pro:anatomy/middle-cerebral-artery-left",
+      "view": "overview",
+      "explorer": {
+        "catalog": {
+          "schemaVersion": 1,
+          "catalogId": "brain-pro-anatomy",
+          "version": "1.1.0",
+          "hash": "8ff191139a59e518",
+          "entries": 76,
+          "roots": 1,
+          "sources": 6,
+          "transforms": 6,
+          "externalAssets": 0,
+          "evidenceLevels": {
+            "PROCEDURAL": 6,
+            "ILLUSTRATIVE": 50,
+            "DIDACTIC": 12,
+            "FENOMENOLOGICAL": 2,
+            "MODEL_BOUND": 6,
+            "REFERENCE_GROUNDED": 0,
+            "CALIBRATED": 0
+          },
+          "issues": [],
+          "contractReady": true
+        },
+        "activeView": "overview",
+        "selectedId": "brain-pro:anatomy/middle-cerebral-artery-left",
+        "query": "",
+        "visibleResultIds": [
+          "brain-pro:anatomy/encephalon",
+          "brain-pro:anatomy/cerebrum",
+          "brain-pro:anatomy/cerebral-hemisphere-left",
+          "brain-pro:anatomy/cerebral-hemisphere-right",
+          "brain-pro:anatomy/cerebellum",
+          "brain-pro:anatomy/brainstem",
+          "brain-pro:anatomy/neocortex",
+          "brain-pro:anatomy/vascular-system",
+          "brain-pro:anatomy/arterial-tree",
+          "brain-pro:anatomy/venous-tree",
+          "brain-pro:anatomy/internal-carotid-artery-left",
+          "brain-pro:anatomy/internal-carotid-artery-right",
+          "brain-pro:anatomy/vertebral-artery-left",
+          "brain-pro:anatomy/vertebral-artery-right",
+          "brain-pro:anatomy/basilar-artery",
+          "brain-pro:anatomy/circle-of-willis",
+          "brain-pro:anatomy/anterior-communicating-artery",
+          "brain-pro:anatomy/posterior-communicating-artery-left",
+          "brain-pro:anatomy/posterior-communicating-artery-right",
+          "brain-pro:anatomy/anterior-cerebral-artery-left",
+          "brain-pro:anatomy/anterior-cerebral-artery-right",
+          "brain-pro:anatomy/middle-cerebral-artery-left",
+          "brain-pro:anatomy/middle-cerebral-artery-right",
+          "brain-pro:anatomy/posterior-cerebral-artery-left",
+          "brain-pro:anatomy/posterior-cerebral-artery-right",
+          "brain-pro:anatomy/pial-arterial-network",
+          "brain-pro:anatomy/superficial-cortical-vein",
+          "brain-pro:anatomy/deep-cerebral-vein",
+          "brain-pro:anatomy/internal-cerebral-vein-left",
+          "brain-pro:anatomy/internal-cerebral-vein-right",
+          "brain-pro:anatomy/basal-vein",
+          "brain-pro:anatomy/great-cerebral-vein",
+          "brain-pro:anatomy/superior-sagittal-sinus",
+          "brain-pro:anatomy/inferior-sagittal-sinus",
+          "brain-pro:anatomy/straight-sinus",
+          "brain-pro:anatomy/confluence-of-sinuses",
+          "brain-pro:anatomy/transverse-sinus-left",
+          "brain-pro:anatomy/transverse-sinus-right",
+          "brain-pro:anatomy/sigmoid-sinus-left",
+          "brain-pro:anatomy/sigmoid-sinus-right",
+          "brain-pro:anatomy/internal-jugular-vein-left",
+          "brain-pro:anatomy/internal-jugular-vein-right"
+        ]
+      }
+    },
+    {
+      "entryId": "brain-pro:anatomy/superior-sagittal-sinus",
+      "view": "overview",
+      "explorer": {
+        "catalog": {
+          "schemaVersion": 1,
+          "catalogId": "brain-pro-anatomy",
+          "version": "1.1.0",
+          "hash": "8ff191139a59e518",
+          "entries": 76,
+          "roots": 1,
+          "sources": 6,
+          "transforms": 6,
+          "externalAssets": 0,
+          "evidenceLevels": {
+            "PROCEDURAL": 6,
+            "ILLUSTRATIVE": 50,
+            "DIDACTIC": 12,
+            "FENOMENOLOGICAL": 2,
+            "MODEL_BOUND": 6,
+            "REFERENCE_GROUNDED": 0,
+            "CALIBRATED": 0
+          },
+          "issues": [],
+          "contractReady": true
+        },
+        "activeView": "overview",
+        "selectedId": "brain-pro:anatomy/superior-sagittal-sinus",
+        "query": "",
+        "visibleResultIds": [
+          "brain-pro:anatomy/encephalon",
+          "brain-pro:anatomy/cerebrum",
+          "brain-pro:anatomy/cerebral-hemisphere-left",
+          "brain-pro:anatomy/cerebral-hemisphere-right",
+          "brain-pro:anatomy/cerebellum",
+          "brain-pro:anatomy/brainstem",
+          "brain-pro:anatomy/neocortex",
+          "brain-pro:anatomy/vascular-system",
+          "brain-pro:anatomy/arterial-tree",
+          "brain-pro:anatomy/venous-tree",
+          "brain-pro:anatomy/internal-carotid-artery-left",
+          "brain-pro:anatomy/internal-carotid-artery-right",
+          "brain-pro:anatomy/vertebral-artery-left",
+          "brain-pro:anatomy/vertebral-artery-right",
+          "brain-pro:anatomy/basilar-artery",
+          "brain-pro:anatomy/circle-of-willis",
+          "brain-pro:anatomy/anterior-communicating-artery",
+          "brain-pro:anatomy/posterior-communicating-artery-left",
+          "brain-pro:anatomy/posterior-communicating-artery-right",
+          "brain-pro:anatomy/anterior-cerebral-artery-left",
+          "brain-pro:anatomy/anterior-cerebral-artery-right",
+          "brain-pro:anatomy/middle-cerebral-artery-left",
+          "brain-pro:anatomy/middle-cerebral-artery-right",
+          "brain-pro:anatomy/posterior-cerebral-artery-left",
+          "brain-pro:anatomy/posterior-cerebral-artery-right",
+          "brain-pro:anatomy/pial-arterial-network",
+          "brain-pro:anatomy/superficial-cortical-vein",
+          "brain-pro:anatomy/deep-cerebral-vein",
+          "brain-pro:anatomy/internal-cerebral-vein-left",
+          "brain-pro:anatomy/internal-cerebral-vein-right",
+          "brain-pro:anatomy/basal-vein",
+          "brain-pro:anatomy/great-cerebral-vein",
+          "brain-pro:anatomy/superior-sagittal-sinus",
+          "brain-pro:anatomy/inferior-sagittal-sinus",
+          "brain-pro:anatomy/straight-sinus",
+          "brain-pro:anatomy/confluence-of-sinuses",
+          "brain-pro:anatomy/transverse-sinus-left",
+          "brain-pro:anatomy/transverse-sinus-right",
+          "brain-pro:anatomy/sigmoid-sinus-left",
+          "brain-pro:anatomy/sigmoid-sinus-right",
+          "brain-pro:anatomy/internal-jugular-vein-left",
+          "brain-pro:anatomy/internal-jugular-vein-right"
+        ]
+      }
+    },
+    {
+      "entryId": "brain-pro:anatomy/penetrating-arteriole",
+      "view": "laminar",
+      "explorer": {
+        "catalog": {
+          "schemaVersion": 1,
+          "catalogId": "brain-pro-anatomy",
+          "version": "1.1.0",
+          "hash": "8ff191139a59e518",
+          "entries": 76,
+          "roots": 1,
+          "sources": 6,
+          "transforms": 6,
+          "externalAssets": 0,
+          "evidenceLevels": {
+            "PROCEDURAL": 6,
+            "ILLUSTRATIVE": 50,
+            "DIDACTIC": 12,
+            "FENOMENOLOGICAL": 2,
+            "MODEL_BOUND": 6,
+            "REFERENCE_GROUNDED": 0,
+            "CALIBRATED": 0
+          },
+          "issues": [],
+          "contractReady": true
+        },
+        "activeView": "laminar",
+        "selectedId": "brain-pro:anatomy/penetrating-arteriole",
+        "query": "",
+        "visibleResultIds": [
+          "brain-pro:anatomy/encephalon",
+          "brain-pro:anatomy/cerebrum",
+          "brain-pro:anatomy/neocortex",
+          "brain-pro:anatomy/cortical-column",
+          "brain-pro:anatomy/cortical-layer-1",
+          "brain-pro:anatomy/cortical-layer-2",
+          "brain-pro:anatomy/cortical-layer-3",
+          "brain-pro:anatomy/cortical-layer-4",
+          "brain-pro:anatomy/cortical-layer-5",
+          "brain-pro:anatomy/cortical-layer-6",
+          "brain-pro:anatomy/thalamus",
+          "brain-pro:anatomy/thalamic-relay",
+          "brain-pro:anatomy/thalamic-reticular-nucleus",
+          "brain-pro:anatomy/corticothalamic-pathway",
+          "brain-pro:anatomy/vascular-system",
+          "brain-pro:anatomy/arterial-tree",
+          "brain-pro:anatomy/venous-tree",
+          "brain-pro:anatomy/pial-arterial-network",
+          "brain-pro:anatomy/penetrating-arteriole",
+          "brain-pro:anatomy/postcapillary-venule"
+        ]
+      }
+    },
+    {
+      "entryId": "brain-pro:anatomy/pericyte",
+      "view": "synapse",
+      "explorer": {
+        "catalog": {
+          "schemaVersion": 1,
+          "catalogId": "brain-pro-anatomy",
+          "version": "1.1.0",
+          "hash": "8ff191139a59e518",
+          "entries": 76,
+          "roots": 1,
+          "sources": 6,
+          "transforms": 6,
+          "externalAssets": 0,
+          "evidenceLevels": {
+            "PROCEDURAL": 6,
+            "ILLUSTRATIVE": 50,
+            "DIDACTIC": 12,
+            "FENOMENOLOGICAL": 2,
+            "MODEL_BOUND": 6,
+            "REFERENCE_GROUNDED": 0,
+            "CALIBRATED": 0
+          },
+          "issues": [],
+          "contractReady": true
+        },
+        "activeView": "synapse",
+        "selectedId": "brain-pro:anatomy/pericyte",
+        "query": "",
+        "visibleResultIds": [
+          "brain-pro:anatomy/encephalon",
+          "brain-pro:anatomy/cerebrum",
+          "brain-pro:anatomy/neocortex",
+          "brain-pro:anatomy/cell-patch",
+          "brain-pro:anatomy/neuron",
+          "brain-pro:anatomy/synapse",
+          "brain-pro:anatomy/presynaptic-bouton",
+          "brain-pro:anatomy/synaptic-cleft",
+          "brain-pro:anatomy/postsynaptic-membrane",
+          "brain-pro:anatomy/vesicle-reserve",
+          "brain-pro:anatomy/receptor-site",
+          "brain-pro:anatomy/vascular-system",
+          "brain-pro:anatomy/arterial-tree",
+          "brain-pro:anatomy/neurovascular-unit",
+          "brain-pro:anatomy/pial-arterial-network",
+          "brain-pro:anatomy/penetrating-arteriole",
+          "brain-pro:anatomy/precapillary-arteriole",
+          "brain-pro:anatomy/capillary-bed",
+          "brain-pro:anatomy/capillary-endothelium",
+          "brain-pro:anatomy/pericyte",
+          "brain-pro:anatomy/astrocyte-endfoot",
+          "brain-pro:anatomy/blood-brain-barrier"
+        ]
+      }
+    }
+  ],
+  "skeleton": {
+    "diagnostics": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "effects": {
+      "opacity": 1,
+      "xray": false,
+      "isolateMatter": false,
+      "isolateVascular": true
+    },
+    "audit": {
+      "topology": {
+        "schemaVersion": 1,
+        "contractId": "brain-pro-vascular",
+        "version": "1.0.0",
+        "geometryHash": "46b9ddf9cd6510d4",
+        "segments": 42,
+        "classes": {
+          "arterial": 21,
+          "capillary": 2,
+          "venous": 19
+        },
+        "views": {
+          "overview": 34,
+          "laminar": 4,
+          "cell": 4,
+          "neuron": 2,
+          "synapse": 2
+        },
+        "anastomosisSegments": 4,
+        "sinks": 2,
+        "maximumControlPoints": 4,
+        "issues": [],
+        "contractReady": true
+      },
+      "views": {
+        "overview": {
+          "drawCalls": 3,
+          "maximumDrawCalls": 6,
+          "triangles": 4800,
+          "geometryBytes": 125100,
+          "renderableObjects": 3,
+          "topologyObjects": 3,
+          "stateObjects": 0,
+          "animatedObjects": 0,
+          "contractReady": true
+        },
+        "laminar": {
+          "drawCalls": 2,
+          "maximumDrawCalls": 3,
+          "triangles": 112,
+          "geometryBytes": 3280,
+          "renderableObjects": 2,
+          "topologyObjects": 2,
+          "stateObjects": 0,
+          "animatedObjects": 0,
+          "contractReady": true
+        },
+        "cell": {
+          "drawCalls": 2,
+          "maximumDrawCalls": 2,
+          "triangles": 620,
+          "geometryBytes": 16200,
+          "renderableObjects": 2,
+          "topologyObjects": 2,
+          "stateObjects": 0,
+          "animatedObjects": 0,
+          "contractReady": true
+        },
+        "neuron": {
+          "drawCalls": 1,
+          "maximumDrawCalls": 1,
+          "triangles": 300,
+          "geometryBytes": 7944,
+          "renderableObjects": 1,
+          "topologyObjects": 1,
+          "stateObjects": 0,
+          "animatedObjects": 0,
+          "contractReady": true
+        },
+        "electricity": {
+          "drawCalls": 0,
+          "maximumDrawCalls": 0,
+          "triangles": 0,
+          "geometryBytes": 0,
+          "renderableObjects": 0,
+          "topologyObjects": 0,
+          "stateObjects": 0,
+          "animatedObjects": 0,
+          "contractReady": true
+        },
+        "synapse": {
+          "drawCalls": 4,
+          "maximumDrawCalls": 5,
+          "triangles": 768,
+          "geometryBytes": 20256,
+          "renderableObjects": 4,
+          "topologyObjects": 4,
+          "stateObjects": 0,
+          "animatedObjects": 0,
+          "contractReady": true
+        }
+      },
+      "totalDrawCalls": 12,
+      "maximumTotalDrawCalls": 17,
+      "geometryBuilds": 12,
+      "skeletonMode": true,
+      "contractReady": true
+    },
+    "checkbox": true,
+    "bodyState": "true"
+  },
+  "mobileLayout": {
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "panelVisible": true,
+    "vascularVisible": true
+  },
+  "captures": [
+    "01-overview-arterial.png",
+    "02-overview-venous.png",
+    "03-laminar-penetrating.png",
+    "04-synapse-nvu.png",
+    "05-skeleton-mode.png",
+    "06-mobile.png"
+  ],
+  "browserErrors": []
+}

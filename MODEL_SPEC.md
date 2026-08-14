@@ -1,6 +1,6 @@
 # Especificação matemática e epistemológica · BRAIN PRO
 
-**Revisão:** 4 · produto observado 0.9.0 · modelos com schema próprio · R10-A sem modelo novo
+**Revisão:** 5 · produto observado 0.9.0 · modelos com schema próprio · R10-B sem modelo novo
 
 Esta é a fonte canônica das perguntas, variáveis, equações, métodos, hipóteses e
 limites do motor. Ela não transforma a fisiologia em algo que o código ainda não
@@ -40,6 +40,12 @@ mas não registra um novo modelo, variável ou observável. `MODEL_BOUND` signif
 apenas que a entrada visual aponta para um objeto já publicado pelo modelo; não
 eleva a geometria procedural a evidência anatômica. Seu fingerprint não integra
 nenhum dos cinco domínios científicos.
+
+A topologia vascular R10-B também não é modelo hemodinâmico. Seu grafo e sua
+geometria têm hash próprio de apresentação e descrevem somente conectividade,
+direção topológica e classe anatômica ilustrativa. Não existem estado vascular,
+unidade de fluxo, perfusão, oxigenação, pulso, solver ou acoplamento com o motor;
+por isso nenhum dado vascular integra a ABI v8 ou os cinco hashes científicos.
 
 ## Registro dos modelos atuais
 

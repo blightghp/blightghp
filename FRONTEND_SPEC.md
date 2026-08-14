@@ -1,6 +1,6 @@
 # Especificação da aplicação e UX · BRAIN PRO
 
-**Revisão:** 5 · produto observado 0.9.0 · R10-A validado
+**Revisão:** 6 · produto observado 0.9.0 · R10-B validado
 
 Este documento regula o shell TypeScript, DOM, fluxos, acessibilidade e consumo
 do Worker. Não regula equações nem materiais 3D.
@@ -126,6 +126,20 @@ mensagem ao Worker, não muda preset, `dt`, topologia, snapshot ou hashes. O hoo
 de auditoria expõe busca, seleção e relatório de cobertura; ele não é API pública
 de persistência. O viewport `390×844` mantém busca e árvore disponíveis sem
 overflow horizontal. Nenhuma entrada usa HTML fornecido por usuário.
+
+### Explorador vascular
+
+R10-B estende o mesmo explorador com 44 entradas vasculares e uma ficha textual
+de topologia. Selecionar um vaso mostra classe, lado, ordem de ramo, relações
+montante/jusante e vistas disponíveis. Picking resolve `faceIndex` em geometrias
+mescladas e `instanceId` em instâncias sem criar ID alternativo. A legenda usa
+forma, padrão e rótulo além da cor e declara permanentemente que não há fluxo,
+perfusão ou oxigenação modelados.
+
+O modo esqueleto vascular é uma preferência de apresentação disponível por
+checkbox, API de auditoria e tecla `V`. Ele atenua a matéria não vascular, não
+oculta equivalentes DOM e não envia mensagem ao Worker. Busca, seleção,
+isolamento, monocromia e viewport móvel preservam os cinco hashes científicos.
 
 ## Modos de uso alvo
 
