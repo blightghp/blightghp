@@ -10,6 +10,9 @@ import { contrastRatio, parseCssColor } from "./audit_utils.js";
 import { auditWorkerLifecycle } from "./worker_lifecycle_audit.js";
 import packageManifest from "../package.json" with { type: "json" };
 
+const EXPECTED_R09F_MATERIALS = 25;
+const EXPECTED_R10B_VASCULAR_MATERIALS = 12;
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDirectory = process.env.BRAIN_AUDIT_DIR
   ? path.resolve(process.env.BRAIN_AUDIT_DIR)
@@ -208,7 +211,8 @@ try {
   ];
   if (
     r09fGate.active.material.activeProfile !== "realistic-illustrative" ||
-    r09fGate.active.material.physicalMaterialObjects !== 25 ||
+    r09fGate.active.material.physicalMaterialObjects !==
+      EXPECTED_R09F_MATERIALS + EXPECTED_R10B_VASCULAR_MATERIALS ||
     r09fGate.active.material.semanticGeometryChanges !== 0 ||
     r09fGate.active.clipping.planeCount !== 1 ||
     r09fGate.active.clipping.capSources !== 4 ||

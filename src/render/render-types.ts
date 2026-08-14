@@ -90,6 +90,7 @@ const MATERIAL_PROFILE_KEY = "visualMaterialProfile";
 const MATERIAL_ELIGIBILITY_KEY = "visualMaterialEligibility";
 const CLIPPING_PARTICIPATION_KEY = "visualClippingParticipation";
 const BLOOM_EXCLUSION_KEY = "selectiveBloomExcluded";
+const VASCULAR_TOPOLOGY_KEY = "vascularTopology";
 
 export function declareVisual(
   object: THREE.Object3D,
@@ -202,6 +203,16 @@ export function excludeFromSelectiveBloom(object: THREE.Object3D): void {
 
 export function isExcludedFromSelectiveBloom(object: THREE.Object3D): boolean {
   return object.userData[BLOOM_EXCLUSION_KEY] === true;
+}
+
+/** Marks a renderable as part of the static vascular topology overlay. */
+export function declareVascularTopologyObject(object: THREE.Object3D): void {
+  object.userData[VASCULAR_TOPOLOGY_KEY] = true;
+}
+
+/** Returns true only for objects explicitly owned by the vascular topology overlay. */
+export function isVascularTopologyObject(object: THREE.Object3D): boolean {
+  return object.userData[VASCULAR_TOPOLOGY_KEY] === true;
 }
 
 export function auditVisualProvenance(root: THREE.Object3D): VisualProvenanceReport {

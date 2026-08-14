@@ -19,6 +19,7 @@
     "audit:hardware": "node scripts/audit_runtime.js",
     "audit:material": "node scripts/audit_material_profile.js",
     "audit:anatomy": "node scripts/audit_anatomical_catalog.js",
+    "audit:vascular": "node scripts/audit_vascular_topology.js",
     "verify:runtime-audit": "node scripts/verify_runtime_audit.js",
     "verify:hardware-audit": "node scripts/verify_hardware_audit.js",
     "verify:promotion-0.8": "node scripts/verify_promotion_0_8.js",

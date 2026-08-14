@@ -1,6 +1,6 @@
 # Especificação gráfica e de proveniência · BRAIN PRO
 
-**Revisão:** 7 · R10-A validado em Three.js 0.185/WebGL · produto 0.9.0
+**Revisão:** 8 · R10-B validado em Three.js 0.185/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
 preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
@@ -37,7 +37,15 @@ fidelidade entre estado calculado e estado mostrado.
 | AST-032 | toda entrada resolve sistema de coordenadas, unidade, escala, orientação e transformação, sem converter unidade procedural em calibração. |
 | AST-033 | nível de evidência, afirmação permitida e ao menos uma limitação são explícitos e não são elevados pela aparência. |
 | AST-034 | cada objeto renderizável aponta diretamente para uma entrada do catálogo ou declara por que não representa anatomia. |
+| AST-036 | nomenclatura/conectividade de referência não elevam geometria ilustrativa; o nível declarado é o mais fraco e a diferença aparece em afirmações/limitações. |
 | VAS-001 | fluxo/perfusão/oxigenação só animam com estado/modelo correspondente. |
+| VAS-002 | todo segmento resolve classe, ordem, lado, vistas e entrada do catálogo. |
+| VAS-003 | o grafo rejeita órfãos/IDs desconhecidos, valida anastomose e permite apenas transições arterial→capilar→venoso. |
+| VAS-004 | direção é geometria estática e rótulo, nunca animação descrita como fluxo. |
+| VAS-005 | classes vasculares são distinguíveis por forma, espessura, padrão e rótulo além da cor. |
+| VAS-006 | modo esqueleto isola vasos com contexto residual e preserva hashes. |
+| VAS-007 | toda vista declara teto de draws, triângulos e memória; excesso degrada LOD. |
+| VAS-008 | nenhuma entrada vascular é `STATE`; promoção futura exige campo, unidade, solver e validação. |
 | ELE-001 | Prancha Elétrica mostra grandezas com unidade e origem operacional. |
 | ELE-002 | Prancha Elétrica possui scene graph próprio e não reutiliza a cena Célula. |
 | ELE-003 | corrente preserva sinal e direção com orientação, tamanho, posição e rótulo redundantes. |
@@ -251,7 +259,7 @@ de fonte/evidência. Toda busca gráfica tem equivalente acessível no DOM.
 
 ## Sistema vascular
 
-O primeiro corte é topológico/ilustrativo:
+R10-B implementa o primeiro corte topológico/ilustrativo:
 
 - hierarquia arterial, venosa e capilar com IDs semânticos;
 - direção topológica, espessura, LOD, seleção, isolamento e transparência;
@@ -262,6 +270,21 @@ O primeiro corte é topológico/ilustrativo:
 Fluxo, pulso, perfusão e oxigenação ficam proibidos até existir estado com
 unidade, origem, solver, validação e campo publicado. Um relógio visual não é
 modelo hemodinâmico.
+
+O contrato `brain-pro-vascular` schema 1 contém 42 segmentos direcionados: 21
+arteriais, dois capilares e 19 venosos. A auditoria exige simetria das relações,
+alcance artéria→capilar→sumidouro venoso, exatamente um ciclo conectado para a
+anastomose declarada e referências válidas ao catálogo 1.1.0. O catálogo contém
+44 entradas vasculares, todas `ILLUSTRATIVE`, e permanece árvore de contenção.
+
+A geometria é procedural e construída uma vez. Os seis subgrupos somam 12 draw
+calls (teto 17): Visão Geral 3, Lâminas 2, Célula 2, Neurônio 1, Eletricidade 0 e
+Sinapse 4. Todo objeto vascular é `matter`, `TOPOLOGY`, ligado diretamente ao
+catálogo, incluído em clipping e excluído de bloom; nenhum objeto é animado. O
+manifesto PBR incremental contém 12 objetos e não altera o baseline histórico de
+25 objetos do R09-F. Artéria usa perfil circular/tapered e chevrons; veia usa
+perfil achatado/duplo; capilar usa filamento/pontilhado. O modo esqueleto apenas
+reduz a matéria não vascular e restaura os materiais exatamente após o frame.
 
 ## Planos de corte
 

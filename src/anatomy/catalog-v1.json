@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogId": "brain-pro-anatomy",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": {
     "id": "brain-pro-internal",
     "expression": "LicenseRef-BRAIN-PRO-INTERNAL",
@@ -49,6 +49,15 @@
       "id": "source.synapse-contract",
       "kind": "model-contract",
       "locator": "MODEL_SPEC.md#MOD-060..MOD-081",
+      "version": "1",
+      "licenseId": "brain-pro-internal",
+      "externalAsset": false,
+      "assetSha256": null
+    },
+    {
+      "id": "source.vascular-generator",
+      "kind": "procedural-generator",
+      "locator": "src/vascular/vascular-layer.ts#VascularTopologyModule",
       "version": "1",
       "licenseId": "brain-pro-internal",
       "externalAsset": false,
@@ -105,6 +114,16 @@
       "scale": "deliberately exaggerated microdomain",
       "orientation": "presynaptic left; postsynaptic right",
       "description": "Didactic separation of bouton, cleft and postsynaptic membrane; not ultrastructural measurement."
+    },
+    {
+      "id": "transform.vascular-procedural",
+      "coordinateSystem": "BRAIN_PRO_VASCULAR_RH_Y_UP",
+      "handedness": "right",
+      "upAxis": "+Y",
+      "unit": "procedural scene unit",
+      "scale": "illustrative radius and trajectory; no anatomical calibration",
+      "orientation": "view-local placement attached to the existing overview, laminar, cell, neuron and synapse roots",
+      "description": "The catalog parentId expresses containment only, never flow direction; graph direction lives exclusively in vascular-topology-v1.json."
     }
   ],
   "entries": [
@@ -527,6 +546,182 @@
       "sourceId": "source.synapse-contract",
       "transformId": "transform.synapse-exaggerated",
       "evidence": { "level": "MODEL_BOUND", "claim": "Vincula famílias e ocupações publicadas.", "limitations": ["Posição e densidade são didáticas."] }
+    },
+    {
+      "id": "brain-pro:anatomy/vascular-system", "parentId": "brain-pro:anatomy/encephalon", "label": "Sistema vascular topológico", "synonyms": ["vasos cerebrais", "sistema vascular", "vascular system"], "laterality": "bilateral", "scale": "encephalon", "views": ["overview", "laminar", "cell", "neuron", "synapse"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Agrupa nomenclatura e conectividade vascular de referência em uma geometria procedural ilustrativa.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/arterial-tree", "parentId": "brain-pro:anatomy/vascular-system", "label": "Árvore arterial topológica", "synonyms": ["artérias", "arterias", "arterial tree"], "laterality": "bilateral", "scale": "region", "views": ["overview", "laminar", "cell"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Agrupa segmentos arteriais por contenção; a direção topológica permanece no contrato de grafo.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/venous-tree", "parentId": "brain-pro:anatomy/vascular-system", "label": "Árvore venosa topológica", "synonyms": ["veias", "seios venosos", "venous tree"], "laterality": "bilateral", "scale": "region", "views": ["overview", "laminar"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Agrupa veias e seios por contenção sem representar drenagem funcional.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/neurovascular-unit", "parentId": "brain-pro:anatomy/vascular-system", "label": "Unidade neurovascular ilustrativa", "synonyms": ["unidade neurovascular", "neurovascular unit", "barreira hematoencefálica"], "laterality": "not-applicable", "scale": "synapse", "views": ["synapse"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Agrupa quatro componentes rotulados de uma unidade neurovascular didática.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada.", "Escala exagerada e rotulada; não é ultraestrutura medida."] }
+    },
+    {
+      "id": "brain-pro:anatomy/internal-carotid-artery-left", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria carótida interna esquerda", "synonyms": ["carótida interna esquerda", "carotida interna esquerda", "left internal carotid artery"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/internal-carotid-artery-right", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria carótida interna direita", "synonyms": ["carótida interna direita", "carotida interna direita", "right internal carotid artery"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/vertebral-artery-left", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria vertebral esquerda", "synonyms": ["vertebral esquerda", "left vertebral artery"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/vertebral-artery-right", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria vertebral direita", "synonyms": ["vertebral direita", "right vertebral artery"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/basilar-artery", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria basilar", "synonyms": ["basilar", "basilar artery"], "laterality": "midline", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/circle-of-willis", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Polígono de Willis", "synonyms": ["círculo arterial", "circulo arterial", "circle of Willis"], "laterality": "midline", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Identifica o anel anastomótico no grafo vascular versionado.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/anterior-communicating-artery", "parentId": "brain-pro:anatomy/circle-of-willis", "label": "Artéria comunicante anterior", "synonyms": ["comunicante anterior", "anterior communicating artery", "ACom"], "laterality": "midline", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/posterior-communicating-artery-left", "parentId": "brain-pro:anatomy/circle-of-willis", "label": "Artéria comunicante posterior esquerda", "synonyms": ["comunicante posterior esquerda", "left posterior communicating artery", "PCom esquerda"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/posterior-communicating-artery-right", "parentId": "brain-pro:anatomy/circle-of-willis", "label": "Artéria comunicante posterior direita", "synonyms": ["comunicante posterior direita", "right posterior communicating artery", "PCom direita"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/anterior-cerebral-artery-left", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria cerebral anterior esquerda", "synonyms": ["artéria cerebral anterior esquerda", "arteria cerebral anterior esquerda", "left anterior cerebral artery", "ACA esquerda"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/anterior-cerebral-artery-right", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria cerebral anterior direita", "synonyms": ["artéria cerebral anterior direita", "arteria cerebral anterior direita", "right anterior cerebral artery", "ACA direita"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/middle-cerebral-artery-left", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria cerebral média esquerda", "synonyms": ["artéria cerebral média esquerda", "arteria cerebral media esquerda", "left middle cerebral artery", "MCA esquerda"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/middle-cerebral-artery-right", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria cerebral média direita", "synonyms": ["artéria cerebral média direita", "arteria cerebral media direita", "right middle cerebral artery", "MCA direita"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/posterior-cerebral-artery-left", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria cerebral posterior esquerda", "synonyms": ["artéria cerebral posterior esquerda", "arteria cerebral posterior esquerda", "left posterior cerebral artery", "PCA esquerda"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/posterior-cerebral-artery-right", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Artéria cerebral posterior direita", "synonyms": ["artéria cerebral posterior direita", "arteria cerebral posterior direita", "right posterior cerebral artery", "PCA direita"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/pial-arterial-network", "parentId": "brain-pro:anatomy/arterial-tree", "label": "Rede arterial pial ilustrativa", "synonyms": ["rede pial", "pial arterial network"], "laterality": "bilateral", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Representa a transição topológica para ramos penetrantes sem território calibrado.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/penetrating-arteriole", "parentId": "brain-pro:anatomy/pial-arterial-network", "label": "Arteríola penetrante ilustrativa", "synonyms": ["arteríola penetrante", "arteriola penetrante", "penetrating arteriole"], "laterality": "bilateral", "scale": "column", "views": ["laminar"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Mostra orientação estática através das camadas, sem velocidade nem fluxo.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/precapillary-arteriole", "parentId": "brain-pro:anatomy/penetrating-arteriole", "label": "Arteríola pré-capilar ilustrativa", "synonyms": ["pré-capilar", "pre-capilar", "precapillary arteriole"], "laterality": "bilateral", "scale": "patch", "views": ["cell"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Marca a transição topológica entre ramo arterial e leito capilar.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/capillary-bed", "parentId": "brain-pro:anatomy/precapillary-arteriole", "label": "Leito capilar ilustrativo", "synonyms": ["leito capilar", "capilares", "capillary bed"], "laterality": "bilateral", "scale": "patch", "views": ["cell", "neuron", "synapse"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Fornece contexto espacial capilar estático em três escalas didáticas.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/postcapillary-venule", "parentId": "brain-pro:anatomy/venous-tree", "label": "Vênula pós-capilar ilustrativa", "synonyms": ["vênula pós-capilar", "venula pos-capilar", "postcapillary venule"], "laterality": "bilateral", "scale": "column", "views": ["laminar"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Marca a transição topológica do leito capilar para a árvore venosa.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/superficial-cortical-vein", "parentId": "brain-pro:anatomy/venous-tree", "label": "Veia cortical superficial", "synonyms": ["veia cortical superficial", "superficial cortical vein"], "laterality": "bilateral", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/deep-cerebral-vein", "parentId": "brain-pro:anatomy/venous-tree", "label": "Sistema venoso cerebral profundo", "synonyms": ["veia cerebral profunda", "deep cerebral vein"], "laterality": "bilateral", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Agrupa veias internas e basal por contenção, sem afirmar drenagem funcional.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/internal-cerebral-vein-left", "parentId": "brain-pro:anatomy/deep-cerebral-vein", "label": "Veia cerebral interna esquerda", "synonyms": ["veia cerebral interna esquerda", "left internal cerebral vein"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/internal-cerebral-vein-right", "parentId": "brain-pro:anatomy/deep-cerebral-vein", "label": "Veia cerebral interna direita", "synonyms": ["veia cerebral interna direita", "right internal cerebral vein"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/basal-vein", "parentId": "brain-pro:anatomy/deep-cerebral-vein", "label": "Veia basal ilustrativa", "synonyms": ["veia basal", "basal vein", "veia de Rosenthal"], "laterality": "bilateral", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/great-cerebral-vein", "parentId": "brain-pro:anatomy/venous-tree", "label": "Grande veia cerebral", "synonyms": ["grande veia cerebral", "veia de Galeno", "great cerebral vein"], "laterality": "midline", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/superior-sagittal-sinus", "parentId": "brain-pro:anatomy/venous-tree", "label": "Seio sagital superior", "synonyms": ["seio sagital", "seio sagital superior", "superior sagittal sinus"], "laterality": "midline", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/inferior-sagittal-sinus", "parentId": "brain-pro:anatomy/venous-tree", "label": "Seio sagital inferior", "synonyms": ["seio sagital inferior", "inferior sagittal sinus"], "laterality": "midline", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/straight-sinus", "parentId": "brain-pro:anatomy/venous-tree", "label": "Seio reto", "synonyms": ["seio reto", "straight sinus"], "laterality": "midline", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/confluence-of-sinuses", "parentId": "brain-pro:anatomy/venous-tree", "label": "Confluência dos seios", "synonyms": ["confluência dos seios", "confluencia dos seios", "confluence of sinuses"], "laterality": "midline", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/transverse-sinus-left", "parentId": "brain-pro:anatomy/venous-tree", "label": "Seio transverso esquerdo", "synonyms": ["seio transverso esquerdo", "left transverse sinus"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/transverse-sinus-right", "parentId": "brain-pro:anatomy/venous-tree", "label": "Seio transverso direito", "synonyms": ["seio transverso direito", "right transverse sinus"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/sigmoid-sinus-left", "parentId": "brain-pro:anatomy/venous-tree", "label": "Seio sigmoide esquerdo", "synonyms": ["seio sigmoide esquerdo", "left sigmoid sinus"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/sigmoid-sinus-right", "parentId": "brain-pro:anatomy/venous-tree", "label": "Seio sigmoide direito", "synonyms": ["seio sigmoide direito", "right sigmoid sinus"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Nomenclatura e conectividade seguem descrição de referência; posição, calibre e trajeto são procedurais.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada."] }
+    },
+    {
+      "id": "brain-pro:anatomy/internal-jugular-vein-left", "parentId": "brain-pro:anatomy/venous-tree", "label": "Veia jugular interna esquerda · limite", "synonyms": ["jugular interna esquerda", "left internal jugular vein"], "laterality": "left", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Declara o sumidouro esquerdo do domínio topológico modelado.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada.", "Representa o limite do domínio modelado; a drenagem extracraniana não é simulada nem desenhada além do primeiro segmento."] }
+    },
+    {
+      "id": "brain-pro:anatomy/internal-jugular-vein-right", "parentId": "brain-pro:anatomy/venous-tree", "label": "Veia jugular interna direita · limite", "synonyms": ["jugular interna direita", "right internal jugular vein"], "laterality": "right", "scale": "region", "views": ["overview"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Declara o sumidouro direito do domínio topológico modelado.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada.", "Representa o limite do domínio modelado; a drenagem extracraniana não é simulada nem desenhada além do primeiro segmento."] }
+    },
+    {
+      "id": "brain-pro:anatomy/capillary-endothelium", "parentId": "brain-pro:anatomy/neurovascular-unit", "label": "Endotélio capilar ilustrativo", "synonyms": ["endotélio capilar", "endotelio capilar", "capillary endothelium"], "laterality": "not-applicable", "scale": "synapse", "views": ["synapse"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Rotula a parede endotelial na unidade neurovascular didática.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada.", "Escala exagerada e rotulada; não é ultraestrutura medida."] }
+    },
+    {
+      "id": "brain-pro:anatomy/pericyte", "parentId": "brain-pro:anatomy/neurovascular-unit", "label": "Pericito ilustrativo", "synonyms": ["pericito", "pericyte"], "laterality": "not-applicable", "scale": "synapse", "views": ["synapse"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Rotula um pericito estático em escala didática exagerada.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada.", "Escala exagerada e rotulada; não é ultraestrutura medida."] }
+    },
+    {
+      "id": "brain-pro:anatomy/astrocyte-endfoot", "parentId": "brain-pro:anatomy/neurovascular-unit", "label": "Pé astrocitário ilustrativo", "synonyms": ["pé astrocitário", "pe astrocitario", "astrocyte endfoot"], "laterality": "not-applicable", "scale": "synapse", "views": ["synapse"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Rotula o contato astrocitário sem modelar acoplamento neurovascular.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada.", "Escala exagerada e rotulada; não é ultraestrutura medida."] }
+    },
+    {
+      "id": "brain-pro:anatomy/blood-brain-barrier", "parentId": "brain-pro:anatomy/neurovascular-unit", "label": "Barreira hematoencefálica ilustrativa", "synonyms": ["barreira hematoencefálica", "barreira hematoencefalica", "blood-brain barrier", "BHE"], "laterality": "not-applicable", "scale": "synapse", "views": ["synapse"], "sourceId": "source.vascular-generator", "transformId": "transform.vascular-procedural",
+      "evidence": { "level": "ILLUSTRATIVE", "claim": "Marca uma fronteira didática; não simula transporte, permeabilidade ou homeostase.", "limitations": ["Não há fluxo, perfusão ou oxigenação.", "Trajeto e calibre não correspondem a nenhum sujeito.", "Variação anatômica individual não é representada.", "Escala exagerada e rotulada; não é ultraestrutura medida."] }
     }
   ]
 }

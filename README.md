@@ -136,6 +136,12 @@ lado, fonte, licença, transformação, evidência e limitações. Busca, árvor
 breadcrumbs e picking convergem no mesmo ID. São 32 entradas e zero asset
 externo; o catálogo não cria anatomia, draw call ou estado científico.
 
+R10-B acrescenta 44 entradas vasculares e um contrato de grafo próprio com 42
+segmentos estáticos. Artérias, capilares e veias usam forma/padrão/rótulo
+redundantes, busca, picking e modo esqueleto nas vistas existentes. O conjunto
+custa 12 draw calls contra teto 17 e permanece estritamente topológico e
+ilustrativo: não há fluxo, perfusão, pulso ou oxigenação modelados.
+
 As seis vistas agora alternam atomicamente entre `schematic` e
 `realistic-illustrative` no mesmo scene graph. Apenas 25 objetos de matéria com
 proveniência, normal e envelope declarados recebem PBR/transmission; emissão,
@@ -176,9 +182,9 @@ biológica.
 - planos coronal, sagital, axial e oblíquo, laje, tampas stencil, raio-X,
   opacidade, isolamento e sonda textual do campo cortical; 9 draws adicionais
   no corte simples e teto de 18 na laje;
-- catálogo anatômico com 32 IDs estáveis, busca acento-insensível, árvore
-  acessível, breadcrumbs, ficha de proveniência e bindings/exclusões explícitos
-  para os 98 objetos renderizáveis das seis vistas;
+- catálogo anatômico 1.1.0 com 76 entradas e grafo vascular schema 1 com 42
+  segmentos/44 entradas vasculares, 12 draw calls, direção estática, legenda
+  redundante, busca, picking e isolamento sem animação hemodinâmica;
 - corrente receptora média com sinal, halos orientados para entrada, saída e
   shunt, além de forma redundante para leitura sem depender de matiz;
 - gates automáticos de ABI, lifecycle, rampa pura, saturação, modo
@@ -304,6 +310,7 @@ Para repetir os gates:
 ```bash
 npm run check
 npm run audit:anatomy
+npm run audit:vascular
 npm run verify:promotion-0.8
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings

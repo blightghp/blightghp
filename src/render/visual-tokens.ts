@@ -32,6 +32,9 @@ export const VISUAL_COLORS = {
   presynapticMembrane: 0x285a78,
   postsynapticMembrane: 0x183d5c,
   cleftBoundary: 0x4f8dbd,
+  vascularArterial: 0xe25e4f,
+  vascularVenous: 0x527fd6,
+  vascularCapillary: 0xd9b56d,
 } as const;
 
 export const COLOR_TOKENS = {

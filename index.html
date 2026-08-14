@@ -34,7 +34,7 @@
     </nav>
 
     <aside class="glass-panel presentation-panel" id="presentation-panel" aria-labelledby="presentation-title">
-      <div class="eyebrow" id="presentation-title">R10-A · EXPLORADOR LOCAL</div>
+      <div class="eyebrow" id="presentation-title">R10-B · ANATOMIA & VASCULAR</div>
       <details>
         <summary>PELÍCULA & CORTE</summary>
         <div class="control-group compact">
@@ -58,6 +58,7 @@
           <label><input type="checkbox" id="cut-slab" /><span></span>Laje</label>
           <label><input type="checkbox" id="presentation-xray" /><span></span>Raio-X</label>
           <label><input type="checkbox" id="presentation-isolate" /><span></span>Isolar matéria</label>
+          <label><input type="checkbox" id="vascular-skeleton-mode" /><span></span>Esqueleto vascular</label>
           <label><input type="checkbox" id="high-contrast-mode" /><span></span>Alto contraste</label>
         </div>
         <div class="control-group compact">
@@ -113,6 +114,27 @@
         <p id="anatomy-selection-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
         <button id="anatomy-reset" class="presentation-reset" type="button">RESTAURAR CATÁLOGO</button>
         <p class="cut-shortcuts">Árvore, busca e picking usam o mesmo ID. Setas percorrem os resultados; a seleção é somente apresentação.</p>
+      </details>
+      <details id="vascular-explorer" open>
+        <summary>TOPOLOGIA VASCULAR</summary>
+        <div class="vascular-legend" aria-label="Legenda vascular sem dependência exclusiva de cor">
+          <span><i class="vascular-arterial" aria-hidden="true"></i><strong>A</strong> · arterial · circular/chevron</span>
+          <span><i class="vascular-venous" aria-hidden="true"></i><strong>V</strong> · venoso · achatado/duplo</span>
+          <span><i class="vascular-capillary" aria-hidden="true"></i><strong>C</strong> · capilar · fino/pontilhado</span>
+        </div>
+        <p class="vascular-limit"><strong>TOPOLOGY · ILLUSTRATIVE.</strong> Topologia ilustrativa. Não há fluxo, perfusão ou oxigenação.</p>
+        <section id="vascular-selection-details" class="vascular-details" aria-labelledby="vascular-selection-title" hidden>
+          <h2 id="vascular-selection-title">Segmento selecionado</h2>
+          <dl>
+            <div><dt>CLASSE</dt><dd id="vascular-selected-class">—</dd></div>
+            <div><dt>LADO</dt><dd id="vascular-selected-side">—</dd></div>
+            <div><dt>ORDEM</dt><dd id="vascular-selected-order">—</dd></div>
+            <div><dt>MONTANTE</dt><dd id="vascular-selected-upstream">—</dd></div>
+            <div><dt>JUSANTE</dt><dd id="vascular-selected-downstream">—</dd></div>
+            <div><dt>VISTAS</dt><dd id="vascular-selected-views">—</dd></div>
+          </dl>
+        </section>
+        <p class="cut-shortcuts">Teclado: V alterna o esqueleto vascular. Busca, árvore e picking compartilham o mesmo ID estável.</p>
       </details>
     </aside>
 

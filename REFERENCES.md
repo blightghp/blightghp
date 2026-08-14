@@ -21,6 +21,16 @@ não transforma as referências de estudo abaixo em atlas aprovado. Uma futura
 fonte anatômica externa ainda exigirá manifesto, licença compatível, versão,
 SHA-256 e pipeline reproduzível próprios.
 
+R10-B usa as referências abaixo somente para nomenclatura e conectividade
+vascular. A geometria continua procedural e `ILLUSTRATIVE`; nenhuma citação
+calibra raio, posição, escala, perfusão ou dinâmica:
+
+- Purves, D. et al. (2001). [The Blood Supply of the Brain and Spinal Cord](https://www.ncbi.nlm.nih.gov/books/NBK11042/). Referência para carótidas internas, vertebrais/basilar, artérias cerebrais e círculo de Willis.
+- Cipolla, M. J. (2009). [Anatomy and Ultrastructure](https://www.ncbi.nlm.nih.gov/books/NBK53086/), em *The Cerebral Circulation*. Referência para arquitetura pial/penetrante, drenagem venosa, seios e unidade neurovascular.
+- [TeachMeAnatomy · arterial supply](https://teachmeanatomy.info/neuroanatomy/vessels/arterial-supply/), [venous drainage](https://teachmeanatomy.info/neuroanatomy/vessels/venous-drainage/) e [dural venous sinuses](https://teachmeanatomy.info/neuroanatomy/vessels/dural-venous-sinuses/). Apoio didático de nomenclatura; não é fonte de geometria distribuída.
+- Kadry, H. et al. (2023). [Cells of the Blood-Brain Barrier](https://pmc.ncbi.nlm.nih.gov/articles/PMC9987262/). Referência de revisão para endoteliais, pericitos, astrócitos e barreira.
+- Hartmann, D. A. et al. (2023). [Pericyte Control of Blood Flow across Microvascular Zones](https://pmc.ncbi.nlm.nih.gov/articles/PMC10480047/). Referência de revisão para nomenclatura microvascular; R10-B não implementa seu conteúdo hemodinâmico.
+
 ## Percurso de aprendizagem desde 2025
 
 - Kandel, E. R.; Koester, J. D.; Mack, S. H.; Siegelbaum, S. A. (2021). [*Principles of Neural Science*, 6ª ed.](https://books.google.com/books/about/Principles_of_Neural_Science_Sixth_Editi.html?id=8yGq0QEACAAJ). O “Kandel” é meu projeto de leitura; enquanto o estudo, uso o BRAIN PRO para consolidar conceitos sem tratar o livro como calibração automática.
