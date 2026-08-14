@@ -4,6 +4,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { auditWorkerLifecycle } from "./worker_lifecycle_audit.js";
 
+const EXPECTED_R09F_MATERIALS = 25;
+const EXPECTED_R10B_VASCULAR_MATERIALS = 12;
+
 const server = await createServer({
   root: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
   logLevel: "warn",
@@ -137,7 +140,8 @@ try {
   if (
     r09f.activeProfile !== "realistic-illustrative" ||
     r09f.highContrastProfile !== "schematic" ||
-    r09f.active.material.physicalMaterialObjects !== 25 ||
+    r09f.active.material.physicalMaterialObjects !==
+      EXPECTED_R09F_MATERIALS + EXPECTED_R10B_VASCULAR_MATERIALS ||
     r09f.active.material.semanticGeometryChanges !== 0 ||
     r09f.active.clipping.planeCount !== 1 ||
     r09f.active.clipping.capSources !== 4 ||

@@ -195,6 +195,30 @@ describe("R09-F realistic-illustrative material manager", () => {
     emission.material.dispose();
   });
 
+  it("isolates vascular matter with residual non-vascular context and exact restoration", () => {
+    const root = new THREE.Group();
+    const contextMaterial = new THREE.MeshBasicMaterial({ opacity: 0.8, transparent: true });
+    const vesselMaterial = new THREE.MeshBasicMaterial({ opacity: 0.9, transparent: true });
+    const context = new THREE.Mesh(new THREE.BoxGeometry(), contextMaterial);
+    const vessel = new THREE.Mesh(new THREE.CylinderGeometry(), vesselMaterial);
+    declareVisual(context, "matter", "topology");
+    declareVisual(vessel, "matter", "topology");
+    vessel.userData.vascularTopology = true;
+    root.add(context, vessel);
+    const effects = new PresentationMaterialEffects();
+    effects.setState({ isolateVascular: true });
+    effects.beforeRender(root);
+    expect(contextMaterial.opacity).toBeCloseTo(0.8 * 0.12);
+    expect(vesselMaterial.opacity).toBe(0.9);
+    effects.afterRender();
+    expect(contextMaterial.opacity).toBe(0.8);
+    expect(vesselMaterial.opacity).toBe(0.9);
+    context.geometry.dispose();
+    vessel.geometry.dispose();
+    contextMaterial.dispose();
+    vesselMaterial.dispose();
+  });
+
   it("falls back atomically when one material in a view cannot be created", () => {
     const scene = new THREE.Scene();
     const root = new THREE.Group();

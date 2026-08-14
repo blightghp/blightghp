@@ -161,12 +161,12 @@ try {
   if (
     JSON.stringify(manifestViews) !== JSON.stringify(expectedViews) ||
     Object.values(finalManifest).some((view) => !view.contractReady) ||
-    eligibleObjects !== 25 ||
-    declaredManifestObjects !== 25 ||
+    eligibleObjects !== 37 ||
+    declaredManifestObjects !== 37 ||
     Object.values(finalManifest).some((view) =>
       view.manifest.some((entry) => !entry.id || !entry.objectName || !entry.surface)
     ) ||
-    finalPresentation.material.physicalMaterialObjects !== 25 ||
+    finalPresentation.material.physicalMaterialObjects !== 37 ||
     finalPresentation.material.semanticGeometryChanges !== 0 ||
     !finalPresentation.material.environmentMapActive ||
     finalPresentation.material.proceduralNormalMapTextures !== 3

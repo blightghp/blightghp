@@ -82,6 +82,11 @@ import type {
 } from "./protocol";
 import { BrainSettings, getInitialBrainSettings } from "./schema";
 import { snapshotBufferEntries } from "./snapshot-layout";
+import {
+  VASCULAR_REALISTIC_ILLUSTRATIVE_MANIFEST,
+  VascularTopologyModule,
+  vascularTopologyDetailsFor,
+} from "./vascular";
 
 declare global {
   interface Window {
@@ -132,7 +137,9 @@ declare global {
         opacity?: number;
         xray?: boolean;
         isolateMatter?: boolean;
+        isolateVascular?: boolean;
       }) => void;
+      setVascularSkeleton: (enabled: boolean) => boolean;
       setHighContrast: (enabled: boolean) => VisualMaterialProfile;
       visualAudit: () => {
         colorMode: VisualColorMode;
@@ -143,6 +150,7 @@ declare global {
       };
       materialProfileAudit: () => ReturnType<typeof materialProfileAuditReport>;
       anatomyCatalogAudit: () => ReturnType<typeof anatomyCatalogAuditReport>;
+      vascularAudit: () => ReturnType<VascularTopologyModule["audit"]>;
       presentationAudit: () => {
         material: MaterialProfileAudit;
         clipping: ReturnType<ClippingSystem["audit"]>;
@@ -198,6 +206,7 @@ let cellLayer: CellRenderLayer;
 let electricalBoardLayer: ElectricalBoardLayer;
 let neuronLayer: NeuronRenderLayer;
 let synapseLayer: SynapseRenderLayer;
+let vascularModule: VascularTopologyModule;
 let brainData: BrainData;
 let electricalTopology: ElectricalBoardTopologyObservables;
 let worker: Worker;
@@ -523,7 +532,7 @@ function visualAuditReport() {
 function materialProfileAuditReport() {
   const reportFor = (view: SimulationView, root: THREE.Object3D) => ({
     ...auditVisualMaterialReadiness(root),
-    manifest: REALISTIC_ILLUSTRATIVE_MANIFEST[view],
+    manifest: materialManifestForView(view),
     material: materialProfileManager.audit(view),
   });
   return {
@@ -534,6 +543,13 @@ function materialProfileAuditReport() {
     electricity: reportFor("electricity", electricalBoardLayer.group),
     synapse: reportFor("synapse", synapseLayer.group),
   };
+}
+
+function materialManifestForView(view: SimulationView) {
+  return [
+    ...REALISTIC_ILLUSTRATIVE_MANIFEST[view],
+    ...VASCULAR_REALISTIC_ILLUSTRATIVE_MANIFEST[view],
+  ];
 }
 
 function anatomyCatalogAuditReport() {
@@ -899,6 +915,21 @@ function applyAnatomySelection(
     if (focus) focus.value = overviewRegion;
     layers.updateVisibility(state, currentFocusRegion);
   }
+  const vascular = vascularTopologyDetailsFor(entry.id);
+  const topology = document.querySelector<HTMLElement>("#vascular-selection-details");
+  if (topology) {
+    topology.hidden = !vascular;
+    if (vascular) {
+      element("#vascular-selected-class").textContent = vascular.class;
+      element("#vascular-selected-order").textContent = String(vascular.branchOrder);
+      element("#vascular-selected-side").textContent = vascular.side;
+      element("#vascular-selected-upstream").textContent =
+        vascular.upstreamIds.join(", ") || "origem do domínio";
+      element("#vascular-selected-downstream").textContent =
+        vascular.downstreamIds.join(", ") || "sumidouro do domínio";
+      element("#vascular-selected-views").textContent = vascular.views.join(", ");
+    }
+  }
   if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
 }
 
@@ -1020,7 +1051,8 @@ function setupInterface(): void {
         return;
       }
     }
-    const entry = pickAnatomicalEntry(renderRootForView(activeView), cellRaycaster);
+    const entry = vascularModule.pick(activeView, cellRaycaster) ??
+      pickAnatomicalEntry(renderRootForView(activeView), cellRaycaster);
     if (entry) anatomyExplorer?.select(entry.id, "scene");
   });
 
@@ -1127,6 +1159,7 @@ function setupInterface(): void {
 
   const xrayToggle = element<HTMLInputElement>("#presentation-xray");
   const isolationToggle = element<HTMLInputElement>("#presentation-isolate");
+  const vascularToggle = element<HTMLInputElement>("#vascular-skeleton-mode");
   const opacityInput = element<HTMLInputElement>("#presentation-opacity");
   const opacityOutput = element<HTMLOutputElement>("#presentation-opacity-val");
   const applyEffects = (): void => {
@@ -1135,7 +1168,10 @@ function setupInterface(): void {
       opacity,
       xray: xrayToggle.checked,
       isolateMatter: isolationToggle.checked,
+      isolateVascular: vascularToggle.checked,
     });
+    vascularModule.setSkeletonMode(vascularToggle.checked);
+    document.body.dataset.vascularSkeleton = String(vascularToggle.checked);
     opacityOutput.textContent = `${Math.round(opacity * 100)}%`;
     opacityInput.setAttribute("aria-valuenow", String(opacity));
     opacityInput.setAttribute("aria-valuetext", `${Math.round(opacity * 100)} por cento`);
@@ -1143,6 +1179,7 @@ function setupInterface(): void {
   };
   xrayToggle.addEventListener("change", applyEffects);
   isolationToggle.addEventListener("change", applyEffects);
+  vascularToggle.addEventListener("change", applyEffects);
   opacityInput.addEventListener("input", applyEffects);
 
   const highContrastToggle = element<HTMLInputElement>("#high-contrast-mode");
@@ -1179,6 +1216,9 @@ function setupInterface(): void {
       applyEffects();
     } else if (event.code === "KeyI") {
       isolationToggle.checked = !isolationToggle.checked;
+      applyEffects();
+    } else if (event.code === "KeyV") {
+      vascularToggle.checked = !vascularToggle.checked;
       applyEffects();
     } else if (event.code === "KeyR") {
       resetCameraForCut();
@@ -1299,6 +1339,7 @@ function disposeApplication(): void {
   anatomyExplorer = undefined;
   clippingSystem?.dispose();
   materialProfileManager?.dispose();
+  vascularModule?.dispose();
   renderPipeline?.dispose();
   controls?.dispose();
   layers?.dispose();
@@ -1376,6 +1417,14 @@ async function init(): Promise<void> {
   synapseLayer.setVisible(false);
   synapseLayer.mount(renderContext, renderTopology);
 
+  vascularModule = new VascularTopologyModule();
+  vascularModule.attach("overview", layers.group);
+  vascularModule.attach("laminar", laminarLayer.group);
+  vascularModule.attach("cell", cellLayer.group);
+  vascularModule.attach("neuron", neuronLayer.group);
+  vascularModule.attach("electricity", electricalBoardLayer.group);
+  vascularModule.attach("synapse", synapseLayer.group);
+
   materialProfileManager = new RealisticIllustrativeMaterialManager(scene, { renderer });
   if (webGlShaderCompilationFailed) {
     materialProfileManager.failAtomic("webgl-shader-compilation-failure");
@@ -1383,32 +1432,32 @@ async function init(): Promise<void> {
   materialProfileManager.registerLayer(
     "overview",
     layers.group,
-    REALISTIC_ILLUSTRATIVE_MANIFEST.overview,
+    materialManifestForView("overview"),
   );
   materialProfileManager.registerLayer(
     "laminar",
     laminarLayer.group,
-    REALISTIC_ILLUSTRATIVE_MANIFEST.laminar,
+    materialManifestForView("laminar"),
   );
   materialProfileManager.registerLayer(
     "cell",
     cellLayer.group,
-    REALISTIC_ILLUSTRATIVE_MANIFEST.cell,
+    materialManifestForView("cell"),
   );
   materialProfileManager.registerLayer(
     "neuron",
     neuronLayer.group,
-    REALISTIC_ILLUSTRATIVE_MANIFEST.neuron,
+    materialManifestForView("neuron"),
   );
   materialProfileManager.registerLayer(
     "electricity",
     electricalBoardLayer.group,
-    REALISTIC_ILLUSTRATIVE_MANIFEST.electricity,
+    materialManifestForView("electricity"),
   );
   materialProfileManager.registerLayer(
     "synapse",
     synapseLayer.group,
-    REALISTIC_ILLUSTRATIVE_MANIFEST.synapse,
+    materialManifestForView("synapse"),
   );
   presentationEffects = new PresentationMaterialEffects();
   clippingSystem = new ClippingSystem(renderer, scene);
@@ -1599,6 +1648,9 @@ async function init(): Promise<void> {
       const effects = presentationEffects.audit();
       element<HTMLInputElement>("#presentation-xray").checked = effects.xray;
       element<HTMLInputElement>("#presentation-isolate").checked = effects.isolateMatter;
+      element<HTMLInputElement>("#vascular-skeleton-mode").checked = effects.isolateVascular;
+      vascularModule.setSkeletonMode(effects.isolateVascular);
+      document.body.dataset.vascularSkeleton = String(effects.isolateVascular);
       element<HTMLInputElement>("#presentation-opacity").value = String(effects.opacity);
       element<HTMLOutputElement>("#presentation-opacity-val").textContent =
         `${Math.round(effects.opacity * 100)}%`;
@@ -1611,6 +1663,14 @@ async function init(): Promise<void> {
         `${Math.round(effects.opacity * 100)} por cento`,
       );
       if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+    },
+    setVascularSkeleton(enabled) {
+      presentationEffects.setState({ isolateVascular: enabled });
+      vascularModule.setSkeletonMode(enabled);
+      element<HTMLInputElement>("#vascular-skeleton-mode").checked = enabled;
+      document.body.dataset.vascularSkeleton = String(enabled);
+      if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+      return enabled;
     },
     setHighContrast(enabled) {
       document.body.dataset.highContrast = String(enabled);
@@ -1630,6 +1690,9 @@ async function init(): Promise<void> {
     },
     anatomyCatalogAudit() {
       return anatomyCatalogAuditReport();
+    },
+    vascularAudit() {
+      return vascularModule.audit();
     },
     presentationAudit() {
       return {

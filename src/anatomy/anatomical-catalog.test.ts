@@ -24,13 +24,15 @@ describe("anatomical catalog schema 1", () => {
     expect(audit).toMatchObject({
       schemaVersion: 1,
       catalogId: "brain-pro-anatomy",
-      version: "1.0.0",
+      version: "1.1.0",
       roots: 1,
       externalAssets: 0,
       contractReady: true,
       issues: [],
     });
-    expect(audit.entries).toBeGreaterThanOrEqual(28);
+    expect(audit.entries).toBe(76);
+    expect(audit.sources).toBe(6);
+    expect(audit.transforms).toBe(6);
     expect(audit.hash).toMatch(/^[a-f0-9]{16}$/);
     expect(Object.isFrozen(ANATOMICAL_CATALOG)).toBe(true);
     expect(Object.isFrozen(ANATOMICAL_CATALOG.entries)).toBe(true);
@@ -58,7 +60,24 @@ describe("anatomical catalog schema 1", () => {
     expect(searchAnatomy("L4", { view: "laminar" })[0]?.id)
       .toBe("brain-pro:anatomy/cortical-layer-4");
     expect(searchAnatomy("hemisfério", { laterality: "left" })).toHaveLength(1);
+    expect(searchAnatomy("arteria cerebral media")).toHaveLength(2);
+    expect(searchAnatomy("seio sagital")[0]?.id)
+      .toBe("brain-pro:anatomy/superior-sagittal-sinus");
+    expect(searchAnatomy("pericito")[0]?.id).toBe("brain-pro:anatomy/pericyte");
     expect(searchAnatomy("", { limit: 3 })).toHaveLength(3);
+  });
+
+  it("keeps every vascular entry illustrative, bounded and explicitly non-hemodynamic", () => {
+    const vascular = ANATOMICAL_CATALOG.entries.filter(
+      (entry) => entry.sourceId === "source.vascular-generator",
+    );
+    expect(vascular).toHaveLength(44);
+    for (const entry of vascular) {
+      expect(entry.evidence.level).toBe("ILLUSTRATIVE");
+      expect(entry.evidence.limitations.length).toBeGreaterThanOrEqual(3);
+      expect(entry.evidence.limitations).toContain("Não há fluxo, perfusão ou oxigenação.");
+    }
+    expect(auditAnatomicalCatalog().evidenceLevels.CALIBRATED).toBe(0);
   });
 
   it("builds stable breadcrumbs and depth", () => {

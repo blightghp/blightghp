@@ -11,6 +11,7 @@ import {
   visualPassOf,
   visualProvenanceOf,
   visualSemanticBindingOf,
+  isVascularTopologyObject,
 } from "./render-types";
 import type {
   VisualMaterialEligibility,
@@ -624,11 +625,17 @@ export interface PresentationEffectsState {
   readonly opacity: number;
   readonly xray: boolean;
   readonly isolateMatter: boolean;
+  readonly isolateVascular: boolean;
 }
 
 /** Applies presentation-only multipliers for exactly one render and restores them afterwards. */
 export class PresentationMaterialEffects {
-  private state: PresentationEffectsState = { opacity: 1, xray: false, isolateMatter: false };
+  private state: PresentationEffectsState = {
+    opacity: 1,
+    xray: false,
+    isolateMatter: false,
+    isolateVascular: false,
+  };
   private readonly saved = new Map<THREE.Material, SavedPresentationMaterial>();
 
   setState(update: Partial<PresentationEffectsState>): void {
@@ -636,6 +643,7 @@ export class PresentationMaterialEffects {
       opacity: THREE.MathUtils.clamp(update.opacity ?? this.state.opacity, 0.08, 1),
       xray: update.xray ?? this.state.xray,
       isolateMatter: update.isolateMatter ?? this.state.isolateMatter,
+      isolateVascular: update.isolateVascular ?? this.state.isolateVascular,
     };
   }
 
@@ -659,9 +667,12 @@ export class PresentationMaterialEffects {
           depthWrite: material.depthWrite,
         });
         const isolationMultiplier = this.state.isolateMatter && !matter ? 0.16 : 1;
+        const vascularIsolationMultiplier =
+          this.state.isolateVascular && matter && !isVascularTopologyObject(object) ? 0.12 : 1;
         const matterOpacity = matter ? this.state.opacity : 1;
         const xrayMultiplier = this.state.xray && matter ? 0.28 : 1;
-        material.opacity *= isolationMultiplier * matterOpacity * xrayMultiplier;
+        material.opacity *= isolationMultiplier * vascularIsolationMultiplier *
+          matterOpacity * xrayMultiplier;
         if (material.opacity < 1) material.transparent = true;
         if (this.state.xray && matter) material.depthWrite = false;
       }
