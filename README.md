@@ -93,10 +93,10 @@ publicado neste repositório.
 <div align="center">
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=31348b115728" width="760" alt="BRAIN PRO com película realista-ilustrativa e corte coronal tampado, percorrendo Visão Geral, Lâminas, Célula, Neurônio, Eletricidade e Sinapse" />
+  <img src="assets/brain.gif?v=d7ddff841f91" width="760" alt="BRAIN PRO com superfície encefálica procedural, película realista-ilustrativa e corte coronal, percorrendo Visão Geral, Lâminas, Célula, Neurônio, Eletricidade e Sinapse" />
 </a>
 
-<sub>▲ Captura R09-F das seis vistas, com película realista-ilustrativa e corte coronal tampado na Visão Geral. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI, aos cinco hashes do motor, ao perfil visual e à cobertura por vista.</sub>
+<sub>▲ Captura R10-D das seis vistas, com superfície procedural em dois LODs, película realista-ilustrativa e corte coronal na Visão Geral. O SHA na URL e o <a href="assets/brain-gif.json">manifesto</a> ligam o GIF ao commit, à ABI, aos cinco hashes do motor, ao hash geométrico, ao perfil visual e à cobertura por vista.</sub>
 
 </div>
 
@@ -149,6 +149,14 @@ motivo do downgrade, usa histerese e exige recuperação manual. Em GPU física,
 artefato schema 1 mediu 24 frames por vista: p95 entre 1,9 e 19,1 ms, sempre
 abaixo da referência R10-B, com os cinco hashes invariantes.
 
+R10-D substitui as quatro cascas convexas da Visão Geral por icosferas indexadas
+ajustadas à mesma nuvem regional, com domínio deformado por simplex de três
+oitavas. Hemisférios recebem sulcos procedurais e fissura medial; o cerebelo,
+folias paralelas ilustrativas. `aoFactor`, `curvature` e `thickness` são assados
+uma vez, e `baseline`/`enhanced` alternam LOD sem CPU adicional por frame. Em
+GPU física, a construção somada mediu 77,9 ms, os LODs ficaram em 5.780/1.500
+triângulos e o hash geométrico `7dfdd64207190121` repetiu em duas inicializações.
+
 As seis vistas agora alternam atomicamente entre `schematic` e
 `realistic-illustrative` no mesmo scene graph; a película realista-ilustrativa é
 tentada por padrão e recua atomicamente quando o ambiente exige. Os 37 objetos
@@ -160,12 +168,12 @@ da Visão Geral lê somente `field.waveActivity` publicado, com unidade e regra 
 interpolação; nenhum atlas externo foi incorporado e aparência não é evidência
 biológica.
 
-A [revisão visual R10-C](docs/VISUAL_REVIEW_R10_C.md) compara as seis capturas
-com MRI, atlas e reconstruções 3D públicas. O parecer é deliberadamente crítico:
-há mais profundidade e materialidade, mas a casca facetada, a falta de
-girificação, a iluminação e as formas celulares ainda são rudimentares. R10-D e
-R10-E são os gates proprietários dessa evolução; brilho não é tratado como
-substituto de geometria nem como validação clínica.
+A [revisão visual R10-D](docs/VISUAL_REVIEW_R10_D.md) compara 12 capturas com
+superfícies piais e reconstruções cerebelares públicas. A macroforma, a fissura
+e o relevo deixaram de ser cascas convexas, mas ainda não são atlas nem chegam a
+fotorrealismo: a paleta azul, a iluminação, o tecido, vasos e formas celulares
+continuam estilizados. R10-E é o próximo gate e possui luz/materialidade; brilho
+não é tratado como substituto de geometria nem como validação clínica.
 
 ### O que consigo explorar hoje
 
@@ -197,10 +205,14 @@ substituto de geometria nem como validação clínica.
   decorativas, fallback esquemático atômico e zero troca de geometria/binding;
 - perfis de renderização `baseline`, `enhanced` e `cinema`, governador com
   motivo/histerese/recuperação manual e orçamento por vista em gate de CI;
+- superfície encefálica procedural determinística com icosfera indexada, dois
+  LODs, fissura medial, foliação cerebelar, atributos baked, hash FNV-1a de 64
+  bits e fallback atômico para `ConvexGeometry`;
 - planos coronal, sagital, axial e oblíquo, laje, tampas stencil, raio-X,
   opacidade, isolamento e sonda textual do campo cortical; 9 draws adicionais
   no corte simples e teto de 18 na laje;
-- catálogo anatômico 1.1.0 com 76 entradas e grafo vascular schema 1 com 42
+- catálogo anatômico 1.2.0 com 76 entradas e 7 fontes, incluindo a limitação
+  explícita de que a girificação não corresponde a sulcos nomeados; grafo vascular schema 1 com 42
   segmentos/44 entradas vasculares, 12 draw calls, direção estática, legenda
   redundante, busca, picking e isolamento sem animação hemodinâmica;
 - corrente receptora média com sinal, halos orientados para entrada, saída e
@@ -300,6 +312,7 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-13 | fecho R10-A com catálogo anatômico, busca, picking e 32 entradas procedurais explicitamente ilustrativas |
 | 2026-08-13 | fecho R10-B com 42 segmentos vasculares estáticos, 44 entradas e zero alegação de fluxo ou perfusão |
 | 2026-08-20 | fecho R10-C com orçamento versionado, governador de perfis, caches, capturas em GPU física e revisão visual comparativa |
+| 2026-08-21 | fecho R10-D com superfície regional procedural, dois LODs, três atributos assados, hash geométrico, fallback atômico e 12 capturas em GPU física |
 
 O histórico da base está em
 [`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
@@ -319,7 +332,8 @@ estão registradas nas auditorias [R09-A](AUDIT_0.9_R09_A.md),
 [R09-F](AUDIT_0.9_R09_F.md). A fronteira original da película permanece na
 [auditoria de prontidão visual](AUDIT_0.9_VISUAL_MATERIAL_READINESS.md).
 As etapas 0.10 encerradas estão nas auditorias [R10-A](AUDIT_0.10_R10_A.md),
-[R10-B](AUDIT_0.10_R10_B.md) e [R10-C](AUDIT_0.10_R10_C.md).
+[R10-B](AUDIT_0.10_R10_B.md), [R10-C](AUDIT_0.10_R10_C.md) e
+[R10-D](AUDIT_0.10_R10_D.md).
 
 ### Executar e conferir
 
@@ -336,14 +350,16 @@ npm run audit:anatomy
 npm run audit:vascular
 npm run audit:presentation-budget
 npm run verify:presentation-budget
+npm run audit:procedural-surface
+npm run verify:procedural-surface
 npm run verify:promotion-0.8
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo check -p brain-wasm --target wasm32-unknown-unknown
 ```
 
-O audit de apresentação solicita GPU física por padrão e rejeita um renderer de
-software. `BRAIN_GRAPHICS_BACKEND=swiftshader npm run audit:presentation-budget`
+Os audits de apresentação e superfície solicitam GPU física por padrão e rejeitam
+um renderer de software. `BRAIN_GRAPHICS_BACKEND=swiftshader npm run audit:presentation-budget`
 serve apenas como diagnóstico local e não substitui o artefato aceito pelo gate.
 
 O gate web também gera capturas temporárias em desktop/mobile e audita teclado,
@@ -361,9 +377,9 @@ npm run verify:brain-gif
 ```
 
 O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v8,
-entra em `captureMode`, seleciona explicitamente o perfil `cinema` R10-C, aplica
+entra em `captureMode`, seleciona explicitamente o perfil `cinema` R10-D, aplica
 a película realista-ilustrativa e o corte coronal à Visão Geral, registra zero atlas
-externo, os cinco hashes independentes, a cobertura das seis vistas e o SHA-256 do GIF em
+externo, os cinco hashes independentes, o hash da superfície, a cobertura das seis vistas e o SHA-256 do GIF em
 [`assets/brain-gif.json`](assets/brain-gif.json), carimba o README com o commit
 de origem e só então publica os artefatos. O GitHub ainda pode levar alguns
 minutos para invalidar o cache do perfil.

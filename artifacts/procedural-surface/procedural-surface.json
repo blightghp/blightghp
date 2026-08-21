@@ -1,0 +1,1016 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-21T04:06:35.782Z",
+  "source": {
+    "commit": "d7ddff841f91f149ccbbf773b430b27f07182c0c",
+    "productVersion": "0.9.0",
+    "command": "npm run audit:procedural-surface",
+    "requestedGraphicsBackend": "hardware"
+  },
+  "environment": {
+    "browser": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
+      "platform": ""
+    },
+    "hardware": {
+      "logicalCores": 8,
+      "deviceMemoryGiB": 8,
+      "webglVendor": "Google Inc. (Intel)",
+      "webglRenderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00009BC4) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    "host": {
+      "cpu": "Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz",
+      "logicalCores": 8,
+      "memoryBytes": 8412778496,
+      "platform": "win32",
+      "release": "10.0.26200",
+      "architecture": "x64"
+    }
+  },
+  "surface": {
+    "schemaVersion": 1,
+    "algorithmVersion": "r10-d-simplex-ridge-v1",
+    "activeLod": "high",
+    "fallbackUsed": false,
+    "zeroPerFrameCpu": true,
+    "procedural": {
+      "schemaVersion": 1,
+      "algorithmVersion": "r10-d-simplex-ridge-v1",
+      "seed": 1369948382,
+      "buildMilliseconds": 77.90000000596046,
+      "buildCeilingMilliseconds": 120,
+      "totalTriangles": {
+        "high": 5780,
+        "low": 1500
+      },
+      "totalGeometryBytes": {
+        "high": 196968,
+        "low": 51448
+      },
+      "regions": [
+        {
+          "region": "leftHemi",
+          "lod": "high",
+          "seed": 1369948382,
+          "stream": 2091934749,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 9,
+          "vertices": 1002,
+          "triangles": 2000,
+          "geometryBytes": 68112,
+          "hash": "ebbc1fa4fe4691cf",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "leftHemi",
+          "lod": "low",
+          "seed": 1369948382,
+          "stream": 2091934749,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 4,
+          "vertices": 252,
+          "triangles": 500,
+          "geometryBytes": 17112,
+          "hash": "46d4419238fb02f7",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "rightHemi",
+          "lod": "high",
+          "seed": 1369948382,
+          "stream": 543448827,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 9,
+          "vertices": 1002,
+          "triangles": 2000,
+          "geometryBytes": 68112,
+          "hash": "c0e03595e0cd8f85",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "rightHemi",
+          "lod": "low",
+          "seed": 1369948382,
+          "stream": 543448827,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 4,
+          "vertices": 252,
+          "triangles": 500,
+          "geometryBytes": 17112,
+          "hash": "c42613411e67df87",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "cerebellum",
+          "lod": "high",
+          "seed": 1369948382,
+          "stream": 404690641,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 7,
+          "vertices": 642,
+          "triangles": 1280,
+          "geometryBytes": 43632,
+          "hash": "7460fc92b5e3227e",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "cerebellum",
+          "lod": "low",
+          "seed": 1369948382,
+          "stream": 404690641,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 3,
+          "vertices": 162,
+          "triangles": 320,
+          "geometryBytes": 10992,
+          "hash": "377fca8243ba99a1",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "stem",
+          "lod": "high",
+          "seed": 1369948382,
+          "stream": 1111518287,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 4,
+          "vertices": 252,
+          "triangles": 500,
+          "geometryBytes": 17112,
+          "hash": "856d68d387895ebf",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "stem",
+          "lod": "low",
+          "seed": 1369948382,
+          "stream": 1111518287,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 2,
+          "vertices": 92,
+          "triangles": 180,
+          "geometryBytes": 6232,
+          "hash": "72cc3028af261b0b",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        }
+      ],
+      "surfaceGeometryHash": "7dfdd64207190121",
+      "contractReady": true
+    }
+  },
+  "replaySurface": {
+    "schemaVersion": 1,
+    "algorithmVersion": "r10-d-simplex-ridge-v1",
+    "activeLod": "high",
+    "fallbackUsed": false,
+    "zeroPerFrameCpu": true,
+    "procedural": {
+      "schemaVersion": 1,
+      "algorithmVersion": "r10-d-simplex-ridge-v1",
+      "seed": 1369948382,
+      "buildMilliseconds": 60.099999994039536,
+      "buildCeilingMilliseconds": 120,
+      "totalTriangles": {
+        "high": 5780,
+        "low": 1500
+      },
+      "totalGeometryBytes": {
+        "high": 196968,
+        "low": 51448
+      },
+      "regions": [
+        {
+          "region": "leftHemi",
+          "lod": "high",
+          "seed": 1369948382,
+          "stream": 2091934749,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 9,
+          "vertices": 1002,
+          "triangles": 2000,
+          "geometryBytes": 68112,
+          "hash": "ebbc1fa4fe4691cf",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "leftHemi",
+          "lod": "low",
+          "seed": 1369948382,
+          "stream": 2091934749,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 4,
+          "vertices": 252,
+          "triangles": 500,
+          "geometryBytes": 17112,
+          "hash": "46d4419238fb02f7",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "rightHemi",
+          "lod": "high",
+          "seed": 1369948382,
+          "stream": 543448827,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 9,
+          "vertices": 1002,
+          "triangles": 2000,
+          "geometryBytes": 68112,
+          "hash": "c0e03595e0cd8f85",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "rightHemi",
+          "lod": "low",
+          "seed": 1369948382,
+          "stream": 543448827,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 4,
+          "vertices": 252,
+          "triangles": 500,
+          "geometryBytes": 17112,
+          "hash": "c42613411e67df87",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "cerebellum",
+          "lod": "high",
+          "seed": 1369948382,
+          "stream": 404690641,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 7,
+          "vertices": 642,
+          "triangles": 1280,
+          "geometryBytes": 43632,
+          "hash": "7460fc92b5e3227e",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "cerebellum",
+          "lod": "low",
+          "seed": 1369948382,
+          "stream": 404690641,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 3,
+          "vertices": 162,
+          "triangles": 320,
+          "geometryBytes": 10992,
+          "hash": "377fca8243ba99a1",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "stem",
+          "lod": "high",
+          "seed": 1369948382,
+          "stream": 1111518287,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 4,
+          "vertices": 252,
+          "triangles": 500,
+          "geometryBytes": 17112,
+          "hash": "856d68d387895ebf",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        },
+        {
+          "region": "stem",
+          "lod": "low",
+          "seed": 1369948382,
+          "stream": 1111518287,
+          "algorithm": "r10-d-simplex-ridge-v1",
+          "detail": 2,
+          "vertices": 92,
+          "triangles": 180,
+          "geometryBytes": 6232,
+          "hash": "72cc3028af261b0b",
+          "bakedAttributes": [
+            "aoFactor",
+            "curvature",
+            "thickness"
+          ]
+        }
+      ],
+      "surfaceGeometryHash": "7dfdd64207190121",
+      "contractReady": true
+    }
+  },
+  "lodEvidence": {
+    "baseline": {
+      "schemaVersion": 1,
+      "algorithmVersion": "r10-d-simplex-ridge-v1",
+      "activeLod": "low",
+      "fallbackUsed": false,
+      "zeroPerFrameCpu": true,
+      "procedural": {
+        "schemaVersion": 1,
+        "algorithmVersion": "r10-d-simplex-ridge-v1",
+        "seed": 1369948382,
+        "buildMilliseconds": 77.90000000596046,
+        "buildCeilingMilliseconds": 120,
+        "totalTriangles": {
+          "high": 5780,
+          "low": 1500
+        },
+        "totalGeometryBytes": {
+          "high": 196968,
+          "low": 51448
+        },
+        "regions": [
+          {
+            "region": "leftHemi",
+            "lod": "high",
+            "seed": 1369948382,
+            "stream": 2091934749,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 9,
+            "vertices": 1002,
+            "triangles": 2000,
+            "geometryBytes": 68112,
+            "hash": "ebbc1fa4fe4691cf",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "leftHemi",
+            "lod": "low",
+            "seed": 1369948382,
+            "stream": 2091934749,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 4,
+            "vertices": 252,
+            "triangles": 500,
+            "geometryBytes": 17112,
+            "hash": "46d4419238fb02f7",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "rightHemi",
+            "lod": "high",
+            "seed": 1369948382,
+            "stream": 543448827,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 9,
+            "vertices": 1002,
+            "triangles": 2000,
+            "geometryBytes": 68112,
+            "hash": "c0e03595e0cd8f85",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "rightHemi",
+            "lod": "low",
+            "seed": 1369948382,
+            "stream": 543448827,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 4,
+            "vertices": 252,
+            "triangles": 500,
+            "geometryBytes": 17112,
+            "hash": "c42613411e67df87",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "cerebellum",
+            "lod": "high",
+            "seed": 1369948382,
+            "stream": 404690641,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 7,
+            "vertices": 642,
+            "triangles": 1280,
+            "geometryBytes": 43632,
+            "hash": "7460fc92b5e3227e",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "cerebellum",
+            "lod": "low",
+            "seed": 1369948382,
+            "stream": 404690641,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 3,
+            "vertices": 162,
+            "triangles": 320,
+            "geometryBytes": 10992,
+            "hash": "377fca8243ba99a1",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "stem",
+            "lod": "high",
+            "seed": 1369948382,
+            "stream": 1111518287,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 4,
+            "vertices": 252,
+            "triangles": 500,
+            "geometryBytes": 17112,
+            "hash": "856d68d387895ebf",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "stem",
+            "lod": "low",
+            "seed": 1369948382,
+            "stream": 1111518287,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 2,
+            "vertices": 92,
+            "triangles": 180,
+            "geometryBytes": 6232,
+            "hash": "72cc3028af261b0b",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          }
+        ],
+        "surfaceGeometryHash": "7dfdd64207190121",
+        "contractReady": true
+      }
+    },
+    "enhanced": {
+      "schemaVersion": 1,
+      "algorithmVersion": "r10-d-simplex-ridge-v1",
+      "activeLod": "high",
+      "fallbackUsed": false,
+      "zeroPerFrameCpu": true,
+      "procedural": {
+        "schemaVersion": 1,
+        "algorithmVersion": "r10-d-simplex-ridge-v1",
+        "seed": 1369948382,
+        "buildMilliseconds": 77.90000000596046,
+        "buildCeilingMilliseconds": 120,
+        "totalTriangles": {
+          "high": 5780,
+          "low": 1500
+        },
+        "totalGeometryBytes": {
+          "high": 196968,
+          "low": 51448
+        },
+        "regions": [
+          {
+            "region": "leftHemi",
+            "lod": "high",
+            "seed": 1369948382,
+            "stream": 2091934749,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 9,
+            "vertices": 1002,
+            "triangles": 2000,
+            "geometryBytes": 68112,
+            "hash": "ebbc1fa4fe4691cf",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "leftHemi",
+            "lod": "low",
+            "seed": 1369948382,
+            "stream": 2091934749,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 4,
+            "vertices": 252,
+            "triangles": 500,
+            "geometryBytes": 17112,
+            "hash": "46d4419238fb02f7",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "rightHemi",
+            "lod": "high",
+            "seed": 1369948382,
+            "stream": 543448827,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 9,
+            "vertices": 1002,
+            "triangles": 2000,
+            "geometryBytes": 68112,
+            "hash": "c0e03595e0cd8f85",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "rightHemi",
+            "lod": "low",
+            "seed": 1369948382,
+            "stream": 543448827,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 4,
+            "vertices": 252,
+            "triangles": 500,
+            "geometryBytes": 17112,
+            "hash": "c42613411e67df87",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "cerebellum",
+            "lod": "high",
+            "seed": 1369948382,
+            "stream": 404690641,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 7,
+            "vertices": 642,
+            "triangles": 1280,
+            "geometryBytes": 43632,
+            "hash": "7460fc92b5e3227e",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "cerebellum",
+            "lod": "low",
+            "seed": 1369948382,
+            "stream": 404690641,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 3,
+            "vertices": 162,
+            "triangles": 320,
+            "geometryBytes": 10992,
+            "hash": "377fca8243ba99a1",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "stem",
+            "lod": "high",
+            "seed": 1369948382,
+            "stream": 1111518287,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 4,
+            "vertices": 252,
+            "triangles": 500,
+            "geometryBytes": 17112,
+            "hash": "856d68d387895ebf",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          },
+          {
+            "region": "stem",
+            "lod": "low",
+            "seed": 1369948382,
+            "stream": 1111518287,
+            "algorithm": "r10-d-simplex-ridge-v1",
+            "detail": 2,
+            "vertices": 92,
+            "triangles": 180,
+            "geometryBytes": 6232,
+            "hash": "72cc3028af261b0b",
+            "bakedAttributes": [
+              "aoFactor",
+              "curvature",
+              "thickness"
+            ]
+          }
+        ],
+        "surfaceGeometryHash": "7dfdd64207190121",
+        "contractReady": true
+      }
+    },
+    "semanticGeometryChanges": 0
+  },
+  "performance": {
+    "sampleCountPerProfile": 24,
+    "baselineOverview": {
+      "drawCalls": 54,
+      "triangles": 155000,
+      "textureBytes": 100663296,
+      "geometryBytes": 25165824,
+      "frameMillisecondsP95": 33.4,
+      "sampleCount": 24,
+      "frameMillisecondsP50": 2.800000011920929,
+      "measuredFrameMillisecondsP95": 5.199999988079071,
+      "measuredDrawCalls": 28,
+      "measuredTriangles": 16020,
+      "measuredTextureBytes": 61187040,
+      "measuredGeometryBytes": 453940,
+      "withinBudget": true
+    },
+    "enhancedOverview": {
+      "drawCalls": 72,
+      "triangles": 180000,
+      "textureBytes": 268435456,
+      "geometryBytes": 33554432,
+      "frameMillisecondsP95": 50,
+      "sampleCount": 24,
+      "frameMillisecondsP50": 2.699999988079071,
+      "measuredFrameMillisecondsP95": 6.9000000059604645,
+      "measuredDrawCalls": 59,
+      "measuredTriangles": 41374,
+      "measuredTextureBytes": 61187040,
+      "measuredGeometryBytes": 599460,
+      "withinBudget": true
+    },
+    "baselineContractReady": true,
+    "enhancedContractReady": true
+  },
+  "cutProbe": {
+    "clipping": {
+      "enabled": true,
+      "orientation": "coronal",
+      "slab": false,
+      "planeCount": 1,
+      "registeredLayers": 6,
+      "optedInLayers": 6,
+      "clippedMaterials": 110,
+      "capSources": 4,
+      "estimatedAdditionalDrawCalls": 9,
+      "maximumAdditionalDrawCalls": 18
+    },
+    "probe": {
+      "field": "field.waveActivity",
+      "unit": "normalized field activity",
+      "interpolation": "linear between adjacent published snapshots",
+      "available": true,
+      "sampling": "arithmetic mean of published cortical vertices within ±0.08 procedural scene units",
+      "sampleCount": 98,
+      "value": 1.4880180667461372e-7
+    }
+  },
+  "catalog": {
+    "catalog": {
+      "schemaVersion": 1,
+      "catalogId": "brain-pro-anatomy",
+      "version": "1.2.0",
+      "hash": "e00094527f1d839e",
+      "entries": 76,
+      "roots": 1,
+      "sources": 7,
+      "transforms": 6,
+      "externalAssets": 0,
+      "evidenceLevels": {
+        "PROCEDURAL": 6,
+        "ILLUSTRATIVE": 50,
+        "DIDACTIC": 12,
+        "FENOMENOLOGICAL": 2,
+        "MODEL_BOUND": 6,
+        "REFERENCE_GROUNDED": 0,
+        "CALIBRATED": 0
+      },
+      "issues": [],
+      "contractReady": true
+    },
+    "explorer": {
+      "catalog": {
+        "schemaVersion": 1,
+        "catalogId": "brain-pro-anatomy",
+        "version": "1.2.0",
+        "hash": "e00094527f1d839e",
+        "entries": 76,
+        "roots": 1,
+        "sources": 7,
+        "transforms": 6,
+        "externalAssets": 0,
+        "evidenceLevels": {
+          "PROCEDURAL": 6,
+          "ILLUSTRATIVE": 50,
+          "DIDACTIC": 12,
+          "FENOMENOLOGICAL": 2,
+          "MODEL_BOUND": 6,
+          "REFERENCE_GROUNDED": 0,
+          "CALIBRATED": 0
+        },
+        "issues": [],
+        "contractReady": true
+      },
+      "activeView": "overview",
+      "selectedId": "brain-pro:anatomy/encephalon",
+      "query": "",
+      "visibleResultIds": [
+        "brain-pro:anatomy/encephalon",
+        "brain-pro:anatomy/cerebrum",
+        "brain-pro:anatomy/cerebral-hemisphere-left",
+        "brain-pro:anatomy/cerebral-hemisphere-right",
+        "brain-pro:anatomy/cerebellum",
+        "brain-pro:anatomy/brainstem",
+        "brain-pro:anatomy/neocortex",
+        "brain-pro:anatomy/vascular-system",
+        "brain-pro:anatomy/arterial-tree",
+        "brain-pro:anatomy/venous-tree",
+        "brain-pro:anatomy/internal-carotid-artery-left",
+        "brain-pro:anatomy/internal-carotid-artery-right",
+        "brain-pro:anatomy/vertebral-artery-left",
+        "brain-pro:anatomy/vertebral-artery-right",
+        "brain-pro:anatomy/basilar-artery",
+        "brain-pro:anatomy/circle-of-willis",
+        "brain-pro:anatomy/anterior-communicating-artery",
+        "brain-pro:anatomy/posterior-communicating-artery-left",
+        "brain-pro:anatomy/posterior-communicating-artery-right",
+        "brain-pro:anatomy/anterior-cerebral-artery-left",
+        "brain-pro:anatomy/anterior-cerebral-artery-right",
+        "brain-pro:anatomy/middle-cerebral-artery-left",
+        "brain-pro:anatomy/middle-cerebral-artery-right",
+        "brain-pro:anatomy/posterior-cerebral-artery-left",
+        "brain-pro:anatomy/posterior-cerebral-artery-right",
+        "brain-pro:anatomy/pial-arterial-network",
+        "brain-pro:anatomy/superficial-cortical-vein",
+        "brain-pro:anatomy/deep-cerebral-vein",
+        "brain-pro:anatomy/internal-cerebral-vein-left",
+        "brain-pro:anatomy/internal-cerebral-vein-right",
+        "brain-pro:anatomy/basal-vein",
+        "brain-pro:anatomy/great-cerebral-vein",
+        "brain-pro:anatomy/superior-sagittal-sinus",
+        "brain-pro:anatomy/inferior-sagittal-sinus",
+        "brain-pro:anatomy/straight-sinus",
+        "brain-pro:anatomy/confluence-of-sinuses",
+        "brain-pro:anatomy/transverse-sinus-left",
+        "brain-pro:anatomy/transverse-sinus-right",
+        "brain-pro:anatomy/sigmoid-sinus-left",
+        "brain-pro:anatomy/sigmoid-sinus-right",
+        "brain-pro:anatomy/internal-jugular-vein-left",
+        "brain-pro:anatomy/internal-jugular-vein-right"
+      ]
+    },
+    "views": {
+      "overview": {
+        "totalRenderableObjects": 20,
+        "boundObjects": 19,
+        "explicitlyNonAnatomicalObjects": 1,
+        "catalogEntriesReferenced": 8,
+        "missingDeclarations": [],
+        "unknownEntryIds": [],
+        "missingEvidence": [],
+        "contractReady": true
+      },
+      "laminar": {
+        "totalRenderableObjects": 46,
+        "boundObjects": 31,
+        "explicitlyNonAnatomicalObjects": 15,
+        "catalogEntriesReferenced": 11,
+        "missingDeclarations": [],
+        "unknownEntryIds": [],
+        "missingEvidence": [],
+        "contractReady": true
+      },
+      "cell": {
+        "totalRenderableObjects": 7,
+        "boundObjects": 4,
+        "explicitlyNonAnatomicalObjects": 3,
+        "catalogEntriesReferenced": 4,
+        "missingDeclarations": [],
+        "unknownEntryIds": [],
+        "missingEvidence": [],
+        "contractReady": true
+      },
+      "neuron": {
+        "totalRenderableObjects": 11,
+        "boundObjects": 5,
+        "explicitlyNonAnatomicalObjects": 6,
+        "catalogEntriesReferenced": 5,
+        "missingDeclarations": [],
+        "unknownEntryIds": [],
+        "missingEvidence": [],
+        "contractReady": true
+      },
+      "electricity": {
+        "totalRenderableObjects": 11,
+        "boundObjects": 2,
+        "explicitlyNonAnatomicalObjects": 9,
+        "catalogEntriesReferenced": 1,
+        "missingDeclarations": [],
+        "unknownEntryIds": [],
+        "missingEvidence": [],
+        "contractReady": true
+      },
+      "synapse": {
+        "totalRenderableObjects": 15,
+        "boundObjects": 9,
+        "explicitlyNonAnatomicalObjects": 6,
+        "catalogEntriesReferenced": 9,
+        "missingDeclarations": [],
+        "unknownEntryIds": [],
+        "missingEvidence": [],
+        "contractReady": true
+      }
+    }
+  },
+  "hashInvariance": {
+    "fields": [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash"
+    ],
+    "baseline": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "final": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "scientificInvariant": true,
+    "surfaceInvariant": true
+  },
+  "captures": [
+    "surface-low-baseline.png",
+    "surface-high-anterior.png",
+    "surface-high-lateral-left.png",
+    "surface-high-posterior.png",
+    "surface-high-lateral-right.png",
+    "surface-review-overview.png",
+    "surface-review-laminar.png",
+    "surface-review-cell.png",
+    "surface-review-neuron.png",
+    "surface-review-electricity.png",
+    "surface-review-synapse.png",
+    "surface-high-coronal-cut.png"
+  ],
+  "captureCoverage": {
+    "surface-low-baseline.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2283,
+      "sampledPixels": 6144
+    },
+    "surface-high-anterior.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2284,
+      "sampledPixels": 6144
+    },
+    "surface-high-lateral-left.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2200,
+      "sampledPixels": 6144
+    },
+    "surface-high-posterior.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2601,
+      "sampledPixels": 6144
+    },
+    "surface-high-lateral-right.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2211,
+      "sampledPixels": 6144
+    },
+    "surface-review-overview.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2315,
+      "sampledPixels": 6144
+    },
+    "surface-review-laminar.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 435,
+      "sampledPixels": 6144
+    },
+    "surface-review-cell.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 493,
+      "sampledPixels": 6144
+    },
+    "surface-review-neuron.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 129,
+      "sampledPixels": 6144
+    },
+    "surface-review-electricity.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2811,
+      "sampledPixels": 6144
+    },
+    "surface-review-synapse.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 1067,
+      "sampledPixels": 6144
+    },
+    "surface-high-coronal-cut.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 1963,
+      "sampledPixels": 6144
+    }
+  },
+  "browserErrors": []
+}

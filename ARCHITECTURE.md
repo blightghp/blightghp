@@ -1,6 +1,6 @@
 # Arquitetura canônica · BRAIN PRO
 
-**Documento:** revisão 6 · 20 de agosto de 2026
+**Documento:** revisão 7 · 21 de agosto de 2026
 
 **Produto observado:** 0.9.0
 
@@ -35,6 +35,7 @@ como planejada e nunca é descrita como implementada.
 | ARC-018 | catálogo anatômico é registro versionado de metadados e seleção, separado do estado científico e da geometria | aceita em R10-A | entrada de atlas externo ou ID persistido exige migração/fonte/licença próprias |
 | ARC-019 | perfil de renderização é dimensão de apresentação independente do perfil de material; `cinema` pertence exclusivamente ao modo de captura | aceita em R10-C | R10-G pode ampliar qualidade de captura sem torná-la interativa |
 | ARC-020 | topologia vascular é contrato próprio em `src/vascular`, separado da árvore de contenção do catálogo anatômico | aceita em R10-B | fonte externa de vasos com geometria própria exige pipeline e migração deliberados |
+| ARC-021 | geometria anatômica de apresentação é procedural, determinística, construída uma vez e troca apenas entre LODs da mesma família sem trabalho por frame | aceita em R10-D | asset externo com proveniência aprovado em R10-H |
 | ARC-022 | orçamento gráfico é contrato versionado por perfil/vista e possui governador, artefato e gate de regressão | aceita em R10-C | somente uma nova baseline medida e auditada substitui os tetos |
 
 ## Contexto do sistema
@@ -88,6 +89,7 @@ flowchart TB
 | aplicação | `main.ts`, `schema.ts`, `clock.ts`, `performance-profile.ts` | bootstrap, estado de UI, cadência, controles, métricas | mutar buffers científicos |
 | tarefa experimental | `experiment.ts`, `inference.ts` | posterior Bayesiana escalar | schema/adapter/replay próprios; permanece experimental e não alimenta o drive |
 | gráficos | `src/render/*` | scene graph, materiais, passes, tokens, LOD e proveniência | eventos/valores inexistentes no snapshot |
+| superfície de apresentação | `procedural-surface.ts`, `brain-layer.ts` | ajustar icosferas à nuvem regional, assar AO/curvatura/espessura, manter hash e LODs | nomear sulcos, alterar estado científico ou reconstruir por frame |
 | topologia visual | `brain.ts` | geometria e conectividade procedural serializada ao motor | afirmar anatomia parcelada |
 | desktop | `src-tauri` | janela, CSP, comando de metadados e opener | segundo motor |
 | validação | Cargo/Vitest/scripts/fixtures | provar contratos e capturar evidência | promover por nome de teste apenas |
@@ -506,7 +508,9 @@ flowchart LR
     F --> CATALOG["R10-A catalog"]
     CATALOG --> VASCULAR["R10-B vascular graph"]
     VASCULAR --> BUDGET["R10-C render budget"]
-    BUDGET --> ATLAS["R10-H external asset pipeline"]
+    BUDGET --> SURFACE["R10-D procedural surface"]
+    SURFACE --> LIGHT["R10-E light/material"]
+    SURFACE --> ATLAS["R10-H external asset pipeline"]
     A --> EXP["R11 experiments"]
 ```
 

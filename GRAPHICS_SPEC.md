@@ -1,6 +1,6 @@
 # Especificação gráfica e de proveniência · BRAIN PRO
 
-**Revisão:** 9 · R10-C validado em Three.js 0.185/WebGL · produto 0.9.0
+**Revisão:** 10 · R10-D validado em Three.js 0.185/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
 preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
@@ -31,6 +31,8 @@ fidelidade entre estado calculado e estado mostrado.
 | GFX-075 | fabricação por vista exige captura comparativa, orçamento GPU e auditoria `materialProfileAudit()` sem lacunas. |
 | GFX-080 | `baseline`, `enhanced` e `cinema` são perfis de custo independentes da materialidade; `cinema` é inalcançável fora da captura. |
 | GFX-081 | pressão sustentada em `enhanced` degrada para `baseline` com motivo público, histerese e recuperação manual; o governador nunca altera estado científico. |
+| GFX-082 | geometria anatômica procedural declara seed, stream, algoritmo, triângulos e hash FNV-1a de 64 bits. |
+| GFX-083 | `aoFactor`, `curvature` e `thickness` são atributos assados determinísticos, cobertos pelo hash e nunca reinterpretados como grandezas científicas. |
 | AST-001 | anatomia detalhada não implica validação biológica. |
 | AST-002 | estrutura entra por função, orientação decorativa ou proveniência topológica declarada. |
 | AST-010 | morfologia procedural declara seed, stream, hash e limite ilustrativo; não afirma tipo celular real. |
@@ -39,6 +41,7 @@ fidelidade entre estado calculado e estado mostrado.
 | AST-032 | toda entrada resolve sistema de coordenadas, unidade, escala, orientação e transformação, sem converter unidade procedural em calibração. |
 | AST-033 | nível de evidência, afirmação permitida e ao menos uma limitação são explícitos e não são elevados pela aparência. |
 | AST-034 | cada objeto renderizável aponta diretamente para uma entrada do catálogo ou declara por que não representa anatomia. |
+| AST-035 | girificação procedural é ruído determinístico; nenhum sulco, giro ou área recebe nome sem geometria/fonte correspondente. |
 | AST-036 | nomenclatura/conectividade de referência não elevam geometria ilustrativa; o nível declarado é o mais fraco e a diferença aparece em afirmações/limitações. |
 | VAS-001 | fluxo/perfusão/oxigenação só animam com estado/modelo correspondente. |
 | VAS-002 | todo segmento resolve classe, ordem, lado, vistas e entrada do catálogo. |
@@ -90,7 +93,7 @@ prova que o campo declarado pintou o pixel correto.
 
 | Layer | Objetos principais | Fonte | Limite conhecido |
 | :-- | :-- | :-- | :-- |
-| `BrainRenderLayers` | pontos, cascas convexas, conexões e pulsos | rede/campo/topologia procedural | aloca array interpolado e limpa 900 instâncias por frame |
+| `BrainRenderLayers` | pontos, superfície procedural em dois LODs, conexões e pulsos | rede/campo/topologia procedural | superfície e atributos são construídos uma vez; atualização por frame só lê estado publicado |
 | `LaminarRenderLayer` | L1–L6 E/I, vias, relé e TRN | snapshot corticotalâmico | coluna didática, não anatomia |
 | `CellRenderLayer` | 12 somas, dendritos, halos e contorno | patch | vista Célula; soma/proximal/distal publicados |
 | `ElectricalBoardLayer` | 12 nós, barras V, anéis S, vias e eventos | patch + topologia macro rotulada | esquema próprio; 6/10/11 draws conforme detalhe |
@@ -230,12 +233,34 @@ autoriza incorporar um atlas de terceiros.
 | :-- | :-- | :-- | :-- | :-- |
 | escalpo/crânio | orientação | DECORATION → TOPOLOGY | pós-baseline | desligados por padrão; sem afirmação clínica |
 | meninges/pia | ensinar relações de cobertura | DECORATION → TOPOLOGY | com tarefa educacional | transparência/recorte; escala declarada |
-| córtex/superfície | suporte da leitura macro | procedural DECORATION; atlas TOPOLOGY | 0.9/1.0 | casca atual não é variedade anatômica |
+| córtex/superfície | suporte da leitura macro | procedural DECORATION; atlas TOPOLOGY | R10-D/1.0 | dobras atuais são ruído determinístico, não uma variedade anatômica de sujeito |
 | L1–L6 | ligar coluna ao patch | STATE no esquema; anatomia futura | já há coluna didática | espessura não calibrada |
 | substância branca/feixes | orientação causal | TOPOLOGY | com fonte/IDs | não chamar de tractografia detalhada |
 | tálamo/TRN | circuito existente | STATE/TOPOLOGY | existente na coluna | agregados fenomenológicos |
 | hipotálamo/amígdala/hipocampo/basal | função futura | DECORATION proibida como atividade | quando circuito/tarefa existir | não animar sem estado |
 | cerebelo/tronco | orientação procedural | TOPOLOGY procedural | existente na visão geral | fora do campo cortical atual |
+
+### Superfície procedural R10-D
+
+`buildProceduralSurfaceSet()` constrói quatro regiões a partir da mesma seed e
+das mesmas nuvens de pontos usadas pela topologia. A base é uma icosfera indexada;
+um envelope regional por função radial orientada ajusta a macroforma. Simplex 3D
+com domain warp e três oitavas produz relevo ridged nos hemisférios; o cerebelo
+usa bandas quase paralelas e maior frequência relativa. A face medial é achatada
+para manter a fissura longitudinal.
+
+Cada região possui `high` e `low`, construídos na inicialização. O perfil de
+render escolhe o LOD e troca `BufferGeometry` da mesma
+`presentationGeometryFamily`; não existe reconstrução nem amostragem de ruído no
+laço de frame. O conjunto auditado usa 5.780/1.500 triângulos e 196.968/51.448
+bytes de geometria. A construção+baking mediu 77,9 ms contra teto de 120 ms.
+
+Os atributos `aoFactor`, `curvature`, `thickness`, `color` e `uv` são assados.
+Posições quantizadas, três atributos e índices entram no hash de 64 bits
+`7dfdd64207190121`. Falha de input, orçamento ou construção descarta o lote
+inteiro e restaura as quatro `ConvexGeometry`; nunca mistura regiões. As quatro
+entradas regionais do catálogo 1.2.0 declaram que o padrão não corresponde a
+sulcos nomeados.
 | ventrículos | orientação | DECORATION/TOPOLOGY | opcional | sem fluxo de LCR sem modelo |
 | vascular | orientação/fluxo futuro | TOPOLOGY; STATE somente com hemodinâmica | 0.10+ | ver VAS-001 |
 | patch/neurônio/sinapse | escalas científicas | STATE + TOPOLOGY | compartimentos passivos publicados; morfologia fina continua ilustrativa | selo de resolução obrigatório |
@@ -474,9 +499,11 @@ Ordem de otimização:
 5. GPU para partículas/culling/volume com fallback;
 6. WebGPU após paridade e ganho demonstrado.
 
-Lacunas atuais prioritárias: `Float32Array` interpolado por frame, novos
-`Vector3`/`Quaternion` em loops, limpeza de 900 matrizes e atualização de
-visibilidade dependente apenas da UI executada no frame.
+Lacunas atuais prioritárias: iluminação/tone mapping ainda não usa os atributos
+assados de espessura/oclusão; as formas celulares permanecem primitivas; e o
+envelope vascular continua apenas topológico. Buffer cortical, cauda instanciada,
+partições de bloom, clipping e superfície já possuem reuso/cache ou construção
+fora do frame nos envelopes auditados.
 
 Perfis:
 
@@ -497,6 +524,8 @@ degradação reduz qualidade/cadência visual; nunca equações.
 - saturação/bloom abaixo do teto;
 - modo monocromático com distinções verificadas, não só `grayscale`;
 - câmera, LOD, corte, opacidade e isolamento preservam hashes;
+- superfície prova hash geométrico repetível, atributos baked, dois LODs,
+  construção fora do frame e fallback atômico;
 - contraste, teclado, touch e movimento reduzido;
 - clipping, seleção, labels, perda de contexto e dispose;
 - orçamento por vista e baseline em hardware real.

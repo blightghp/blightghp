@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "sourceCommit": "31348b1157286ed91062b16f116adbb7ad22819e",
-  "gifSha256": "e7e42755a061783b6a043d14f52044b06cf8509c9998af46b9ec59d44b8c5f80",
+  "sourceCommit": "d7ddff841f91f149ccbbf773b430b27f07182c0c",
+  "gifSha256": "ee45d52313f7707bb956ab19feb3284bed6207bae1f82f53833ba79133135949",
   "engine": {
     "runtime": "rust-wasm",
     "abiSchemaVersion": 8,
@@ -27,6 +27,7 @@
       "synapse": 9
     },
     "presentation": {
+      "renderProfile": "cinema",
       "materialProfile": "realistic-illustrative",
       "clipping": {
         "view": "overview",
@@ -34,7 +35,8 @@
         "slab": false,
         "frames": 15
       },
-      "externalAtlasAssets": 0
+      "externalAtlasAssets": 0,
+      "surfaceGeometryHash": "7dfdd64207190121"
     }
   }
 }
