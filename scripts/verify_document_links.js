@@ -1,15 +1,25 @@
-import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 const projectRoot = process.cwd();
-const markdownFiles = execFileSync(
-  "rg",
-  ["--files", "-g", "*.md", "-g", "!node_modules/**", "-g", "!target/**"],
-  { cwd: projectRoot, encoding: "utf8" },
-)
-  .split(/\r?\n/u)
-  .filter(Boolean);
+const ignoredDirectories = new Set([".git", "dist", "node_modules", "target"]);
+
+function collectMarkdownFiles(directory, relativeDirectory = "") {
+  const files = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const relativePath = path.join(relativeDirectory, entry.name);
+    if (entry.isDirectory()) {
+      if (!ignoredDirectories.has(entry.name)) {
+        files.push(...collectMarkdownFiles(path.join(directory, entry.name), relativePath));
+      }
+    } else if (entry.isFile() && entry.name.endsWith(".md")) {
+      files.push(relativePath.replaceAll("\\", "/"));
+    }
+  }
+  return files;
+}
+
+const markdownFiles = collectMarkdownFiles(projectRoot).sort();
 
 const unexpectedRootDocs = markdownFiles.filter(
   (file) => path.dirname(file) === "." && file !== "README.md",
