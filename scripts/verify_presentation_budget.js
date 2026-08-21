@@ -27,6 +27,16 @@ if (!report.hashInvariance?.invariant || !report.cinemaIsolation?.rejectedOutsid
 if (report.browserErrors?.length) {
   throw new Error(`presentation budget browser errors: ${report.browserErrors.join(" | ")}`);
 }
+if (
+  !Array.isArray(report.captures) ||
+  report.captures.length !== 12 ||
+  report.captures.some((capture) => {
+    const coverage = report.captureCoverage?.[capture];
+    return !coverage || coverage.visiblePixels < 8 || coverage.sampledPixels < 1;
+  })
+) {
+  throw new Error("presentation budget artifact contains an empty or unaudited capture");
+}
 for (const view of views) {
   const measured = report.measurement?.views?.[view];
   const reference = report.reference?.views?.[view];

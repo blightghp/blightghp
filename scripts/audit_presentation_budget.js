@@ -23,6 +23,49 @@ const hashFields = [
   "cellSpikeEventHash",
 ];
 
+async function captureRenderedCanvas(page, outputPath, rotation) {
+  const capture = await page.evaluate((captureRotation) => {
+    window.__BRAIN_ENGINE__.setCameraRotation(captureRotation);
+    const canvas = document.querySelector("#canvas-container canvas");
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      throw new Error("presentation canvas is unavailable");
+    }
+    const probe = document.createElement("canvas");
+    probe.width = 96;
+    probe.height = 64;
+    const context = probe.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("presentation capture probe is unavailable");
+    context.drawImage(canvas, 0, 0, probe.width, probe.height);
+    const pixels = context.getImageData(0, 0, probe.width, probe.height).data;
+    let visiblePixels = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      if (
+        pixels[index + 3] > 8 &&
+        pixels[index] + pixels[index + 1] + pixels[index + 2] > 12
+      ) {
+        visiblePixels += 1;
+      }
+    }
+    return {
+      dataUrl: canvas.toDataURL("image/png"),
+      width: canvas.width,
+      height: canvas.height,
+      visiblePixels,
+      sampledPixels: probe.width * probe.height,
+    };
+  }, rotation);
+  if (capture.visiblePixels < 8 || !capture.dataUrl.startsWith("data:image/png;base64,")) {
+    throw new Error(`presentation capture is visually empty: ${outputPath}`);
+  }
+  await writeFile(outputPath, Buffer.from(capture.dataUrl.split(",", 2)[1], "base64"));
+  return {
+    width: capture.width,
+    height: capture.height,
+    visiblePixels: capture.visiblePixels,
+    sampledPixels: capture.sampledPixels,
+  };
+}
+
 // R10-B reference = R09-F measured per-view renderer cost plus the exact static
 // vascular marginal audited in artifacts/vascular-audit/vascular-audit.json.
 const r10bReference = {
@@ -102,6 +145,7 @@ try {
   const hashBaseline = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   const measurementViews = {};
   const captures = [];
+  const captureCoverage = {};
   for (const view of views) {
     await page.evaluate((activeView) => {
       window.__BRAIN_ENGINE__.setView(activeView);
@@ -117,11 +161,11 @@ try {
     const presentation = await page.evaluate(() => window.__BRAIN_ENGINE__.presentationAudit());
     measurementViews[view] = presentation.budget.views[view];
     const filename = `baseline-${view}.png`;
-    const canvas = await page.$("#canvas-container canvas");
-    if (!canvas) throw new Error("presentation canvas is unavailable");
-    await canvas.screenshot({
-      path: path.join(outputDirectory, filename),
-    });
+    captureCoverage[filename] = await captureRenderedCanvas(
+      page,
+      path.join(outputDirectory, filename),
+      0.34,
+    );
     captures.push(filename);
   }
 
@@ -134,11 +178,11 @@ try {
       window.__BRAIN_ENGINE__.setCameraRotation(0.34);
     }, view);
     const filename = `visual-${view}-enhanced.png`;
-    const canvas = await page.$("#canvas-container canvas");
-    if (!canvas) throw new Error("presentation canvas is unavailable");
-    await canvas.screenshot({
-      path: path.join(outputDirectory, filename),
-    });
+    captureCoverage[filename] = await captureRenderedCanvas(
+      page,
+      path.join(outputDirectory, filename),
+      0.34,
+    );
     captures.push(filename);
   }
   const finalPresentation = await page.evaluate(() => window.__BRAIN_ENGINE__.presentationAudit());
@@ -220,6 +264,7 @@ try {
       invariant: hashInvariant,
     },
     captures,
+    captureCoverage,
     browserErrors,
   };
   const artifact = path.join(outputDirectory, "presentation-budget.json");
