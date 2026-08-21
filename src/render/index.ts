@@ -8,6 +8,7 @@ export * from "./material-profile";
 export * from "./neuron-layer";
 export * from "./procedural-textures";
 export * from "./presentation-budget";
+export * from "./procedural-surface";
 export * from "./render-types";
 export * from "./rendered-state-probe";
 export * from "./selective-bloom";

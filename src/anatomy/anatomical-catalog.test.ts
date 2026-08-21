@@ -24,18 +24,33 @@ describe("anatomical catalog schema 1", () => {
     expect(audit).toMatchObject({
       schemaVersion: 1,
       catalogId: "brain-pro-anatomy",
-      version: "1.1.0",
+      version: "1.2.0",
       roots: 1,
       externalAssets: 0,
       contractReady: true,
       issues: [],
     });
     expect(audit.entries).toBe(76);
-    expect(audit.sources).toBe(6);
+    expect(audit.sources).toBe(7);
     expect(audit.transforms).toBe(6);
     expect(audit.hash).toMatch(/^[a-f0-9]{16}$/);
     expect(Object.isFrozen(ANATOMICAL_CATALOG)).toBe(true);
     expect(Object.isFrozen(ANATOMICAL_CATALOG.entries)).toBe(true);
+  });
+
+  it("labels every R10-D surface region as deterministic, unnamed procedural anatomy", () => {
+    for (const id of [
+      "brain-pro:anatomy/cerebral-hemisphere-left",
+      "brain-pro:anatomy/cerebral-hemisphere-right",
+      "brain-pro:anatomy/cerebellum",
+      "brain-pro:anatomy/brainstem",
+    ]) {
+      const entry = anatomicalEntryById(id);
+      expect(entry?.sourceId).toBe("source.surface-generator");
+      expect(entry?.evidence.limitations.join(" ")).toContain(
+        "não corresponde a sulcos nomeados",
+      );
+    }
   });
 
   it("resolves source, license and coordinate transform for every entry", () => {

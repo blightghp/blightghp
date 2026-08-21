@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogId": "brain-pro-anatomy",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "license": {
     "id": "brain-pro-internal",
     "expression": "LicenseRef-BRAIN-PRO-INTERNAL",
@@ -58,6 +58,15 @@
       "id": "source.vascular-generator",
       "kind": "procedural-generator",
       "locator": "src/vascular/vascular-layer.ts#VascularTopologyModule",
+      "version": "1",
+      "licenseId": "brain-pro-internal",
+      "externalAsset": false,
+      "assetSha256": null
+    },
+    {
+      "id": "source.surface-generator",
+      "kind": "procedural-generator",
+      "locator": "src/render/procedural-surface.ts#buildProceduralSurfaceSet",
       "version": "1",
       "licenseId": "brain-pro-internal",
       "externalAsset": false,
@@ -156,7 +165,7 @@
       "evidence": {
         "level": "PROCEDURAL",
         "claim": "Agrupa os hemisférios procedurais esquerdo e direito.",
-        "limitations": ["A casca convexa não reproduz giros, sulcos ou parcelamento real."]
+        "limitations": ["Agrupamento procedural sem parcelamento ou correspondência com um sujeito real."]
       }
     },
     {
@@ -167,12 +176,15 @@
       "laterality": "left",
       "scale": "region",
       "views": ["overview"],
-      "sourceId": "source.overview-generator",
+      "sourceId": "source.surface-generator",
       "transformId": "transform.overview-procedural",
       "evidence": {
         "level": "PROCEDURAL",
         "claim": "Identifica o lote procedural apresentado no lado esquerdo.",
-        "limitations": ["Sem áreas corticais ou correspondência de sujeito."]
+        "limitations": [
+          "Sem áreas corticais ou correspondência de sujeito.",
+          "Girificação procedural: o padrão de sulcos é ruído determinístico e não corresponde a sulcos nomeados."
+        ]
       }
     },
     {
@@ -183,12 +195,15 @@
       "laterality": "right",
       "scale": "region",
       "views": ["overview"],
-      "sourceId": "source.overview-generator",
+      "sourceId": "source.surface-generator",
       "transformId": "transform.overview-procedural",
       "evidence": {
         "level": "PROCEDURAL",
         "claim": "Identifica o lote procedural apresentado no lado direito.",
-        "limitations": ["Sem áreas corticais ou correspondência de sujeito."]
+        "limitations": [
+          "Sem áreas corticais ou correspondência de sujeito.",
+          "Girificação procedural: o padrão de sulcos é ruído determinístico e não corresponde a sulcos nomeados."
+        ]
       }
     },
     {
@@ -199,12 +214,15 @@
       "laterality": "bilateral",
       "scale": "region",
       "views": ["overview"],
-      "sourceId": "source.overview-generator",
+      "sourceId": "source.surface-generator",
       "transformId": "transform.overview-procedural",
       "evidence": {
         "level": "PROCEDURAL",
         "claim": "Fornece contexto topológico posterior-inferior.",
-        "limitations": ["Não contém foliação, núcleos ou circuito cerebelar real."]
+        "limitations": [
+          "A foliação é ilustrativa; não contém núcleos ou circuito cerebelar real.",
+          "Girificação procedural: o padrão de sulcos é ruído determinístico e não corresponde a sulcos nomeados."
+        ]
       }
     },
     {
@@ -215,12 +233,15 @@
       "laterality": "midline",
       "scale": "region",
       "views": ["overview"],
-      "sourceId": "source.overview-generator",
+      "sourceId": "source.surface-generator",
       "transformId": "transform.overview-procedural",
       "evidence": {
         "level": "PROCEDURAL",
         "claim": "Fornece contexto topológico inferior do encéfalo.",
-        "limitations": ["Mesencéfalo, ponte e bulbo não estão parcelados."]
+        "limitations": [
+          "Mesencéfalo, ponte e bulbo não estão parcelados.",
+          "Girificação procedural: o padrão de sulcos é ruído determinístico e não corresponde a sulcos nomeados."
+        ]
       }
     },
     {

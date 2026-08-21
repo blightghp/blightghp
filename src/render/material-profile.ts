@@ -79,6 +79,11 @@ export const REALISTIC_ILLUSTRATIVE_MANIFEST: RealisticIllustrativeManifest = {
 
 type MaterialMesh = THREE.Mesh & { material: THREE.Material };
 
+function semanticGeometryIdentity(geometry: THREE.BufferGeometry): string {
+  const family = geometry.userData.presentationGeometryFamily;
+  return typeof family === "string" && family.length > 0 ? `family:${family}` : `uuid:${geometry.uuid}`;
+}
+
 interface PhysicalMaterialRecord {
   readonly view: SimulationView;
   readonly object: MaterialMesh;
@@ -446,7 +451,7 @@ export class RealisticIllustrativeMaterialManager {
       record.object.castShadow = false;
       record.object.receiveShadow = false;
       declareMaterialEligibility(record.object, record.eligibility);
-      this.originalGeometryIds.set(record.object, record.object.geometry.uuid);
+      this.originalGeometryIds.set(record.object, semanticGeometryIdentity(record.object.geometry));
       this.managed.push(record);
     }
     this.roots.add(root);
@@ -504,7 +509,8 @@ export class RealisticIllustrativeMaterialManager {
         (record) => (record.object.material as THREE.MeshPhysicalMaterial).transmission > 0,
       ).length,
       semanticGeometryChanges: records.filter(
-        (record) => this.originalGeometryIds.get(record.object) !== record.object.geometry.uuid,
+        (record) => this.originalGeometryIds.get(record.object) !==
+          semanticGeometryIdentity(record.object.geometry),
       ).length,
       estimatedAdditionalObjectDraws: physical.filter((record) => {
         const material = record.object.material as THREE.MeshPhysicalMaterial;

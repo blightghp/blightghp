@@ -57,9 +57,11 @@ function validateCapture(capture) {
     presentation?.clipping?.orientation !== "coronal" ||
     presentation?.clipping?.slab !== false ||
     presentation?.clipping?.frames !== BRAIN_GIF_VIEW_FRAMES.overview ||
-    presentation?.externalAtlasAssets !== 0
+    presentation?.externalAtlasAssets !== 0 ||
+    (presentation?.surfaceGeometryHash !== undefined &&
+      !HASH_PATTERN.test(presentation.surfaceGeometryHash))
   ) {
-    throw new Error("GIF capture must declare the canonical R10-C presentation profile");
+    throw new Error("GIF capture must declare the canonical R10-D presentation profile");
   }
 }
 

@@ -51,8 +51,8 @@ function assertVascularAudit(audit) {
 
 function assertSceneCoverage(audit) {
   if (
-    audit.catalog.version !== "1.1.0" || audit.catalog.entries !== 76 ||
-    audit.catalog.sources !== 6 || audit.catalog.transforms !== 6 ||
+    audit.catalog.version !== "1.2.0" || audit.catalog.entries !== 76 ||
+    audit.catalog.sources !== 7 || audit.catalog.transforms !== 6 ||
     audit.catalog.evidenceLevels.CALIBRATED !== 0 || !audit.catalog.contractReady ||
     Object.keys(audit.views).sort().join(",") !== expectedViews.join(",") ||
     Object.values(audit.views).some((view) => !view.contractReady)
