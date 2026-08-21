@@ -12,7 +12,7 @@
 
 R08-P4 reuniu as provas independentes de P1–P3 sem alterar equações, fixtures,
 ABI ou hashes científicos. O artefato
-[`artifacts/promotion-0.8.json`](artifacts/promotion-0.8.json) liga a candidata,
+[`../../../artifacts/promotion-0.8.json`](../../../artifacts/promotion-0.8.json) liga a candidata,
 as quatro fases, a matriz executada, os achados residuais e o rollback. O comando
 `npm run verify:promotion-0.8` rejeita divergência entre:
 

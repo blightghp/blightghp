@@ -32,9 +32,9 @@
     }
   ],
   "evidence": [
-    "AUDIT_0.8_ENTRY.md",
-    "AUDIT_0.8_ABI_V6.md",
-    "AUDIT_0.8_GRAPHICS.md",
+    "docs/audits/0.8/AUDIT_0.8_ENTRY.md",
+    "docs/audits/0.8/AUDIT_0.8_ABI_V6.md",
+    "docs/audits/0.8/AUDIT_0.8_GRAPHICS.md",
     "artifacts/visual-audit/runtime-audit.json",
     "artifacts/hardware-audit/runtime-audit.json"
   ],

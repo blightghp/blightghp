@@ -1,6 +1,6 @@
 # Índice de documentação legacy
 
-> **LEGACY — os arquivos abaixo são preservados para rastreabilidade histórica. O [ROADMAP canônico](../../ROADMAP.md) e as especificações da raiz são as únicas instruções vigentes.**
+> **LEGACY — os arquivos abaixo são preservados para rastreabilidade histórica. O [ROADMAP canônico](../planning/ROADMAP.md) e as [especificações vigentes](../README.md#especificações-vigentes) são as únicas instruções atuais.**
 
 Auditorias continuam na raiz porque são evidência de gates executados, não
 roadmaps ativos.

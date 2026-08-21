@@ -5,8 +5,8 @@
 **Relação com o [ROADMAP](ROADMAP.md):** este arquivo é o detalhamento executável dos cortes
 `R10-B`..`R10-H`. O ROADMAP continua sendo o índice canônico; a §10 deste plano traz a
 tabela pronta que substitui a seção `0.10` de lá quando o primeiro corte abrir. Ao
-encerrar a fase, este documento é aposentado em [`docs/legacy/plans`](docs/legacy/README.md)
-e cada corte deixa sua própria `AUDIT_0.10_R10_x.md`.
+encerrar a fase, este documento é aposentado em [`docs/legacy/plans`](../legacy/README.md)
+e cada corte deixa sua própria auditoria em `../audits/0.10/`.
 
 ---
 
@@ -44,7 +44,7 @@ Proibições que atravessam a fase inteira, herdadas e reforçadas:
 
 ## 1 · Decisões arquiteturais novas
 
-Registrar em [ARCHITECTURE.md](ARCHITECTURE.md) §"Decisões vigentes":
+Registrar em [ARCHITECTURE.md](../specifications/ARCHITECTURE.md) §"Decisões vigentes":
 
 | ID | Decisão | Estado | Reversão exige |
 | :-- | :-- | :-- | :-- |
@@ -191,11 +191,11 @@ produziria uma hierarquia falsa.
 
 Portanto:
 
-- **`src/anatomy/catalog-v1.json`** ganha 44 entradas novas que declaram *identidade,
+- **`../../src/anatomy/catalog-v1.json`** ganha 44 entradas novas que declaram *identidade,
   contenção, lado, escala, fonte, licença, transformação, evidência e limite*. O
   `parentId` expressa **contenção/agrupamento**, jamais direção de fluxo — isso passa a
   estar escrito na descrição da transformação nova.
-- **`src/vascular/vascular-topology-v1.json`** (schema 1, novo) declara o **grafo**:
+- **`../../src/vascular/vascular-topology-v1.json`** (schema 1, novo) declara o **grafo**:
   segmentos, classe, ordem de ramificação, montante/jusante, anastomose, pontos de
   controle e perfil de raio de apresentação.
 
@@ -280,7 +280,7 @@ ultraestrutura medida.”
 
 ### 4.5 O contrato de topologia vascular
 
-Arquivo: `src/vascular/vascular-topology-v1.json`
+Arquivo: `../../src/vascular/vascular-topology-v1.json`
 Parser: `src/vascular/vascular-topology.ts` (Zod estrito, mesmo padrão de
 `anatomical-catalog.ts`).
 
@@ -410,11 +410,11 @@ continuam separáveis por forma/padrão/rótulo.
 | navegador | Chromium/SwiftShader, zero erro de console, capturas por vista |
 | ausência de ciência | teste que falha se qualquer objeto vascular declarar `state` ou possuir `visualSemanticBinding` |
 
-**Artefatos:** `artifacts/vascular-audit/vascular-audit.json` (schema 1) + capturas
+**Artefatos:** `../../artifacts/vascular-audit/vascular-audit.json` (schema 1) + capturas
 `01-overview-arterial.png`, `02-overview-venous.png`, `03-laminar-penetrating.png`,
 `04-synapse-nvu.png`, `05-skeleton-mode.png`, `06-mobile.png`.
 **Script novo:** `npm run audit:vascular` → `scripts/audit_vascular_topology.js`.
-**Auditoria:** `AUDIT_0.10_R10_B.md`.
+**Auditoria:** `../audits/0.10/AUDIT_0.10_R10_B.md`.
 
 ### 4.10 Risco e rollback
 
@@ -473,14 +473,14 @@ compara frames renderizados antes/depois dentro da tolerância declarada.
 
 | Prova | Critério |
 | :-- | :-- |
-| artefato | `artifacts/presentation-budget/presentation-budget.json` schema 1, com ambiente, GPU, perfil, e por vista: draws, triângulos, texturas, geometria, `frame p50/p95` |
+| artefato | `../../artifacts/presentation-budget/presentation-budget.json` schema 1, com ambiente, GPU, perfil, e por vista: draws, triângulos, texturas, geometria, `frame p50/p95` |
 | gate | `npm run verify:presentation-budget` falha se `baseline` regredir além da tolerância declarada contra o artefato anterior |
 | degradação | teste força estouro sintético e verifica demoção, motivo, anúncio na UI e recuperação |
 | isolamento | teste prova que `cinema` é rejeitado fora de `captureMode` |
 | equivalência visual | frames antes/depois das sete reclamações dentro da tolerância de pixel por backend |
 | invariância | cinco hashes idênticos |
 
-**Auditoria:** `AUDIT_0.10_R10_C.md`. **Complexidade/confiança:** média / alta.
+**Auditoria:** `../audits/0.10/AUDIT_0.10_R10_C.md`. **Complexidade/confiança:** média / alta.
 
 ---
 
@@ -539,7 +539,7 @@ ou estouro, sonda de corte continuando válida (a transformação posição→ca
 malha! **o mapeamento da sonda precisa ser reavaliado e reprovado**, senão a leitura do
 campo passa a mentir), cinco hashes invariantes.
 
-**Auditoria:** `AUDIT_0.10_R10_D.md`. **Complexidade/confiança:** alta / média-alta.
+**Auditoria:** `../audits/0.10/AUDIT_0.10_R10_D.md`. **Complexidade/confiança:** alta / média-alta.
 
 ---
 
@@ -589,7 +589,7 @@ corte precisa:
 Se qualquer um não fechar, o corte entrega apenas luz/grade/SSS e adia o tone mapping.
 Isso precisa estar escrito na auditoria, não decidido no calor do momento.
 
-**Auditoria:** `AUDIT_0.10_R10_E.md`. **Complexidade/confiança:** média / média.
+**Auditoria:** `../audits/0.10/AUDIT_0.10_R10_E.md`. **Complexidade/confiança:** média / média.
 
 ---
 
@@ -623,7 +623,7 @@ mudança de comportamento junto de mudança de estrutura.
 live regions, equivalente textual de tudo que é gráfico, 390×844, movimento reduzido,
 `prefers-reduced-motion`, e os cinco hashes invariantes sob qualquer interação.
 
-**Auditoria:** `AUDIT_0.10_R10_F.md`. **Complexidade/confiança:** alta / média-alta.
+**Auditoria:** `../audits/0.10/AUDIT_0.10_R10_F.md`. **Complexidade/confiança:** alta / média-alta.
 
 ---
 
@@ -732,7 +732,7 @@ demais em CI), `cinema` inacessível pela UI, tetos de bytes e tempo, transparê
 preservada em fundo claro e escuro do GitHub, e o gate de sincronia falhando de propósito
 num teste que altera uma constante do contrato.
 
-**Auditoria:** `AUDIT_0.10_R10_G.md`. **Complexidade/confiança:** alta / alta.
+**Auditoria:** `../audits/0.10/AUDIT_0.10_R10_G.md`. **Complexidade/confiança:** alta / alta.
 
 ---
 
@@ -762,7 +762,7 @@ exportador glTF, orçamento de normal maps, calibração PBR de tecido úmido, p
 stencil e vínculo de estado sem alocação — está em
 [PLAN_0.10_ASSET_REALISM.md](PLAN_0.10_ASSET_REALISM.md).
 
-**Auditoria:** `AUDIT_0.10_R10_H.md`. **Complexidade/confiança:** média / alta.
+**Auditoria:** `../audits/0.10/AUDIT_0.10_R10_H.md`. **Complexidade/confiança:** média / alta.
 
 ---
 
@@ -879,7 +879,7 @@ E, na abertura do arquivo, trocar **Próximo gate** para `R10-B · vascular topo
 ## 16 · Referências consultadas para o conteúdo anatômico
 
 O conteúdo vascular é **nomenclatura e conectividade de referência**, não medida. As
-fontes abaixo entram em [REFERENCES.md](REFERENCES.md) junto com o corte R10-B:
+fontes abaixo entram em [REFERENCES.md](../references/REFERENCES.md) junto com o corte R10-B:
 
 - Purves et al., *Neuroscience* — “The Blood Supply of the Brain and Spinal Cord”
   ([NCBI Bookshelf NBK11042](https://www.ncbi.nlm.nih.gov/books/NBK11042/));

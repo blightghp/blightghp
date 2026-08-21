@@ -622,4 +622,4 @@ O primeiro LFP será um pseudo-LFP. Modelos pontuais não oferecem a geometria d
 Itens não listados como necessários não viram obrigação pela simples
 disponibilidade de tecnologia.
 
-As decisões de implementação estão em [ARCHITECTURE.md](ARCHITECTURE.md) e a forma de testá-las em [VALIDATION.md](VALIDATION.md).
+As decisões de implementação estão em [ARCHITECTURE.md](ARCHITECTURE.md) e a forma de testá-las em [VALIDATION.md](../quality/VALIDATION.md).

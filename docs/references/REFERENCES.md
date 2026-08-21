@@ -12,7 +12,7 @@ assets registram origem, licença, versão, hash, escala, orientação e pipelin
 Atlas ou malha detalhada não promovem um modelo matemático. Nenhum asset
 anatômico ou vascular externo está aprovado pelo simples fato de aparecer nesta
 lista; sua entrada exige manifesto próprio definido em
-[GRAPHICS_SPEC.md](GRAPHICS_SPEC.md).
+[GRAPHICS_SPEC.md](../specifications/GRAPHICS_SPEC.md).
 
 R10-A aplica essa regra sem adicionar fonte externa: seu catálogo schema 1
 registra somente geradores e contratos internos já existentes, com licença,

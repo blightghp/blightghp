@@ -36,7 +36,7 @@ atributos neutros compatíveis. Esse é o rollback executável.
 
 ## Desempenho físico
 
-Artefato: `artifacts/procedural-surface/procedural-surface.json`.
+Artefato: `../../../artifacts/procedural-surface/procedural-surface.json`.
 
 | Métrica | Medido | Teto |
 | :-- | --: | --: |
@@ -63,7 +63,7 @@ zero `semanticGeometryChanges` e zero CPU adicional da superfície por frame.
   vistas e corte coronal.
 
 A análise das imagens e das referências públicas está em
-[`docs/VISUAL_REVIEW_R10_D.md`](docs/VISUAL_REVIEW_R10_D.md). O ganho é de
+[`../../reviews/VISUAL_REVIEW_R10_D.md`](../../reviews/VISUAL_REVIEW_R10_D.md). O ganho é de
 macroforma; tecido, luz, cor e formas celulares ainda são rudimentares e ficam
 sob responsabilidade de R10-E ou cortes posteriores.
 

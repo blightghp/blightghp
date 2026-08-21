@@ -11,7 +11,7 @@
 **Próximo gate:** `R10-D` · superfície procedural
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
-[`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
+[`docs/legacy`](../legacy/README.md) apenas como evidência histórica.
 Matemática, implementação, aplicação, gráficos e validação pertencem às
 respectivas especificações; este arquivo ordena cortes e aponta para seus
 contratos, sem duplicá-los.
@@ -70,31 +70,31 @@ diagnóstico ou prognóstico. Geometria detalhada não é evidência biológica.
 | patch AdEx e quatro correntes | IMPLEMENTADO E VALIDADO EM R09-E | `cell_patch` | replay v1/v2, convergência e conservação | soma + proximal + distal passivos; sem canais dendríticos ativos |
 | recursos e STP | IMPLEMENTADO E VALIDADO NO CONTRATO | `chemical_contract`, `short_term_plasticity` | testes e fixture v1 | preset didático não calibrado |
 | fenda, ocupação e solver | IMPLEMENTADO E VALIDADO NO REGIME TESTADO | `cleft_occupancy`, `chemical_solver` | replays e convergência | microdomínio representativo, não população de fendas |
-| ABI v6 e aba Sinapse | IMPLEMENTADO, VALIDADO E PROMOVIDO | `brain-wasm`, Worker, `SynapseRenderLayer` | [auditoria de promoção](AUDIT_0.8_PROMOTION.md) | validade restrita ao contrato 0.8 declarado |
-| passes matéria/emissão e tokens | IMPLEMENTADO E VALIDADO EM P3 | `src/render` | [auditoria gráfica](AUDIT_0.8_GRAPHICS.md) | validade restrita aos backends/envelopes registrados |
+| ABI v6 e aba Sinapse | IMPLEMENTADO, VALIDADO E PROMOVIDO | `brain-wasm`, Worker, `SynapseRenderLayer` | [auditoria de promoção](../audits/0.8/AUDIT_0.8_PROMOTION.md) | validade restrita ao contrato 0.8 declarado |
+| passes matéria/emissão e tokens | IMPLEMENTADO E VALIDADO EM P3 | `src/render` | [auditoria gráfica](../audits/0.8/AUDIT_0.8_GRAPHICS.md) | validade restrita aos backends/envelopes registrados |
 | inferência Bayesiana de tarefa | EXPERIMENTAL E ISOLADA | `experiment.ts`, `inference.ts` | schema 1, fixture, controle nulo e replay | posterior é apenas apresentada; estímulo interativo exige contexto nulo |
 | eventos celulares carimbados | IMPLEMENTADO E VALIDADO EM R09-B | `cell_patch`, `simulation`, ABI/Worker | fixture, hash próprio, browser e lifecycle | lote limitado a 4.096; cenário padrão pode legitimamente produzir lote vazio |
 | Prancha Elétrica | IMPLEMENTADA E VALIDADA EM R09-C | `ElectricalBoardLayer`, DOM e auditoria | testes estruturais, orçamento e navegador | esquema do patch; atraso/ganho macro aparecem separados e não são atribuídos às células |
 | seleção e vista Neurônio | IMPLEMENTADAS E VALIDADAS EM R09-E | `CellRenderLayer`, `NeuronRenderLayer`, DOM e auditoria | seleção, gradiente soma/proximal/distal, navegador e invariância | morfologia continua ilustrativa; sem condução ativa ou tipo celular real |
-| película 3D e planos de corte | IMPLEMENTADOS E VALIDADOS EM R09-F | `material-profile`, `clipping`, seis `RenderLayer`s | [auditoria R09-F](AUDIT_0.9_R09_F.md), navegador e manifesto GIF schema 3 | acabamento ilustrativo procedural; sem atlas, calibração anatômica ou nova ciência |
-| catálogo anatômico | IMPLEMENTADO E VALIDADO EM R10-A | `src/anatomy`, bindings dos seis `RenderLayer`s e explorador DOM | [auditoria R10-A](AUDIT_0.10_R10_A.md), schema 1, navegador e invariância | 32 entradas sobre estruturas existentes; zero atlas/asset externo; sem calibração anatômica |
-| vascular topológico | IMPLEMENTADO E VALIDADO EM R10-B | `src/vascular`, catálogo anatômico e seis vistas existentes | [auditoria R10-B](AUDIT_0.10_R10_B.md), 42 segmentos/44 entradas, 12 draws e cinco hashes invariantes | topologia ilustrativa estática; sem fluxo, perfusão ou oxigenação |
+| película 3D e planos de corte | IMPLEMENTADOS E VALIDADOS EM R09-F | `material-profile`, `clipping`, seis `RenderLayer`s | [auditoria R09-F](../audits/0.9/AUDIT_0.9_R09_F.md), navegador e manifesto GIF schema 3 | acabamento ilustrativo procedural; sem atlas, calibração anatômica ou nova ciência |
+| catálogo anatômico | IMPLEMENTADO E VALIDADO EM R10-A | `src/anatomy`, bindings dos seis `RenderLayer`s e explorador DOM | [auditoria R10-A](../audits/0.10/AUDIT_0.10_R10_A.md), schema 1, navegador e invariância | 32 entradas sobre estruturas existentes; zero atlas/asset externo; sem calibração anatômica |
+| vascular topológico | IMPLEMENTADO E VALIDADO EM R10-B | `src/vascular`, catálogo anatômico e seis vistas existentes | [auditoria R10-B](../audits/0.10/AUDIT_0.10_R10_B.md), 42 segmentos/44 entradas, 12 draws e cinco hashes invariantes | topologia ilustrativa estática; sem fluxo, perfusão ou oxigenação |
 | atlas e assets externos | DOCUMENTADO, MAS NÃO IMPLEMENTADO | futuro R10-H | plano 0.10 e especificações | depende de fonte/licença/SHA-256 próprios; zero asset externo distribuído |
 
 ## Histórico verificável
 
 | Fase | Resultado | Estado | Evidência principal | Documento histórico |
 | :-- | :-- | :-- | :-- | :-- |
-| 0.2–0.4 | excitabilidade, Worker, campo e superfície | promovida | `AUDIT_0.4.md` | roadmap 0.7 legado |
-| 0.5 | Rust/Wasm torna-se motor padrão | promovida | `AUDIT_0.5_PROMOTION.md` | `MIGRATION-0.5.md` |
+| 0.2–0.4 | excitabilidade, Worker, campo e superfície | promovida | `../audits/0.4/AUDIT_0.4.md` | roadmap 0.7 legado |
+| 0.5 | Rust/Wasm torna-se motor padrão | promovida | `../audits/0.5/AUDIT_0.5_PROMOTION.md` | `../legacy/plans/MIGRATION-0.5.md` |
 | 0.6 | L1–L6, relé/TRN e ABI v4 | promovida | auditorias 0.6 | `PLAN-0.6.md` |
 | 0.7 | patch AdEx, quatro receptores e ABI v5 | promovida | auditorias 0.7 | `PLAN-0.7.md` |
-| 0.8 | recursos, química local, solver, ABI v6 e Sinapse | promovida | [auditoria final](AUDIT_0.8_PROMOTION.md) | proposta 0.8 legada |
+| 0.8 | recursos, química local, solver, ABI v6 e Sinapse | promovida | [auditoria final](../audits/0.8/AUDIT_0.8_PROMOTION.md) | proposta 0.8 legada |
 
 A 0.8 foi promovida após a evidência da ABI v6 em
-[R08-P2](AUDIT_0.8_ABI_V6.md), o fechamento de pixel→estado, redundância sem cor
-e custo em GPU física em [R08-P3](AUDIT_0.8_GRAPHICS.md), e a concordância final
-registrada em [R08-P4](AUDIT_0.8_PROMOTION.md).
+[R08-P2](../audits/0.8/AUDIT_0.8_ABI_V6.md), o fechamento de pixel→estado, redundância sem cor
+e custo em GPU física em [R08-P3](../audits/0.8/AUDIT_0.8_GRAPHICS.md), e a concordância final
+registrada em [R08-P4](../audits/0.8/AUDIT_0.8_PROMOTION.md).
 
 ## Modelo obrigatório de corte
 
@@ -140,7 +140,7 @@ Worker → frontend → renderer → auditoria → documentação → promoção
 
 ### R08-P2 · evidência executável da ABI v6
 
-**Estado:** concluída; evidência em [AUDIT_0.8_ABI_V6.md](AUDIT_0.8_ABI_V6.md).
+**Estado:** concluída; evidência em [AUDIT_0.8_ABI_V6.md](../audits/0.8/AUDIT_0.8_ABI_V6.md).
 
 | Campo | Contrato |
 | :-- | :-- |
@@ -156,7 +156,7 @@ Worker → frontend → renderer → auditoria → documentação → promoção
 
 ### R08-P3 · fechar os gates gráficos reais
 
-**Estado:** concluída; evidência em [AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md).
+**Estado:** concluída; evidência em [AUDIT_0.8_GRAPHICS.md](../audits/0.8/AUDIT_0.8_GRAPHICS.md).
 
 | Campo | Contrato |
 | :-- | :-- |
@@ -173,7 +173,7 @@ Worker → frontend → renderer → auditoria → documentação → promoção
 ### R08-P4 · promoção
 
 **Estado:** concluída; evidência em
-[AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md).
+[AUDIT_0.8_PROMOTION.md](../audits/0.8/AUDIT_0.8_PROMOTION.md).
 
 | Campo | Contrato |
 | :-- | :-- |
@@ -194,7 +194,7 @@ o cálculo como modelo de tarefa e retira sua influência do drive. Não cria
 “cognição” genérica.
 
 - **Estado:** concluída; **IDs:** ARC-014, UI-012, MOD-090, QA-090; **evidência:**
-  [AUDIT_0.9_R09_A.md](AUDIT_0.9_R09_A.md).
+  [AUDIT_0.9_R09_A.md](../audits/0.9/AUDIT_0.9_R09_A.md).
 - **Arquivos:** `experiment.ts`, `direct-stimulus.ts`, `inference.ts`, `main.ts`,
   protocolo, schemas de aplicação, fixture e testes.
 - **Aceite:** nenhuma posterior atravessa o comando interativo; contexto nulo é
@@ -209,7 +209,7 @@ Publica IDs e offsets de tempo de spikes em lote compacto. Rust possui o evento;
 ABI/Worker apenas o transportam; renderer nunca infere um spike entre snapshots.
 
 - **Estado:** concluída; **IDs:** ENG-018, ABI-012, GFX-031, QA-091;
-  **evidência:** [AUDIT_0.9_R09_B.md](AUDIT_0.9_R09_B.md).
+  **evidência:** [AUDIT_0.9_R09_B.md](../audits/0.9/AUDIT_0.9_R09_B.md).
 - **Aceite:** ordem canônica, replay, limite de eventos, hash próprio ou regra
   explícita de compatibilidade, reset/dispose e teste de backpressure.
 - **Orçamento:** 12 bytes/evento, dois buffers e teto de 4.096 eventos/49.152
@@ -226,7 +226,7 @@ conjunto de observáveis ou preset científico explicitamente selecionado.
 
 - **Estado:** implementada e validada em 12 de agosto de 2026; **IDs:**
   ELE-001..006, UI-020, GFX-040, QA-092; **evidência:**
-  [auditoria R09-C](AUDIT_0.9_R09_C.md).
+  [auditoria R09-C](../audits/0.9/AUDIT_0.9_R09_C.md).
 - **Fora de escopo:** alterar `dt`, solver, topologia ou compartimentos por zoom.
 - **Aceite:** cada número aponta para snapshot/observável; câmera e modo não
   mudam hashes; teclado, equivalente textual e movimento reduzido.
@@ -246,7 +246,7 @@ Seleciona uma das 12 células por clique e teclado e apresenta soma, dendrito
 dendrito inteiro usa um único valor; nenhum gradiente é inventado.
 
 - **Estado:** concluída em 13 de agosto de 2026; **IDs:** UI-021, GFX-050,
-  AST-010, QA-093; **evidência:** [auditoria R09-D](AUDIT_0.9_R09_D.md).
+  AST-010, QA-093; **evidência:** [auditoria R09-D](../audits/0.9/AUDIT_0.9_R09_D.md).
 - **Aceite:** seleção não muta motor; `Tab`/`Enter`/`Escape`; hash de geometria
   determinístico; evento visual consome exclusivamente o lote carimbado em R09-B.
 - **Rollback:** voltar ao patch de 12 células. **Complexidade/confiança:** média / alta.
@@ -263,7 +263,7 @@ Acrescenta ao Rust estados somático, proximal e distal, cabo passivo acoplado,
 roteamento receptor por compartimento, schema/fixtures v2 e gradiente autorizado.
 
 - **Estado:** concluída em 13 de agosto de 2026; **IDs:** MOD-100, ENG-025,
-  ABI-020, QA-100; **evidência:** [auditoria R09-E](AUDIT_0.9_R09_E.md).
+  ABI-020, QA-100; **evidência:** [auditoria R09-E](../audits/0.9/AUDIT_0.9_R09_E.md).
 - **Aceite:** unidades/condições de contorno, referência refinada, invariantes,
   sensibilidade, replay e orçamento de 12 células.
 - **Resultado:** matriz tridiagonal implícita; 200 subpassos/tick; replay v1/v2;
@@ -284,7 +284,7 @@ O acabamento é procedural e ilustrativo; não pode ser descrito como realismo
 científico.
 
 - **Estado:** concluída em 13 de agosto de 2026; **IDs:** GFX-060..075, AST-020,
-  UI-024, QA-101; **evidência:** [auditoria R09-F](AUDIT_0.9_R09_F.md).
+  UI-024, QA-101; **evidência:** [auditoria R09-F](../audits/0.9/AUDIT_0.9_R09_F.md).
 - **Assets:** nenhum atlas é incluído neste corte.
 - **Aceite:** hash invariante a câmera/corte/LOD/material, operação por
   teclado/touch, legenda de unidade, fallback esquemático atômico, manifesto por
@@ -303,10 +303,10 @@ científico.
 
 | Corte | Estado | Contrato e dependências | Aceite principal | Risco/rollback |
 | :-- | :-- | :-- | :-- | :-- |
-| R10-A · catálogo anatômico | implementada e validada em 13 de agosto de 2026 | schema 1 com 32 IDs semânticos, hierarquia, busca, lado, fonte, licença, transformação e evidência; IDs AST-030..034, UI-030, SEC-020, QA-110 | 98 objetos renderizáveis ligados ao catálogo ou excluídos explicitamente; árvore/picking convergem; cinco hashes invariantes; [auditoria R10-A](AUDIT_0.10_R10_A.md) | zero asset externo; import estrito e limitado; rollback remove explorador/bindings e mantém cenas procedurais |
-| R10-B · vascular topológico | implementada e validada em 13 de agosto de 2026 | 44 entradas de catálogo + contrato de grafo próprio; VAS-002..008, SEC-021, QA-111 | 42 segmentos validados, 12 draws, zero animação, busca/picking/isolamento e cinco hashes invariantes; [auditoria R10-B](AUDIT_0.10_R10_B.md) | aparência clínica mitigada por `TOPOLOGY/ILUSTRATIVO`; rollback remove `src/vascular` e as 44 entradas |
-| R10-C · orçamento e reclamação | implementada e validada em 20 de agosto de 2026 | perfis `baseline`/`enhanced`/`cinema`, governador e sete reclamações; GFX-080/081, PERF-011..013, QA-112 | seis vistas × 24 amostras; p95 1,9–19,1 ms em GPU física; `baseline` abaixo da referência, cinco hashes invariantes; [auditoria R10-C](AUDIT_0.10_R10_C.md) | desligar governador e manter `enhanced`; realismo ainda bloqueado por R10-D/R10-E |
-| R10-D · superfície procedural | implementada e validada em 21 de agosto de 2026 | icosfera indexada, dois LODs, girificação e atributos assados; GFX-082/083, AST-035, QA-113 | 5.780/1.500 triângulos, build 77,9 ms, hash repetível, p95 físico dentro do orçamento e [auditoria R10-D](AUDIT_0.10_R10_D.md) | fallback atômico para `ConvexGeometry`; R10-E possui luz/materialidade |
+| R10-A · catálogo anatômico | implementada e validada em 13 de agosto de 2026 | schema 1 com 32 IDs semânticos, hierarquia, busca, lado, fonte, licença, transformação e evidência; IDs AST-030..034, UI-030, SEC-020, QA-110 | 98 objetos renderizáveis ligados ao catálogo ou excluídos explicitamente; árvore/picking convergem; cinco hashes invariantes; [auditoria R10-A](../audits/0.10/AUDIT_0.10_R10_A.md) | zero asset externo; import estrito e limitado; rollback remove explorador/bindings e mantém cenas procedurais |
+| R10-B · vascular topológico | implementada e validada em 13 de agosto de 2026 | 44 entradas de catálogo + contrato de grafo próprio; VAS-002..008, SEC-021, QA-111 | 42 segmentos validados, 12 draws, zero animação, busca/picking/isolamento e cinco hashes invariantes; [auditoria R10-B](../audits/0.10/AUDIT_0.10_R10_B.md) | aparência clínica mitigada por `TOPOLOGY/ILUSTRATIVO`; rollback remove `src/vascular` e as 44 entradas |
+| R10-C · orçamento e reclamação | implementada e validada em 20 de agosto de 2026 | perfis `baseline`/`enhanced`/`cinema`, governador e sete reclamações; GFX-080/081, PERF-011..013, QA-112 | seis vistas × 24 amostras; p95 1,9–19,1 ms em GPU física; `baseline` abaixo da referência, cinco hashes invariantes; [auditoria R10-C](../audits/0.10/AUDIT_0.10_R10_C.md) | desligar governador e manter `enhanced`; realismo ainda bloqueado por R10-D/R10-E |
+| R10-D · superfície procedural | implementada e validada em 21 de agosto de 2026 | icosfera indexada, dois LODs, girificação e atributos assados; GFX-082/083, AST-035, QA-113 | 5.780/1.500 triângulos, build 77,9 ms, hash repetível, p95 físico dentro do orçamento e [auditoria R10-D](../audits/0.10/AUDIT_0.10_R10_D.md) | fallback atômico para `ConvexGeometry`; R10-E possui luz/materialidade |
 | R10-E · luz e tone mapping | planejada | AgX, SSS aproximado, grade; GFX-084..086, QA-114 | quatro gates de cor reexecutados e redeclarados | flag de reversão para ACES |
 | R10-F · nova UI e interação | planejada | modos, paleta, selo de proveniência, escada de escalas; UI-031..038, UX-003, QA-115 | teclado, foco, equivalente textual, móvel | manter painel atual |
 | R10-G · captura cinema e GIF | planejada | perfil `cinema`, supersampling, manifesto schema 4; GFX-089/090, QA-116/117 | determinismo, teto de bytes/tempo e sincronia verificada | voltar ao schema 3 |
@@ -373,6 +373,6 @@ Uma fase só muda para **promovida** quando:
 - documentação canônica e índice legacy estão coerentes;
 - não há efeito visual sem `STATE`, `TOPOLOGY` ou `DECORATION` declarado.
 
-Veja [ARCHITECTURE.md](ARCHITECTURE.md), [MODEL_SPEC.md](MODEL_SPEC.md),
-[ENGINE_SPEC.md](ENGINE_SPEC.md), [FRONTEND_SPEC.md](FRONTEND_SPEC.md),
-[GRAPHICS_SPEC.md](GRAPHICS_SPEC.md) e [VALIDATION.md](VALIDATION.md).
+Veja [ARCHITECTURE.md](../specifications/ARCHITECTURE.md), [MODEL_SPEC.md](../specifications/MODEL_SPEC.md),
+[ENGINE_SPEC.md](../specifications/ENGINE_SPEC.md), [FRONTEND_SPEC.md](../specifications/FRONTEND_SPEC.md),
+[GRAPHICS_SPEC.md](../specifications/GRAPHICS_SPEC.md) e [VALIDATION.md](../quality/VALIDATION.md).

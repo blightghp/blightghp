@@ -3,7 +3,7 @@
 **Revisão:** 10 · R10-D validado em Three.js 0.185/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
-preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
+preservado em [`docs/legacy/specs`](../legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
 Ele regula scene graph, materiais, animações, assets, camadas, cortes e prova de
 fidelidade entre estado calculado e estado mostrado.
 
@@ -206,7 +206,7 @@ movimento reduzido e viewport móvel. O inventário executável reporta
 ### Catálogo anatômico schema 1
 
 R10-A cataloga somente a anatomia/topologia já presente; não importa atlas nem
-altera os seis scene graphs. `src/anatomy/catalog-v1.json` contém 32 entradas,
+altera os seis scene graphs. `../../src/anatomy/catalog-v1.json` contém 32 entradas,
 cinco fontes internas e cinco transformações. O fingerprint FNV-1a de 64 bits
 audita a serialização canônica do catálogo, mas é metadado de apresentação e
 não constitui um sexto hash científico.
@@ -533,4 +533,4 @@ degradação reduz qualidade/cadência visual; nunca equações.
 Capturas de pixel complementam, mas não substituem, prova estrutural. O estado
 0.8 fecha tokens, sinal, proveniência, bindings estruturais, pixel→estado
 renderizado e baseline físico dentro dos envelopes documentados em
-[AUDIT_0.8_GRAPHICS.md](AUDIT_0.8_GRAPHICS.md).
+[AUDIT_0.8_GRAPHICS.md](../audits/0.8/AUDIT_0.8_GRAPHICS.md).

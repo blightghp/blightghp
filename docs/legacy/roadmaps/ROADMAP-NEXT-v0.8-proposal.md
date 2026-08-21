@@ -1,6 +1,6 @@
 # LEGACY — proposta de roadmap 0.8 → 1.0
 
-> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../../ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
+> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../planning/ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
 
 Proposta histórica de substituição para o roadmap 0.7. Ela mantém a espinha do
 documento original — descer de escala fechando uma resolução por vez — e
@@ -13,7 +13,7 @@ A primeira é que a apresentação virou gargalo. O motor publica estado celular
 SI, com quatro receptores separados e sinal correto, e a interface reduz tudo a
 quatro medidores sem sinal e a doze esferas brancas. Não é falta de dado: é falta
 de contrato de imagem. A [proposta visual arquivada](../specs/VISUAL-SPEC-v0.8-proposal.md) passa a ser esse
-contrato, no mesmo nível de [MODEL_SPEC.md](../../../MODEL_SPEC.md).
+contrato, no mesmo nível de [MODEL_SPEC.md](../../specifications/MODEL_SPEC.md).
 
 A segunda é que o documento anterior excluía, até a 1.0, exatamente as peças que
 a leitura visual precisa — atlas, morfologia, tractografia. Era uma boa defesa
@@ -51,10 +51,10 @@ Os treze primeiros continuam valendo sem alteração. Dois entram.
 | :-- | :-- | :-- | :-- |
 | **0.2 · Excitabilidade** | LIF, atrasos, STDP, inferência escalar | atividade por unidade e envoltórios | concluída |
 | **0.3 · Fundação** | relógio, RNG endereçado, CSR, Worker | feixes, instrumentos, LOD, interpolação | concluída |
-| **0.4 · Superfície** | domínio cortical, campo E/I atrasado | atividade sobre o envelope, zoom orbital | concluída · [AUDIT_0.4.md](../../../AUDIT_0.4.md) |
-| **0.5 · Corredor Rust/Wasm** | crate puro, ABI estreita, paridade | shell consumindo snapshots Rust | concluída · [AUDIT_0.5_ENTRY.md](../../../AUDIT_0.5_ENTRY.md) |
-| **0.6 · Lâmina e tálamo** | seis lâminas, relé e TRN | aba Lâminas, coluna explodida | concluída · [AUDIT_0.6.md](../../../AUDIT_0.6.md) |
-| **0.7 · Célula e eletricidade** | patch AdEx, quatro receptores em SI | abas Célula e Eletricidade | concluída · [AUDIT_0.7.md](../../../AUDIT_0.7.md) |
+| **0.4 · Superfície** | domínio cortical, campo E/I atrasado | atividade sobre o envelope, zoom orbital | concluída · [AUDIT_0.4.md](../../audits/0.4/AUDIT_0.4.md) |
+| **0.5 · Corredor Rust/Wasm** | crate puro, ABI estreita, paridade | shell consumindo snapshots Rust | concluída · [AUDIT_0.5_ENTRY.md](../../audits/0.5/AUDIT_0.5_ENTRY.md) |
+| **0.6 · Lâmina e tálamo** | seis lâminas, relé e TRN | aba Lâminas, coluna explodida | concluída · [AUDIT_0.6.md](../../audits/0.6/AUDIT_0.6.md) |
+| **0.7 · Célula e eletricidade** | patch AdEx, quatro receptores em SI | abas Célula e Eletricidade | concluída · [AUDIT_0.7.md](../../audits/0.7/AUDIT_0.7.md) |
 | **0.8 · Sinapse e química local** | vesícula, fenda, ocupação, plasticidade curta | fundação da apresentação e aba Sinapse em escala µm | conservação, positividade, rigidez, invertibilidade cor↔estado |
 | **0.9 · Neurônio resolvido e corte anatômico** | dendrito em três compartimentos, tempo de evento, condução declarada | vista Neurônio, pilha de películas, planos de corte com tampa e sonda | convergência de cabo, evento carimbado, hash invariante ao recorte |
 | **0.10 · Transmissão de volume** | núcleos de projeção com função, reação–difusão de moduladores | plumas por substância e os três mapas separados | conservação de massa, positividade, tortuosidade declarada, orçamento de raymarch |
@@ -74,7 +74,7 @@ TRN, patch AdEx com quatro receptores em SI, ABI v5 com 22 buffers e três hashe
 independentes.
 
 A auditoria de entrada desta fase está em
-[AUDIT_0.8_ENTRY.md](../../../AUDIT_0.8_ENTRY.md). Ela registra dezenove achados; os de
+[AUDIT_0.8_ENTRY.md](../../audits/0.8/AUDIT_0.8_ENTRY.md). Ela registra dezenove achados; os de
 severidade alta e de bloqueio estão distribuídos nos cortes abaixo, e nenhum
 corte seguinte pode esconder um achado aberto do anterior.
 
@@ -104,7 +104,7 @@ encontram na aba Sinapse.
 ### Trilho de apresentação
 
 - [x] **0.8-v1 · Fundação:** criar `src/render/` com a interface `RenderLayer`
-  já especificada em `ARCHITECTURE.md:404`, mover as três camadas existentes, e
+  já especificada em `../../specifications/ARCHITECTURE.md:404`, mover as três camadas existentes, e
   criar o módulo único de tokens visuais. Elimina os sete hexadecimais
   espalhados por três arquivos.
 - [x] **0.8-v2 · Três passes:** separar matéria de emissão, ordenar a
@@ -116,7 +116,7 @@ encontram na aba Sinapse.
   visualmente distintos.
 - [x] **0.8-v4 · Gates:** invertibilidade cor↔estado, modo sem cor, contador de
   proveniência e baseline de desempenho em hardware real, com os campos que
-  `VALIDATION.md:96` exige.
+  `../../quality/VALIDATION.md:96` exige.
 - [x] **0.8-v5 · Aba Sinapse:** fenda em escala µm, com vesícula, liberação,
   nuvem de transmissor, ocupação e recaptura — cada etapa presa a um estado
   publicado pelo trilho de motor.
@@ -169,7 +169,7 @@ banha território.
   no subpasso, tortuosidade declarada.
 - [ ] **0.10-c · Três mapas separados:** concentração, ocupação e efeito em
   buffers e sobreposições independentes, alternáveis, como
-  `MODEL_SPEC.md` já exige do modelo.
+  `../../specifications/MODEL_SPEC.md` já exige do modelo.
 - [ ] **0.10-d · Plumas volumétricas:** glifo de fonte, superfície de nível e
   integração no passe de emissão, com resolução de volume escolhida por medição
   de custo.
@@ -189,7 +189,7 @@ explícitas, com abas Sistemas, Experimentos e Comportamento.
 
 Um item herdado entra aqui: o experimento bayesiano de `inference.ts` é portado
 para o contrato `ExperimentEncoder`/`ExperimentDecoder` de
-`ARCHITECTURE.md:357` ou aposentado do painel principal. Hoje ele calcula em
+`../../specifications/ARCHITECTURE.md:357` ou aposentado do painel principal. Hoje ele calcula em
 TypeScript uma posterior que entra no drive do motor, ocupa o espaço nobre da
 Visão Geral e não tem cobertura de validação. É a última peça de ciência fora do
 motor.
@@ -282,7 +282,7 @@ diferentes.
    superfície visual;
 4. daí em diante, os cortes na ordem listada.
 
-As equações e convenções vigentes ficam em [MODEL_SPEC.md](../../../MODEL_SPEC.md), a tradução
-para o código em [ARCHITECTURE.md](../../../ARCHITECTURE.md), os critérios de evidência
-em [VALIDATION.md](../../../VALIDATION.md) e o contrato vigente em
-[GRAPHICS_SPEC.md](../../../GRAPHICS_SPEC.md).
+As equações e convenções vigentes ficam em [MODEL_SPEC.md](../../specifications/MODEL_SPEC.md), a tradução
+para o código em [ARCHITECTURE.md](../../specifications/ARCHITECTURE.md), os critérios de evidência
+em [VALIDATION.md](../../quality/VALIDATION.md) e o contrato vigente em
+[GRAPHICS_SPEC.md](../../specifications/GRAPHICS_SPEC.md).

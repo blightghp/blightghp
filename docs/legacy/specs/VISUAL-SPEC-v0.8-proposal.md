@@ -1,15 +1,15 @@
 # LEGACY — Contrato de apresentação da proposta 0.8
 
-> **LEGACY — documento preservado para rastreabilidade histórica. Foi incorporado a [GRAPHICS_SPEC.md](../../../GRAPHICS_SPEC.md). Não deve ser utilizado como instrução vigente de implementação.**
+> **LEGACY — documento preservado para rastreabilidade histórica. Foi incorporado a [GRAPHICS_SPEC.md](../../specifications/GRAPHICS_SPEC.md). Não deve ser utilizado como instrução vigente de implementação.**
 
-Este documento faz para a imagem o que [MODEL_SPEC.md](../../../MODEL_SPEC.md) faz para a
+Este documento faz para a imagem o que [MODEL_SPEC.md](../../specifications/MODEL_SPEC.md) faz para a
 matemática: declara o que cada elemento visível significa, de onde vem seu valor
 e o que ele não afirma. Ele nasce de uma dificuldade concreta — quero mostrar
 anatomia, corte, película transparente, um neurônio ampliado em funcionamento e
 a química se espalhando, sem que nada disso vire encenação.
 
 A regra que organiza tudo é uma só: **a câmera escolhe o que mostrar, nunca qual
-equação executar** (`ARCHITECTURE.md:351`). Ampliar não resolve mais física.
+equação executar** (`../../specifications/ARCHITECTURE.md:351`). Ampliar não resolve mais física.
 Ampliar revela a resolução que o motor já calcula, e diz qual é.
 
 ## 1. Proveniência de cada elemento
@@ -122,7 +122,7 @@ que permite olhar uma faixa coronal inteira sem perder profundidade, e é o mais
 próximo do que se faz em uma preparação real.
 
 Invariante testável: mudar plano, espessura ou orientação **não altera nenhum
-hash do motor**. Esse teste já existe em espírito em `VALIDATION.md:81`, como
+hash do motor**. Esse teste já existe em espírito em `../../quality/VALIDATION.md:81`, como
 independência da câmera, e passa a cobrir também o recorte.
 
 ## 5. Escada de escalas e a vista de neurônio
@@ -187,7 +187,7 @@ visivelmente lenta. A animação ensina a cinética em vez de decorar a cena.
 Quando `E_rev` e `V` se aproximam, a corrente tende a zero mesmo com condutância
 alta. Nesse caso o fluxo para e a condutância aparece como um anel presente e
 imóvel. Inibição por shunt precisa ser legível como o que é: um caminho aberto
-que não empurra carga. É exatamente o ponto que `MODEL_SPEC:203` exige não
+que não empurra carga. É exatamente o ponto que `../../specifications/MODEL_SPEC.md:203` exige não
 reduzir ao nome do receptor.
 
 ### 5.3 A escolha que precede o desenho
@@ -216,7 +216,7 @@ Ela se divide em duas escalas com físicas diferentes.
 Estados por sinapse, todos em Rust:
 
 - recurso disponível `R` e utilização `u`, pela convenção de Tsodyks–Markram já
-  escrita em `MODEL_SPEC:226`;
+  escrita em `../../specifications/MODEL_SPEC.md:226`;
 - quanta liberados no evento pré-sináptico;
 - concentração na fenda `[T]`, com limpeza rápida;
 - ocupação por família de receptor `O_r`.
@@ -248,7 +248,7 @@ decorativo recebe animação de estado.
 Para moduladores — dopamina, acetilcolina, noradrenalina, serotonina — a
 transmissão relevante não é pontual. É liberação por varicosidade, difusão no
 espaço extracelular e captação. O modelo correspondente é reação–difusão, que
-[MODEL_SPEC.md](../../../MODEL_SPEC.md) já antecipa como classe de solver:
+[MODEL_SPEC.md](../../specifications/MODEL_SPEC.md) já antecipa como classe de solver:
 
 $$
 \frac{\partial C}{\partial t} = D^{*}\nabla^{2}C + S(x,t) - \frac{V_{\max}C}{K_m + C},
@@ -281,7 +281,7 @@ os núcleos ganharem circuito na 0.10.
 
 ### 6.3 Três mapas, nunca um
 
-`MODEL_SPEC:303` exige que concentração, ocupação e efeito funcional vivam em
+`../../specifications/MODEL_SPEC.md:303` exige que concentração, ocupação e efeito funcional vivam em
 buffers diferentes. A apresentação sustenta essa separação com três sobreposições
 independentes e alternáveis:
 
@@ -391,7 +391,7 @@ afirmação verificável.
 | Química | a declarar na 0.10 | o raymarch domina; a resolução do volume é escolhida por medição |
 
 Regra que não muda: se o motor atrasar, a interface reduz nível de detalhe ou
-cadência de snapshot. Ela nunca aumenta `dt` (`VALIDATION.md:108`).
+cadência de snapshot. Ela nunca aumenta `dt` (`../../quality/VALIDATION.md:108`).
 
 ## 11. O que este contrato não afirma
 
@@ -407,4 +407,4 @@ cadência de snapshot. Ela nunca aumenta `dt` (`VALIDATION.md:108`).
 
 A sequência em que estes elementos entram, e a condição de entrada de cada um,
 estão na [proposta de roadmap arquivada](../roadmaps/ROADMAP-NEXT-v0.8-proposal.md). Os achados que motivaram este
-contrato estão em [AUDIT_0.8_ENTRY.md](../../../AUDIT_0.8_ENTRY.md).
+contrato estão em [AUDIT_0.8_ENTRY.md](../../audits/0.8/AUDIT_0.8_ENTRY.md).

@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixturePath = path.join(projectRoot, "fixtures", "parity", "field-observables-v1.json");
-const reportPath = path.join(projectRoot, "AUDIT_0.5_SHADOW.json");
+const reportPath = path.join(projectRoot, "docs/audits/0.5/AUDIT_0.5_SHADOW.json");
 
 function typedTopology(source) {
   return {

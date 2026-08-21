@@ -232,7 +232,7 @@ try {
       source: [
         "artifacts/material-audit/material-audit.json#perViewGpu",
         "artifacts/vascular-audit/vascular-audit.json#vascular.views",
-        "AUDIT_0.10_R10_B.md#comandos-e-evidência",
+        "docs/audits/0.10/AUDIT_0.10_R10_B.md#comandos-e-evidência",
       ],
       method: "R09-F measured per-view cost + exact R10-B vascular marginal",
       tolerance: {

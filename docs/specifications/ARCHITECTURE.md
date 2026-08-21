@@ -517,4 +517,4 @@ flowchart LR
 As regras executáveis do motor estão em [ENGINE_SPEC.md](ENGINE_SPEC.md), a
 semântica matemática em [MODEL_SPEC.md](MODEL_SPEC.md), a aplicação em
 [FRONTEND_SPEC.md](FRONTEND_SPEC.md), os gráficos em
-[GRAPHICS_SPEC.md](GRAPHICS_SPEC.md) e os gates em [VALIDATION.md](VALIDATION.md).
+[GRAPHICS_SPEC.md](GRAPHICS_SPEC.md) e os gates em [VALIDATION.md](../quality/VALIDATION.md).

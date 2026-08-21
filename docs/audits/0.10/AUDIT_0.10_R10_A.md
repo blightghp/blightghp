@@ -30,7 +30,7 @@ qual limite precisa permanecer visível.
 
 ## Contrato implementado
 
-`src/anatomy/catalog-v1.json` tem 23.249 bytes e usa o namespace
+`../../../src/anatomy/catalog-v1.json` tem 23.249 bytes e usa o namespace
 `brain-pro:anatomy/`. A implementação TypeScript:
 
 - valida schema fechado com Zod, inclusive enums, comprimentos e campos extras;
@@ -143,7 +143,7 @@ ABI/snapshot continuam v8 e nenhum comando/protocolo novo foi criado.
 
 Artefatos:
 
-- `artifacts/anatomy-audit/anatomy-audit.json`;
+- `../../../artifacts/anatomy-audit/anatomy-audit.json`;
 - `01-overview-left-hemisphere.png`;
 - `02-laminar-thalamus.png`;
 - `03-neuron-axon.png`;

@@ -81,17 +81,17 @@ com quatro cap sources adiciona 9 draws; a laje permanece limitada a 18.
 ## Capturas comparativas
 
 As 18 capturas e o relatório estruturado estão em
-[`artifacts/material-audit`](artifacts/material-audit/material-audit.json).
+[`artifacts/material-audit`](../../../artifacts/material-audit/material-audit.json).
 O diff schematic→realistic alterou 27,15% dos pixels da captura canônica.
 
 | Cenário | Evidência |
 | :-- | :-- |
-| schematic | [`01-schematic.png`](artifacts/material-audit/01-schematic.png) |
-| realistic-illustrative | [`02-realistic-illustrative.png`](artifacts/material-audit/02-realistic-illustrative.png) |
-| realistic + corte coronal | [`03-realistic-coronal-clipping.png`](artifacts/material-audit/03-realistic-coronal-clipping.png) |
-| realistic + corte + raio-X | [`04-realistic-coronal-xray.png`](artifacts/material-audit/04-realistic-coronal-xray.png) |
-| realistic + corte + opacidade 50% | [`05-realistic-coronal-opacity-50.png`](artifacts/material-audit/05-realistic-coronal-opacity-50.png) |
-| realistic + corte + monocromia | [`06-realistic-coronal-monochrome.png`](artifacts/material-audit/06-realistic-coronal-monochrome.png) |
+| schematic | [`01-schematic.png`](../../../artifacts/material-audit/01-schematic.png) |
+| realistic-illustrative | [`02-realistic-illustrative.png`](../../../artifacts/material-audit/02-realistic-illustrative.png) |
+| realistic + corte coronal | [`03-realistic-coronal-clipping.png`](../../../artifacts/material-audit/03-realistic-coronal-clipping.png) |
+| realistic + corte + raio-X | [`04-realistic-coronal-xray.png`](../../../artifacts/material-audit/04-realistic-coronal-xray.png) |
+| realistic + corte + opacidade 50% | [`05-realistic-coronal-opacity-50.png`](../../../artifacts/material-audit/05-realistic-coronal-opacity-50.png) |
+| realistic + corte + monocromia | [`06-realistic-coronal-monochrome.png`](../../../artifacts/material-audit/06-realistic-coronal-monochrome.png) |
 
 Também há pares schematic/realistic para Visão Geral, Lâminas, Célula,
 Neurônio, Eletricidade e Sinapse. A inspeção visual confirmou reflexão,

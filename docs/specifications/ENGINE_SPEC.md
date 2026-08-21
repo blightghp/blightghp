@@ -356,4 +356,4 @@ perfil. Se uma aparência exigir espessura, compartimento, condução, concentra
 ou evento ainda ausente, primeiro entra um modelo e uma ABI próprios; o renderer
 não pode preencher essa lacuna.
 
-Os critérios de prova e promoção estão em [VALIDATION.md](VALIDATION.md).
+Os critérios de prova e promoção estão em [VALIDATION.md](../quality/VALIDATION.md).
