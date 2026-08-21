@@ -206,6 +206,18 @@ body[data-material-profile="realistic-illustrative"] .material-profile-status {
   background: rgba(59, 165, 226, .18);
 }
 
+body[data-render-profile="enhanced"] #render-profile,
+body[data-render-profile="cinema"] #render-profile {
+  border-color: rgba(111, 224, 184, .6);
+  box-shadow: 0 0 12px rgba(65, 217, 165, .16);
+}
+
+body[data-render-profile="baseline"] #render-profile-status {
+  color: #ffd292;
+  border-color: rgba(255, 185, 89, .42);
+  background: rgba(162, 98, 22, .18);
+}
+
 .cut-scale-note {
   margin: -3px 0 10px;
   color: #557694;
@@ -222,6 +234,11 @@ body[data-material-profile="realistic-illustrative"] .material-profile-status {
   font: 600 8px "JetBrains Mono", monospace;
   letter-spacing: .06em;
   cursor: pointer;
+}
+
+.presentation-reset:disabled {
+  opacity: .42;
+  cursor: not-allowed;
 }
 
 .cut-probe { display: grid; gap: 5px; margin: 12px 0 0; }

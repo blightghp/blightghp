@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-21T02:55:41.988Z",
+  "profile": "baseline",
+  "source": {
+    "commit": "964bf4ae0c936b94b4005baf4ca6dd69bd01dc15",
+    "productVersion": "0.9.0",
+    "command": "npm run audit:presentation-budget",
+    "requestedGraphicsBackend": "hardware"
+  },
+  "environment": {
+    "browser": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
+      "platform": ""
+    },
+    "hardware": {
+      "logicalCores": 8,
+      "deviceMemoryGiB": 8,
+      "webglVendor": "Google Inc. (Intel)",
+      "webglRenderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00009BC4) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    "host": {
+      "cpu": "Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz",
+      "logicalCores": 8,
+      "memoryBytes": 8412778496,
+      "platform": "win32",
+      "release": "10.0.26200",
+      "architecture": "x64"
+    }
+  },
+  "reference": {
+    "source": [
+      "artifacts/material-audit/material-audit.json#perViewGpu",
+      "artifacts/vascular-audit/vascular-audit.json#vascular.views",
+      "AUDIT_0.10_R10_B.md#comandos-e-evidência"
+    ],
+    "method": "R09-F measured per-view cost + exact R10-B vascular marginal",
+    "tolerance": {
+      "drawCalls": 0,
+      "triangles": 0,
+      "textureBytes": 0,
+      "geometryBytes": 0,
+      "frameMillisecondsP95": 0.1
+    },
+    "views": {
+      "overview": {
+        "drawCalls": 51,
+        "triangles": 150578,
+        "frameMillisecondsP95": 3990.5,
+        "textureBytes": 61187040,
+        "geometryBytes": 487164
+      },
+      "laminar": {
+        "drawCalls": 94,
+        "triangles": 13166,
+        "frameMillisecondsP95": 3990.5,
+        "textureBytes": 61182944,
+        "geometryBytes": 204924
+      },
+      "cell": {
+        "drawCalls": 24,
+        "triangles": 9178,
+        "frameMillisecondsP95": 3990.5,
+        "textureBytes": 60920800,
+        "geometryBytes": 96648
+      },
+      "neuron": {
+        "drawCalls": 33,
+        "triangles": 4962,
+        "frameMillisecondsP95": 3990.5,
+        "textureBytes": 60920800,
+        "geometryBytes": 68228
+      },
+      "electricity": {
+        "drawCalls": 34,
+        "triangles": 2386,
+        "frameMillisecondsP95": 3990.5,
+        "textureBytes": 60658656,
+        "geometryBytes": 7580
+      },
+      "synapse": {
+        "drawCalls": 40,
+        "triangles": 33542,
+        "frameMillisecondsP95": 3990.5,
+        "textureBytes": 61182944,
+        "geometryBytes": 160664
+      }
+    }
+  },
+  "measurement": {
+    "sampleCountPerView": 24,
+    "views": {
+      "overview": {
+        "drawCalls": 54,
+        "triangles": 155000,
+        "textureBytes": 100663296,
+        "geometryBytes": 25165824,
+        "frameMillisecondsP95": 33.4,
+        "sampleCount": 24,
+        "frameMillisecondsP50": 1.9000000059604645,
+        "measuredFrameMillisecondsP95": 6.300000011920929,
+        "measuredDrawCalls": 28,
+        "measuredTriangles": 14166,
+        "measuredTextureBytes": 61187040,
+        "measuredGeometryBytes": 487164,
+        "withinBudget": true
+      },
+      "laminar": {
+        "drawCalls": 98,
+        "triangles": 16000,
+        "textureBytes": 100663296,
+        "geometryBytes": 25165824,
+        "frameMillisecondsP95": 33.4,
+        "sampleCount": 24,
+        "frameMillisecondsP50": 8.599999994039536,
+        "measuredFrameMillisecondsP95": 19.099999994039536,
+        "measuredDrawCalls": 50,
+        "measuredTriangles": 7496,
+        "measuredTextureBytes": 61182944,
+        "measuredGeometryBytes": 204924,
+        "withinBudget": true
+      },
+      "cell": {
+        "drawCalls": 26,
+        "triangles": 12000,
+        "textureBytes": 100663296,
+        "geometryBytes": 25165824,
+        "frameMillisecondsP95": 33.4,
+        "sampleCount": 24,
+        "frameMillisecondsP50": 0.7999999821186066,
+        "measuredFrameMillisecondsP95": 1.9000000059604645,
+        "measuredDrawCalls": 6,
+        "measuredTriangles": 4892,
+        "measuredTextureBytes": 60920800,
+        "measuredGeometryBytes": 96648,
+        "withinBudget": true
+      },
+      "neuron": {
+        "drawCalls": 35,
+        "triangles": 8000,
+        "textureBytes": 100663296,
+        "geometryBytes": 25165824,
+        "frameMillisecondsP95": 33.4,
+        "sampleCount": 24,
+        "frameMillisecondsP50": 3.2000000178813934,
+        "measuredFrameMillisecondsP95": 8.099999994039536,
+        "measuredDrawCalls": 9,
+        "measuredTriangles": 2324,
+        "measuredTextureBytes": 60920800,
+        "measuredGeometryBytes": 68228,
+        "withinBudget": true
+      },
+      "electricity": {
+        "drawCalls": 36,
+        "triangles": 5000,
+        "textureBytes": 100663296,
+        "geometryBytes": 25165824,
+        "frameMillisecondsP95": 33.4,
+        "sampleCount": 24,
+        "frameMillisecondsP50": 0.800000011920929,
+        "measuredFrameMillisecondsP95": 2.4000000059604645,
+        "measuredDrawCalls": 10,
+        "measuredTriangles": 1186,
+        "measuredTextureBytes": 60658656,
+        "measuredGeometryBytes": 7580,
+        "withinBudget": true
+      },
+      "synapse": {
+        "drawCalls": 42,
+        "triangles": 36000,
+        "textureBytes": 100663296,
+        "geometryBytes": 25165824,
+        "frameMillisecondsP95": 33.4,
+        "sampleCount": 24,
+        "frameMillisecondsP50": 1.300000011920929,
+        "measuredFrameMillisecondsP95": 6.200000017881393,
+        "measuredDrawCalls": 15,
+        "measuredTriangles": 17148,
+        "measuredTextureBytes": 61182944,
+        "measuredGeometryBytes": 160664,
+        "withinBudget": true
+      }
+    },
+    "contractReady": true
+  },
+  "governor": {
+    "profile": "cinema",
+    "consecutiveOverBudgetFrames": 0,
+    "recoveryFrames": 0,
+    "recoveryAvailable": true,
+    "transitions": 2
+  },
+  "caches": {
+    "effects": {
+      "roots": 6,
+      "records": 110,
+      "builds": 7
+    },
+    "clipping": {
+      "layers": 6,
+      "objects": 110,
+      "builds": 6
+    },
+    "bloom": {
+      "sceneRevision": 2,
+      "matterObjects": 58,
+      "emissionObjects": 40,
+      "excludedObjects": 12,
+      "directRenders": 168,
+      "bloomRenders": 47,
+      "estimatedOwnedTextureBytes": 54367200
+    },
+    "frozenStaticMatrices": 21
+  },
+  "cinemaIsolation": {
+    "rejectedOutsideCapture": true,
+    "message": "cinema render profile requires capture mode"
+  },
+  "hashInvariance": {
+    "fields": [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash"
+    ],
+    "baseline": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "final": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "invariant": true
+  },
+  "captures": [
+    "baseline-overview.png",
+    "baseline-laminar.png",
+    "baseline-cell.png",
+    "baseline-neuron.png",
+    "baseline-electricity.png",
+    "baseline-synapse.png",
+    "visual-overview-enhanced.png",
+    "visual-laminar-enhanced.png",
+    "visual-cell-enhanced.png",
+    "visual-neuron-enhanced.png",
+    "visual-electricity-enhanced.png",
+    "visual-synapse-enhanced.png"
+  ],
+  "captureCoverage": {
+    "baseline-overview.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2054,
+      "sampledPixels": 6144
+    },
+    "baseline-laminar.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 442,
+      "sampledPixels": 6144
+    },
+    "baseline-cell.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 492,
+      "sampledPixels": 6144
+    },
+    "baseline-neuron.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 150,
+      "sampledPixels": 6144
+    },
+    "baseline-electricity.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2814,
+      "sampledPixels": 6144
+    },
+    "baseline-synapse.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 1070,
+      "sampledPixels": 6144
+    },
+    "visual-overview-enhanced.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2029,
+      "sampledPixels": 6144
+    },
+    "visual-laminar-enhanced.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 429,
+      "sampledPixels": 6144
+    },
+    "visual-cell-enhanced.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 492,
+      "sampledPixels": 6144
+    },
+    "visual-neuron-enhanced.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 128,
+      "sampledPixels": 6144
+    },
+    "visual-electricity-enhanced.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2811,
+      "sampledPixels": 6144
+    },
+    "visual-synapse-enhanced.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 1062,
+      "sampledPixels": 6144
+    }
+  },
+  "browserErrors": []
+}

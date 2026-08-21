@@ -79,7 +79,7 @@ try {
   if (
     JSON.stringify(Object.keys(materialProfiles)) !== JSON.stringify(expectedViews) ||
     Object.values(materialProfiles).some((report) =>
-      report.activeProfile !== "schematic" ||
+      report.activeProfile !== "realistic-illustrative" ||
       report.totalRenderableObjects <= 0 ||
       report.matterObjects + report.emissionObjects !== report.totalRenderableObjects ||
       report.undeclaredObjects !== 0 ||

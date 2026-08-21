@@ -22,6 +22,7 @@ const capture = {
   frameCount: BRAIN_GIF_FRAME_COUNT,
   framesByView: { ...BRAIN_GIF_VIEW_FRAMES },
   presentation: {
+    renderProfile: "cinema",
     materialProfile: "realistic-illustrative",
     clipping: {
       view: "overview",
@@ -123,7 +124,7 @@ describe("brain GIF provenance manifest", () => {
     })).toThrow(/six current views/);
   });
 
-  it("rejects a GIF without the canonical R09-F material and cut declaration", () => {
+  it("rejects a GIF without the canonical R10-C render, material and cut declaration", () => {
     expect(() => createBrainGifManifest({
       sourceCommit,
       gifBytes: Buffer.from("GIF89a-test"),
@@ -132,7 +133,16 @@ describe("brain GIF provenance manifest", () => {
         ...capture,
         presentation: { ...capture.presentation, externalAtlasAssets: 1 },
       },
-    })).toThrow(/R09-F presentation profile/);
+    })).toThrow(/R10-C presentation profile/);
+    expect(() => createBrainGifManifest({
+      sourceCommit,
+      gifBytes: Buffer.from("GIF89a-test"),
+      diagnostics,
+      capture: {
+        ...capture,
+        presentation: { ...capture.presentation, renderProfile: "enhanced" },
+      },
+    })).toThrow(/R10-C presentation profile/);
   });
 
   it("compares legacy hashes only inside the same frozen input scenario", () => {

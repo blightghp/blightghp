@@ -64,6 +64,7 @@ async function generateGif() {
     await page.waitForFunction(() => Boolean(window.__BRAIN_ENGINE__));
     await page.evaluate(() => window.__BRAIN_ENGINE__.setCaptureMode(true));
     await page.evaluate(() => {
+      window.__BRAIN_ENGINE__.setRenderProfile("cinema");
       window.__BRAIN_ENGINE__.setMaterialProfile("realistic-illustrative");
       window.__BRAIN_ENGINE__.setPresentationEffects({
         opacity: 0.82,
@@ -130,6 +131,7 @@ async function generateGif() {
         loopDurationSeconds: loopDuration,
         framesByView: { ...BRAIN_GIF_VIEW_FRAMES },
         presentation: {
+          renderProfile: "cinema",
           materialProfile: "realistic-illustrative",
           clipping: {
             view: "overview",

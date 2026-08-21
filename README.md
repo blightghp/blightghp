@@ -142,14 +142,30 @@ redundantes, busca, picking e modo esqueleto nas vistas existentes. O conjunto
 custa 12 draw calls contra teto 17 e permanece estritamente topológico e
 ilustrativo: não há fluxo, perfusão, pulso ou oxigenação modelados.
 
+R10-C transforma custo gráfico em contrato. `enhanced` é a apresentação
+interativa inicial, `baseline` remove o composer de bloom sob pressão sustentada
+e `cinema` só pode ser solicitado pelo modo de captura. O governador anuncia o
+motivo do downgrade, usa histerese e exige recuperação manual. Em GPU física, o
+artefato schema 1 mediu 24 frames por vista: p95 entre 1,9 e 19,1 ms, sempre
+abaixo da referência R10-B, com os cinco hashes invariantes.
+
 As seis vistas agora alternam atomicamente entre `schematic` e
-`realistic-illustrative` no mesmo scene graph. Apenas 25 objetos de matéria com
+`realistic-illustrative` no mesmo scene graph; a película realista-ilustrativa é
+tentada por padrão e recua atomicamente quando o ambiente exige. Os 37 objetos
+de matéria com
 proveniência, normal e envelope declarados recebem PBR/transmission; emissão,
 linhas, pontos, labels e overlays preservam o pipeline auditado. Cortes coronal,
 sagital, axial, oblíquo e em laje usam clipping local e tampas stencil. A sonda
 da Visão Geral lê somente `field.waveActivity` publicado, com unidade e regra de
 interpolação; nenhum atlas externo foi incorporado e aparência não é evidência
 biológica.
+
+A [revisão visual R10-C](docs/VISUAL_REVIEW_R10_C.md) compara as seis capturas
+com MRI, atlas e reconstruções 3D públicas. O parecer é deliberadamente crítico:
+há mais profundidade e materialidade, mas a casca facetada, a falta de
+girificação, a iluminação e as formas celulares ainda são rudimentares. R10-D e
+R10-E são os gates proprietários dessa evolução; brilho não é tratado como
+substituto de geometria nem como validação clínica.
 
 ### O que consigo explorar hoje
 
@@ -177,8 +193,10 @@ biológica.
   canônica, 12 bytes por evento e teto de 4.096 eventos por snapshot;
 - pipeline visual com matéria, emissão e composição; bloom restrito ao que
   realmente emite e proveniência declarada por objeto;
-- película `realistic-illustrative` com 25 objetos PBR elegíveis, três luzes
+- película `realistic-illustrative` com 37 objetos PBR elegíveis, três luzes
   decorativas, fallback esquemático atômico e zero troca de geometria/binding;
+- perfis de renderização `baseline`, `enhanced` e `cinema`, governador com
+  motivo/histerese/recuperação manual e orçamento por vista em gate de CI;
 - planos coronal, sagital, axial e oblíquo, laje, tampas stencil, raio-X,
   opacidade, isolamento e sonda textual do campo cortical; 9 draws adicionais
   no corte simples e teto de 18 na laje;
@@ -279,6 +297,9 @@ memória de estudo em falsa proveniência Git.
 | 2026-08-13 | fecho R09-E com cabo soma/proximal/distal implícito, replay v1/v2, ABI v8, 37 buffers e gradiente auditável |
 | 2026-08-13 | preparo as seis vistas para a película 3D com inventário executável e fallback esquemático |
 | 2026-08-13 | fecho R09-F com 25 materiais PBR limitados, quatro cortes/laje, tampas stencil, sonda macroscópica, cinco hashes invariantes e manifesto GIF schema 3 |
+| 2026-08-13 | fecho R10-A com catálogo anatômico, busca, picking e 32 entradas procedurais explicitamente ilustrativas |
+| 2026-08-13 | fecho R10-B com 42 segmentos vasculares estáticos, 44 entradas e zero alegação de fluxo ou perfusão |
+| 2026-08-20 | fecho R10-C com orçamento versionado, governador de perfis, caches, capturas em GPU física e revisão visual comparativa |
 
 O histórico da base está em
 [`docs/legacy/plans/PLAN-0.7.md`](docs/legacy/plans/PLAN-0.7.md) e
@@ -297,6 +318,8 @@ estão registradas nas auditorias [R09-A](AUDIT_0.9_R09_A.md),
 [R09-D](AUDIT_0.9_R09_D.md), [R09-E](AUDIT_0.9_R09_E.md) e
 [R09-F](AUDIT_0.9_R09_F.md). A fronteira original da película permanece na
 [auditoria de prontidão visual](AUDIT_0.9_VISUAL_MATERIAL_READINESS.md).
+As etapas 0.10 encerradas estão nas auditorias [R10-A](AUDIT_0.10_R10_A.md),
+[R10-B](AUDIT_0.10_R10_B.md) e [R10-C](AUDIT_0.10_R10_C.md).
 
 ### Executar e conferir
 
@@ -311,11 +334,17 @@ Para repetir os gates:
 npm run check
 npm run audit:anatomy
 npm run audit:vascular
+npm run audit:presentation-budget
+npm run verify:presentation-budget
 npm run verify:promotion-0.8
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo check -p brain-wasm --target wasm32-unknown-unknown
 ```
+
+O audit de apresentação solicita GPU física por padrão e rejeita um renderer de
+software. `BRAIN_GRAPHICS_BACKEND=swiftshader npm run audit:presentation-budget`
+serve apenas como diagnóstico local e não substitui o artefato aceito pelo gate.
 
 O gate web também gera capturas temporárias em desktop/mobile e audita teclado,
 contraste e o perfil de execução. Para preservar esses artefatos em um diretório:
@@ -332,7 +361,8 @@ npm run verify:brain-gif
 ```
 
 O workflow recompila o Wasm antes da captura, exige runtime `rust-wasm`/ABI v8,
-aplica a película R09-F e o corte coronal à Visão Geral, registra zero atlas
+entra em `captureMode`, seleciona explicitamente o perfil `cinema` R10-C, aplica
+a película realista-ilustrativa e o corte coronal à Visão Geral, registra zero atlas
 externo, os cinco hashes independentes, a cobertura das seis vistas e o SHA-256 do GIF em
 [`assets/brain-gif.json`](assets/brain-gif.json), carimba o README com o commit
 de origem e só então publica os artefatos. O GitHub ainda pode levar alguns

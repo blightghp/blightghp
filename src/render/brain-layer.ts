@@ -115,10 +115,13 @@ export class BrainRenderLayers implements RenderLayer {
   private readonly tempScale = new THREE.Vector3();
   private readonly tempQuaternion = new THREE.Quaternion();
   private readonly tempColor = new THREE.Color();
+  private interpolatedActivations: Float32Array;
+  private lastSignalInstanceCount = 0;
   private visibleSignalLimit = MAX_VISIBLE_SIGNALS;
 
   constructor(data: BrainData) {
     this.data = data;
+    this.interpolatedActivations = new Float32Array(data.nodes.length);
     this.group = new THREE.Group();
     this.group.rotation.set(0.04, 0.34, -0.025);
     this.buildLayers();
@@ -230,6 +233,7 @@ export class BrainRenderLayers implements RenderLayer {
       MAX_VISIBLE_SIGNALS * TRAIL_LENGTH,
     );
     this.pulseMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.pulseMesh.count = 0;
     this.pulseMesh.name = "published-network-signals";
     declareVisual(this.pulseMesh, "emission", "state", {
       field: "signals.{progress,strength,inhibitory}",
@@ -338,7 +342,11 @@ export class BrainRenderLayers implements RenderLayer {
     alpha: number,
     visibleSignalLimit = MAX_VISIBLE_SIGNALS,
   ): void {
-    const interpolatedActivations = new Float32Array(currSnapshot.activations.length);
+    if (this.interpolatedActivations.length !== currSnapshot.activations.length) {
+      // A resize is a topology/snapshot-contract event, never a frame-level allocation.
+      this.interpolatedActivations = new Float32Array(currSnapshot.activations.length);
+    }
+    const interpolatedActivations = this.interpolatedActivations;
     for (let index = 0; index < currSnapshot.activations.length; index += 1) {
       const prev = prevSnapshot ? prevSnapshot.activations[index] : currSnapshot.activations[index];
       const curr = currSnapshot.activations[index];
@@ -444,13 +452,6 @@ export class BrainRenderLayers implements RenderLayer {
   }
 
   private renderSignals(snapshot: NeuralSnapshot, visibleSignalLimit: number): void {
-    const totalInstances = MAX_VISIBLE_SIGNALS * TRAIL_LENGTH;
-    for (let index = 0; index < totalInstances; index += 1) {
-      this.tempScale.setScalar(0.0001);
-      this.tempMatrix.compose(this.tempPosition.set(0, -999, 0), this.tempQuaternion.identity(), this.tempScale);
-      this.pulseMesh.setMatrixAt(index, this.tempMatrix);
-    }
-
     const { synapseIds, progress, strength, inhibitory } = snapshot.signals;
     const signalCount = Math.min(
       synapseIds.length,
@@ -488,6 +489,20 @@ export class BrainRenderLayers implements RenderLayer {
         instanceIndex += 1;
       }
     }
+
+    // Only erase the stale tail when the visible batch shrinks. InstancedMesh.count
+    // prevents untouched capacity from becoming a draw or a matrix upload.
+    for (let index = instanceIndex; index < this.lastSignalInstanceCount; index += 1) {
+      this.tempScale.setScalar(0.0001);
+      this.tempMatrix.compose(
+        this.tempPosition.set(0, -999, 0),
+        this.tempQuaternion.identity(),
+        this.tempScale,
+      );
+      this.pulseMesh.setMatrixAt(index, this.tempMatrix);
+    }
+    this.pulseMesh.count = instanceIndex;
+    this.lastSignalInstanceCount = instanceIndex;
 
     this.pulseMesh.instanceMatrix.needsUpdate = true;
     if (this.pulseMesh.instanceColor) this.pulseMesh.instanceColor.needsUpdate = true;

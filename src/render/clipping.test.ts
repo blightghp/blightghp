@@ -99,6 +99,7 @@ describe("R09-F clipping planes and stencil caps", () => {
       estimatedAdditionalDrawCalls: 3,
       maximumAdditionalDrawCalls: 18,
     });
+    expect(clipping.cacheAudit()).toEqual({ layers: 1, objects: 2, builds: 1 });
     const stencil = scene.getObjectByName("cut-stencil-back-0-0") as THREE.Mesh;
     const cap = scene.getObjectByName("cut-cap-0") as THREE.Mesh;
     expect(stencil.geometry).toBe(source.geometry);
@@ -117,6 +118,9 @@ describe("R09-F clipping planes and stencil caps", () => {
     expect(stencilDispose).toHaveBeenCalledOnce();
     expect(capGeometryDispose).toHaveBeenCalledOnce();
     expect(capMaterialDispose).toHaveBeenCalledOnce();
+    expect(clipping.cacheAudit().builds).toBe(1);
+    clipping.invalidateLayer("overview");
+    expect(clipping.cacheAudit().builds).toBe(2);
 
     clipping.dispose();
     expect(renderer.localClippingEnabled).toBe(false);

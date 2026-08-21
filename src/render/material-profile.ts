@@ -637,6 +637,17 @@ export class PresentationMaterialEffects {
     isolateVascular: false,
   };
   private readonly saved = new Map<THREE.Material, SavedPresentationMaterial>();
+  private readonly materialCache = new Map<
+    THREE.Object3D,
+    {
+      revision: number;
+      records: Array<{
+        object: THREE.Object3D & { material: THREE.Material | THREE.Material[] };
+        matter: boolean;
+      }>;
+    }
+  >();
+  private cacheBuilds = 0;
 
   setState(update: Partial<PresentationEffectsState>): void {
     this.state = {
@@ -647,17 +658,13 @@ export class PresentationMaterialEffects {
     };
   }
 
-  beforeRender(root: THREE.Object3D): void {
+  beforeRender(root: THREE.Object3D, sceneRevision = 0): void {
     if (this.saved.size > 0) throw new Error("presentation effects were not restored");
-    root.traverse((object) => {
-      if (!("material" in object)) return;
-      const renderable = object as THREE.Object3D & {
-        material: THREE.Material | THREE.Material[];
-      };
+    const cached = this.cachedMaterials(root, sceneRevision);
+    for (const { object: renderable, matter } of cached) {
       const materials = Array.isArray(renderable.material)
         ? renderable.material
         : [renderable.material];
-      const matter = visualPassOf(object) === "matter";
       for (const material of materials) {
         if (this.saved.has(material)) continue;
         this.saved.set(material, {
@@ -668,7 +675,7 @@ export class PresentationMaterialEffects {
         });
         const isolationMultiplier = this.state.isolateMatter && !matter ? 0.16 : 1;
         const vascularIsolationMultiplier =
-          this.state.isolateVascular && matter && !isVascularTopologyObject(object) ? 0.12 : 1;
+          this.state.isolateVascular && matter && !isVascularTopologyObject(renderable) ? 0.12 : 1;
         const matterOpacity = matter ? this.state.opacity : 1;
         const xrayMultiplier = this.state.xray && matter ? 0.28 : 1;
         material.opacity *= isolationMultiplier * vascularIsolationMultiplier *
@@ -676,7 +683,7 @@ export class PresentationMaterialEffects {
         if (material.opacity < 1) material.transparent = true;
         if (this.state.xray && matter) material.depthWrite = false;
       }
-    });
+    }
   }
 
   afterRender(): void {
@@ -690,5 +697,48 @@ export class PresentationMaterialEffects {
 
   audit(): PresentationEffectsState {
     return { ...this.state };
+  }
+
+  invalidate(root?: THREE.Object3D): void {
+    if (root) this.materialCache.delete(root);
+    else this.materialCache.clear();
+  }
+
+  cacheAudit(): { readonly roots: number; readonly records: number; readonly builds: number } {
+    return {
+      roots: this.materialCache.size,
+      records: [...this.materialCache.values()].reduce(
+        (total, cached) => total + cached.records.length,
+        0,
+      ),
+      builds: this.cacheBuilds,
+    };
+  }
+
+  private cachedMaterials(
+    root: THREE.Object3D,
+    revision: number,
+  ): Array<{
+    object: THREE.Object3D & { material: THREE.Material | THREE.Material[] };
+    matter: boolean;
+  }> {
+    const cached = this.materialCache.get(root);
+    if (cached?.revision === revision) return cached.records;
+    const records: Array<{
+      object: THREE.Object3D & { material: THREE.Material | THREE.Material[] };
+      matter: boolean;
+    }> = [];
+    root.traverse((object) => {
+      if (!("material" in object)) return;
+      records.push({
+        object: object as THREE.Object3D & {
+          material: THREE.Material | THREE.Material[];
+        },
+        matter: visualPassOf(object) === "matter",
+      });
+    });
+    this.materialCache.set(root, { revision, records });
+    this.cacheBuilds += 1;
+    return records;
   }
 }
