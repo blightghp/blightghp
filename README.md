@@ -146,7 +146,7 @@ R10-C transforma custo gráfico em contrato. `enhanced` é a apresentação
 interativa inicial, `baseline` remove o composer de bloom sob pressão sustentada
 e `cinema` só pode ser solicitado pelo modo de captura. O governador anuncia o
 motivo do downgrade, usa histerese e exige recuperação manual. Em GPU física, o
-artefato schema 1 mediu 24 frames por vista: p95 entre 0,5 e 13,6 ms, sempre
+artefato schema 1 mediu 24 frames por vista: p95 entre 1,9 e 19,1 ms, sempre
 abaixo da referência R10-B, com os cinco hashes invariantes.
 
 As seis vistas agora alternam atomicamente entre `schematic` e

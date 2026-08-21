@@ -491,7 +491,7 @@ na janela de recuperação, evitando oscilação automática.
 O artefato mede 24 frames em cada uma das seis vistas e registra ambiente, GPU,
 draws, triângulos, bytes de textura/geometria e p50/p95. O verificador compara
 `baseline` com o custo R10-B e tolerâncias versionadas. A auditoria em ANGLE
-Direct3D11/Intel UHD mediu p95 de 0,5 a 13,6 ms, 6 a 50 draws e preservou os
+Direct3D11/Intel UHD mediu p95 de 1,9 a 19,1 ms, 6 a 50 draws e preservou os
 cinco hashes.
 
 As sete reclamações são provadas por buffer cortical reutilizado; limpeza só da

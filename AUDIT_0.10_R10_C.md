@@ -41,15 +41,15 @@ JSON do artefato.
 
 | Vista | p50 (ms) | p95 (ms) | Draws | Triângulos | Textura (bytes) | Geometria (bytes) |
 | :-- | --: | --: | --: | --: | --: | --: |
-| Visão Geral | 1,40 | 6,00 | 28 | 14.166 | 51.056.640 | 487.164 |
-| Lâminas | 7,90 | 13,60 | 50 | 7.496 | 51.052.544 | 204.924 |
-| Célula | 0,40 | 0,50 | 6 | 4.892 | 50.790.400 | 96.648 |
-| Neurônio | 0,40 | 0,70 | 9 | 2.324 | 50.790.400 | 68.228 |
-| Eletricidade | 0,40 | 0,70 | 10 | 1.186 | 50.528.256 | 7.580 |
-| Sinapse | 2,30 | 7,10 | 15 | 17.148 | 51.052.544 | 160.664 |
+| Visão Geral | 1,90 | 6,30 | 28 | 14.166 | 61.187.040 | 487.164 |
+| Lâminas | 8,60 | 19,10 | 50 | 7.496 | 61.182.944 | 204.924 |
+| Célula | 0,80 | 1,90 | 6 | 4.892 | 60.920.800 | 96.648 |
+| Neurônio | 3,20 | 8,10 | 9 | 2.324 | 60.920.800 | 68.228 |
+| Eletricidade | 0,80 | 2,40 | 10 | 1.186 | 60.658.656 | 7.580 |
+| Sinapse | 1,30 | 6,20 | 15 | 17.148 | 61.182.944 | 160.664 |
 
 Todas as vistas ficaram abaixo de 33,4 ms p95 e dos tetos estruturais. O maior
-p95 foi 13,6 ms em Lâminas. A comparação com R10-B é conservadora: o verificador
+p95 foi 19,1 ms em Lâminas. A comparação com R10-B é conservadora: o verificador
 exige que nenhum draw, triângulo ou byte exceda a referência mais a tolerância
 declarada. Os cinco hashes permaneceram iguais antes e depois da alternância de
 perfil e das capturas.
@@ -59,7 +59,7 @@ de clipping e partições de bloom com 58 objetos de matéria, 40 de emissão e 
 excluídos. A UI e a sonda de corte foram desacopladas do frame e atualizadas na
 cadência de métricas de 0,12 s.
 
-O `audit:runtime` também passou com 105 amostras e p95 de 3.814,90 ms em
+O `audit:runtime` também passou com 102 amostras e p95 de 3.632,10 ms em
 SwiftShader. Esse número valida lifecycle no rasterizador de software; não é
 baseline de desempenho e não é comparado ao p95 de GPU física.
 
@@ -103,7 +103,7 @@ entrada permitida para atlas/assets externos com proveniência.
 
 | Comando | Resultado |
 | :-- | :-- |
-| `npm run check` | passou; tipagem, replay, 27 arquivos/138 testes, build, Worker/Wasm, promoção 0.8, orçamento e runtime |
+| `npm run check` | passou; tipagem, replay, 27 arquivos/139 testes, build, Worker/Wasm, promoção 0.8, orçamento e runtime |
 | `npm run audit:presentation-budget` | passou; seis vistas, 144 amostras, 12 capturas, GPU física e zero erro de navegador |
 | `npm run verify:presentation-budget` | passou; schema, tetos, referência R10-B, isolamento de cinema e hashes |
 | `npm run audit:material` | passou em diretório temporário; 37 elegíveis e 18 capturas |
@@ -121,6 +121,11 @@ Artefatos versionados em `artifacts/presentation-budget/`:
 - `presentation-budget.json` schema 1;
 - seis capturas `baseline-*.png`;
 - seis capturas `visual-*-enhanced.png`.
+
+Cada PNG nasce de `canvas.toDataURL()` no mesmo callback do render, evitando o
+descarte tardio do framebuffer. `captureCoverage` amostra 96×64 pixels e o gate
+rejeita menos de oito pixels visíveis; as 12 capturas finais registraram de 128
+a 2.814 pixels visíveis.
 
 O workflow CI verifica o artefato versionado. A geração ao vivo permanece um
 comando explícito porque exige GPU/driver declarados; SwiftShader não pode
