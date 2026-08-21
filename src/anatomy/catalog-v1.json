@@ -21,7 +21,7 @@
     {
       "id": "source.corticothalamic-contract",
       "kind": "model-contract",
-      "locator": "MODEL_SPEC.md#MOD-020/MOD-030",
+      "locator": "docs/specifications/MODEL_SPEC.md#MOD-020/MOD-030",
       "version": "3",
       "licenseId": "brain-pro-internal",
       "externalAsset": false,
@@ -30,7 +30,7 @@
     {
       "id": "source.cell-patch-contract",
       "kind": "model-contract",
-      "locator": "MODEL_SPEC.md#MOD-040/MOD-091",
+      "locator": "docs/specifications/MODEL_SPEC.md#MOD-040/MOD-091",
       "version": "2",
       "licenseId": "brain-pro-internal",
       "externalAsset": false,
@@ -48,7 +48,7 @@
     {
       "id": "source.synapse-contract",
       "kind": "model-contract",
-      "locator": "MODEL_SPEC.md#MOD-060..MOD-081",
+      "locator": "docs/specifications/MODEL_SPEC.md#MOD-060..MOD-081",
       "version": "1",
       "licenseId": "brain-pro-internal",
       "externalAsset": false,

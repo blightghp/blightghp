@@ -44,8 +44,8 @@ Os números são medições, não metas inventadas nem garantia para outro hardw
 
 ## Evidência e reprodução
 
-- funcional/headless: `artifacts/visual-audit/runtime-audit.json`;
-- GPU física: `artifacts/hardware-audit/runtime-audit.json`;
+- funcional/headless: `../../../artifacts/visual-audit/runtime-audit.json`;
+- GPU física: `../../../artifacts/hardware-audit/runtime-audit.json`;
 - verificação: `npm run verify:runtime-audit` e
   `npm run verify:hardware-audit`;
 - testes estruturais: `src/render/render-contract.test.ts`,

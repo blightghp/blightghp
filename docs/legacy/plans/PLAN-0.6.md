@@ -1,6 +1,6 @@
 # LEGACY — Plano 0.6 · BRAIN PRO [v. 0.6.0]
 
-> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../../ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
+> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../planning/ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
 
 Data de abertura: 2026-07-26.
 

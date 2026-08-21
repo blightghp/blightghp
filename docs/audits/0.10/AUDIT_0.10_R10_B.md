@@ -40,7 +40,7 @@ usam `src/vascular/vascular-layer.ts#VascularTopologyModule` como fonte interna,
 licença interna e transformação procedural orientativa. Zero asset externo é
 distribuído.
 
-`src/vascular/vascular-topology-v1.json` possui 20.627 bytes. O parser Zod limita
+`../../../src/vascular/vascular-topology-v1.json` possui 20.627 bytes. O parser Zod limita
 importações a 128 KiB, rejeita campos desconhecidos e valida referências contra
 o catálogo. O objeto embutido é congelado e seu JSON canônico produz o hash de
 geometria/apresentação `46b9ddf9cd6510d4`, que não integra os cinco domínios

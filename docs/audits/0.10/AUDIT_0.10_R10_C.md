@@ -95,7 +95,7 @@ giros/sulcos; Lâminas e Célula dependem de cilindros/elipsoides repetidos; o
 Neurônio tem arborização esparsa e exposição excessiva; Sinapse mistura escalas
 didáticas; Eletricidade deve permanecer uma prancha legível. O parecer completo,
 notas por vista, referências e ownership dos próximos gates estão em
-[`docs/VISUAL_REVIEW_R10_C.md`](docs/VISUAL_REVIEW_R10_C.md). R10-D possui a
+[`../../reviews/VISUAL_REVIEW_R10_C.md`](../../reviews/VISUAL_REVIEW_R10_C.md). R10-D possui a
 superfície procedural e R10-E, luz/materialidade; R10-H continua sendo a única
 entrada permitida para atlas/assets externos com proveniência.
 

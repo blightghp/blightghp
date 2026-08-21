@@ -12,7 +12,7 @@ Estado: **concluído sem regressão do BRAIN PRO 0.6.0**.
 | cadência e perfil | snapshots configuráveis em 60/30/15/10 Hz sem mudar `dt`; janela móvel de CPU, GPU, memória e latência | `performance-profile.test.ts` e `audit_runtime.js` |
 | AMPA/GABA-A | constantes centralizadas e estudo contra a integral analítica da resposta exponencial | `synaptic_convergence.rs` exige erro decrescente e ordem observada maior que 0,90 |
 | axônios laminares | seis recorrências L1–L6 e nove vias já declaradas usam curvas cúbicas e pulsos com fase própria | teste estrutural, LOD de cena 26/36/44 draw calls e captura laminar |
-| visual e acessibilidade | três capturas em dois viewports, teclado roving, ausência de overflow móvel e contraste mínimo 4,5:1 | `npm run audit:runtime` e `artifacts/visual-audit/runtime-audit.json` |
+| visual e acessibilidade | três capturas em dois viewports, teclado roving, ausência de overflow móvel e contraste mínimo 4,5:1 | `npm run audit:runtime` e `../../../artifacts/visual-audit/runtime-audit.json` |
 
 ## Revisão de qualidade da 0.6
 

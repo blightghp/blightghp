@@ -136,7 +136,7 @@ hierarquia de artista (dezenas de objetos). Regra de agrupamento:
 | um objeto por segmento nomeado | N | **proibido** |
 
 Mesclar destrói o nome por segmento — e o picking por segmento depende dele. Solução sem
-custo: manter o **grafo em dados** (o contrato `src/vascular/vascular-topology-v1.json` de
+custo: manter o **grafo em dados** (o contrato `../../src/vascular/vascular-topology-v1.json` de
 R10-B) e resolver o segmento por `geometry.groups` + atributo `segmentIndex` no raycast,
 em vez de por `Object3D` separado. Uma malha mesclada, picking por segmento, 1 draw.
 
@@ -609,7 +609,7 @@ npm run audit:anatomy && npm run audit:material && npm run audit:runtime
 npm run check && npm run verify:brain-gif
 ```
 
-A auditoria da PR (`AUDIT_0.10_R10_H.md`) registra: comandos executados, ambiente, os
+A auditoria da PR (`../audits/0.10/AUDIT_0.10_R10_H.md`) registra: comandos executados, ambiente, os
 cinco hashes antes/depois, draws/triângulos/texturas por vista antes/depois, bytes do
 asset e seu SHA-256, contagem de objetos ligados/excluídos, e o motivo de qualquer
 fallback observado.

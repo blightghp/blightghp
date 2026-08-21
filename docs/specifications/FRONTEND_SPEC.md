@@ -338,4 +338,4 @@ Rust/ABI, hipótese, preset e replay próprios.
 | interação 3D | picking e seleção idênticos à árvore/lista |
 
 Pixels não substituem testes de estado/DOM. Testes estruturais não substituem
-inspeção visual. Os gates e ambientes estão em [VALIDATION.md](VALIDATION.md).
+inspeção visual. Os gates e ambientes estão em [VALIDATION.md](../quality/VALIDATION.md).

@@ -20,15 +20,15 @@ artefato de promoção.
 | promoção 0.8 | gate agregado de versão, ABI, evidência e achados | `promotion-0.8.json` schema 1 | P1–P4 concluídas; nenhum achado alto aberto |
 | experimento de tarefa R09-A | schema/adapters, controle nulo, fixture e replay | `bayesian-observation-v1.json` | posterior isolada do drive; contexto interativo nulo |
 | eventos celulares R09-B | fixture exata, ABI/Worker e renderer | `cell-spike-events-v1.json` + auditoria de lifecycle | IDs/offsets carimbados pelo Rust; limite e backpressure provados |
-| Prancha Elétrica R09-C | observáveis puros, scene graph, DOM e auditoria | [auditoria R09-C](AUDIT_0.9_R09_C.md) | 10/11 draws, equivalente textual, hashes invariantes e zero objeto sem proveniência |
-| seleção/vista Neurônio R09-D | seleção convergente, geometria determinística, bindings e auditoria | [auditoria R09-D](AUDIT_0.9_R09_D.md) | 10 draws, 8 valores, zero rebuild/frame, foco restaurado e cinco hashes invariantes |
-| materialidade e planos de corte R09-F | manifesto PBR, clipping/stencil, sonda, fallback, hash e GIF | [auditoria R09-F](AUDIT_0.9_R09_F.md) | 25 materiais elegíveis, 9/18 draws de corte, zero geometria/binding alterado e cinco hashes invariantes |
-| catálogo anatômico R10-A | schema/import, hierarquia, bindings de cena, busca, árvore/picking e navegador | [auditoria R10-A](AUDIT_0.10_R10_A.md) | 32 entradas, 98 objetos cobertos, zero asset externo/custo gráfico e cinco hashes invariantes |
-| vascular topológico R10-B | schema/import, invariantes de grafo, catálogo, cena estática, redundância, busca/picking/isolamento e navegador | [auditoria R10-B](AUDIT_0.10_R10_B.md) | 42 segmentos, 44 entradas, 12/17 draws, zero animação/asset externo e cinco hashes invariantes |
-| orçamento de apresentação R10-C | três perfis, governador, caches, medição física e 12 capturas | [auditoria R10-C](AUDIT_0.10_R10_C.md) | seis vistas × 24 amostras abaixo do teto e cinco hashes invariantes |
-| superfície procedural R10-D | determinismo, dois LODs, atributos baked, fallback, corte e medição física | [auditoria R10-D](AUDIT_0.10_R10_D.md) | hash `7dfdd64207190121`, 5.780/1.500 triângulos, build 77,9 ms e 12 capturas válidas |
+| Prancha Elétrica R09-C | observáveis puros, scene graph, DOM e auditoria | [auditoria R09-C](../audits/0.9/AUDIT_0.9_R09_C.md) | 10/11 draws, equivalente textual, hashes invariantes e zero objeto sem proveniência |
+| seleção/vista Neurônio R09-D | seleção convergente, geometria determinística, bindings e auditoria | [auditoria R09-D](../audits/0.9/AUDIT_0.9_R09_D.md) | 10 draws, 8 valores, zero rebuild/frame, foco restaurado e cinco hashes invariantes |
+| materialidade e planos de corte R09-F | manifesto PBR, clipping/stencil, sonda, fallback, hash e GIF | [auditoria R09-F](../audits/0.9/AUDIT_0.9_R09_F.md) | 25 materiais elegíveis, 9/18 draws de corte, zero geometria/binding alterado e cinco hashes invariantes |
+| catálogo anatômico R10-A | schema/import, hierarquia, bindings de cena, busca, árvore/picking e navegador | [auditoria R10-A](../audits/0.10/AUDIT_0.10_R10_A.md) | 32 entradas, 98 objetos cobertos, zero asset externo/custo gráfico e cinco hashes invariantes |
+| vascular topológico R10-B | schema/import, invariantes de grafo, catálogo, cena estática, redundância, busca/picking/isolamento e navegador | [auditoria R10-B](../audits/0.10/AUDIT_0.10_R10_B.md) | 42 segmentos, 44 entradas, 12/17 draws, zero animação/asset externo e cinco hashes invariantes |
+| orçamento de apresentação R10-C | três perfis, governador, caches, medição física e 12 capturas | [auditoria R10-C](../audits/0.10/AUDIT_0.10_R10_C.md) | seis vistas × 24 amostras abaixo do teto e cinco hashes invariantes |
+| superfície procedural R10-D | determinismo, dois LODs, atributos baked, fallback, corte e medição física | [auditoria R10-D](../audits/0.10/AUDIT_0.10_R10_D.md) | hash `7dfdd64207190121`, 5.780/1.500 triângulos, build 77,9 ms e 12 capturas válidas |
 
-O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
+O artefato `../../artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
 reset/replay exato, descarte, reinicialização, cinco abas, 11 capturas e o
 ambiente de execução. Seu renderer é SwiftShader; por isso ele fecha P2, mas não
@@ -119,7 +119,7 @@ não satisfaz este gate.
 ### Dinâmica determinística da 0.8-b
 
 O gate temporal roda isolado da ABI e usa o oráculo versionado
-`fixtures/replay/short-term-plasticity-v1.json`:
+`../../fixtures/replay/short-term-plasticity-v1.json`:
 
 | Teste | Critério |
 | :-- | :-- |
@@ -140,7 +140,7 @@ independente está em
 ### Fenda e ocupação da 0.8-c
 
 O gate químico local usa o oráculo
-`fixtures/replay/cleft-occupancy-v1.json` e mantém a ABI fora do escopo:
+`../../fixtures/replay/cleft-occupancy-v1.json` e mantém a ABI fora do escopo:
 
 | Teste | Critério |
 | :-- | :-- |
@@ -159,7 +159,7 @@ consumidor em `crates/brain-engine/tests/cleft_occupancy_replay.rs`.
 
 ### Solver e rigidez da 0.8-d
 
-O gate composto usa `fixtures/replay/chemical-solver-v1.json`:
+O gate composto usa `../../fixtures/replay/chemical-solver-v1.json`:
 
 | Teste | Critério |
 | :-- | :-- |
@@ -297,8 +297,8 @@ Testes estatísticos longos e análises topológicas podem ficar fora do ciclo r
 
 Uma função passa de experimental para padrão quando:
 
-1. possui unidade, hipótese e limite em `MODEL_SPEC.md`;
-2. possui contrato de estado em `ARCHITECTURE.md`;
+1. possui unidade, hipótese e limite em `../specifications/MODEL_SPEC.md`;
+2. possui contrato de estado em `../specifications/ARCHITECTURE.md`;
 3. passa pelas camadas de validação aplicáveis;
 4. tem custo medido;
 5. aparece graficamente apenas por dados publicados;
@@ -313,7 +313,7 @@ da remoção do integrador TypeScript. A topologia e o renderer continuam cobert
 por `brain.test.ts` e `render-layers.test.ts`; dinâmica, campo e observáveis são
 reexecutados pelos testes Cargo. O resultado da auditoria, incluindo os limites
 que não foram promovidos a afirmações fisiológicas, está em
-[AUDIT_0.4.md](AUDIT_0.4.md).
+[AUDIT_0.4.md](../audits/0.4/AUDIT_0.4.md).
 
 ## Matriz de validação Rust/Wasm da 0.5
 
@@ -456,8 +456,8 @@ O navegador real testa seleção entre Visão Geral, Lâminas, Neurônio e Sinap
 live region, viewport `390×844`, ausência de overflow e cinco hashes congelados.
 O catálogo não cria geometria, material, textura, render target ou draw call; o
 relatório exige delta zero antes/depois. Evidência versionada:
-[AUDIT_0.10_R10_A.md](AUDIT_0.10_R10_A.md) e
-`artifacts/anatomy-audit/anatomy-audit.json`.
+[AUDIT_0.10_R10_A.md](../audits/0.10/AUDIT_0.10_R10_A.md) e
+`../../artifacts/anatomy-audit/anatomy-audit.json`.
 
 ### R10-B · vascular topológico
 
@@ -480,8 +480,8 @@ redundante, modo esqueleto, monocromia e viewport `390×844`. Seis capturas e o
 relatório versionado ficam em `artifacts/vascular-audit`; os cinco hashes
 científicos permanecem exatamente iguais. A geometria é somente ilustrativa e
 não publica fluxo, perfusão, pulso ou oxigenação. Evidência versionada:
-[AUDIT_0.10_R10_B.md](AUDIT_0.10_R10_B.md) e
-`artifacts/vascular-audit/vascular-audit.json`.
+[AUDIT_0.10_R10_B.md](../audits/0.10/AUDIT_0.10_R10_B.md) e
+`../../artifacts/vascular-audit/vascular-audit.json`.
 
 ### R10-C · orçamento, governador e reclamação
 
@@ -501,9 +501,9 @@ As sete reclamações são provadas por buffer cortical reutilizado; limpeza só
 cauda instanciada; partições matter/emission/excluded em cache; cache de
 materiais por raiz/revisão; cache de clipping por camada/invalidação; 21 matrizes
 estáticas congeladas; e UI/sonda na cadência de 8,3 Hz. Evidência:
-[AUDIT_0.10_R10_C.md](AUDIT_0.10_R10_C.md),
-`artifacts/presentation-budget/presentation-budget.json` e
-[revisão visual](docs/VISUAL_REVIEW_R10_C.md).
+[AUDIT_0.10_R10_C.md](../audits/0.10/AUDIT_0.10_R10_C.md),
+`../../artifacts/presentation-budget/presentation-budget.json` e
+[revisão visual](../reviews/VISUAL_REVIEW_R10_C.md).
 
 ### R10-D · superfície procedural
 
@@ -518,9 +518,9 @@ geometrias (quatro regiões × dois LODs) possui `aoFactor`, `curvature` e
 coronal e valida a sonda `field.waveActivity`. O artefato registra build de 77,9
 ms, 5.780/1.500 triângulos, p95 de 5,2/6,9 ms, zero troca de identidade
 geométrica, catálogo 1.2.0, 12 capturas não vazias e invariância dos cinco hashes
-científicos. Evidência: [AUDIT_0.10_R10_D.md](AUDIT_0.10_R10_D.md),
-`artifacts/procedural-surface/procedural-surface.json` e
-[revisão visual](docs/VISUAL_REVIEW_R10_D.md).
+científicos. Evidência: [AUDIT_0.10_R10_D.md](../audits/0.10/AUDIT_0.10_R10_D.md),
+`../../artifacts/procedural-surface/procedural-surface.json` e
+[revisão visual](../reviews/VISUAL_REVIEW_R10_D.md).
 
 Os contratos executáveis atuais são:
 
@@ -561,7 +561,7 @@ replay, publicar buffers e sobreviver a reset/dispose.
 
 ### Gate numérico por subsistema
 
-1. equação, unidade e domínio válidos em `MODEL_SPEC.md`;
+1. equação, unidade e domínio válidos em `../specifications/MODEL_SPEC.md`;
 2. solução analítica, referência refinada ou benchmark independente;
 3. estudo de convergência temporal e, quando aplicável, espacial;
 4. invariantes de positividade, conservação, normalização e limites;
@@ -681,8 +681,8 @@ A 0.8 foi promovida porque:
 8. auditoria de promoção registrar comandos e resultados reais.
 
 O fechamento executável e os limites aceitos estão em
-[AUDIT_0.8_PROMOTION.md](AUDIT_0.8_PROMOTION.md) e
-[`artifacts/promotion-0.8.json`](artifacts/promotion-0.8.json). Alterar versão,
+[AUDIT_0.8_PROMOTION.md](../audits/0.8/AUDIT_0.8_PROMOTION.md) e
+[`../../artifacts/promotion-0.8.json`](../../artifacts/promotion-0.8.json). Alterar versão,
 ABI, evidência física ou um achado aceito reabre este gate.
 
 ### C# e aceleradores externos

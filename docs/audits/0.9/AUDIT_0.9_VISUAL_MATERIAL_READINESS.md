@@ -17,7 +17,7 @@ obrigatório.
 Não há autorização para atribuir validade anatômica, histológica ou clínica ao
 acabamento. Uma vista só poderá receber a película em R09-F depois de cumprir o
 manifesto, a inspeção visual, a acessibilidade, o orçamento e a invariância
-descritos nesta auditoria e em `GRAPHICS_SPEC.md`.
+descritos nesta auditoria e em `../../specifications/GRAPHICS_SPEC.md`.
 
 ## Escopo conferido
 

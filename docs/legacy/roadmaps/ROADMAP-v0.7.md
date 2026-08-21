@@ -1,6 +1,6 @@
 # LEGACY — Roadmap · BRAIN PRO [v. 0.7.0]
 
-> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../../ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
+> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../planning/ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
 
 O experimento evolui em dois eixos inseparáveis: desce da atividade global até a sinapse e sobe da excitabilidade até a cognição e o comportamento. Cada entrega fecha uma escala antes de acrescentar outra e combina avanço do motor, ganho gráfico e evidência de validação.
 
@@ -57,7 +57,7 @@ O objetivo não é fazer todas as escalas rodarem com o mesmo modelo. É represe
   estrutural do renderer.
 
 O relatório de promoção e as limitações aceitas estão em
-[AUDIT_0.4.md](../../../AUDIT_0.4.md). A 0.5 preserva esse baseline como oráculo de
+[AUDIT_0.4.md](../../audits/0.4/AUDIT_0.4.md). A 0.5 preserva esse baseline como oráculo de
 migração; ela não deve reinterpretar o grafo k-NN atual como anatomia parcelada.
 
 ### Cortes da 0.5
@@ -84,7 +84,7 @@ migração; ela não deve reinterpretar o grafo k-NN atual como anatomia parcela
 
 O plano detalhado, incluindo limites do GitHub Pages e a política para C#, está
 em [MIGRATION-0.5.md](../plans/MIGRATION-0.5.md). O veredito, a evidência executada e os
-limites operacionais estão em [AUDIT_0.5_ENTRY.md](../../../AUDIT_0.5_ENTRY.md).
+limites operacionais estão em [AUDIT_0.5_ENTRY.md](../../audits/0.5/AUDIT_0.5_ENTRY.md).
 
 ### Fundação entregue
 
@@ -114,7 +114,7 @@ de qualidade da 0.5, antes de qualquer demonstração científica nova:
 - [x] capturas visuais automatizadas e auditoria contínua de teclado/contraste.
 
 O fechamento executável, os limites e a revisão de qualidade desses itens estão
-em [AUDIT_MIGRATION_BACKLOG.md](../../../AUDIT_MIGRATION_BACKLOG.md). As extensões mantêm
+em [AUDIT_MIGRATION_BACKLOG.md](../../audits/migration/AUDIT_MIGRATION_BACKLOG.md). As extensões mantêm
 o schema ABI 4 e os hashes promovidos da 0.6.
 
 ### Cortes da 0.6
@@ -144,7 +144,7 @@ o schema ABI 4 e os hashes promovidos da 0.6.
   sementes, replay versionado, Cargo/Clippy/Vitest, navegador e auditoria visual.
 
 O plano e o veredito estão em [PLAN-0.7.md](../plans/PLAN-0.7.md) e
-[AUDIT_0.7.md](../../../AUDIT_0.7.md).
+[AUDIT_0.7.md](../../audits/0.7/AUDIT_0.7.md).
 
 ### Preparação para a 0.8
 
@@ -189,4 +189,4 @@ Sono e vigília não serão tratados como simples variação de ganho. A explora
 - O LFP inicial será identificado como pseudo-LFP e derivado de uma aproximação documentada de correntes sinápticas.
 - Neurônios multicompartimentais, atlas externos e tractografia detalhada não fazem parte do caminho crítico até a 1.0.
 
-As equações e convenções vigentes ficam em [MODEL_SPEC.md](../../../MODEL_SPEC.md), a tradução para o código em [ARCHITECTURE.md](../../../ARCHITECTURE.md) e os critérios de evidência em [VALIDATION.md](../../../VALIDATION.md).
+As equações e convenções vigentes ficam em [MODEL_SPEC.md](../../specifications/MODEL_SPEC.md), a tradução para o código em [ARCHITECTURE.md](../../specifications/ARCHITECTURE.md) e os critérios de evidência em [VALIDATION.md](../../quality/VALIDATION.md).

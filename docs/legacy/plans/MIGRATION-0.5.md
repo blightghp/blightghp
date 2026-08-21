@@ -1,6 +1,6 @@
 # LEGACY — Plano 0.5 · Corredor Rust/Wasm
 
-> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../../ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
+> **LEGACY — documento preservado para rastreabilidade histórica. Foi substituído pelo [ROADMAP.md](../../planning/ROADMAP.md) e pelas especificações canônicas. Não deve ser utilizado como instrução vigente de implementação.**
 
 Este é o registro didático da etapa em que aprendi a retirar as equações do
 shell TypeScript e a torná-las responsabilidade do motor Rust. Ele permanece
@@ -83,7 +83,7 @@ Os artefatos comuns `fixtures/parity/discrete-v1.json` e
 Cargo. O segundo preserva os snapshots finais do oráculo TypeScript usado antes
 da promoção. `npm run check:shadow-replay` recompõe o cenário no Wasm e exige
 os mesmos hashes, enquanto Cargo verifica o mesmo artefato nativamente. O
-relatório imutável de custo e divergência está em `AUDIT_0.5_SHADOW.json`.
+relatório imutável de custo e divergência está em `../../audits/0.5/AUDIT_0.5_SHADOW.json`.
 
 ## Política para C#
 

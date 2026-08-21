@@ -23,8 +23,8 @@ export interface NeuralSignal {
 }
 
 // Sinais em trânsito, compactados em arrays paralelos em vez de uma mensagem por
-// disparo (ARCHITECTURE.md, Protocolo do Worker). Os quatro arrays têm o mesmo
-// comprimento; a entrada i descreve um único sinal.
+// disparo (docs/specifications/ARCHITECTURE.md, Protocolo do Worker). Os quatro
+// arrays têm o mesmo comprimento; a entrada i descreve um único sinal.
 export interface SignalBatch {
   synapseIds: Uint32Array;
   progress: Float32Array;
