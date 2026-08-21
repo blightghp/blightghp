@@ -52,13 +52,14 @@ function validateCapture(capture) {
   const presentation = capture.presentation;
   if (
     presentation?.materialProfile !== "realistic-illustrative" ||
+    (presentation?.renderProfile !== undefined && presentation.renderProfile !== "cinema") ||
     presentation?.clipping?.view !== "overview" ||
     presentation?.clipping?.orientation !== "coronal" ||
     presentation?.clipping?.slab !== false ||
     presentation?.clipping?.frames !== BRAIN_GIF_VIEW_FRAMES.overview ||
     presentation?.externalAtlasAssets !== 0
   ) {
-    throw new Error("GIF capture must declare the canonical R09-F presentation profile");
+    throw new Error("GIF capture must declare the canonical R10-C presentation profile");
   }
 }
 

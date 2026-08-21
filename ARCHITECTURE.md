@@ -1,6 +1,6 @@
 # Arquitetura canônica · BRAIN PRO
 
-**Documento:** revisão 5 · 13 de agosto de 2026
+**Documento:** revisão 6 · 20 de agosto de 2026
 
 **Produto observado:** 0.9.0
 
@@ -33,7 +33,9 @@ como planejada e nunca é descrita como implementada.
 | ARC-016 | materialidade realista-ilustrativa é perfil substituível sobre o mesmo scene graph | implementada em R09-F | somente evidência de que a troca exige nova semântica científica |
 | ARC-017 | clipping, stencil, sonda, câmera e isolamento pertencem exclusivamente à apresentação | aceita em R09-F | um novo domínio amostrado exige campo publicado e mapeamento espacial validado |
 | ARC-018 | catálogo anatômico é registro versionado de metadados e seleção, separado do estado científico e da geometria | aceita em R10-A | entrada de atlas externo ou ID persistido exige migração/fonte/licença próprias |
+| ARC-019 | perfil de renderização é dimensão de apresentação independente do perfil de material; `cinema` pertence exclusivamente ao modo de captura | aceita em R10-C | R10-G pode ampliar qualidade de captura sem torná-la interativa |
 | ARC-020 | topologia vascular é contrato próprio em `src/vascular`, separado da árvore de contenção do catálogo anatômico | aceita em R10-B | fonte externa de vasos com geometria própria exige pipeline e migração deliberados |
+| ARC-022 | orçamento gráfico é contrato versionado por perfil/vista e possui governador, artefato e gate de regressão | aceita em R10-C | somente uma nova baseline medida e auditada substitui os tetos |
 
 ## Contexto do sistema
 

@@ -1,6 +1,6 @@
 # Especificação gráfica e de proveniência · BRAIN PRO
 
-**Revisão:** 8 · R10-B validado em Three.js 0.185/WebGL · produto 0.9.0
+**Revisão:** 9 · R10-C validado em Three.js 0.185/WebGL · produto 0.9.0
 
 Este documento incorpora e substitui o antigo contrato visual da proposta 0.8,
 preservado em [`docs/legacy/specs`](docs/legacy/specs/VISUAL-SPEC-v0.8-proposal.md).
@@ -29,6 +29,8 @@ fidelidade entre estado calculado e estado mostrado.
 | GFX-073 | perfil realista preserva contraste, monocromia, movimento reduzido, picking, equivalente textual e cinco hashes. |
 | GFX-074 | falha parcial de asset/shader não mistura perfis: a vista retorna atomicamente ao esquemático. |
 | GFX-075 | fabricação por vista exige captura comparativa, orçamento GPU e auditoria `materialProfileAudit()` sem lacunas. |
+| GFX-080 | `baseline`, `enhanced` e `cinema` são perfis de custo independentes da materialidade; `cinema` é inalcançável fora da captura. |
+| GFX-081 | pressão sustentada em `enhanced` degrada para `baseline` com motivo público, histerese e recuperação manual; o governador nunca altera estado científico. |
 | AST-001 | anatomia detalhada não implica validação biológica. |
 | AST-002 | estrutura entra por função, orientação decorativa ou proveniência topológica declarada. |
 | AST-010 | morfologia procedural declara seed, stream, hash e limite ilustrativo; não afirma tipo celular real. |
@@ -54,6 +56,9 @@ fidelidade entre estado calculado e estado mostrado.
 | ELE-006 | custo máximo é 11 draws e marcadores só atualizam quando muda o hash de eventos. |
 | GFX-040 | prancha separa STATE, TOPOLOGY e DECORATION e mantém fallback textual. |
 | PERF-010 | todo shader/pass/asset tem orçamento e fallback. |
+| PERF-011 | orçamento schema 1 registra draws, triângulos, bytes de textura/geometria e frame p50/p95 por vista, perfil e ambiente. |
+| PERF-012 | o frame não aloca o buffer cortical, não zera capacidade instanciada limpa e não percorre o scene graph para bloom, efeitos ou clipping sem revisão explícita. |
+| PERF-013 | o gate de CI rejeita `baseline` acima da referência R10-B e da tolerância versionada; backend de software não pode ser descrito como GPU física. |
 
 ## Proveniência por objeto
 

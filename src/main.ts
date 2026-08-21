@@ -36,10 +36,14 @@ import {
   parseCellId,
   parseCutOrientation,
   parseLaminarLod,
+  parseRenderProfile,
   parseSimulationView,
   parseVisualColorMode,
   pickAnatomicalEntry,
+  PresentationBudgetMonitor,
+  PresentationResourceCache,
   receptorCurrentTotals,
+  RenderProfileGovernor,
   auditRenderedStatePixels,
   SelectiveBloomPipeline,
   PresentationMaterialEffects,
@@ -49,11 +53,14 @@ import {
   SynapseRenderLayer,
   VISUAL_COLORS,
   ACTIVITY_TRACE_STOPS,
+  freezeStaticPresentationMatrices,
   voltsToMillivolts,
 } from "./render";
 import type {
   CutPlaneState,
   MaterialProfileAudit,
+  PresentationBudgetAudit,
+  RenderProfile,
   SimulationView,
   VisualColorMode,
   VisualMaterialProfile,
@@ -132,6 +139,8 @@ declare global {
       profile: () => RuntimeProfile;
       setColorMode: (mode: VisualColorMode) => void;
       setMaterialProfile: (profile: VisualMaterialProfile) => VisualMaterialProfile;
+      setRenderProfile: (profile: RenderProfile) => RenderProfile;
+      resetPresentationBudgetSamples: () => void;
       setClipping: (state: Partial<CutPlaneState>) => CutPlaneState;
       setPresentationEffects: (state: {
         opacity?: number;
@@ -155,6 +164,11 @@ declare global {
         material: MaterialProfileAudit;
         clipping: ReturnType<ClippingSystem["audit"]>;
         effects: ReturnType<PresentationMaterialEffects["audit"]>;
+        effectsCache: ReturnType<PresentationMaterialEffects["cacheAudit"]>;
+        clippingCache: ReturnType<ClippingSystem["cacheAudit"]>;
+        bloom: ReturnType<SelectiveBloomPipeline["audit"]>;
+        budget: PresentationBudgetAudit;
+        frozenStaticMatrices: number;
         probe: ReturnType<typeof sampleMacroscopicCutProbe>;
         renderer: {
           drawCalls: number;
@@ -190,6 +204,9 @@ const simulationClock = new FixedStepClock({
   maxInteractiveDeltaSeconds: 0.1,
 });
 const runtimeProfiler = new RuntimeProfiler();
+const renderProfileGovernor = new RenderProfileGovernor();
+const presentationBudgetMonitor = new PresentationBudgetMonitor();
+const presentationResourceCache = new PresentationResourceCache();
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
@@ -237,6 +254,9 @@ let lastCutProbe: ReturnType<typeof sampleMacroscopicCutProbe> = {
 };
 let applicationDisposed = false;
 let webGlShaderCompilationFailed = false;
+let sceneGraphRevision = 0;
+let frozenStaticMatrixCount = 0;
+let materialEnvironmentTextureBytes = 0;
 
 const pendingResponses: Array<(event: EngineEvent) => void> = [];
 const activitySamples = Array.from({ length: 96 }, () => 0);
@@ -332,7 +352,7 @@ function updateNeuronMetrics(snapshot: NeuralSnapshot): void {
   element("#neuron-geometry-hash").textContent = neuronLayer.selection().geometryHash;
 }
 
-function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
+function updateMetrics(snapshot: NeuralSnapshot, delta: number, alpha: number): void {
   metricAccumulator += delta;
   if (metricAccumulator < 0.12) return;
   metricAccumulator = 0;
@@ -447,6 +467,8 @@ function updateMetrics(snapshot: NeuralSnapshot, delta: number): void {
   const drawElement = document.querySelector("#gpu-draw-calls");
   if (drawElement) drawElement.textContent = String(profile.gpu.drawCalls);
   updatePresentationCostUi();
+  updateRenderProfileUi();
+  updateCutProbe(snapshot, alpha);
   const memoryElement = document.querySelector("#snapshot-memory");
   if (memoryElement) memoryElement.textContent = `${(profile.memory.snapshotBytes / 1024).toFixed(1)} KiB`;
 
@@ -577,6 +599,54 @@ function updateMaterialProfileUi(profile: VisualMaterialProfile): void {
   }
 }
 
+function updateRenderProfileUi(): void {
+  const governor = renderProfileGovernor.audit();
+  document.body.dataset.renderProfile = governor.profile;
+  const select = document.querySelector<HTMLSelectElement>("#render-profile");
+  if (select) select.value = governor.profile;
+  const status = document.querySelector<HTMLElement>("#render-profile-status");
+  if (status) {
+    status.textContent = governor.reason
+      ? `BASELINE · LIMITE EXCEDIDO`
+      : governor.profile.toUpperCase();
+  }
+  const recovery = document.querySelector<HTMLButtonElement>("#recover-render-profile");
+  if (recovery) {
+    recovery.disabled = governor.profile === "enhanced" || !governor.recoveryAvailable;
+    recovery.textContent = governor.recoveryAvailable
+      ? "RECUPERAR ENHANCED"
+      : `RECUPERAÇÃO · ${governor.recoveryFrames}/90`;
+  }
+}
+
+function applyRenderProfile(profile: RenderProfile, resetSamples = true): void {
+  const maximumPixelRatio = profile === "baseline" ? 1 : 2;
+  const pixelRatio = Math.min(window.devicePixelRatio, maximumPixelRatio);
+  renderer.setPixelRatio(pixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderPipeline.setPixelRatio(pixelRatio);
+  renderPipeline.setSize(window.innerWidth, window.innerHeight);
+  presentationResourceCache.invalidate();
+  if (resetSamples) presentationBudgetMonitor.reset();
+  updateRenderProfileUi();
+}
+
+function requestRenderProfile(profile: RenderProfile): RenderProfile {
+  const parsed = parseRenderProfile(profile);
+  if (!parsed) throw new Error("perfil de renderização desconhecido");
+  const audit = renderProfileGovernor.request(parsed, captureMode);
+  applyRenderProfile(audit.profile);
+  if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+  return audit.profile;
+}
+
+function presentationBudgetAuditReport(): PresentationBudgetAudit {
+  return presentationBudgetMonitor.audit(
+    renderProfileGovernor.profile(),
+    renderProfileGovernor.audit(),
+  );
+}
+
 function updatePresentationCostUi(): void {
   const target = document.querySelector<HTMLElement>("#gpu-presentation-delta");
   if (!target || !clippingSystem || !materialProfileManager) return;
@@ -598,6 +668,9 @@ function renderRootForView(view: SimulationView): THREE.Group {
 
 function setMaterialProfile(profile: VisualMaterialProfile): VisualMaterialProfile {
   const active = materialProfileManager.setProfile(profile);
+  materialEnvironmentTextureBytes = materialProfileManager.audit()
+    .estimatedEnvironmentTextureBytes;
+  presentationResourceCache.invalidate();
   clippingSystem.refresh();
   updateMaterialProfileUi(active);
   updatePresentationCostUi();
@@ -705,7 +778,20 @@ function updatePresentationUi(state: CutPlaneState): void {
 
 function setCutPlaneState(update: Partial<CutPlaneState>): CutPlaneState {
   const state = clippingSystem.setState(update);
+  sceneGraphRevision += 1;
+  renderPipeline.invalidateSceneGraph();
   updatePresentationUi(state);
+  if (latestSnapshot) {
+    const alpha = Math.min(
+      1,
+      Math.max(
+        0,
+        (performance.now() - lastSnapshotReceivedTimestamp) /
+          (SIMULATION_STEP_SECONDS * 1000),
+      ),
+    );
+    updateCutProbe(latestSnapshot, alpha);
+  }
   if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   return state;
 }
@@ -787,22 +873,24 @@ function renderFrame(
   materialProfileManager.sync();
   scene.updateMatrixWorld(true);
   clippingSystem.update();
-  updatePresentationCostUi();
-  updateCutProbe(snapshot, alpha);
-  if (frameDelta > 0) updateMetrics(snapshot, frameDelta);
+  if (frameDelta > 0) updateMetrics(snapshot, frameDelta, alpha);
   controls.update();
   renderer.info.reset();
-  presentationEffects.beforeRender(renderRootForView(activeView));
+  presentationEffects.beforeRender(renderRootForView(activeView), sceneGraphRevision);
   try {
-    renderPipeline.render();
+    renderPipeline.render({
+      bloomEnabled: renderProfileGovernor.profile() !== "baseline",
+      sceneRevision: sceneGraphRevision,
+    });
   } finally {
     presentationEffects.afterRender();
   }
   const memory = (performance as Performance & {
     memory?: { usedJSHeapSize: number };
   }).memory;
+  const frameMilliseconds = performance.now() - frameStarted;
   runtimeProfiler.recordFrame(
-    performance.now() - frameStarted,
+    frameMilliseconds,
     {
       calls: renderer.info.render.calls,
       triangles: renderer.info.render.triangles,
@@ -811,6 +899,23 @@ function renderFrame(
     },
     memory?.usedJSHeapSize,
   );
+  const resources = presentationResourceCache.measure(activeView);
+  const pipeline = renderPipeline.audit();
+  const sample = {
+    view: activeView,
+    frameMilliseconds,
+    drawCalls: renderer.info.render.calls,
+    triangles: renderer.info.render.triangles,
+    geometryBytes: resources.geometryBytes,
+    textureBytes:
+      resources.textureBytes +
+      materialEnvironmentTextureBytes +
+      pipeline.estimatedOwnedTextureBytes,
+  };
+  presentationBudgetMonitor.record(sample);
+  const previousRenderProfile = renderProfileGovernor.profile();
+  const governor = renderProfileGovernor.observe(sample);
+  if (governor.profile !== previousRenderProfile) applyRenderProfile(governor.profile);
 }
 
 function animate(timestamp: number): void {
@@ -1134,6 +1239,32 @@ function setupInterface(): void {
     setMaterialProfile(requested);
   });
 
+  const renderProfileSelect = element<HTMLSelectElement>("#render-profile");
+  renderProfileSelect.value = renderProfileGovernor.profile();
+  renderProfileSelect.addEventListener("change", () => {
+    const requested = parseRenderProfile(renderProfileSelect.value);
+    if (!requested) {
+      updateRenderProfileUi();
+      return;
+    }
+    try {
+      requestRenderProfile(requested);
+    } catch (error) {
+      updateRenderProfileUi();
+      const status = element<HTMLElement>("#render-profile-status");
+      status.textContent = error instanceof Error ? error.message : "perfil indisponível";
+    }
+  });
+  element<HTMLButtonElement>("#recover-render-profile").addEventListener("click", () => {
+    try {
+      requestRenderProfile("enhanced");
+    } catch (error) {
+      const status = element<HTMLElement>("#render-profile-status");
+      status.textContent = error instanceof Error ? error.message : "recuperação indisponível";
+    }
+  });
+  updateRenderProfileUi();
+
   const orientationSelect = element<HTMLSelectElement>("#cut-orientation");
   orientationSelect.addEventListener("change", () => {
     const orientation = parseCutOrientation(orientationSelect.value);
@@ -1187,10 +1318,16 @@ function setupInterface(): void {
   highContrastToggle.checked = prefersHighContrast;
   document.body.dataset.highContrast = String(prefersHighContrast);
   materialProfileManager.setEnvironment({ highContrast: prefersHighContrast });
+  materialEnvironmentTextureBytes = materialProfileManager.audit()
+    .estimatedEnvironmentTextureBytes;
+  presentationResourceCache.invalidate();
   updateMaterialProfileUi(materialProfileManager.profile());
   highContrastToggle.addEventListener("change", () => {
     document.body.dataset.highContrast = String(highContrastToggle.checked);
     materialProfileManager.setEnvironment({ highContrast: highContrastToggle.checked });
+    materialEnvironmentTextureBytes = materialProfileManager.audit()
+      .estimatedEnvironmentTextureBytes;
+    presentationResourceCache.invalidate();
     clippingSystem.refresh();
     updateMaterialProfileUi(materialProfileManager.profile());
     if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
@@ -1459,6 +1596,9 @@ async function init(): Promise<void> {
     synapseLayer.group,
     materialManifestForView("synapse"),
   );
+  materialProfileManager.setProfile("realistic-illustrative");
+  materialEnvironmentTextureBytes = materialProfileManager.audit()
+    .estimatedEnvironmentTextureBytes;
   presentationEffects = new PresentationMaterialEffects();
   clippingSystem = new ClippingSystem(renderer, scene);
   for (const view of [
@@ -1475,8 +1615,14 @@ async function init(): Promise<void> {
       optIn: true,
       capObjectNames: CUT_CAP_OBJECTS[view],
     });
+    const root = renderRootForView(view);
+    presentationResourceCache.register(view, root);
+    frozenStaticMatrixCount += freezeStaticPresentationMatrices(root);
   }
   clippingSystem.setActiveLayer(activeView);
+  sceneGraphRevision += 1;
+  renderPipeline.invalidateSceneGraph();
+  applyRenderProfile(renderProfileGovernor.profile(), false);
 
   worker = new Worker(new URL("./simulation.worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = (event: MessageEvent<EngineEvent>) => {
@@ -1534,6 +1680,9 @@ async function init(): Promise<void> {
           renderFrame(latestSnapshot, 0);
         }
       } else {
+        const previousRenderProfile = renderProfileGovernor.profile();
+        const governor = renderProfileGovernor.leaveCaptureMode();
+        if (governor.profile !== previousRenderProfile) applyRenderProfile(governor.profile);
         simulationClock.rebase(performance.now());
       }
     },
@@ -1640,6 +1789,12 @@ async function init(): Promise<void> {
         profile === "realistic-illustrative" ? "realistic-illustrative" : "schematic",
       );
     },
+    setRenderProfile(profile) {
+      return requestRenderProfile(profile);
+    },
+    resetPresentationBudgetSamples() {
+      presentationBudgetMonitor.reset();
+    },
     setClipping(update) {
       return setCutPlaneState(update);
     },
@@ -1676,6 +1831,9 @@ async function init(): Promise<void> {
       document.body.dataset.highContrast = String(enabled);
       element<HTMLInputElement>("#high-contrast-mode").checked = enabled;
       materialProfileManager.setEnvironment({ highContrast: enabled });
+      materialEnvironmentTextureBytes = materialProfileManager.audit()
+        .estimatedEnvironmentTextureBytes;
+      presentationResourceCache.invalidate();
       clippingSystem.refresh();
       const profile = materialProfileManager.profile();
       updateMaterialProfileUi(profile);
@@ -1699,6 +1857,11 @@ async function init(): Promise<void> {
         material: materialProfileManager.audit(),
         clipping: clippingSystem.audit(),
         effects: presentationEffects.audit(),
+        effectsCache: presentationEffects.cacheAudit(),
+        clippingCache: clippingSystem.cacheAudit(),
+        bloom: renderPipeline.audit(),
+        budget: presentationBudgetAuditReport(),
+        frozenStaticMatrices: frozenStaticMatrixCount,
         probe: lastCutProbe,
         renderer: {
           drawCalls: renderer.info.render.calls,

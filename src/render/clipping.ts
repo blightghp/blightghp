@@ -337,12 +337,17 @@ export class ClippingSystem {
   private state: CutPlaneState = { ...DEFAULT_CUT_PLANE_STATE };
   private planes: THREE.Plane[] = [];
   private readonly layers = new Map<SimulationView, ClippingLayerRegistration>();
+  private readonly layerObjects = new Map<
+    SimulationView,
+    Array<THREE.Object3D & { material: THREE.Material | THREE.Material[] }>
+  >();
   private readonly savedMaterials = new Map<THREE.Material, SavedClippingContract>();
   private readonly capPass: StencilCapPass;
   private activeLayer: SimulationView = "overview";
   private capSources: StencilSource[] = [];
   private disposed = false;
   private readonly previousLocalClippingEnabled: boolean;
+  private cacheBuilds = 0;
 
   constructor(
     private readonly renderer: LocalClippingRenderer,
@@ -359,6 +364,7 @@ export class ClippingSystem {
     }
     registration.root.userData.visualClippingOptIn = registration.optIn;
     this.layers.set(registration.id, registration);
+    this.rebuildLayerCache(registration.id);
     this.refresh();
   }
 
@@ -391,16 +397,12 @@ export class ClippingSystem {
   refresh(): void {
     this.renderer.localClippingEnabled = this.state.enabled || this.previousLocalClippingEnabled;
     for (const registration of this.layers.values()) {
-      registration.root.traverse((object) => {
-        if (!("material" in object)) return;
-        const renderable = object as THREE.Object3D & {
-          material: THREE.Material | THREE.Material[];
-        };
+      for (const renderable of this.layerObjects.get(registration.id) ?? []) {
         const materials = Array.isArray(renderable.material)
           ? renderable.material
           : [renderable.material];
         const included = registration.optIn && this.state.enabled &&
-          visualClippingParticipationOf(object) === "include";
+          visualClippingParticipationOf(renderable) === "include";
         for (const material of materials) {
           if (!this.savedMaterials.has(material)) {
             const inheritedActivePlanes = included && material.clippingPlanes === this.planes;
@@ -418,9 +420,15 @@ export class ClippingSystem {
           material.clipShadows = included ? false : saved?.clipShadows ?? false;
           material.needsUpdate = true;
         }
-      });
+      }
     }
     this.refreshCapSources();
+  }
+
+  invalidateLayer(layer: SimulationView): void {
+    if (!this.layers.has(layer)) throw new Error(`clipping layer is not registered: ${layer}`);
+    this.rebuildLayerCache(layer);
+    this.refresh();
   }
 
   update(): void {
@@ -430,14 +438,11 @@ export class ClippingSystem {
   audit(): ClippingAudit {
     let clippedMaterials = 0;
     for (const registration of this.layers.values()) {
-      registration.root.traverse((object) => {
-        if (!("material" in object)) return;
-        const material = (object as THREE.Object3D & {
-          material: THREE.Material | THREE.Material[];
-        }).material;
+      for (const object of this.layerObjects.get(registration.id) ?? []) {
+        const material = object.material;
         const materials = Array.isArray(material) ? material : [material];
         clippedMaterials += materials.filter((entry) => entry.clippingPlanes?.length).length;
-      });
+      }
     }
     return {
       enabled: this.state.enabled,
@@ -464,6 +469,7 @@ export class ClippingSystem {
     }
     this.savedMaterials.clear();
     this.layers.clear();
+    this.layerObjects.clear();
     this.capPass.dispose();
     this.renderer.localClippingEnabled = this.previousLocalClippingEnabled;
     this.disposed = true;
@@ -486,6 +492,33 @@ export class ClippingSystem {
       );
     }
     this.capPass.configure(this.capSources, this.planes);
+  }
+
+  cacheAudit(): { readonly layers: number; readonly objects: number; readonly builds: number } {
+    return {
+      layers: this.layerObjects.size,
+      objects: [...this.layerObjects.values()].reduce(
+        (total, objects) => total + objects.length,
+        0,
+      ),
+      builds: this.cacheBuilds,
+    };
+  }
+
+  private rebuildLayerCache(layer: SimulationView): void {
+    const registration = this.layers.get(layer);
+    if (!registration) return;
+    const objects: Array<
+      THREE.Object3D & { material: THREE.Material | THREE.Material[] }
+    > = [];
+    registration.root.traverse((object) => {
+      if (!("material" in object)) return;
+      objects.push(object as THREE.Object3D & {
+        material: THREE.Material | THREE.Material[];
+      });
+    });
+    this.layerObjects.set(layer, objects);
+    this.cacheBuilds += 1;
   }
 }
 

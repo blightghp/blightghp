@@ -58,6 +58,7 @@ ambiente e dos envelopes registrados.
 | SEC-020 | import de catálogo rejeita JSON malformado, campos desconhecidos, excesso de 256 KiB, referências quebradas e asset externo sem SHA-256 |
 | QA-111 | vascular prova schema/cotas, invariantes de grafo, cobertura de catálogo por objeto, redundância sem cor, ausência de animação, orçamento e invariância dos cinco hashes |
 | SEC-021 | contrato vascular rejeita JSON malformado, campo desconhecido, acima de 128 KiB, referência quebrada e ID duplicado |
+| QA-112 | orçamento prova três perfis, isolamento de captura, downgrade/histerese/recuperação, sete reclamações executáveis, custo por vista, cache por revisão e cinco hashes invariantes |
 
 ## Camadas de evidência
 
@@ -478,6 +479,28 @@ científicos permanecem exatamente iguais. A geometria é somente ilustrativa e
 não publica fluxo, perfusão, pulso ou oxigenação. Evidência versionada:
 [AUDIT_0.10_R10_B.md](AUDIT_0.10_R10_B.md) e
 `artifacts/vascular-audit/vascular-audit.json`.
+
+### R10-C · orçamento, governador e reclamação
+
+O contrato `presentation-budget` schema 1 fecha `baseline`, `enhanced` e
+`cinema`; o último é rejeitado fora de `captureMode`. Doze frames consecutivos
+acima do teto de `enhanced` causam downgrade com motivo
+`frame-budget-exceeded`. O retorno é manual e só fica disponível após 90 frames
+na janela de recuperação, evitando oscilação automática.
+
+O artefato mede 24 frames em cada uma das seis vistas e registra ambiente, GPU,
+draws, triângulos, bytes de textura/geometria e p50/p95. O verificador compara
+`baseline` com o custo R10-B e tolerâncias versionadas. A auditoria em ANGLE
+Direct3D11/Intel UHD mediu p95 de 0,5 a 13,6 ms, 6 a 50 draws e preservou os
+cinco hashes.
+
+As sete reclamações são provadas por buffer cortical reutilizado; limpeza só da
+cauda instanciada; partições matter/emission/excluded em cache; cache de
+materiais por raiz/revisão; cache de clipping por camada/invalidação; 21 matrizes
+estáticas congeladas; e UI/sonda na cadência de 8,3 Hz. Evidência:
+[AUDIT_0.10_R10_C.md](AUDIT_0.10_R10_C.md),
+`artifacts/presentation-budget/presentation-budget.json` e
+[revisão visual](docs/VISUAL_REVIEW_R10_C.md).
 
 Os contratos executáveis atuais são:
 

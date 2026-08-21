@@ -189,6 +189,12 @@ describe("R09-F realistic-illustrative material manager", () => {
     expect((matter.material as THREE.Material).depthWrite).toBe(true);
     expect((emission.material as THREE.Material).opacity).toBe(0.6);
     expect((emission.material as THREE.Material).depthWrite).toBe(false);
+    effects.beforeRender(root);
+    effects.afterRender();
+    expect(effects.cacheAudit()).toEqual({ roots: 1, records: 2, builds: 1 });
+    effects.beforeRender(root, 1);
+    effects.afterRender();
+    expect(effects.cacheAudit().builds).toBe(2);
     matter.geometry.dispose();
     matter.material.dispose();
     emission.geometry.dispose();

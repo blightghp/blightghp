@@ -860,7 +860,7 @@ Substituir a seção `## 0.10 · anatomia com proveniência e transmissão de vo
 | :-- | :-- | :-- | :-- | :-- |
 | R10-A · catálogo anatômico | implementada e validada em 13 de agosto de 2026 | schema 1 com 32 IDs | 98 objetos cobertos; cinco hashes invariantes | zero asset externo |
 | R10-B · vascular topológico | planejada | 44 entradas de catálogo + contrato de grafo próprio; VAS-002..008, SEC-021, QA-111 | grafo validado, ≤ 17 draws, zero animação, cobertura total, cinco hashes | aparência clínica; remover `src/vascular` |
-| R10-C · orçamento e reclamação | planejada | perfis de render, governador e sete reclamações; GFX-080/081, PERF-011..013, QA-112 | `baseline` ≤ custo medido anterior, com gate de CI | desligar governador e manter perfil único |
+| R10-C · orçamento e reclamação | implementada e validada em 20 de agosto de 2026 | perfis de render, governador e sete reclamações; GFX-080/081, PERF-011..013, QA-112 | `baseline` abaixo da referência R10-B em seis vistas × 24 amostras, com gate de CI e cinco hashes invariantes | desligar governador e manter `enhanced` |
 | R10-D · superfície procedural | planejada | girificação e atributos assados; GFX-082/083, AST-035, QA-113 | determinismo, hash, triângulos e tempo dentro do teto | voltar a `ConvexGeometry` |
 | R10-E · luz e tone mapping | planejada | AgX, SSS aproximado, grade; GFX-084..086, QA-114 | quatro gates de cor reexecutados e redeclarados | flag de reversão para ACES |
 | R10-F · nova UI e interação | planejada | modos, paleta, selo de proveniência, escada de escalas; UI-031..038, UX-003, QA-115 | teclado, foco, equivalente textual, móvel | manter painel atual |

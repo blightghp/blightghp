@@ -34,14 +34,27 @@
     </nav>
 
     <aside class="glass-panel presentation-panel" id="presentation-panel" aria-labelledby="presentation-title">
-      <div class="eyebrow" id="presentation-title">R10-B · ANATOMIA & VASCULAR</div>
+      <div class="eyebrow" id="presentation-title">R10-C · ORÇAMENTO & GOVERNADOR</div>
+      <details open>
+        <summary>PERFIL DE RENDERIZAÇÃO</summary>
+        <div class="control-group compact">
+          <label for="render-profile"><span>Qualidade</span><span id="render-profile-status" class="material-profile-status" role="status" aria-live="polite">ENHANCED</span></label>
+          <select id="render-profile" class="glass-select" aria-label="Perfil de orçamento gráfico">
+            <option value="baseline">Baseline · econômico</option>
+            <option value="enhanced" selected>Enhanced · interativo</option>
+            <option value="cinema" disabled>Cinema · somente captura</option>
+          </select>
+        </div>
+        <button id="recover-render-profile" class="presentation-reset" type="button" disabled>RECUPERAR ENHANCED</button>
+        <p class="cut-shortcuts">O governador reduz o perfil após pressão sustentada. A recuperação é manual e só libera após a janela de histerese.</p>
+      </details>
       <details>
         <summary>PELÍCULA & CORTE</summary>
         <div class="control-group compact">
           <label for="material-profile"><span>Materialidade</span><span id="material-profile-status" class="material-profile-status" role="status" aria-live="polite">Esquemática</span></label>
           <select id="material-profile" class="glass-select" aria-label="Perfil visual de materialidade">
-            <option value="schematic" selected>Esquemática · fallback</option>
-            <option value="realistic-illustrative">Realista-ilustrativa</option>
+            <option value="schematic">Esquemática · fallback</option>
+            <option value="realistic-illustrative" selected>Realista-ilustrativa</option>
           </select>
         </div>
         <div class="control-group compact">
@@ -246,7 +259,7 @@
         <dl class="runtime-profile" aria-label="Perfil de desempenho em tempo real">
           <div><dt>Worker p95</dt><dd id="worker-latency">0.0 ms</dd></div>
           <div><dt>Draw calls</dt><dd id="gpu-draw-calls">0</dd></div>
-          <div><dt>R09-F Δ estimado</dt><dd id="gpu-presentation-delta">+0 corte · +0 dupla face · +0 refração</dd></div>
+          <div><dt>R10-C Δ estimado</dt><dd id="gpu-presentation-delta">+0 corte · +0 dupla face · +0 refração</dd></div>
           <div><dt>Snapshot</dt><dd id="snapshot-memory">0.0 KiB</dd></div>
         </dl>
       </section>

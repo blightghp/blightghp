@@ -6,9 +6,9 @@
 
 **Estado de promoção:** 0.8 promovida em 12 de agosto de 2026
 
-**Estado de desenvolvimento:** 0.10 em construção; R09-A a R09-F e R10-A/R10-B concluídas
+**Estado de desenvolvimento:** 0.10 em construção; R09-A a R09-F e R10-A a R10-C concluídas
 
-**Próximo gate:** `R10-C` · orçamento e reclamação
+**Próximo gate:** `R10-D` · superfície procedural
 
 Este é o único roadmap ativo. Planos anteriores permanecem em
 [`docs/legacy`](docs/legacy/README.md) apenas como evidência histórica.
@@ -305,7 +305,7 @@ científico.
 | :-- | :-- | :-- | :-- | :-- |
 | R10-A · catálogo anatômico | implementada e validada em 13 de agosto de 2026 | schema 1 com 32 IDs semânticos, hierarquia, busca, lado, fonte, licença, transformação e evidência; IDs AST-030..034, UI-030, SEC-020, QA-110 | 98 objetos renderizáveis ligados ao catálogo ou excluídos explicitamente; árvore/picking convergem; cinco hashes invariantes; [auditoria R10-A](AUDIT_0.10_R10_A.md) | zero asset externo; import estrito e limitado; rollback remove explorador/bindings e mantém cenas procedurais |
 | R10-B · vascular topológico | implementada e validada em 13 de agosto de 2026 | 44 entradas de catálogo + contrato de grafo próprio; VAS-002..008, SEC-021, QA-111 | 42 segmentos validados, 12 draws, zero animação, busca/picking/isolamento e cinco hashes invariantes; [auditoria R10-B](AUDIT_0.10_R10_B.md) | aparência clínica mitigada por `TOPOLOGY/ILUSTRATIVO`; rollback remove `src/vascular` e as 44 entradas |
-| R10-C · orçamento e reclamação | planejada | perfis de render, governador e sete reclamações; GFX-080/081, PERF-011..013, QA-112 | `baseline` ≤ custo medido anterior, com gate de CI | desligar governador e manter perfil único |
+| R10-C · orçamento e reclamação | implementada e validada em 20 de agosto de 2026 | perfis `baseline`/`enhanced`/`cinema`, governador e sete reclamações; GFX-080/081, PERF-011..013, QA-112 | seis vistas × 24 amostras; p95 0,5–13,6 ms em GPU física; `baseline` abaixo da referência, cinco hashes invariantes; [auditoria R10-C](AUDIT_0.10_R10_C.md) | desligar governador e manter `enhanced`; realismo ainda bloqueado por R10-D/R10-E |
 | R10-D · superfície procedural | planejada | girificação e atributos assados; GFX-082/083, AST-035, QA-113 | determinismo, hash, triângulos e tempo dentro do teto | voltar a `ConvexGeometry` |
 | R10-E · luz e tone mapping | planejada | AgX, SSS aproximado, grade; GFX-084..086, QA-114 | quatro gates de cor reexecutados e redeclarados | flag de reversão para ACES |
 | R10-F · nova UI e interação | planejada | modos, paleta, selo de proveniência, escada de escalas; UI-031..038, UX-003, QA-115 | teclado, foco, equivalente textual, móvel | manter painel atual |

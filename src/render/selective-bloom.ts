@@ -14,6 +14,15 @@ function hasMaterial(object: THREE.Object3D): object is MaterialObject {
   return "material" in object;
 }
 
+function worldVisible(object: THREE.Object3D): boolean {
+  let cursor: THREE.Object3D | null = object;
+  while (cursor) {
+    if (!cursor.visible) return false;
+    cursor = cursor.parent;
+  }
+  return true;
+}
+
 const COMPOSITE_SHADER = {
   uniforms: {
     baseTexture: { value: null },
@@ -37,6 +46,27 @@ const COMPOSITE_SHADER = {
     }
   `,
 };
+
+export function estimateSelectiveBloomTextureBytes(
+  width: number,
+  height: number,
+  pixelRatio: number,
+): number {
+  const effectiveWidth = Math.max(1, Math.round(width * pixelRatio));
+  const effectiveHeight = Math.max(1, Math.round(height * pixelRatio));
+  // Two RGBA16F ping-pong targets in each of the two composers.
+  let pixels = effectiveWidth * effectiveHeight * 4;
+  let mipWidth = Math.max(1, Math.round(effectiveWidth / 2));
+  let mipHeight = Math.max(1, Math.round(effectiveHeight / 2));
+  // UnrealBloomPass owns one bright target plus two targets for each of 5 mips.
+  pixels += mipWidth * mipHeight;
+  for (let mip = 0; mip < 5; mip += 1) {
+    pixels += mipWidth * mipHeight * 2;
+    mipWidth = Math.max(1, Math.round(mipWidth / 2));
+    mipHeight = Math.max(1, Math.round(mipHeight / 2));
+  }
+  return pixels * 8;
+}
 
 /** Keeps the bloom depth mask on the exact local clipping contract used by the base pass. */
 export function syncBloomDepthMaskClipping(
@@ -63,15 +93,27 @@ export class SelectiveBloomPipeline {
   private readonly depthMaskMaterials = new Map<THREE.Material, THREE.MeshBasicMaterial>();
   private readonly savedMaterials = new Map<MaterialObject, THREE.Material | THREE.Material[]>();
   private readonly savedVisibilities = new Map<THREE.Object3D, boolean>();
+  private matterObjects: MaterialObject[] = [];
+  private emissionObjects: MaterialObject[] = [];
+  private excludedObjects: THREE.Object3D[] = [];
+  private sceneRevision = -1;
+  private width: number;
+  private height: number;
+  private pixelRatio: number;
+  private directRenders = 0;
+  private bloomRenders = 0;
 
   constructor(
-    renderer: THREE.WebGLRenderer,
+    private readonly renderer: THREE.WebGLRenderer,
     private readonly scene: THREE.Scene,
-    camera: THREE.Camera,
+    private readonly camera: THREE.Camera,
     size: THREE.Vector2,
     strength: number,
     radius: number,
   ) {
+    this.width = size.x;
+    this.height = size.y;
+    this.pixelRatio = renderer.getPixelRatio();
     this.bloomPass = new UnrealBloomPass(size, strength, radius, 0.12);
     const createStencilTarget = (): THREE.WebGLRenderTarget =>
       new THREE.WebGLRenderTarget(size.x, size.y, {
@@ -81,7 +123,7 @@ export class SelectiveBloomPipeline {
       });
     this.bloomComposer = new EffectComposer(renderer, createStencilTarget());
     this.bloomComposer.renderToScreen = false;
-    this.bloomComposer.addPass(new RenderPass(scene, camera));
+    this.bloomComposer.addPass(new RenderPass(scene, this.camera));
     this.bloomComposer.addPass(this.bloomPass);
 
     const finalPass = new ShaderPass(
@@ -98,25 +140,32 @@ export class SelectiveBloomPipeline {
     );
     finalPass.needsSwap = true;
     this.finalComposer = new EffectComposer(renderer, createStencilTarget());
-    this.finalComposer.addPass(new RenderPass(scene, camera));
+    this.finalComposer.addPass(new RenderPass(scene, this.camera));
     this.finalComposer.addPass(finalPass);
   }
 
-  render(): void {
-    this.scene.traverse((object) => {
-      if (isExcludedFromSelectiveBloom(object)) {
-        this.savedVisibilities.set(object, object.visible);
-        object.visible = false;
-        return;
-      }
-      if (!hasMaterial(object) || visualPassOf(object) === "emission") return;
+  render(options: { bloomEnabled?: boolean; sceneRevision?: number } = {}): void {
+    const revision = options.sceneRevision ?? 0;
+    if (revision !== this.sceneRevision) this.rebuildPartitions(revision);
+    const bloomEnabled = options.bloomEnabled ?? true;
+    if (!bloomEnabled || !this.emissionObjects.some(worldVisible)) {
+      this.directRenders += 1;
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
+    for (const object of this.excludedObjects) {
+      this.savedVisibilities.set(object, object.visible);
+      object.visible = false;
+    }
+    for (const object of this.matterObjects) {
       this.savedMaterials.set(object, object.material);
       object.material = Array.isArray(object.material)
         ? object.material.map((material) => this.depthMaskFor(material))
         : this.depthMaskFor(object.material);
-    });
+    }
     try {
       this.bloomComposer.render();
+      this.bloomRenders += 1;
     } finally {
       for (const [object, material] of this.savedMaterials) object.material = material;
       this.savedMaterials.clear();
@@ -127,8 +176,44 @@ export class SelectiveBloomPipeline {
   }
 
   setSize(width: number, height: number): void {
+    this.width = width;
+    this.height = height;
     this.bloomComposer.setSize(width, height);
     this.finalComposer.setSize(width, height);
+  }
+
+  setPixelRatio(pixelRatio: number): void {
+    this.pixelRatio = pixelRatio;
+    this.bloomComposer.setPixelRatio(pixelRatio);
+    this.finalComposer.setPixelRatio(pixelRatio);
+  }
+
+  invalidateSceneGraph(): void {
+    this.sceneRevision = -1;
+  }
+
+  audit(): {
+    readonly sceneRevision: number;
+    readonly matterObjects: number;
+    readonly emissionObjects: number;
+    readonly excludedObjects: number;
+    readonly directRenders: number;
+    readonly bloomRenders: number;
+    readonly estimatedOwnedTextureBytes: number;
+  } {
+    return {
+      sceneRevision: this.sceneRevision,
+      matterObjects: this.matterObjects.length,
+      emissionObjects: this.emissionObjects.length,
+      excludedObjects: this.excludedObjects.length,
+      directRenders: this.directRenders,
+      bloomRenders: this.bloomRenders,
+      estimatedOwnedTextureBytes: estimateSelectiveBloomTextureBytes(
+        this.width,
+        this.height,
+        this.pixelRatio,
+      ),
+    };
   }
 
   dispose(): void {
@@ -136,6 +221,28 @@ export class SelectiveBloomPipeline {
     this.depthMaskMaterials.clear();
     this.bloomComposer.dispose();
     this.finalComposer.dispose();
+    this.matterObjects = [];
+    this.emissionObjects = [];
+    this.excludedObjects = [];
+  }
+
+  private rebuildPartitions(revision: number): void {
+    const matter: MaterialObject[] = [];
+    const emission: MaterialObject[] = [];
+    const excluded: THREE.Object3D[] = [];
+    this.scene.traverse((object) => {
+      if (isExcludedFromSelectiveBloom(object)) {
+        excluded.push(object);
+        return;
+      }
+      if (!hasMaterial(object)) return;
+      if (visualPassOf(object) === "emission") emission.push(object);
+      else matter.push(object);
+    });
+    this.matterObjects = matter;
+    this.emissionObjects = emission;
+    this.excludedObjects = excluded;
+    this.sceneRevision = revision;
   }
 
   private depthMaskFor(source: THREE.Material): THREE.MeshBasicMaterial {
