@@ -1,6 +1,6 @@
 # Arquitetura canônica · BRAIN PRO
 
-**Documento:** revisão 7 · 21 de agosto de 2026
+**Documento:** revisão 8 · 21 de agosto de 2026
 
 **Produto observado:** 0.9.0
 
@@ -37,6 +37,15 @@ como planejada e nunca é descrita como implementada.
 | ARC-020 | topologia vascular é contrato próprio em `src/vascular`, separado da árvore de contenção do catálogo anatômico | aceita em R10-B | fonte externa de vasos com geometria própria exige pipeline e migração deliberados |
 | ARC-021 | geometria anatômica de apresentação é procedural, determinística, construída uma vez e troca apenas entre LODs da mesma família sem trabalho por frame | aceita em R10-D | asset externo com proveniência aprovado em R10-H |
 | ARC-022 | orçamento gráfico é contrato versionado por perfil/vista e possui governador, artefato e gate de regressão | aceita em R10-C | somente uma nova baseline medida e auditada substitui os tetos |
+| ARC-023 | contrato visual e artefato de captura carregam identidade sincronizada com o gerador | planejada em R10-G | mudança deliberada de schema do manifesto |
+| ARC-024 | ingestão de asset externo nasce como pipeline dormente, provado por fixture sintética e sem asset distribuído | planejada em R10-H | fonte/licença explícita aprovada pelo mantenedor |
+| ARC-025 | Unrail pode entrar como workspace Cargo aninhado `engine/`, separado da ciência/web e sem afrouxar o workspace raiz | direção aceita; não implementada | `UM0-ENTRY` falhar em isolamento, custo de CI ou path dependency |
+| ARC-026 | existe um único roadmap e WIP global 1; planos e horizontes de programa são subordinados | aceita | ampliação comprovada de mantenedores e governança aprovada |
+| ARC-027 | a primeira implementação Unrail prova `brain-engine` headless antes de janela/GPU; crates só são extraídos por fronteira observável | aceita para `UM0-ENTRY` | evidência de que uma dependência gráfica é indispensável à prova científica |
+
+O [programa arquitetural Unrail](unrail/README.md) amplia a direção futura sem
+alterar o estado atual. O catálogo de 84 capacidades é limite superior
+provisório, não árvore de diretórios nem compromisso de implementação.
 
 ## Contexto do sistema
 
@@ -464,7 +473,7 @@ categoria, perda de contexto WebGL e descarte/reciclagem auditável de buffers.
 | C-06 | “gate de invertibilidade pixel” × teste analítico | script/testes | R08-P3 amostra render target e pixels conhecidos em dois backends |
 | C-07 | “modo sem cor comprova redundância” × filtro grayscale | código auditável | R08-P3 exige bindings e pistas geométricas concretas além da captura |
 | C-08 | TS só apresenta × posterior alimentava drive | `experiment.ts`/protocolo/testes | R09-A isola o modelo de tarefa; comando interativo aceita apenas contexto nulo |
-| C-09 | Tauri roda núcleo nativo × host atual só informa schema | `src-tauri/src/lib.rs` | execução nativa é alvo, não capacidade atual |
+| C-09 | Tauri roda núcleo nativo × host atual só informa schema | `src-tauri/src/lib.rs` | continua aberta; `UM0-A0` cria a prova headless e somente `UM0-F` pode fechar a decisão de host |
 | C-10 | VISUAL_SPEC ativo × GRAPHICS_SPEC requerido | conjunto canônico | conteúdo incorporado e proposta arquivada |
 
 ## Achados da auditoria 0.8 reavaliados

@@ -1,12 +1,11 @@
 # Plano detalhado 0.10 · A CAPA
 
-**Estado documental:** proposta detalhada, redigida em 13 de agosto de 2026
-**Baseline de entrada:** produto `0.9.0` · protocolo/ABI/snapshot `8` · 37 buffers · cinco hashes · R09-A..R09-F e R10-A concluídas
-**Relação com o [ROADMAP](ROADMAP.md):** este arquivo é o detalhamento executável dos cortes
-`R10-B`..`R10-H`. O ROADMAP continua sendo o índice canônico; a §10 deste plano traz a
-tabela pronta que substitui a seção `0.10` de lá quando o primeiro corte abrir. Ao
-encerrar a fase, este documento é aposentado em [`docs/legacy/plans`](../legacy/README.md)
-e cada corte deixa sua própria auditoria em `../audits/0.10/`.
+**Estado documental:** plano vigente; R10-A..R10-D concluídos, R10-E próximo
+**Baseline original:** produto `0.9.0` · protocolo/ABI/snapshot `8` · 37 buffers · cinco hashes
+**Relação com o [ROADMAP](ROADMAP.md):** este arquivo detalha R10-B..R10-H;
+o roadmap é a única fila e as auditorias em `../audits/0.10/` registram o estado
+concluído e auditado. Ao encerrar a fase, este documento será aposentado em
+[`docs/legacy/plans`](../legacy/README.md).
 
 ---
 
@@ -48,10 +47,10 @@ Registrar em [ARCHITECTURE.md](../specifications/ARCHITECTURE.md) §"Decisões v
 
 | ID | Decisão | Estado | Reversão exige |
 | :-- | :-- | :-- | :-- |
-| ARC-019 | **Perfil de renderização** é uma dimensão de apresentação independente do perfil de material: `baseline`, `enhanced` e `cinema`. `cinema` é inalcançável fora do modo de captura. | proposta em R10-C | evidência de que o navegador precisa do perfil de captura |
-| ARC-020 | **Topologia vascular é um contrato próprio** (`src/vascular`), separado do catálogo anatômico: o catálogo é uma árvore de contenção; o vascular é um grafo com anastomose. | proposta em R10-B | fonte externa de vasos com geometria própria |
+| ARC-019 | **Perfil de renderização** é uma dimensão de apresentação independente do perfil de material: `baseline`, `enhanced` e `cinema`. `cinema` é inalcançável fora do modo de captura. | aceita em R10-C | evidência de que o navegador precisa do perfil de captura |
+| ARC-020 | **Topologia vascular é um contrato próprio** (`src/vascular`), separado do catálogo anatômico: o catálogo é uma árvore de contenção; o vascular é um grafo com anastomose. | aceita em R10-B | fonte externa de vasos com geometria própria |
 | ARC-021 | **Geometria anatômica de apresentação é procedural, determinística e assada uma vez**; atributos derivados (AO, curvatura, espessura) são pré-computados, nunca por frame. | aceita em R10-D | ingestão de atlas aprovada por R10-H |
-| ARC-022 | **Orçamento gráfico é contrato versionado**, não observação: existe artefato, teto por vista e gate de CI. | proposta em R10-C | não há gatilho previsto |
+| ARC-022 | **Orçamento gráfico é contrato versionado**, não observação: existe artefato, teto por vista e gate de CI. | aceita em R10-C | nova baseline medida e auditada |
 | ARC-023 | **O contrato visual tem hash próprio** e o artefato de captura carrega esse hash; divergência é erro de build, não questão estética. | proposta em R10-G | mudança deliberada de schema do manifesto |
 | ARC-024 | **Ingestão de asset externo existe como pipeline dormente**, provado por fixture sintética, com zero asset distribuído. | proposta em R10-H | escolha explícita de fonte/licença pelo mantenedor |
 
@@ -160,7 +159,7 @@ E o realismo do perfil `baseline` sai de três lugares que custam zero por frame
 
 ---
 
-## 4 · R10-B · vascular topológico
+## 4 · R10-B · vascular topológico (concluído)
 
 ### 4.1 Identidade e valor
 
@@ -432,7 +431,7 @@ versão vigente `1.2.0`) ou ser revertidas junto. Rust/Wasm/Worker/ABI não são
 
 ---
 
-## 5 · R10-C · orçamento, governança e reclamação de custo
+## 5 · R10-C · orçamento, governança e reclamação de custo (concluído)
 
 ### 5.1 Por que este corte vem logo depois do vascular
 
@@ -484,7 +483,7 @@ compara frames renderizados antes/depois dentro da tolerância declarada.
 
 ---
 
-## 6 · R10-D · superfície anatômica procedural
+## 6 · R10-D · superfície anatômica procedural (concluído)
 
 ### 6.1 O problema visual real
 
@@ -543,7 +542,7 @@ campo passa a mentir), cinco hashes invariantes.
 
 ---
 
-## 7 · R10-E · iluminação, tone mapping e materialidade
+## 7 · R10-E · iluminação, tone mapping e materialidade (próximo)
 
 ### 7.1 Conteúdo
 
@@ -772,26 +771,23 @@ stencil e vínculo de estado sem alocação — está em
 flowchart LR
     B["R10-B vascular"] --> C["R10-C orçamento"]
     C --> D["R10-D superfície"]
-    C --> E["R10-E luz e tonemapping"]
-    D --> E
-    C --> F["R10-F nova UI"]
-    D --> G["R10-G captura e GIF"]
-    E --> G
-    F --> G
-    C --> H["R10-H asset dormente"]
+    D --> E["R10-E luz e tonemapping"]
+    E --> F["R10-F nova UI"]
+    F --> H["R10-H asset dormente"]
+    H --> G["R10-G captura e GIF"]
 ```
 
 - **R10-B** abre a fase porque já era o próximo gate declarado e porque é autocontido;
   ele carrega o próprio teto de custo.
 - **R10-C** vem logo em seguida porque nenhum corte posterior pode provar “custo ≤ 0” sem
   ele — e porque devolve o orçamento que D e E vão gastar.
-- **R10-D** e **R10-E** são sequenciais (a luz depende dos atributos assados), mas **F**
-  corre em paralelo: é DOM, não GPU.
-- **R10-G** fecha a fase porque precisa do contrato visual estável.
-- **R10-H** pode ser feito a qualquer momento depois de C; é isolado.
+- **R10-D** e **R10-E** são sequenciais porque a luz depende dos atributos assados.
+- **R10-F** e **R10-H** vêm depois, em fila, para estabilizar interação e ingestão antes da captura.
+- **R10-G** fecha implementação e captura porque precisa do contrato visual estável;
+  **R10-P** promove a fase após a auditoria agregada.
 
-Regra de WIP, herdada do princípio 10 do programa: **no máximo dois cortes abertos**, um
-gráfico e um de UI.
+Regra de WIP canônica: **um corte aberto por vez**. Independência técnica permite
+rollback, não execução paralela.
 
 ---
 
@@ -825,6 +821,7 @@ A fase só fecha quando, simultaneamente:
 - ROADMAP, ARCHITECTURE, GRAPHICS_SPEC, FRONTEND_SPEC e VALIDATION incorporaram os IDs
   novos e este plano foi movido para `docs/legacy/plans`;
 - README descreve o que passou a existir **e o que continua não sendo verdade**.
+- `R10-P` agrega as sete auditorias, confirma os itens acima e só então promove 0.10.
 
 ---
 
@@ -843,40 +840,13 @@ medido e defensável.
 | R11-F · release reproduzível | build web + Tauri determinístico, assinável, `dist` verificável | artefato de release e instruções executadas |
 | R11-G · promoção | auditoria de promoção 1.0 agregando os anteriores | zero requisito crítico sem teste; nenhum achado alto aberto |
 
-**Migram para 1.1** (o que hoje é 0.11): timeline/replay, comparação lado a lado, catálogo
+**Remapeados para R12/1.1:** timeline/replay, comparação lado a lado, catálogo
 de experimentos, observáveis (pseudo-LFP, espectro) e persistência local. Nenhum deles é
 requisito de uma 1.0 cujo objetivo declarado é consolidar o que existe.
 
 ---
 
-## 15 · Patch pronto para o ROADMAP
-
-Substituir a seção `## 0.10 · anatomia com proveniência e transmissão de volume` por:
-
-```markdown
-## 0.10 · a capa: apresentação, anatomia e captura
-
-| Corte | Estado | Contrato e dependências | Aceite principal | Risco/rollback |
-| :-- | :-- | :-- | :-- | :-- |
-| R10-A · catálogo anatômico | implementada e validada em 13 de agosto de 2026 | schema 1 com 32 IDs | 98 objetos cobertos; cinco hashes invariantes | zero asset externo |
-| R10-B · vascular topológico | planejada | 44 entradas de catálogo + contrato de grafo próprio; VAS-002..008, SEC-021, QA-111 | grafo validado, ≤ 17 draws, zero animação, cobertura total, cinco hashes | aparência clínica; remover `src/vascular` |
-| R10-C · orçamento e reclamação | implementada e validada em 20 de agosto de 2026 | perfis de render, governador e sete reclamações; GFX-080/081, PERF-011..013, QA-112 | `baseline` abaixo da referência R10-B em seis vistas × 24 amostras, com gate de CI e cinco hashes invariantes | desligar governador e manter `enhanced` |
-| R10-D · superfície procedural | implementada e validada em 21 de agosto de 2026 | icosfera indexada, girificação, dois LODs e atributos assados; GFX-082/083, AST-035, QA-113 | hash `7dfdd64207190121`; 5.780/1.500 triângulos; build 77,9 ms; p95 físico 5,2/6,9 ms; cinco hashes invariantes | fallback atômico para `ConvexGeometry` |
-| R10-E · luz e tone mapping | planejada | AgX, SSS aproximado, grade; GFX-084..086, QA-114 | quatro gates de cor reexecutados e redeclarados | flag de reversão para ACES |
-| R10-F · nova UI e interação | planejada | modos, paleta, selo de proveniência, escada de escalas; UI-031..038, UX-003, QA-115 | teclado, foco, equivalente textual, móvel | manter painel atual |
-| R10-G · captura cinema e GIF | planejada | perfil `cinema`, supersampling, manifesto schema 4; GFX-089/090, QA-116/117 | determinismo, teto de bytes/tempo e sincronia verificada | voltar ao schema 3 |
-| R10-H · asset externo dormente | planejada | manifesto/carregador estrito e fixture sintética; AST-037, SEC-022, QA-118 | oito rejeições provadas, zero asset distribuído | remover o pipeline |
-
-Detalhamento executável em [PLAN_0.10.md](PLAN_0.10.md). Reação–difusão e mapas
-químicos saem desta fase e passam a compor a trilha de pesquisa pós-1.0.
-```
-
-E, na abertura do arquivo, trocar **Próximo gate** para `R10-B · vascular topológico
-(detalhado em PLAN_0.10.md)`.
-
----
-
-## 16 · Referências consultadas para o conteúdo anatômico
+## 15 · Referências consultadas para o conteúdo anatômico
 
 O conteúdo vascular é **nomenclatura e conectividade de referência**, não medida. As
 fontes abaixo entram em [REFERENCES.md](../references/REFERENCES.md) junto com o corte R10-B:

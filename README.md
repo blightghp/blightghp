@@ -122,6 +122,7 @@ ainda é hipótese.
 | desempenho | perfis `baseline`, `enhanced` e `cinema`, com orçamento medido em GPU física |
 | último gate | R10-D concluído: 5.780/1.500 triângulos, build de 77,9 ms e hash `7dfdd64207190121` |
 | próximo gate | R10-E: iluminação, tone mapping e materialidade |
+| direção nativa | arquitetura Unrail adotada para depois da 1.0; zero código ou dependência nova |
 
 O R10-D substituiu as cascas convexas da Visão Geral por uma superfície regional
 com sulcos procedurais, fissura medial, foliação cerebelar e atributos assados de
@@ -160,6 +161,10 @@ brain-engine (Rust: estado, equações, unidades, limites e hashes)
 O navegador não replica equações do motor: apresenta apenas estados publicados.
 Perfis gráficos, câmera e materiais podem mudar sem alterar os hashes científicos.
 
+A direção futura [Unrail Motor](docs/specifications/unrail/README.md) prevê um
+workspace nativo separado, subordinado ao mesmo roadmap. Ela começa por runner
+headless e paridade dos cinco hashes; não substitui a aplicação web atual.
+
 ### Limites
 
 O projeto é didático e experimental. O ritmo do circuito, as classes celulares,
@@ -194,6 +199,7 @@ Auditorias que exigem GPU física, regeneração do GIF e demais comandos estão
 | [Roadmap](docs/planning/ROADMAP.md) | estado canônico e próximos gates |
 | [Plano 0.10](docs/planning/PLAN_0.10.md) | contratos executáveis do ciclo atual |
 | [Arquitetura](docs/specifications/ARCHITECTURE.md) | decisões e fronteiras do sistema |
+| [Unrail Motor](docs/specifications/unrail/README.md) | arquitetura nativa futura, condicionantes e limites |
 | [Modelo](docs/specifications/MODEL_SPEC.md) | equações, unidades e limites científicos |
 | [Gráficos](docs/specifications/GRAPHICS_SPEC.md) | contratos de renderização e VFX |
 | [Validação](docs/quality/VALIDATION.md) | testes, ambientes e critérios de promoção |

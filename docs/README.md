@@ -12,6 +12,13 @@ arquivos de configuração da toolchain.
   de cada etapa atual.
 - [Plano de assets realistas](planning/PLAN_0.10_ASSET_REALISM.md) — contrato
   específico para ingestão e proveniência de assets.
+- [Diretivas da próxima etapa R10-E](planning/NEXT_STAGE_R10_E.md) — branch,
+  implementação, referências visuais, auditorias e rollback.
+- [Plano candidato UM0](planning/PLAN_UNRAIL_UM0.md) — primeira fatia nativa,
+  bloqueada até o gate de entrada do roadmap.
+
+O [backlog de horizontes Unrail](planning/backlog/UNRAIL_HORIZONS.md) preserva
+hipóteses U1–U9, sem criar roadmap ou fila paralela.
 
 ## Especificações vigentes
 
@@ -20,6 +27,8 @@ arquivos de configuração da toolchain.
 - [Frontend](specifications/FRONTEND_SPEC.md)
 - [Gráficos e VFX](specifications/GRAPHICS_SPEC.md)
 - [Modelo científico](specifications/MODEL_SPEC.md)
+- [Programa arquitetural Unrail](specifications/unrail/README.md) — direção
+  nativa adotada com condicionantes; nenhuma implementação ainda.
 
 Os critérios de teste e promoção ficam no
 [guia de validação](quality/VALIDATION.md). As fontes científicas estão em
@@ -41,6 +50,11 @@ As auditorias são organizadas pelo ciclo em que foram produzidas:
 As comparações estéticas e revisões de captura ficam em [reviews](reviews/).
 Artefatos produzidos pelos gates permanecem em `artifacts/`, separados da
 documentação narrativa.
+
+A [revisão arquitetural Unrail](reviews/UNRAIL_ARCHITECTURE_REVIEW.md) registra
+as correções de anéis, dependências, `unsafe`, ABI, governança e estrutura. As
+[fontes técnicas primárias](references/unrail/PRIMARY_REFERENCES.md) sustentam
+as decisões de Cargo/Rust/GPU.
 
 ## Histórico
 

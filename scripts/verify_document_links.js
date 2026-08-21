@@ -28,6 +28,23 @@ const errors = unexpectedRootDocs.map(
   (file) => `${file}: documento solto na raiz; mova-o para docs/`,
 );
 
+const canonicalRoadmap = "docs/planning/ROADMAP.md";
+const competingRoadmaps = markdownFiles.filter(
+  (file) =>
+    path.basename(file).toUpperCase().includes("ROADMAP") &&
+    file !== canonicalRoadmap &&
+    !file.startsWith("docs/legacy/"),
+);
+for (const file of competingRoadmaps) {
+  errors.push(
+    `${file}: roadmap concorrente; mantenha somente ${canonicalRoadmap} e reclassifique o arquivo como plano ou backlog`,
+  );
+}
+
+if (!markdownFiles.includes(canonicalRoadmap)) {
+  errors.push(`${canonicalRoadmap}: roadmap canônico ausente`);
+}
+
 let checkedLinks = 0;
 
 function lineNumber(content, offset) {
