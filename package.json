@@ -22,12 +22,14 @@
     "audit:vascular": "node scripts/audit_vascular_topology.js",
     "audit:presentation-budget": "node scripts/audit_presentation_budget.js",
     "verify:presentation-budget": "node scripts/verify_presentation_budget.js",
+    "audit:procedural-surface": "node scripts/audit_procedural_surface.js",
+    "verify:procedural-surface": "node scripts/verify_procedural_surface.js",
     "verify:runtime-audit": "node scripts/verify_runtime_audit.js",
     "verify:hardware-audit": "node scripts/verify_hardware_audit.js",
     "verify:promotion-0.8": "node scripts/verify_promotion_0_8.js",
     "build:wasm": "cargo build -p brain-wasm --release --target wasm32-unknown-unknown && wasm-bindgen target/wasm32-unknown-unknown/release/brain_wasm.wasm --out-dir src/wasm --target web --typescript",
     "stamp:brain-gif": "node scripts/stamp_brain_gif.js",
-    "check": "npm run typecheck && npm run check:shadow-replay && npm run test && npm run build && npm run test:wasm-browser && npm run verify:promotion-0.8 && npm run verify:presentation-budget && npm run audit:runtime"
+    "check": "npm run typecheck && npm run check:shadow-replay && npm run test && npm run build && npm run test:wasm-browser && npm run verify:promotion-0.8 && npm run verify:presentation-budget && npm run verify:procedural-surface && npm run audit:runtime"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

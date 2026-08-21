@@ -50,7 +50,7 @@ Registrar em [ARCHITECTURE.md](ARCHITECTURE.md) §"Decisões vigentes":
 | :-- | :-- | :-- | :-- |
 | ARC-019 | **Perfil de renderização** é uma dimensão de apresentação independente do perfil de material: `baseline`, `enhanced` e `cinema`. `cinema` é inalcançável fora do modo de captura. | proposta em R10-C | evidência de que o navegador precisa do perfil de captura |
 | ARC-020 | **Topologia vascular é um contrato próprio** (`src/vascular`), separado do catálogo anatômico: o catálogo é uma árvore de contenção; o vascular é um grafo com anastomose. | proposta em R10-B | fonte externa de vasos com geometria própria |
-| ARC-021 | **Geometria anatômica de apresentação é procedural, determinística e assada uma vez**; atributos derivados (AO, curvatura, espessura) são pré-computados, nunca por frame. | proposta em R10-D | ingestão de atlas aprovada por R10-H |
+| ARC-021 | **Geometria anatômica de apresentação é procedural, determinística e assada uma vez**; atributos derivados (AO, curvatura, espessura) são pré-computados, nunca por frame. | aceita em R10-D | ingestão de atlas aprovada por R10-H |
 | ARC-022 | **Orçamento gráfico é contrato versionado**, não observação: existe artefato, teto por vista e gate de CI. | proposta em R10-C | não há gatilho previsto |
 | ARC-023 | **O contrato visual tem hash próprio** e o artefato de captura carrega esse hash; divergência é erro de build, não questão estética. | proposta em R10-G | mudança deliberada de schema do manifesto |
 | ARC-024 | **Ingestão de asset externo existe como pipeline dormente**, provado por fixture sintética, com zero asset distribuído. | proposta em R10-H | escolha explícita de fonte/licença pelo mantenedor |
@@ -427,7 +427,7 @@ continuam separáveis por forma/padrão/rótulo.
 
 **Rollback:** remover `src/vascular` e o `attach` nas seis vistas restaura exatamente as
 cenas atuais. As entradas de catálogo são metadados inertes: podem permanecer (com a
-versão em `1.1.0`) ou ser revertidas junto. Rust/Wasm/Worker/ABI não são tocados.
+versão vigente `1.2.0`) ou ser revertidas junto. Rust/Wasm/Worker/ABI não são tocados.
 **Complexidade/confiança:** alta / alta.
 
 ---
@@ -861,7 +861,7 @@ Substituir a seção `## 0.10 · anatomia com proveniência e transmissão de vo
 | R10-A · catálogo anatômico | implementada e validada em 13 de agosto de 2026 | schema 1 com 32 IDs | 98 objetos cobertos; cinco hashes invariantes | zero asset externo |
 | R10-B · vascular topológico | planejada | 44 entradas de catálogo + contrato de grafo próprio; VAS-002..008, SEC-021, QA-111 | grafo validado, ≤ 17 draws, zero animação, cobertura total, cinco hashes | aparência clínica; remover `src/vascular` |
 | R10-C · orçamento e reclamação | implementada e validada em 20 de agosto de 2026 | perfis de render, governador e sete reclamações; GFX-080/081, PERF-011..013, QA-112 | `baseline` abaixo da referência R10-B em seis vistas × 24 amostras, com gate de CI e cinco hashes invariantes | desligar governador e manter `enhanced` |
-| R10-D · superfície procedural | planejada | girificação e atributos assados; GFX-082/083, AST-035, QA-113 | determinismo, hash, triângulos e tempo dentro do teto | voltar a `ConvexGeometry` |
+| R10-D · superfície procedural | implementada e validada em 21 de agosto de 2026 | icosfera indexada, girificação, dois LODs e atributos assados; GFX-082/083, AST-035, QA-113 | hash `7dfdd64207190121`; 5.780/1.500 triângulos; build 77,9 ms; p95 físico 5,2/6,9 ms; cinco hashes invariantes | fallback atômico para `ConvexGeometry` |
 | R10-E · luz e tone mapping | planejada | AgX, SSS aproximado, grade; GFX-084..086, QA-114 | quatro gates de cor reexecutados e redeclarados | flag de reversão para ACES |
 | R10-F · nova UI e interação | planejada | modos, paleta, selo de proveniência, escada de escalas; UI-031..038, UX-003, QA-115 | teclado, foco, equivalente textual, móvel | manter painel atual |
 | R10-G · captura cinema e GIF | planejada | perfil `cinema`, supersampling, manifesto schema 4; GFX-089/090, QA-116/117 | determinismo, teto de bytes/tempo e sincronia verificada | voltar ao schema 3 |

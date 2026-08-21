@@ -26,6 +26,16 @@ import {
   VISUAL_COLORS,
 } from "./visual-tokens";
 import { encodeStateColor } from "./visual-encoding";
+import {
+  buildProceduralSurfaceSet,
+  PROCEDURAL_SURFACE_ALGORITHM_VERSION,
+  PROCEDURAL_SURFACE_SCHEMA_VERSION,
+} from "./procedural-surface";
+import type {
+  ProceduralSurfaceLod,
+  ProceduralSurfaceSet,
+  ProceduralSurfaceSetAudit,
+} from "./procedural-surface";
 
 export interface PointVisual {
   nodeIndices: number[];
@@ -49,7 +59,19 @@ export interface ConnectionVisual {
 
 export interface ShellVisual {
   region: BrainRegion;
+  mesh: THREE.Mesh;
   material: THREE.ShaderMaterial;
+  geometries?: Readonly<Record<ProceduralSurfaceLod, THREE.BufferGeometry>>;
+}
+
+export interface BrainSurfaceAudit {
+  readonly schemaVersion: typeof PROCEDURAL_SURFACE_SCHEMA_VERSION;
+  readonly algorithmVersion: typeof PROCEDURAL_SURFACE_ALGORITHM_VERSION;
+  readonly activeLod: ProceduralSurfaceLod;
+  readonly fallbackUsed: boolean;
+  readonly fallbackReason?: string;
+  readonly zeroPerFrameCpu: true;
+  readonly procedural: ProceduralSurfaceSetAudit | null;
 }
 
 const TRAIL_LENGTH = 3;
@@ -118,12 +140,20 @@ export class BrainRenderLayers implements RenderLayer {
   private interpolatedActivations: Float32Array;
   private lastSignalInstanceCount = 0;
   private visibleSignalLimit = MAX_VISIBLE_SIGNALS;
+  private proceduralSurface?: ProceduralSurfaceSet;
+  private surfaceFallbackReason?: string;
+  private surfaceLod: ProceduralSurfaceLod = "high";
 
   constructor(data: BrainData) {
     this.data = data;
     this.interpolatedActivations = new Float32Array(data.nodes.length);
     this.group = new THREE.Group();
     this.group.rotation.set(0.04, 0.34, -0.025);
+    try {
+      this.proceduralSurface = buildProceduralSurfaceSet(data);
+    } catch (error) {
+      this.surfaceFallbackReason = error instanceof Error ? error.message : String(error);
+    }
     this.buildLayers();
   }
 
@@ -256,23 +286,50 @@ export class BrainRenderLayers implements RenderLayer {
   }
 
   private createShell(region: BrainRegion, points: THREE.Vector3[]): void {
-    const stride = Math.max(1, Math.floor(points.length / 180));
-    const hullPoints = points.filter((_, index) => index % stride === 0);
-    const geometry = new ConvexGeometry(hullPoints);
+    const geometries = this.proceduralSurface?.geometries[region];
+    let geometry = geometries?.[this.surfaceLod];
+    if (!geometry) {
+      const stride = Math.max(1, Math.floor(points.length / 180));
+      const hullPoints = points.filter((_, index) => index % stride === 0);
+      geometry = new ConvexGeometry(hullPoints);
+      geometry.userData.presentationGeometryFamily = `r10-d:${region}:convex-fallback`;
+      const vertexCount = geometry.getAttribute("position").count;
+      geometry.setAttribute(
+        "aoFactor",
+        new THREE.BufferAttribute(new Float32Array(vertexCount).fill(1), 1),
+      );
+      geometry.setAttribute(
+        "curvature",
+        new THREE.BufferAttribute(new Float32Array(vertexCount), 1),
+      );
+      geometry.setAttribute(
+        "thickness",
+        new THREE.BufferAttribute(new Float32Array(vertexCount).fill(0.72), 1),
+      );
+    }
     const material = new THREE.ShaderMaterial({
       uniforms: {
         shellColor: { value: REGION_COLORS[region].clone() },
         activity: { value: 0 },
-        opacity: { value: region === "cerebellum" ? 0.12 : 0.085 },
+        opacity: { value: region === "cerebellum" ? 0.24 : 0.18 },
       },
       vertexShader: `
         #include <clipping_planes_pars_vertex>
+        attribute float aoFactor;
+        attribute float curvature;
+        attribute float thickness;
         varying vec3 vNormal;
         varying vec3 vViewDirection;
+        varying float vAoFactor;
+        varying float vCurvature;
+        varying float vThickness;
         void main() {
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           vNormal = normalize(normalMatrix * normal);
           vViewDirection = normalize(-mvPosition.xyz);
+          vAoFactor = aoFactor;
+          vCurvature = curvature;
+          vThickness = thickness;
           gl_Position = projectionMatrix * mvPosition;
           #include <clipping_planes_vertex>
         }
@@ -284,12 +341,18 @@ export class BrainRenderLayers implements RenderLayer {
         uniform float opacity;
         varying vec3 vNormal;
         varying vec3 vViewDirection;
+        varying float vAoFactor;
+        varying float vCurvature;
+        varying float vThickness;
         void main() {
           #include <clipping_planes_fragment>
           float rim = pow(1.0 - abs(dot(vNormal, vViewDirection)), 2.4);
           float pulse = 0.7 + activity * 1.8;
-          vec3 color = shellColor * (0.22 + rim * 1.55 + activity * 0.8);
-          gl_FragColor = vec4(color, opacity * rim * pulse);
+          float cavity = mix(0.56, 1.0, vAoFactor);
+          float ridge = max(vCurvature, 0.0) * 0.16;
+          vec3 color = shellColor * (0.30 + rim * 1.15 + activity * 0.8 + ridge) * cavity;
+          float body = 0.38 + rim * 0.68 + vThickness * 0.08;
+          gl_FragColor = vec4(color, opacity * body * pulse);
         }
       `,
       transparent: true,
@@ -308,8 +371,30 @@ export class BrainRenderLayers implements RenderLayer {
       redundancy: ["position", "shape"],
     });
     declareAnatomicalBinding(shell, REGION_ANATOMY_IDS[region]);
-    this.shellVisuals.push({ region, material });
+    this.shellVisuals.push({ region, mesh: shell, material, ...(geometries ? { geometries } : {}) });
     this.addRegionObject(region, shell);
+  }
+
+  setSurfaceLod(lod: ProceduralSurfaceLod): ProceduralSurfaceLod {
+    if (lod !== "high" && lod !== "low") throw new Error(`unknown surface LOD: ${String(lod)}`);
+    if (lod === this.surfaceLod) return this.surfaceLod;
+    for (const shell of this.shellVisuals) {
+      if (shell.geometries) shell.mesh.geometry = shell.geometries[lod];
+    }
+    this.surfaceLod = lod;
+    return this.surfaceLod;
+  }
+
+  surfaceAudit(): BrainSurfaceAudit {
+    return {
+      schemaVersion: PROCEDURAL_SURFACE_SCHEMA_VERSION,
+      algorithmVersion: PROCEDURAL_SURFACE_ALGORITHM_VERSION,
+      activeLod: this.surfaceLod,
+      fallbackUsed: !this.proceduralSurface,
+      ...(this.surfaceFallbackReason ? { fallbackReason: this.surfaceFallbackReason } : {}),
+      zeroPerFrameCpu: true,
+      procedural: this.proceduralSurface?.audit ?? null,
+    };
   }
 
   updateVisibility(settings: BrainSettings, focusRegion: BrainRegion | "all" = "all"): void {
@@ -448,6 +533,14 @@ export class BrainRenderLayers implements RenderLayer {
   }
 
   dispose(): void {
+    if (this.proceduralSurface) {
+      const activeGeometries = new Set(this.shellVisuals.map((shell) => shell.mesh.geometry));
+      for (const region of Object.values(this.proceduralSurface.geometries)) {
+        for (const geometry of [region.high, region.low]) {
+          if (!activeGeometries.has(geometry)) geometry.dispose();
+        }
+      }
+    }
     disposeObjectTree(this.group);
   }
 

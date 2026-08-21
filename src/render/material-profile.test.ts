@@ -308,4 +308,34 @@ describe("R09-F realistic-illustrative material manager", () => {
     geometry.dispose();
     mesh.material.dispose();
   });
+
+  it("treats an explicit procedural LOD family as one semantic geometry", () => {
+    const scene = new THREE.Scene();
+    const high = new THREE.IcosahedronGeometry(0.2, 2);
+    const low = new THREE.IcosahedronGeometry(0.2, 1);
+    high.userData.presentationGeometryFamily = "r10-d:leftHemi:surface";
+    low.userData.presentationGeometryFamily = "r10-d:leftHemi:surface";
+    const mesh = new THREE.Mesh(high, new THREE.MeshBasicMaterial());
+    mesh.name = "lod-tissue";
+    declareVisual(mesh, "matter", "topology");
+    const root = new THREE.Group();
+    root.add(mesh);
+    const manager = managerForTest(scene);
+    manager.registerLayer("overview", root, [{
+      id: "test:lod-tissue",
+      objectName: mesh.name,
+      surface: "tissue",
+      maximumLocalRadius: 0.3,
+      opacityRange: [0, 1],
+      source: "procedural-scene-graph",
+    }]);
+    mesh.geometry = low;
+    expect(manager.audit().semanticGeometryChanges).toBe(0);
+    low.userData.presentationGeometryFamily = "r10-d:rightHemi:surface";
+    expect(manager.audit().semanticGeometryChanges).toBe(1);
+    manager.dispose();
+    high.dispose();
+    low.dispose();
+    mesh.material.dispose();
+  });
 });

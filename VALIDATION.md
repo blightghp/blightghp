@@ -1,6 +1,6 @@
 # Estratégia canônica de validação · BRAIN PRO
 
-**Revisão:** 9 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A..R09-F/R10-A/R10-B validadas
+**Revisão:** 10 · produto observado 0.9.0 · promoção 0.8 concluída · R09-A..R09-F/R10-A..R10-D validadas
 
 Quatro perguntas permanecem separadas: o cálculo é reproduzível, respeita
 limites, converge e produz o fenômeno definido pelo experimento? Uma única
@@ -25,6 +25,8 @@ artefato de promoção.
 | materialidade e planos de corte R09-F | manifesto PBR, clipping/stencil, sonda, fallback, hash e GIF | [auditoria R09-F](AUDIT_0.9_R09_F.md) | 25 materiais elegíveis, 9/18 draws de corte, zero geometria/binding alterado e cinco hashes invariantes |
 | catálogo anatômico R10-A | schema/import, hierarquia, bindings de cena, busca, árvore/picking e navegador | [auditoria R10-A](AUDIT_0.10_R10_A.md) | 32 entradas, 98 objetos cobertos, zero asset externo/custo gráfico e cinco hashes invariantes |
 | vascular topológico R10-B | schema/import, invariantes de grafo, catálogo, cena estática, redundância, busca/picking/isolamento e navegador | [auditoria R10-B](AUDIT_0.10_R10_B.md) | 42 segmentos, 44 entradas, 12/17 draws, zero animação/asset externo e cinco hashes invariantes |
+| orçamento de apresentação R10-C | três perfis, governador, caches, medição física e 12 capturas | [auditoria R10-C](AUDIT_0.10_R10_C.md) | seis vistas × 24 amostras abaixo do teto e cinco hashes invariantes |
+| superfície procedural R10-D | determinismo, dois LODs, atributos baked, fallback, corte e medição física | [auditoria R10-D](AUDIT_0.10_R10_D.md) | hash `7dfdd64207190121`, 5.780/1.500 triângulos, build 77,9 ms e 12 capturas válidas |
 
 O artefato `artifacts/visual-audit/runtime-audit.json` usa schema 2 e está
 vinculado ao commit técnico testado. Ele registra 34 buffers, quatro hashes,
@@ -59,6 +61,7 @@ ambiente e dos envelopes registrados.
 | QA-111 | vascular prova schema/cotas, invariantes de grafo, cobertura de catálogo por objeto, redundância sem cor, ausência de animação, orçamento e invariância dos cinco hashes |
 | SEC-021 | contrato vascular rejeita JSON malformado, campo desconhecido, acima de 128 KiB, referência quebrada e ID duplicado |
 | QA-112 | orçamento prova três perfis, isolamento de captura, downgrade/histerese/recuperação, sete reclamações executáveis, custo por vista, cache por revisão e cinco hashes invariantes |
+| QA-113 | superfície procedural prova seed/stream/algoritmo, hash, atributos baked, triângulos, tempo fora do frame, dois LODs, fallback atômico, corte e cinco hashes invariantes |
 
 ## Camadas de evidência
 
@@ -502,6 +505,23 @@ estáticas congeladas; e UI/sonda na cadência de 8,3 Hz. Evidência:
 `artifacts/presentation-budget/presentation-budget.json` e
 [revisão visual](docs/VISUAL_REVIEW_R10_C.md).
 
+### R10-D · superfície procedural
+
+`procedural-surface.test.ts` constrói o lote duas vezes para a mesma seed,
+congela o hash `7dfdd64207190121`, separa domínios de seed/região e rejeita ponto,
+coordenada e orçamento inválidos com descarte atômico. Cada uma das oito
+geometrias (quatro regiões × dois LODs) possui `aoFactor`, `curvature` e
+`thickness` com a mesma contagem de vértices.
+
+`audit:procedural-surface` usa GPU física, mede 24 frames em `baseline` e
+`cinema`, alterna LOD, reabre a aplicação para comparar o hash, ativa o corte
+coronal e valida a sonda `field.waveActivity`. O artefato registra build de 77,9
+ms, 5.780/1.500 triângulos, p95 de 5,2/6,9 ms, zero troca de identidade
+geométrica, catálogo 1.2.0, 12 capturas não vazias e invariância dos cinco hashes
+científicos. Evidência: [AUDIT_0.10_R10_D.md](AUDIT_0.10_R10_D.md),
+`artifacts/procedural-surface/procedural-surface.json` e
+[revisão visual](docs/VISUAL_REVIEW_R10_D.md).
+
 Os contratos executáveis atuais são:
 
 - `discrete-v1.json`: relógio, RNG e ordenação CSR;
@@ -636,6 +656,10 @@ npm run audit:runtime
 npm run verify:runtime-audit
 npm run verify:hardware-audit
 npm run verify:promotion-0.8
+npm run audit:presentation-budget
+npm run verify:presentation-budget
+npm run audit:procedural-surface
+npm run verify:procedural-surface
 ```
 
 `npm run check` inclui build, navegador, verificação do artefato versionado e

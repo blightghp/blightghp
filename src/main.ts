@@ -160,8 +160,10 @@ declare global {
       materialProfileAudit: () => ReturnType<typeof materialProfileAuditReport>;
       anatomyCatalogAudit: () => ReturnType<typeof anatomyCatalogAuditReport>;
       vascularAudit: () => ReturnType<VascularTopologyModule["audit"]>;
+      surfaceAudit: () => ReturnType<BrainRenderLayers["surfaceAudit"]>;
       presentationAudit: () => {
         material: MaterialProfileAudit;
+        surface: ReturnType<BrainRenderLayers["surfaceAudit"]>;
         clipping: ReturnType<ClippingSystem["audit"]>;
         effects: ReturnType<PresentationMaterialEffects["audit"]>;
         effectsCache: ReturnType<PresentationMaterialEffects["cacheAudit"]>;
@@ -626,6 +628,7 @@ function applyRenderProfile(profile: RenderProfile, resetSamples = true): void {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderPipeline.setPixelRatio(pixelRatio);
   renderPipeline.setSize(window.innerWidth, window.innerHeight);
+  layers?.setSurfaceLod(profile === "baseline" ? "low" : "high");
   presentationResourceCache.invalidate();
   if (resetSamples) presentationBudgetMonitor.reset();
   updateRenderProfileUi();
@@ -1852,9 +1855,13 @@ async function init(): Promise<void> {
     vascularAudit() {
       return vascularModule.audit();
     },
+    surfaceAudit() {
+      return layers.surfaceAudit();
+    },
     presentationAudit() {
       return {
         material: materialProfileManager.audit(),
+        surface: layers.surfaceAudit(),
         clipping: clippingSystem.audit(),
         effects: presentationEffects.audit(),
         effectsCache: presentationEffects.cacheAudit(),

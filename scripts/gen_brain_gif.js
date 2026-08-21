@@ -114,6 +114,10 @@ async function generateGif() {
     encoder.finish();
     const gif = encoder.out.getData();
     const diagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
+    const surface = await page.evaluate(() => window.__BRAIN_ENGINE__.surfaceAudit());
+    if (surface.fallbackUsed || !surface.procedural?.contractReady) {
+      throw new Error(`canonical procedural surface is unavailable: ${surface.fallbackReason ?? "unknown"}`);
+    }
     const sourceCommit = process.env.GITHUB_SHA ?? execFileSync(
       "git",
       ["rev-parse", "HEAD"],
@@ -140,6 +144,7 @@ async function generateGif() {
             frames: BRAIN_GIF_VIEW_FRAMES.overview,
           },
           externalAtlasAssets: 0,
+          surfaceGeometryHash: surface.procedural.surfaceGeometryHash,
         },
       },
     });
