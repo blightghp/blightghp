@@ -93,10 +93,10 @@ publicado neste repositório.
 <div align="center">
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=b20eb187e2e6" width="760" alt="BRAIN PRO com superfície encefálica procedural e seis vistas interativas" />
+  <img src="assets/brain.gif?v=df85e290229e" width="760" alt="BRAIN PRO com superfície encefálica procedural e seis vistas interativas" />
 </a>
 
-<sub>▲ Estado visual R10-D: superfície procedural em dois LODs, seis vistas e corte coronal. O <a href="assets/brain-gif.json">manifesto</a> vincula a captura ao motor, à ABI e aos hashes auditados.</sub>
+<sub>▲ Estado visual R10-E: superfície procedural, material regional quente, luz reversível e seis vistas. O <a href="assets/brain-gif.json">manifesto</a> vincula a captura ao motor Rust/Wasm, à ABI e aos hashes auditados; a imagem continua ilustrativa, não clínica.</sub>
 
 </div>
 
@@ -120,15 +120,18 @@ ainda é hipótese.
 | experiência interativa | seis vistas sincronizadas, Worker Rust/Wasm e acessibilidade por teclado |
 | anatomia visual | catálogo 1.2.0, vascular topológico e superfície procedural determinística |
 | desempenho | perfis `baseline`, `enhanced` e `cinema`, com orçamento medido em GPU física |
-| último gate | R10-D concluído: 5.780/1.500 triângulos, build de 77,9 ms e hash `7dfdd64207190121` |
-| próximo gate | R10-E: iluminação, tone mapping e materialidade |
+| último gate | R10-E em andamento: material regional, AgX reversível, GTAO 0,5× contido e matriz física D3D11 |
+| próximo gate | promoção R10-E após auditoria agregada; R10-F segue planejado |
 | direção nativa | arquitetura Unrail adotada para depois da 1.0; zero código ou dependência nova |
 
-O R10-D substituiu as cascas convexas da Visão Geral por uma superfície regional
-com sulcos procedurais, fissura medial, foliação cerebelar e atributos assados de
-oclusão, curvatura e espessura. O avanço e seus limites estão na
-[auditoria R10-D](docs/audits/0.10/AUDIT_0.10_R10_D.md) e na
-[revisão visual](docs/reviews/VISUAL_REVIEW_R10_D.md).
+R10-E mantém a superfície regional R10-D e aplica luz, AgX reversível,
+cor-base quente por região e GTAO de meia resolução apenas no `overview`
+realista do perfil `cinema`. `enhanced` preserva seu teto de 64 draws sem GTAO;
+corte, alto contraste, outras vistas e `baseline` também removem o passe. A
+implementação não transforma o modelo em atlas,
+reconstrução clínica ou anatomia validada. O avanço e seus limites estão na
+[auditoria R10-E](docs/audits/0.10/AUDIT_0.10_R10_E.md) e na
+[revisão visual](docs/reviews/VISUAL_REVIEW_R10_E.md).
 
 ### O que existe hoje
 

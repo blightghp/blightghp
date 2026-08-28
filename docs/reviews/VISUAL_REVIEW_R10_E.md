@@ -43,12 +43,12 @@ resultado procedural sem fonte anatômica não recebe 4.
 R10-E é aprovado como melhoria **de apresentação reversível**: a paleta deixa de
 ser dominada pelo ciano e GTAO em meia resolução acrescenta sombra de contato
 somente onde foi testado. O contrato preserva geometria, atividade, hashes e
-acessibilidade; corte, alto contraste, outras vistas e `baseline` desligam o
-efeito de modo explícito. A evidência não autoriza “fotorrealista”, “atlas”,
+acessibilidade; corte, alto contraste, outras vistas, `baseline` e `enhanced`
+desligam o efeito de modo explícito. A evidência não autoriza “fotorrealista”, “atlas”,
 “seção anatômica”, “reconstrução clínica” ou qualquer alegação de paciente.
 
 A inspeção não justifica intensificar GTAO: os highlights continuam podendo
 achatar o relevo, e a oclusão não corrige a silhueta de baixa frequência nem a
-aderência vascular. GIF, manifesto e README só devem mudar depois de uma captura
-que mantenha esses limites explícitos; a promoção continua bloqueada até esses
-artefatos e sua decisão final.
+aderência vascular. O GIF, manifesto e README foram sincronizados sem remover
+esses limites; a promoção continua bloqueada até a auditoria agregada e sua
+decisão final.
