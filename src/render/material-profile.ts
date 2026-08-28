@@ -105,6 +105,8 @@ export interface MaterialProfileAudit {
   readonly physicalMaterialObjects: number;
   readonly transmissionObjects: number;
   readonly bakedSurfaceShaderObjects: number;
+  /** Overview shells whose presentation-only base color is regionally warmed. */
+  readonly regionalBaseColorObjects: number;
   readonly vascularMaterialObjects: number;
   readonly semanticGeometryChanges: number;
   readonly estimatedAdditionalObjectDraws: number;
@@ -138,14 +140,26 @@ export interface MaterialProfileManagerOptions {
   ) => THREE.MeshPhysicalMaterial;
 }
 
-function materialColor(source: THREE.Material): THREE.Color {
+function copyMaterialColor(source: THREE.Material, target: THREE.Color): void {
   const colored = source as THREE.Material & { color?: THREE.Color };
-  if (colored.color) return colored.color.clone();
+  if (colored.color) {
+    target.copy(colored.color);
+    return;
+  }
   if (source instanceof THREE.ShaderMaterial) {
     const uniformColor: unknown = source.uniforms.shellColor?.value;
-    if (uniformColor instanceof THREE.Color) return uniformColor.clone();
+    if (uniformColor instanceof THREE.Color) {
+      target.copy(uniformColor);
+      return;
+    }
   }
-  return new THREE.Color(0x7fa8bf);
+  target.set(0x7fa8bf);
+}
+
+function materialColor(source: THREE.Material): THREE.Color {
+  const target = new THREE.Color();
+  copyMaterialColor(source, target);
+  return target;
 }
 
 function sourceOpacity(source: THREE.Material): number {
@@ -195,6 +209,9 @@ export interface R10EBakedSurfaceParameters {
 interface R10ERegionalMaterialParameters {
   readonly roughnessOffset: number;
   readonly clearcoatMultiplier: number;
+  /** Presentation only: static warm-neutral tint for the approved overview shells. */
+  readonly baseColor?: THREE.Color;
+  readonly baseColorMix?: number;
   readonly bakedSurface: R10EBakedSurfaceParameters;
 }
 
@@ -217,6 +234,8 @@ const R10_E_REGIONAL_MATERIAL_PARAMETERS: Readonly<
   cortex: {
     roughnessOffset: -0.03,
     clearcoatMultiplier: 1,
+    baseColor: new THREE.Color(0xc98f78),
+    baseColorMix: 0.88,
     bakedSurface: {
       aoStrength: 0.42,
       curvatureStrength: 0.15,
@@ -230,6 +249,8 @@ const R10_E_REGIONAL_MATERIAL_PARAMETERS: Readonly<
   cerebellum: {
     roughnessOffset: 0.04,
     clearcoatMultiplier: 0.7,
+    baseColor: new THREE.Color(0xb97d68),
+    baseColorMix: 0.86,
     bakedSurface: {
       aoStrength: 0.5,
       curvatureStrength: 0.19,
@@ -243,6 +264,8 @@ const R10_E_REGIONAL_MATERIAL_PARAMETERS: Readonly<
   stem: {
     roughnessOffset: 0.02,
     clearcoatMultiplier: 0.82,
+    baseColor: new THREE.Color(0xb78672),
+    baseColorMix: 0.84,
     bakedSurface: {
       aoStrength: 0.38,
       curvatureStrength: 0.11,
@@ -315,6 +338,31 @@ function materialRegion(value: unknown): R10EMaterialRegion {
 function r10EOverviewShellRegion(record: PhysicalMaterialRecord): R10EMaterialRegion | undefined {
   if (record.view !== "overview") return undefined;
   return R10_E_OVERVIEW_SHELL_REGIONS[record.object.name];
+}
+
+function r10EPresentationRegion(record: PhysicalMaterialRecord): R10EMaterialRegion {
+  return r10EOverviewShellRegion(record) ?? record.materialRegion;
+}
+
+function applyRegionalPresentationBaseColor(
+  target: THREE.Color,
+  approvedOverviewRegion: R10EMaterialRegion | undefined,
+): boolean {
+  // A manifest region alone is not enough: only the four R10-D overview shells
+  // are approved to replace their schematic blue base color.
+  if (!approvedOverviewRegion) return false;
+  const parameters = R10_E_REGIONAL_MATERIAL_PARAMETERS[approvedOverviewRegion];
+  if (!parameters.baseColor || !parameters.baseColorMix) return false;
+  target.lerp(parameters.baseColor, parameters.baseColorMix);
+  return true;
+}
+
+function hasRegionalPresentationBaseColor(
+  approvedOverviewRegion: R10EMaterialRegion | undefined,
+): boolean {
+  if (!approvedOverviewRegion) return false;
+  const parameters = R10_E_REGIONAL_MATERIAL_PARAMETERS[approvedOverviewRegion];
+  return Boolean(parameters.baseColor && parameters.baseColorMix);
 }
 
 function hasFiniteScalarAttribute(
@@ -616,11 +664,13 @@ function createPhysicalMaterial(
   normalMapProvider: ProceduralNormalMapProvider,
 ): THREE.MeshPhysicalMaterial {
   const bakedSurfaceRegion = r10EOverviewShellRegion(record);
-  const region = bakedSurfaceRegion ?? record.materialRegion;
+  const region = r10EPresentationRegion(record);
   const parameters = surfaceParameters(record.eligibility.surface, region);
   const textureType = normalMapType(record);
+  const color = materialColor(record.schematic);
+  applyRegionalPresentationBaseColor(color, bakedSurfaceRegion);
   const material = new THREE.MeshPhysicalMaterial({
-    color: materialColor(record.schematic),
+    color,
     roughness: parameters.roughness,
     metalness: 0,
     clearcoat: parameters.clearcoat,
@@ -657,8 +707,12 @@ function copyDynamicState(
   source: THREE.Material,
   target: THREE.MeshPhysicalMaterial,
   eligibility: VisualMaterialEligibility,
+  approvedOverviewRegion: R10EMaterialRegion | undefined,
 ): void {
-  target.color.copy(materialColor(source));
+  copyMaterialColor(source, target.color);
+  if (applyRegionalPresentationBaseColor(target.color, approvedOverviewRegion)) {
+    target.emissive.copy(target.color).multiplyScalar(0.035);
+  }
   target.opacity = THREE.MathUtils.clamp(
     sourceOpacity(source),
     eligibility.opacityRange[0],
@@ -849,7 +903,14 @@ export class RealisticIllustrativeMaterialManager {
   sync(): void {
     if (this.activeProfile !== "realistic-illustrative") return;
     for (const record of this.managed) {
-      if (record.physical) copyDynamicState(record.schematic, record.physical, record.eligibility);
+      if (record.physical) {
+        copyDynamicState(
+          record.schematic,
+          record.physical,
+          record.eligibility,
+          r10EOverviewShellRegion(record),
+        );
+      }
     }
   }
 
@@ -881,6 +942,9 @@ export class RealisticIllustrativeMaterialManager {
           (record.object.material as THREE.MeshPhysicalMaterial).userData[
             R10_E_BAKED_SURFACE_SHADER_FLAG
           ] === true,
+      ).length,
+      regionalBaseColorObjects: physical.filter(
+        (record) => hasRegionalPresentationBaseColor(r10EOverviewShellRegion(record)),
       ).length,
       vascularMaterialObjects: physical.filter((record) => record.materialRegion === "vascular").length,
       semanticGeometryChanges: records.filter(
@@ -960,7 +1024,12 @@ export class RealisticIllustrativeMaterialManager {
       }
       for (const record of this.managed) {
         if (!record.physical) throw new Error("realistic material was not created atomically");
-        copyDynamicState(record.schematic, record.physical, record.eligibility);
+        copyDynamicState(
+          record.schematic,
+          record.physical,
+          record.eligibility,
+          r10EOverviewShellRegion(record),
+        );
         record.object.material = record.physical;
       }
       this.activeProfile = "realistic-illustrative";

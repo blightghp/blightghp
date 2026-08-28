@@ -163,6 +163,7 @@ describe("R09-F realistic-illustrative material manager", () => {
     const shell = new THREE.Mesh(shellGeometry, new THREE.MeshBasicMaterial({ color: 0x886655 }));
     shell.name = "leftHemi-shell";
     declareVisual(shell, "matter", "topology");
+    const shellSchematic = shell.material as THREE.MeshBasicMaterial;
 
     const nonShellGeometry = shellGeometry.clone();
     const nonShell = new THREE.Mesh(nonShellGeometry, new THREE.MeshBasicMaterial({ color: 0x668899 }));
@@ -179,6 +180,7 @@ describe("R09-F realistic-illustrative material manager", () => {
         maximumLocalRadius: 0.3,
         opacityRange: [0, 1],
         source: "procedural-scene-graph",
+        materialRegion: "cortex",
       },
       {
         id: "test:baked-looking-non-shell",
@@ -197,15 +199,32 @@ describe("R09-F realistic-illustrative material manager", () => {
     expect(shellMaterial.userData.r10eBakedSurfaceShader).toBe(true);
     expect(nonShellMaterial.userData.r10eBakedSurfaceShader).toBeUndefined();
     expect(shellMaterial.customProgramCacheKey()).toBe("r10-e-baked-surface-v1:cortex");
+    const corticalPresentationColor = new THREE.Color(0x886655).lerp(
+      new THREE.Color(0xc98f78),
+      0.88,
+    );
+    expect(shellMaterial.color).toEqual(corticalPresentationColor);
+    expect(nonShellMaterial.color).toEqual(new THREE.Color(0x668899));
     expect(manager.audit()).toMatchObject({
       transmissionObjects: 0,
       estimatedTransmissionPasses: 0,
       bakedSurfaceShaderObjects: 1,
+      regionalBaseColorObjects: 1,
     });
 
     const versionBeforeSync = shellMaterial.version;
+    shellSchematic.color.set(0x335577);
     manager.sync();
     expect(shellMaterial.version).toBe(versionBeforeSync);
+    expect(shellMaterial.color).toEqual(
+      new THREE.Color(0x335577).lerp(new THREE.Color(0xc98f78), 0.88),
+    );
+    expect(shellMaterial.emissive).toEqual(shellMaterial.color.clone().multiplyScalar(0.035));
+    expect(nonShellMaterial.color).toEqual(new THREE.Color(0x668899));
+
+    manager.setEnvironment({ highContrast: true });
+    expect(shell.material).toBe(shellSchematic);
+    expect(shellSchematic.color).toEqual(new THREE.Color(0x335577));
 
     const shader = {
       vertexShader: THREE.ShaderLib.physical.vertexShader,
@@ -293,9 +312,11 @@ describe("R09-F realistic-illustrative material manager", () => {
     expect(material.clearcoat).toBeCloseTo(surfaceParameters("membrane", "vascular").clearcoat);
     expect(material.userData.r10eMaterialRegion).toBe("vascular");
     expect(material.userData.r10eBakedSurfaceShader).toBeUndefined();
+    expect(material.color).toEqual(new THREE.Color(0xa65e52));
     expect(manager.audit()).toMatchObject({
       vascularMaterialObjects: 1,
       bakedSurfaceShaderObjects: 0,
+      regionalBaseColorObjects: 0,
       transmissionObjects: 0,
     });
     manager.dispose();

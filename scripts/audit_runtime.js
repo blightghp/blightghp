@@ -216,6 +216,7 @@ try {
     r09fGate.active.material.transmissionObjects !== 0 ||
     r09fGate.active.material.estimatedTransmissionPasses !== 0 ||
     r09fGate.active.material.bakedSurfaceShaderObjects !== 4 ||
+    r09fGate.active.material.regionalBaseColorObjects !== 4 ||
     r09fGate.active.material.vascularMaterialObjects !== EXPECTED_R10B_VASCULAR_MATERIALS ||
     r09fGate.active.material.semanticGeometryChanges !== 0 ||
     r09fGate.active.clipping.planeCount !== 1 ||

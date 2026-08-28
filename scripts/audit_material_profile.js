@@ -175,6 +175,7 @@ try {
     finalPresentation.material.transmissionObjects !== 0 ||
     finalPresentation.material.estimatedTransmissionPasses !== 0 ||
     finalPresentation.material.bakedSurfaceShaderObjects !== 4 ||
+    finalPresentation.material.regionalBaseColorObjects !== 4 ||
     finalPresentation.material.vascularMaterialObjects !== 12 ||
     finalPresentation.material.semanticGeometryChanges !== 0 ||
     !finalPresentation.material.environmentMapActive ||

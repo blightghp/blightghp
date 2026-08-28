@@ -1,7 +1,8 @@
 # Diretivas da próxima etapa · R10-E luz e materialidade
 
-**Estado:** em andamento — cortes 1–6 (tone mapping, ambiente/luz, material regional e fallback); não promovido,
-com gates físicos, acessibilidade e comparação visual ainda pendentes.
+**Estado:** em andamento — cortes 1–7 (tone mapping, ambiente/luz, material regional,
+fallback e cor-base regional); não promovido. A validação física de hardware passou;
+matriz versionada, acessibilidade e comparação visual ainda pendem.
 
 **Corte 1:** `?toneMapping=agx` é o candidato atual; `?toneMapping=aces` preserva a
 reversão explícita e `neutral` fica disponível apenas para comparação A/B. Alto contraste,
@@ -32,6 +33,13 @@ excluído e orçamento de 9/18 draws; não há textura, geometria, passe, Worker
 saneia cor, `NaN`, infinito e limites de opacidade/padrão. Uma falha de compilação WebGL
 continua a reverter AgX/material para ACES/esquemático e agora também desliga clipping,
 removendo a tampa que poderia repetir o programa falho.
+
+**Corte 7:** as quatro shells overview recebem uma cor-base quente/neutra limitada por
+região (córtex, cerebelo e tronco), aplicada somente ao material físico de apresentação.
+O valor-fonte e a codificação dinâmica continuam preservados: a ligação científica dessas
+shells segue transformando estado apenas em opacidade. Vasos, overlays, topologia,
+geometria, draws e o diagrama das outras vistas não recebem essa mistura; a sincronização
+não aloca nem recompila material por quadro.
 
 **Branch prevista:** `blightghp/r10-e-light-materiality`
 
@@ -90,7 +98,8 @@ diferenças; não importa pixels ou geometria dessas fontes.
 4. Remover `transmission` do `baseline`; compor material em camadas baratas:
    base difusa, wrap diffuse, Fresnel/lobo úmido, `thickness`, `aoFactor` e grade.
 5. Criar parâmetros regionais para córtex, cerebelo, tronco, vasos e face de
-   corte; estado científico colorido permanece em overlay/emissão separada.
+   corte; a cor-base quente/neutra permanece apresentação estática e o estado
+   científico colorido fica em overlay/emissão/opacidade separada.
 6. Validar o contrato `onBeforeCompile`, clamps, `NaN`/infinito e fallback WebGL.
 7. Aplicar a disciplina às seis vistas, sem forçar o diagrama Eletricidade a
    imitar fotografia nem atribuir anatomia falsa a Célula/Neurônio/Sinapse.
