@@ -1,8 +1,8 @@
 # Diretivas da próxima etapa · R10-E luz e materialidade
 
 **Estado:** em andamento — cortes 1–7 (tone mapping, ambiente/luz, material regional,
-fallback e cor-base regional); não promovido. A validação física de hardware passou;
-matriz versionada, acessibilidade e comparação visual ainda pendem.
+fallback e cor-base regional); não promovido. A matriz física versionada e a revisão
+visual foram concluídas; decisão GTAO, GIF/manifesto/README e promoção ainda pendem.
 
 **Corte 1:** `?toneMapping=agx` é o candidato atual; `?toneMapping=aces` preserva a
 reversão explícita e `neutral` fica disponível apenas para comparação A/B. Alto contraste,
@@ -106,9 +106,11 @@ diferenças; não importa pixels ou geometria dessas fontes.
 8. Só ativar GTAO em meia resolução no perfil `enhanced` se a GPU física provar
    margem; `baseline` não recebe passe novo.
 9. Gerar matriz final frontal, laterais, superior, oblíqua e coronal, mais seis
-   vistas, monocromia, móvel e movimento reduzido.
+   vistas, monocromia, móvel e movimento reduzido. **Concluído:**
+   [`artifacts/light-materiality`](../../artifacts/light-materiality/) registra 16 capturas físicas.
 10. Executar auditoria, sincronizar gerador/GIF/manifesto, atualizar README e só
-    então promover/mergear.
+    então promover/mergear. **Parcial:** auditoria e revisão R10-E existem; ainda
+    faltam a decisão GTAO e os artefatos de promoção.
 
 ## Gates de segurança
 
