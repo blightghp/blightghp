@@ -19,6 +19,9 @@ const expectedMatrix = [
 const expectedViews = ["cell", "electricity", "laminar", "neuron", "overview", "synapse"];
 const evidenceOnlyPaths = [
   "artifacts/light-materiality/",
+  "assets/brain.gif",
+  "assets/brain-gif.json",
+  "README.md",
   "docs/audits/0.10/AUDIT_0.10_R10_E.md",
   "docs/reviews/VISUAL_REVIEW_R10_E.md",
   "docs/planning/NEXT_STAGE_R10_E.md",
