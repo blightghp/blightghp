@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "kind": "r10-e-light-materiality",
-  "capturedAt": "2026-08-28T16:40:14.031Z",
+  "capturedAt": "2026-08-28T21:42:26.420Z",
   "source": {
-    "commit": "161665f9d9acf00dfb47d1900922780ea03f82d8",
+    "commit": "f1080b253edd62cc427a025f6317ac1a8b4a58ad",
     "productVersion": "0.9.0",
     "command": "npm run audit:light-materiality",
     "requestedGraphicsBackend": "hardware"
@@ -65,13 +65,28 @@
       "geometryBytes": 25165824,
       "frameMillisecondsP95": 33.4,
       "sampleCount": 24,
-      "frameMillisecondsP50": 1.699999999254942,
-      "measuredFrameMillisecondsP95": 2.699999999254942,
+      "frameMillisecondsP50": 1.2000000029802322,
+      "measuredFrameMillisecondsP95": 2.2999999970197678,
       "measuredDrawCalls": 24,
       "measuredTriangles": 14520,
       "measuredTextureBytes": 55239648,
       "measuredGeometryBytes": 453940,
       "withinBudget": true
+    },
+    "enhancedOverview": {
+      "drawCalls": 64,
+      "triangles": 160000,
+      "textureBytes": 167772160,
+      "geometryBytes": 25165824,
+      "frameMillisecondsP95": 20,
+      "sampleCount": 24,
+      "frameMillisecondsP50": 1.8999999985098839,
+      "measuredFrameMillisecondsP95": 5.899999998509884,
+      "measuredDrawCalls": 67,
+      "measuredTriangles": 46179,
+      "measuredTextureBytes": 64949216,
+      "measuredGeometryBytes": 599460,
+      "withinBudget": false
     },
     "cinemaOverview": {
       "drawCalls": 72,
@@ -80,13 +95,40 @@
       "geometryBytes": 33554432,
       "frameMillisecondsP95": 50,
       "sampleCount": 24,
-      "frameMillisecondsP50": 1.8999999985098839,
-      "measuredFrameMillisecondsP95": 3.2000000029802322,
-      "measuredDrawCalls": 56,
-      "measuredTriangles": 35595,
-      "measuredTextureBytes": 55239648,
+      "frameMillisecondsP50": 2.2000000029802322,
+      "measuredFrameMillisecondsP95": 6.9000000059604645,
+      "measuredDrawCalls": 67,
+      "measuredTriangles": 46179,
+      "measuredTextureBytes": 64949216,
       "measuredGeometryBytes": 599460,
       "withinBudget": true
+    }
+  },
+  "ambientOcclusion": {
+    "baseline": {
+      "enabled": false,
+      "scale": 0.5,
+      "width": 0,
+      "height": 0,
+      "reason": "baseline-profile"
+    },
+    "enhanced": {
+      "enabled": true,
+      "scale": 0.5,
+      "width": 720,
+      "height": 480
+    },
+    "cinema": {
+      "enabled": true,
+      "scale": 0.5,
+      "width": 720,
+      "height": 480
+    },
+    "final": {
+      "enabled": true,
+      "scale": 0.5,
+      "width": 720,
+      "height": 480
     }
   },
   "matrix": [
@@ -153,8 +195,15 @@
         "interpolation": "linear between adjacent published snapshots",
         "available": true,
         "sampling": "arithmetic mean of published cortical vertices within ±0.08 procedural scene units",
-        "sampleCount": 91,
-        "value": 7.590904805199615e-8
+        "sampleCount": 92,
+        "value": 7.508527624242329e-8
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "clipping-active"
       }
     }
   ],
@@ -163,10 +212,16 @@
       "view": "overview",
       "capture": "view-overview.png",
       "renderer": {
-        "drawCalls": 56,
-        "triangles": 35595,
+        "drawCalls": 67,
+        "triangles": 46179,
         "geometries": 25,
-        "textures": 19
+        "textures": 25
+      },
+      "ambientOcclusion": {
+        "enabled": true,
+        "scale": 0.5,
+        "width": 720,
+        "height": 480
       }
     },
     {
@@ -177,6 +232,13 @@
         "triangles": 13167,
         "geometries": 63,
         "textures": 19
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
       }
     },
     {
@@ -187,6 +249,13 @@
         "triangles": 4892,
         "geometries": 69,
         "textures": 19
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
       }
     },
     {
@@ -197,6 +266,13 @@
         "triangles": 4663,
         "geometries": 78,
         "textures": 19
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
       }
     },
     {
@@ -207,6 +283,13 @@
         "triangles": 2387,
         "geometries": 88,
         "textures": 19
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
       }
     },
     {
@@ -217,6 +300,13 @@
         "triangles": 33543,
         "geometries": 103,
         "textures": 20
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
       }
     }
   ],
@@ -309,7 +399,7 @@
             "schemaVersion": 1,
             "algorithmVersion": "r10-d-simplex-ridge-v1",
             "seed": 1369948382,
-            "buildMilliseconds": 31.5,
+            "buildMilliseconds": 34.100000001490116,
             "buildCeilingMilliseconds": 120,
             "totalTriangles": {
               "high": 5780,
@@ -496,8 +586,15 @@
           "emissionObjects": 40,
           "excludedObjects": 12,
           "directRenders": 33,
-          "bloomRenders": 90,
+          "bloomRenders": 115,
           "finalOutputPass": true,
+          "ambientOcclusion": {
+            "enabled": false,
+            "scale": 0.5,
+            "width": 0,
+            "height": 0,
+            "reason": "high-contrast"
+          },
           "estimatedOwnedTextureBytes": 54367200
         },
         "budget": {
@@ -508,7 +605,7 @@
             "consecutiveOverBudgetFrames": 0,
             "recoveryFrames": 0,
             "recoveryAvailable": true,
-            "transitions": 2
+            "transitions": 3
           },
           "views": {
             "overview": {
@@ -518,13 +615,13 @@
               "geometryBytes": 33554432,
               "frameMillisecondsP95": 50,
               "sampleCount": 50,
-              "frameMillisecondsP50": 2.2999999970197678,
-              "measuredFrameMillisecondsP95": 14.100000001490116,
+              "frameMillisecondsP50": 2.600000001490116,
+              "measuredFrameMillisecondsP95": 189.09999999403954,
               "measuredDrawCalls": 52,
               "measuredTriangles": 29815,
               "measuredTextureBytes": 54715360,
               "measuredGeometryBytes": 599460,
-              "withinBudget": true
+              "withinBudget": false
             },
             "laminar": {
               "drawCalls": 120,
@@ -533,8 +630,8 @@
               "geometryBytes": 33554432,
               "frameMillisecondsP95": 50,
               "sampleCount": 3,
-              "frameMillisecondsP50": 5.899999998509884,
-              "measuredFrameMillisecondsP95": 300.80000000074506,
+              "frameMillisecondsP50": 9.700000002980232,
+              "measuredFrameMillisecondsP95": 282.09999999403954,
               "measuredDrawCalls": 95,
               "measuredTriangles": 13167,
               "measuredTextureBytes": 55235552,
@@ -548,8 +645,8 @@
               "geometryBytes": 33554432,
               "frameMillisecondsP95": 50,
               "sampleCount": 2,
-              "frameMillisecondsP50": 0.5,
-              "measuredFrameMillisecondsP95": 664.9000000022352,
+              "frameMillisecondsP50": 0.8000000044703484,
+              "measuredFrameMillisecondsP95": 661,
               "measuredDrawCalls": 6,
               "measuredTriangles": 4892,
               "measuredTextureBytes": 54973408,
@@ -563,8 +660,8 @@
               "geometryBytes": 33554432,
               "frameMillisecondsP95": 50,
               "sampleCount": 3,
-              "frameMillisecondsP50": 4.300000000745058,
-              "measuredFrameMillisecondsP95": 22.800000000745058,
+              "frameMillisecondsP50": 1.1000000014901161,
+              "measuredFrameMillisecondsP95": 18,
               "measuredDrawCalls": 33,
               "measuredTriangles": 4663,
               "measuredTextureBytes": 54973408,
@@ -578,8 +675,8 @@
               "geometryBytes": 33554432,
               "frameMillisecondsP95": 50,
               "sampleCount": 3,
-              "frameMillisecondsP50": 1.199999999254942,
-              "measuredFrameMillisecondsP95": 235.10000000149012,
+              "frameMillisecondsP50": 1.2999999970197678,
+              "measuredFrameMillisecondsP95": 236.10000000149012,
               "measuredDrawCalls": 35,
               "measuredTriangles": 2387,
               "measuredTextureBytes": 54711264,
@@ -593,8 +690,8 @@
               "geometryBytes": 33554432,
               "frameMillisecondsP95": 50,
               "sampleCount": 3,
-              "frameMillisecondsP50": 3.300000000745058,
-              "measuredFrameMillisecondsP95": 295.19999999925494,
+              "frameMillisecondsP50": 3.100000001490116,
+              "measuredFrameMillisecondsP95": 340.1000000014901,
               "measuredDrawCalls": 41,
               "measuredTriangles": 33543,
               "measuredTextureBytes": 55235552,
@@ -688,81 +785,81 @@
     "overview-schematic-reference.png": {
       "width": 1440,
       "height": 960,
-      "visiblePixels": 2288,
+      "visiblePixels": 2287,
       "sampledPixels": 6144,
-      "warmPixels": 180,
+      "warmPixels": 179,
       "coolPixels": 2108
     },
     "matrix-frontal.png": {
       "width": 1440,
       "height": 960,
-      "visiblePixels": 2280,
+      "visiblePixels": 2279,
       "sampledPixels": 6144,
-      "warmPixels": 1986,
-      "coolPixels": 254
+      "warmPixels": 1980,
+      "coolPixels": 264
     },
     "matrix-lateral-esquerda.png": {
       "width": 1440,
       "height": 960,
-      "visiblePixels": 2206,
+      "visiblePixels": 2204,
       "sampledPixels": 6144,
-      "warmPixels": 2046,
-      "coolPixels": 144
+      "warmPixels": 2043,
+      "coolPixels": 145
     },
     "matrix-lateral-direita.png": {
       "width": 1440,
       "height": 960,
-      "visiblePixels": 2216,
+      "visiblePixels": 2218,
       "sampledPixels": 6144,
-      "warmPixels": 2027,
-      "coolPixels": 179
+      "warmPixels": 2025,
+      "coolPixels": 181
     },
     "matrix-superior.png": {
       "width": 1440,
       "height": 960,
-      "visiblePixels": 2259,
+      "visiblePixels": 2262,
       "sampledPixels": 6144,
-      "warmPixels": 1786,
-      "coolPixels": 451
+      "warmPixels": 1799,
+      "coolPixels": 442
     },
     "matrix-obliqua.png": {
       "width": 1440,
       "height": 960,
-      "visiblePixels": 1679,
+      "visiblePixels": 1681,
       "sampledPixels": 6144,
-      "warmPixels": 1494,
-      "coolPixels": 163
+      "warmPixels": 1489,
+      "coolPixels": 170
     },
     "matrix-coronal-corte.png": {
       "width": 1440,
       "height": 960,
-      "visiblePixels": 1955,
+      "visiblePixels": 1957,
       "sampledPixels": 6144,
-      "warmPixels": 1729,
-      "coolPixels": 66
+      "warmPixels": 1736,
+      "coolPixels": 70
     },
     "view-overview.png": {
       "width": 1440,
       "height": 960,
       "visiblePixels": 2311,
       "sampledPixels": 6144,
-      "warmPixels": 2065,
-      "coolPixels": 215
+      "warmPixels": 2071,
+      "coolPixels": 219
     },
     "view-laminar.png": {
       "width": 1440,
       "height": 960,
-      "visiblePixels": 433,
+      "visiblePixels": 438,
       "sampledPixels": 6144,
       "warmPixels": 20,
-      "coolPixels": 399
+      "coolPixels": 404
     },
     "view-cell.png": {
       "width": 1440,
       "height": 960,
       "visiblePixels": 493,
       "sampledPixels": 6144,
-      "warmPixels": 87,
+      "warmPixels": 89,
       "coolPixels": 312
     },
     "view-neuron.png": {
@@ -794,24 +891,24 @@
       "height": 960,
       "visiblePixels": 2311,
       "sampledPixels": 6144,
-      "warmPixels": 2065,
-      "coolPixels": 215
+      "warmPixels": 2071,
+      "coolPixels": 219
     },
     "accessibility-overview-mobile.png": {
       "width": 1440,
       "height": 960,
       "visiblePixels": 2311,
       "sampledPixels": 6144,
-      "warmPixels": 2065,
-      "coolPixels": 215
+      "warmPixels": 2071,
+      "coolPixels": 219
     },
     "accessibility-overview-reduced-motion.png": {
       "width": 1440,
       "height": 960,
-      "visiblePixels": 2310,
+      "visiblePixels": 2316,
       "sampledPixels": 6144,
-      "warmPixels": 2067,
-      "coolPixels": 218
+      "warmPixels": 2076,
+      "coolPixels": 212
     }
   },
   "browserErrors": []

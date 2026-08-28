@@ -1,8 +1,9 @@
 # Diretivas da próxima etapa · R10-E luz e materialidade
 
-**Estado:** em andamento — cortes 1–7 (tone mapping, ambiente/luz, material regional,
-fallback e cor-base regional); não promovido. A matriz física versionada e a revisão
-visual foram concluídas; decisão GTAO, GIF/manifesto/README e promoção ainda pendem.
+**Estado:** em andamento — cortes 1–8 (tone mapping, ambiente/luz, material regional,
+fallback, cor-base regional e GTAO contido); não promovido. A matriz física versionada,
+a revisão visual e a decisão GTAO foram concluídas; GIF/manifesto/README e promoção
+ainda pendem.
 
 **Corte 1:** `?toneMapping=agx` é o candidato atual; `?toneMapping=aces` preserva a
 reversão explícita e `neutral` fica disponível apenas para comparação A/B. Alto contraste,
@@ -40,6 +41,13 @@ O valor-fonte e a codificação dinâmica continuam preservados: a ligação cie
 shells segue transformando estado apenas em opacidade. Vasos, overlays, topologia,
 geometria, draws e o diagrama das outras vistas não recebem essa mistura; a sincronização
 não aloca nem recompila material por quadro.
+
+**Corte 8:** GTAO entra como experimento de meia resolução somente em `enhanced` e
+`cinema`, na Visão Geral realista e entre o render-base e a composição de bloom. O G-buffer
+oculta emissão e decoração transitoriamente; clipping, alto contraste, `baseline` e qualquer
+fallback WebGL removem o passe e seus alvos. A evidência física mede 24 amostras separadas
+em `baseline`, `enhanced` e `cinema`, registra escala 0,5 e prova os rollbacks de corte e
+contraste antes de manter o efeito.
 
 **Branch prevista:** `blightghp/r10-e-light-materiality`
 
@@ -104,13 +112,15 @@ diferenças; não importa pixels ou geometria dessas fontes.
 7. Aplicar a disciplina às seis vistas, sem forçar o diagrama Eletricidade a
    imitar fotografia nem atribuir anatomia falsa a Célula/Neurônio/Sinapse.
 8. Só ativar GTAO em meia resolução no perfil `enhanced` se a GPU física provar
-   margem; `baseline` não recebe passe novo.
+   margem; `baseline` não recebe passe novo. **Concluído:** o passe está ativo apenas em
+   `overview` realista nos perfis `enhanced`/`cinema`; a Intel UHD/D3D11 mediu p95 de
+   5,9 ms e 6,9 ms, respectivamente, sob os tetos vigentes.
 9. Gerar matriz final frontal, laterais, superior, oblíqua e coronal, mais seis
    vistas, monocromia, móvel e movimento reduzido. **Concluído:**
    [`artifacts/light-materiality`](../../artifacts/light-materiality/) registra 16 capturas físicas.
 10. Executar auditoria, sincronizar gerador/GIF/manifesto, atualizar README e só
-    então promover/mergear. **Parcial:** auditoria e revisão R10-E existem; ainda
-    faltam a decisão GTAO e os artefatos de promoção.
+    então promover/mergear. **Parcial:** auditoria, revisão e decisão GTAO R10-E existem;
+    ainda faltam os artefatos de promoção.
 
 ## Gates de segurança
 
