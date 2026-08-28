@@ -167,6 +167,9 @@ try {
       view.manifest.some((entry) => !entry.id || !entry.objectName || !entry.surface)
     ) ||
     finalPresentation.material.physicalMaterialObjects !== 37 ||
+    finalPresentation.material.transmissionObjects !== 0 ||
+    finalPresentation.material.estimatedTransmissionPasses !== 0 ||
+    finalPresentation.material.bakedSurfaceShaderObjects !== 4 ||
     finalPresentation.material.semanticGeometryChanges !== 0 ||
     !finalPresentation.material.environmentMapActive ||
     finalPresentation.material.proceduralNormalMapTextures !== 3

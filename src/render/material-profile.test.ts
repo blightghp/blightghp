@@ -5,6 +5,7 @@ import { ElectricalBoardLayer } from "./electrical-board-layer";
 import { LaminarRenderLayer } from "./laminar-layer";
 import {
   createR10EProceduralEnvironmentSource,
+  hasR10EBakedSurfaceAttributes,
   PresentationMaterialEffects,
   REALISTIC_ILLUSTRATIVE_MANIFEST,
   RealisticIllustrativeMaterialManager,
@@ -90,7 +91,9 @@ describe("R09-F realistic-illustrative material manager", () => {
       physicalMaterialObjects: 21,
       semanticGeometryChanges: 0,
       estimatedAdditionalObjectDraws: 6,
-      estimatedTransmissionPasses: 1,
+      transmissionObjects: 0,
+      estimatedTransmissionPasses: 0,
+      bakedSurfaceShaderObjects: 0,
       lightCount: 4,
       environmentMapActive: true,
       proceduralNormalMapTextures: 3,
@@ -137,6 +140,127 @@ describe("R09-F realistic-illustrative material manager", () => {
       expect(light.intensity).toBeGreaterThan(0);
     }
     manager.dispose();
+  });
+
+  it("uses baked R10-D attributes only on approved overview shells without transmission", () => {
+    const scene = new THREE.Scene();
+    const root = new THREE.Group();
+    const shellGeometry = new THREE.SphereGeometry(0.2, 8, 6);
+    const vertexCount = shellGeometry.getAttribute("position").count;
+    shellGeometry.setAttribute(
+      "aoFactor",
+      new THREE.BufferAttribute(new Float32Array(vertexCount).fill(0.78), 1),
+    );
+    shellGeometry.setAttribute(
+      "curvature",
+      new THREE.BufferAttribute(new Float32Array(vertexCount).fill(0.12), 1),
+    );
+    shellGeometry.setAttribute(
+      "thickness",
+      new THREE.BufferAttribute(new Float32Array(vertexCount).fill(0.7), 1),
+    );
+    const shell = new THREE.Mesh(shellGeometry, new THREE.MeshBasicMaterial({ color: 0x886655 }));
+    shell.name = "leftHemi-shell";
+    declareVisual(shell, "matter", "topology");
+
+    const nonShellGeometry = shellGeometry.clone();
+    const nonShell = new THREE.Mesh(nonShellGeometry, new THREE.MeshBasicMaterial({ color: 0x668899 }));
+    nonShell.name = "baked-looking-non-shell";
+    declareVisual(nonShell, "matter", "topology");
+    root.add(shell, nonShell);
+
+    const manager = managerForTest(scene);
+    manager.registerLayer("overview", root, [
+      {
+        id: "test:leftHemi-shell",
+        objectName: shell.name,
+        surface: "tissue",
+        maximumLocalRadius: 0.3,
+        opacityRange: [0, 1],
+        source: "procedural-scene-graph",
+      },
+      {
+        id: "test:baked-looking-non-shell",
+        objectName: nonShell.name,
+        surface: "tissue",
+        maximumLocalRadius: 0.3,
+        opacityRange: [0, 1],
+        source: "procedural-scene-graph",
+      },
+    ]);
+    expect(manager.setProfile("realistic-illustrative")).toBe("realistic-illustrative");
+    const shellMaterial = shell.material as unknown as THREE.MeshPhysicalMaterial;
+    const nonShellMaterial = nonShell.material as unknown as THREE.MeshPhysicalMaterial;
+    expect(shellMaterial.transmission).toBe(0);
+    expect(nonShellMaterial.transmission).toBe(0);
+    expect(shellMaterial.userData.r10eBakedSurfaceShader).toBe(true);
+    expect(nonShellMaterial.userData.r10eBakedSurfaceShader).toBeUndefined();
+    expect(shellMaterial.customProgramCacheKey()).toBe("r10-e-baked-surface-v1:cortex");
+    expect(manager.audit()).toMatchObject({
+      transmissionObjects: 0,
+      estimatedTransmissionPasses: 0,
+      bakedSurfaceShaderObjects: 1,
+    });
+
+    const versionBeforeSync = shellMaterial.version;
+    manager.sync();
+    expect(shellMaterial.version).toBe(versionBeforeSync);
+
+    const shader = {
+      vertexShader: THREE.ShaderLib.physical.vertexShader,
+      fragmentShader: THREE.ShaderLib.physical.fragmentShader,
+      uniforms: {},
+    } as unknown as THREE.WebGLProgramParametersWithUniforms;
+    shellMaterial.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+    expect(shader.vertexShader.split("attribute float aoFactor;")).toHaveLength(2);
+    expect(shader.vertexShader).toContain("vR10EAoFactor = clamp(aoFactor, 0.0, 1.0);");
+    expect(shader.fragmentShader).toContain("uniform float r10eAoStrength;");
+    expect(shader.fragmentShader).toContain("#if NUM_DIR_LIGHTS > 0");
+    const modulationIndex = shader.fragmentShader.indexOf("float r10eAo = clamp");
+    expect(modulationIndex).toBeGreaterThan(shader.fragmentShader.indexOf("#include <aomap_fragment>"));
+    expect(modulationIndex).toBeLessThan(shader.fragmentShader.indexOf("vec3 totalDiffuse"));
+    expect(Number.isFinite(shader.uniforms.r10eAoStrength.value as number)).toBe(true);
+    expect(Number.isFinite(shader.uniforms.r10eFresnelPower.value as number)).toBe(true);
+
+    const malformedGeometry = shellGeometry.clone();
+    malformedGeometry.setAttribute(
+      "thickness",
+      new THREE.BufferAttribute(new Float32Array(vertexCount).fill(Number.NaN), 1),
+    );
+    expect(hasR10EBakedSurfaceAttributes(shellGeometry)).toBe(true);
+    expect(hasR10EBakedSurfaceAttributes(malformedGeometry)).toBe(false);
+
+    manager.dispose();
+    shellGeometry.dispose();
+    nonShellGeometry.dispose();
+    malformedGeometry.dispose();
+    (shell.material as THREE.Material).dispose();
+    (nonShell.material as THREE.Material).dispose();
+  });
+
+  it("falls back atomically when an approved overview shell lacks a baked attribute", () => {
+    const scene = new THREE.Scene();
+    const root = new THREE.Group();
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), new THREE.MeshBasicMaterial());
+    mesh.name = "cerebellum-shell";
+    declareVisual(mesh, "matter", "topology");
+    root.add(mesh);
+    const schematic = mesh.material;
+    const manager = managerForTest(scene);
+    manager.registerLayer("overview", root, [{
+      id: "test:cerebellum-shell",
+      objectName: mesh.name,
+      surface: "tissue",
+      maximumLocalRadius: 0.3,
+      opacityRange: [0, 1],
+      source: "procedural-scene-graph",
+    }]);
+    expect(manager.setProfile("realistic-illustrative")).toBe("schematic");
+    expect(mesh.material).toBe(schematic);
+    expect(manager.audit().fallbackReason).toContain("lacks valid baked surface attributes");
+    manager.dispose();
+    mesh.geometry.dispose();
+    schematic.dispose();
   });
 
   it("falls back atomically for high contrast and context loss", () => {

@@ -1,6 +1,6 @@
 # Diretivas da próxima etapa · R10-E luz e materialidade
 
-**Estado:** em andamento — cortes 1–2 (tone mapping, ambiente e luz); não promovido,
+**Estado:** em andamento — cortes 1–3 (tone mapping, ambiente/luz e material); não promovido,
 com gates físicos, acessibilidade e comparação visual ainda pendentes.
 
 **Corte 1:** `?toneMapping=agx` é o candidato atual; `?toneMapping=aces` preserva a
@@ -10,6 +10,13 @@ perda de contexto e erro de shader efetivam ACES até a condição segura ser re
 **Corte 2:** o ambiente agora é um equiretangular procedural convertido uma vez por PMREM,
 sem asset externo; o rig `hemisphere` + key/fill/rim é de apresentação e não altera geometria,
 estado científico ou passes de `baseline`.
+
+**Corte 3:** `transmission` e a atenuação associada saem do perfil; as quatro shells
+overview R10-D consomem `aoFactor`, `curvature` e `thickness` já assados por um contrato
+`onBeforeCompile` limitado, com parâmetros de córtex/cerebelo/tronco. Atributo ausente,
+malformado ou shader incompatível aciona reversão atômica para `schematic`; os demais
+objetos, inclusive vasos, não recebem esse hook. A sincronização dinâmica não recompila
+material por quadro.
 
 **Branch prevista:** `blightghp/r10-e-light-materiality`
 

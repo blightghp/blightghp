@@ -536,27 +536,27 @@ describe("MaterialProfileManager contract", () => {
     layer.dispose();
   });
 
-  it("uses the refined tissue, membrane and substrate PBR presets", () => {
+  it("uses non-transmissive tissue, membrane and substrate PBR presets", () => {
     expect(surfaceParameters("membrane")).toMatchObject({
       roughness: 0.32,
-      transmission: 0.22,
       clearcoat: 0.28,
       sheen: 0.18,
       ior: 1.4,
     });
     expect(surfaceParameters("tissue")).toMatchObject({
       roughness: 0.52,
-      transmission: 0.1,
       clearcoat: 0.12,
       sheen: 0.25,
       ior: 1.38,
     });
     expect(surfaceParameters("substrate")).toMatchObject({
       roughness: 0.72,
-      transmission: 0,
       sheen: 0,
       ior: 1.5,
     });
+    expect(surfaceParameters("membrane")).not.toHaveProperty("transmission");
+    expect(surfaceParameters("tissue", "cortex").roughness).toBeCloseTo(0.49);
+    expect(surfaceParameters("tissue", "cerebellum").roughness).toBeCloseTo(0.56);
   });
 
   it("keeps geometry UUIDs and five scientific hashes stable across profile switches", () => {

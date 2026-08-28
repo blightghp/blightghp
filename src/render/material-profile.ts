@@ -101,6 +101,7 @@ export interface MaterialProfileAudit {
   readonly eligibleObjects: number;
   readonly physicalMaterialObjects: number;
   readonly transmissionObjects: number;
+  readonly bakedSurfaceShaderObjects: number;
   readonly semanticGeometryChanges: number;
   readonly estimatedAdditionalObjectDraws: number;
   readonly estimatedTransmissionPasses: number;
@@ -152,14 +153,279 @@ function sourceOpacity(source: THREE.Material): number {
 
 interface SurfaceParams {
   roughness: number;
-  transmission: number;
-  thickness: number;
   clearcoat: number;
   clearcoatRoughness: number;
   sheen: number;
   sheenRoughness: number;
   sheenColor: number;
   ior: number;
+}
+
+export const R10_E_MATERIAL_REGIONS = [
+  "generic",
+  "cortex",
+  "cerebellum",
+  "stem",
+] as const;
+
+export type R10EMaterialRegion = (typeof R10_E_MATERIAL_REGIONS)[number];
+
+export const R10_E_BAKED_SURFACE_ATTRIBUTES = [
+  "aoFactor",
+  "curvature",
+  "thickness",
+] as const;
+
+export interface R10EBakedSurfaceParameters {
+  readonly aoStrength: number;
+  readonly curvatureStrength: number;
+  readonly diffuseWrapStrength: number;
+  readonly thicknessStrength: number;
+  readonly fresnelStrength: number;
+  readonly fresnelPower: number;
+  readonly tint: THREE.ColorRepresentation;
+}
+
+interface R10ERegionalMaterialParameters {
+  readonly roughnessOffset: number;
+  readonly clearcoatMultiplier: number;
+  readonly bakedSurface: R10EBakedSurfaceParameters;
+}
+
+const R10_E_REGIONAL_MATERIAL_PARAMETERS: Readonly<
+  Record<R10EMaterialRegion, R10ERegionalMaterialParameters>
+> = {
+  generic: {
+    roughnessOffset: 0,
+    clearcoatMultiplier: 1,
+    bakedSurface: {
+      aoStrength: 0.34,
+      curvatureStrength: 0.1,
+      diffuseWrapStrength: 0.04,
+      thicknessStrength: 0.025,
+      fresnelStrength: 0.035,
+      fresnelPower: 3.2,
+      tint: 0xd5b49d,
+    },
+  },
+  cortex: {
+    roughnessOffset: -0.03,
+    clearcoatMultiplier: 1,
+    bakedSurface: {
+      aoStrength: 0.42,
+      curvatureStrength: 0.15,
+      diffuseWrapStrength: 0.055,
+      thicknessStrength: 0.035,
+      fresnelStrength: 0.05,
+      fresnelPower: 3.4,
+      tint: 0xe2b79f,
+    },
+  },
+  cerebellum: {
+    roughnessOffset: 0.04,
+    clearcoatMultiplier: 0.7,
+    bakedSurface: {
+      aoStrength: 0.5,
+      curvatureStrength: 0.19,
+      diffuseWrapStrength: 0.035,
+      thicknessStrength: 0.022,
+      fresnelStrength: 0.032,
+      fresnelPower: 3.8,
+      tint: 0xcba78d,
+    },
+  },
+  stem: {
+    roughnessOffset: 0.02,
+    clearcoatMultiplier: 0.82,
+    bakedSurface: {
+      aoStrength: 0.38,
+      curvatureStrength: 0.11,
+      diffuseWrapStrength: 0.04,
+      thicknessStrength: 0.028,
+      fresnelStrength: 0.04,
+      fresnelPower: 3.1,
+      tint: 0xcda88e,
+    },
+  },
+};
+
+const R10_E_BAKED_SURFACE_SHADER_VERSION = "r10-e-baked-surface-v1";
+const R10_E_BAKED_SURFACE_SHADER_FLAG = "r10eBakedSurfaceShader";
+const R10_E_OVERVIEW_SHELL_REGIONS: Readonly<Record<string, R10EMaterialRegion>> = {
+  "leftHemi-shell": "cortex",
+  "rightHemi-shell": "cortex",
+  "cerebellum-shell": "cerebellum",
+  "stem-shell": "stem",
+};
+
+type R10EShaderSource = Pick<
+  THREE.WebGLProgramParametersWithUniforms,
+  "vertexShader" | "fragmentShader" | "uniforms"
+>;
+
+function boundedFinite(value: number, minimum: number, maximum: number, fallback: number): number {
+  return Number.isFinite(value) ? THREE.MathUtils.clamp(value, minimum, maximum) : fallback;
+}
+
+function boundedBakedSurfaceParameters(
+  parameters: R10EBakedSurfaceParameters,
+): R10EBakedSurfaceParameters {
+  return {
+    aoStrength: boundedFinite(parameters.aoStrength, 0, 1, 0.34),
+    curvatureStrength: boundedFinite(parameters.curvatureStrength, 0, 0.5, 0.1),
+    diffuseWrapStrength: boundedFinite(parameters.diffuseWrapStrength, 0, 0.2, 0.04),
+    thicknessStrength: boundedFinite(parameters.thicknessStrength, 0, 0.12, 0.025),
+    fresnelStrength: boundedFinite(parameters.fresnelStrength, 0, 0.16, 0.035),
+    fresnelPower: boundedFinite(parameters.fresnelPower, 1, 8, 3.2),
+    tint: parameters.tint,
+  };
+}
+
+export function r10EBakedSurfaceParameters(
+  region: R10EMaterialRegion = "generic",
+): R10EBakedSurfaceParameters {
+  return boundedBakedSurfaceParameters(R10_E_REGIONAL_MATERIAL_PARAMETERS[region].bakedSurface);
+}
+
+function r10EOverviewShellRegion(record: PhysicalMaterialRecord): R10EMaterialRegion | undefined {
+  if (record.view !== "overview") return undefined;
+  return R10_E_OVERVIEW_SHELL_REGIONS[record.object.name];
+}
+
+function hasFiniteScalarAttribute(
+  attribute: THREE.BufferAttribute | THREE.InterleavedBufferAttribute | undefined,
+  count: number,
+): boolean {
+  if (!attribute || attribute.itemSize !== 1 || attribute.count !== count) return false;
+  for (let index = 0; index < attribute.count; index += 1) {
+    if (!Number.isFinite(attribute.getX(index))) return false;
+  }
+  return true;
+}
+
+/**
+ * The custom R10-E path is deliberately opt-in: a mesh must already contain
+ * all R10-D baked scalar attributes with finite values. The manager retains
+ * ordinary physical material for non-shell meshes, while an approved overview
+ * shell without this contract activates its atomic schematic fallback.
+ */
+export function hasR10EBakedSurfaceAttributes(geometry: THREE.BufferGeometry): boolean {
+  const position = geometry.getAttribute("position");
+  if (!position || position.count === 0) return false;
+  return R10_E_BAKED_SURFACE_ATTRIBUTES.every((name) =>
+    hasFiniteScalarAttribute(geometry.getAttribute(name), position.count)
+  );
+}
+
+function replaceShaderAnchor(
+  source: string,
+  anchor: string,
+  replacement: string,
+  label: string,
+): string {
+  if (!source.includes(anchor)) throw new Error(`R10-E shader anchor is missing: ${label}`);
+  return source.replace(anchor, replacement);
+}
+
+function ensureR10EBakedSurfaceShaderAnchors(): void {
+  const physical = THREE.ShaderLib.physical;
+  if (
+    !physical.vertexShader.includes("#include <common>") ||
+    !physical.vertexShader.includes("#include <begin_vertex>") ||
+    !physical.fragmentShader.includes("#include <common>") ||
+    !physical.fragmentShader.includes("#include <aomap_fragment>")
+  ) {
+    throw new Error("R10-E shader contract is incompatible with this Three.js build");
+  }
+}
+
+/** Applies the R10-E attribute modulation before the physical shader totals light. */
+export function applyR10EBakedSurfaceShader(
+  shader: R10EShaderSource,
+  parameters: R10EBakedSurfaceParameters,
+): void {
+  const bounded = boundedBakedSurfaceParameters(parameters);
+  shader.uniforms.r10eAoStrength = { value: bounded.aoStrength };
+  shader.uniforms.r10eCurvatureStrength = { value: bounded.curvatureStrength };
+  shader.uniforms.r10eDiffuseWrapStrength = { value: bounded.diffuseWrapStrength };
+  shader.uniforms.r10eThicknessStrength = { value: bounded.thicknessStrength };
+  shader.uniforms.r10eFresnelStrength = { value: bounded.fresnelStrength };
+  shader.uniforms.r10eFresnelPower = { value: bounded.fresnelPower };
+  shader.uniforms.r10eTint = { value: new THREE.Color(bounded.tint) };
+  shader.vertexShader = replaceShaderAnchor(
+    shader.vertexShader,
+    "#include <common>",
+    `#include <common>
+attribute float aoFactor;
+attribute float curvature;
+attribute float thickness;
+varying float vR10EAoFactor;
+varying float vR10ECurvature;
+varying float vR10EThickness;`,
+    "vertex common",
+  );
+  shader.vertexShader = replaceShaderAnchor(
+    shader.vertexShader,
+    "#include <begin_vertex>",
+    `#include <begin_vertex>
+vR10EAoFactor = clamp(aoFactor, 0.0, 1.0);
+vR10ECurvature = clamp(curvature, -1.0, 1.0);
+vR10EThickness = clamp(thickness, 0.0, 1.0);`,
+    "vertex begin",
+  );
+  shader.fragmentShader = replaceShaderAnchor(
+    shader.fragmentShader,
+    "#include <common>",
+    `#include <common>
+varying float vR10EAoFactor;
+varying float vR10ECurvature;
+varying float vR10EThickness;
+uniform float r10eAoStrength;
+uniform float r10eCurvatureStrength;
+uniform float r10eDiffuseWrapStrength;
+uniform float r10eThicknessStrength;
+uniform float r10eFresnelStrength;
+uniform float r10eFresnelPower;
+uniform vec3 r10eTint;`,
+    "fragment common",
+  );
+  shader.fragmentShader = replaceShaderAnchor(
+    shader.fragmentShader,
+    "#include <aomap_fragment>",
+    `#include <aomap_fragment>
+float r10eAo = clamp(vR10EAoFactor, 0.0, 1.0);
+float r10eRidge = max(clamp(vR10ECurvature, -1.0, 1.0), 0.0);
+float r10eCavity = max(-clamp(vR10ECurvature, -1.0, 1.0), 0.0);
+float r10eThickness = clamp(vR10EThickness, 0.0, 1.0);
+float r10eIndirectOcclusion = max(0.0, mix(1.0, r10eAo, r10eAoStrength) - r10eCavity * r10eCurvatureStrength);
+reflectedLight.indirectDiffuse *= r10eIndirectOcclusion;
+#if NUM_DIR_LIGHTS > 0
+  float r10eWrap = r10eDiffuseWrapStrength * (0.35 + 0.65 * r10eThickness) * (1.0 - r10eCavity);
+  reflectedLight.directDiffuse += reflectedLight.directDiffuse * r10eWrap;
+#endif
+float r10eFresnel = pow(1.0 - saturate(dot(geometryNormal, geometryViewDir)), r10eFresnelPower);
+totalEmissiveRadiance += r10eTint * (
+  r10eRidge * r10eThicknessStrength +
+  r10eThickness * r10eThicknessStrength * 0.35 +
+  r10eFresnel * r10eFresnelStrength
+);`,
+    "ambient-occlusion modulation",
+  );
+}
+
+function installR10EBakedSurfaceShader(
+  material: THREE.MeshPhysicalMaterial,
+  geometry: THREE.BufferGeometry,
+  parameters: R10EBakedSurfaceParameters,
+  region: R10EMaterialRegion,
+): boolean {
+  if (!hasR10EBakedSurfaceAttributes(geometry)) return false;
+  ensureR10EBakedSurfaceShaderAnchors();
+  material.onBeforeCompile = (shader) => applyR10EBakedSurfaceShader(shader, parameters);
+  material.customProgramCacheKey = () => `${R10_E_BAKED_SURFACE_SHADER_VERSION}:${region}`;
+  material.userData[R10_E_BAKED_SURFACE_SHADER_FLAG] = true;
+  material.needsUpdate = true;
+  return true;
 }
 
 const R10_E_ENVIRONMENT_WIDTH = 128;
@@ -246,13 +512,15 @@ function sphericalUvAttribute(geometry: THREE.BufferGeometry): THREE.BufferAttri
   return new THREE.BufferAttribute(values, 2);
 }
 
-export function surfaceParameters(surface: VisualMaterialSurface): SurfaceParams {
+export function surfaceParameters(
+  surface: VisualMaterialSurface,
+  region: R10EMaterialRegion = "generic",
+): SurfaceParams {
+  const regional = R10_E_REGIONAL_MATERIAL_PARAMETERS[region];
   if (surface === "membrane") {
     return {
-      roughness: 0.32,
-      transmission: 0.22,
-      thickness: 0.06,
-      clearcoat: 0.28,
+      roughness: THREE.MathUtils.clamp(0.32 + regional.roughnessOffset, 0.12, 0.92),
+      clearcoat: THREE.MathUtils.clamp(0.28 * regional.clearcoatMultiplier, 0, 1),
       clearcoatRoughness: 0.35,
       sheen: 0.18,
       sheenRoughness: 0.75,
@@ -262,10 +530,8 @@ export function surfaceParameters(surface: VisualMaterialSurface): SurfaceParams
   }
   if (surface === "tissue") {
     return {
-      roughness: 0.52,
-      transmission: 0.1,
-      thickness: 0.12,
-      clearcoat: 0.12,
+      roughness: THREE.MathUtils.clamp(0.52 + regional.roughnessOffset, 0.12, 0.92),
+      clearcoat: THREE.MathUtils.clamp(0.12 * regional.clearcoatMultiplier, 0, 1),
       clearcoatRoughness: 0.55,
       sheen: 0.25,
       sheenRoughness: 0.85,
@@ -274,10 +540,8 @@ export function surfaceParameters(surface: VisualMaterialSurface): SurfaceParams
     };
   }
   return {
-    roughness: 0.72,
-    transmission: 0,
-    thickness: 0,
-    clearcoat: 0.06,
+    roughness: THREE.MathUtils.clamp(0.72 + regional.roughnessOffset, 0.12, 0.92),
+    clearcoat: THREE.MathUtils.clamp(0.06 * regional.clearcoatMultiplier, 0, 1),
     clearcoatRoughness: 0.85,
     sheen: 0,
     sheenRoughness: 0,
@@ -289,7 +553,7 @@ export function surfaceParameters(surface: VisualMaterialSurface): SurfaceParams
 function copyRenderContract(source: THREE.Material, target: THREE.MeshPhysicalMaterial): void {
   target.name = `${source.name || source.type}:realistic-illustrative`;
   target.opacity = sourceOpacity(source);
-  target.transparent = source.transparent || target.opacity < 1 || target.transmission > 0;
+  target.transparent = source.transparent || target.opacity < 1;
   target.alphaTest = source.alphaTest;
   target.blending = source.blending;
   target.blendSrc = source.blendSrc;
@@ -326,22 +590,20 @@ function createPhysicalMaterial(
   record: PhysicalMaterialRecord,
   normalMapProvider: ProceduralNormalMapProvider,
 ): THREE.MeshPhysicalMaterial {
-  const parameters = surfaceParameters(record.eligibility.surface);
+  const bakedSurfaceRegion = r10EOverviewShellRegion(record);
+  const region = bakedSurfaceRegion ?? "generic";
+  const parameters = surfaceParameters(record.eligibility.surface, region);
   const textureType = normalMapType(record);
   const material = new THREE.MeshPhysicalMaterial({
     color: materialColor(record.schematic),
     roughness: parameters.roughness,
     metalness: 0,
-    transmission: parameters.transmission,
-    thickness: parameters.thickness,
     clearcoat: parameters.clearcoat,
     clearcoatRoughness: parameters.clearcoatRoughness,
     sheen: parameters.sheen,
     sheenRoughness: parameters.sheenRoughness,
     sheenColor: parameters.sheenColor,
     ior: parameters.ior,
-    attenuationColor: materialColor(record.schematic),
-    attenuationDistance: 1.8,
     vertexColors: Boolean(record.object.geometry.getAttribute("color")),
     normalMap: textureType ? normalMapProvider.get(textureType) : null,
     normalScale: new THREE.Vector2(
@@ -352,6 +614,16 @@ function createPhysicalMaterial(
   material.emissive.copy(material.color).multiplyScalar(0.035);
   material.emissiveIntensity = 0.18;
   copyRenderContract(record.schematic, material);
+  if (bakedSurfaceRegion) {
+    if (!installR10EBakedSurfaceShader(
+      material,
+      record.object.geometry,
+      r10EBakedSurfaceParameters(region),
+      bakedSurfaceRegion,
+    )) {
+      throw new Error(`R10-E overview shell lacks valid baked surface attributes: ${record.object.name}`);
+    }
+  }
   return material;
 }
 
@@ -361,13 +633,12 @@ function copyDynamicState(
   eligibility: VisualMaterialEligibility,
 ): void {
   target.color.copy(materialColor(source));
-  target.attenuationColor.copy(target.color);
   target.opacity = THREE.MathUtils.clamp(
     sourceOpacity(source),
     eligibility.opacityRange[0],
     eligibility.opacityRange[1],
   );
-  target.transparent = source.transparent || target.opacity < 1 || target.transmission > 0;
+  target.transparent = source.transparent || target.opacity < 1;
   if (source instanceof THREE.ShaderMaterial) {
     const activity: unknown = source.uniforms.activity?.value;
     const normalized = typeof activity === "number" && Number.isFinite(activity)
@@ -376,7 +647,6 @@ function copyDynamicState(
     target.opacity *= 0.78 + normalized * 0.22;
     target.emissiveIntensity = 0.12 + normalized * 0.24;
   }
-  target.needsUpdate = true;
 }
 
 function textureDimensions(texture: THREE.Texture | undefined): { width: number; height: number } {
@@ -578,6 +848,12 @@ export class RealisticIllustrativeMaterialManager {
       physicalMaterialObjects: physical.length,
       transmissionObjects: physical.filter(
         (record) => (record.object.material as THREE.MeshPhysicalMaterial).transmission > 0,
+      ).length,
+      bakedSurfaceShaderObjects: physical.filter(
+        (record) =>
+          (record.object.material as THREE.MeshPhysicalMaterial).userData[
+            R10_E_BAKED_SURFACE_SHADER_FLAG
+          ] === true,
       ).length,
       semanticGeometryChanges: records.filter(
         (record) => this.originalGeometryIds.get(record.object) !==

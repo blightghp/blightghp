@@ -665,7 +665,10 @@ function updatePresentationCostUi(): void {
   const material = materialProfileManager.audit(activeView);
   target.textContent = `+${clipping.estimatedAdditionalDrawCalls} corte · ` +
     `+${material.estimatedAdditionalObjectDraws} dupla face · ` +
-    `+${material.estimatedTransmissionPasses} refração`;
+    `${material.bakedSurfaceShaderObjects} superfície assada · ` +
+    (material.estimatedTransmissionPasses > 0
+      ? `+${material.estimatedTransmissionPasses} refração`
+      : "sem refração");
 }
 
 function renderRootForView(view: SimulationView): THREE.Group {

@@ -213,6 +213,9 @@ try {
     r09fGate.active.material.activeProfile !== "realistic-illustrative" ||
     r09fGate.active.material.physicalMaterialObjects !==
       EXPECTED_R09F_MATERIALS + EXPECTED_R10B_VASCULAR_MATERIALS ||
+    r09fGate.active.material.transmissionObjects !== 0 ||
+    r09fGate.active.material.estimatedTransmissionPasses !== 0 ||
+    r09fGate.active.material.bakedSurfaceShaderObjects !== 4 ||
     r09fGate.active.material.semanticGeometryChanges !== 0 ||
     r09fGate.active.clipping.planeCount !== 1 ||
     r09fGate.active.clipping.capSources !== 4 ||
