@@ -13,6 +13,7 @@ export const HALF_RESOLUTION_AMBIENT_OCCLUSION_SCALE = 0.5 as const;
 
 export type AmbientOcclusionDisableReason =
   | "baseline-profile"
+  | "enhanced-budget"
   | "non-overview-view"
   | "schematic-material"
   | "clipping-active"
@@ -58,6 +59,13 @@ export function ambientOcclusionDecision(
       enabled: false,
       scale: HALF_RESOLUTION_AMBIENT_OCCLUSION_SCALE,
       reason: "baseline-profile",
+    };
+  }
+  if (input.renderProfile === "enhanced") {
+    return {
+      enabled: false,
+      scale: HALF_RESOLUTION_AMBIENT_OCCLUSION_SCALE,
+      reason: "enhanced-budget",
     };
   }
   if (input.activeView !== "overview") {

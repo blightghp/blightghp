@@ -94,10 +94,11 @@ const ambientOcclusion = report.ambientOcclusion;
 if (
   ambientOcclusion?.baseline?.enabled !== false ||
   ambientOcclusion.baseline.reason !== "baseline-profile" ||
-  ambientOcclusion?.enhanced?.enabled !== true ||
+  ambientOcclusion?.enhanced?.enabled !== false ||
+  ambientOcclusion.enhanced.reason !== "enhanced-budget" ||
   ambientOcclusion.enhanced.scale !== 0.5 ||
-  ambientOcclusion.enhanced.width < 1 ||
-  ambientOcclusion.enhanced.height < 1 ||
+  ambientOcclusion.enhanced.width !== 0 ||
+  ambientOcclusion.enhanced.height !== 0 ||
   ambientOcclusion?.cinema?.enabled !== true ||
   ambientOcclusion.cinema.scale !== 0.5 ||
   ambientOcclusion.cinema.width < 1 ||
@@ -106,6 +107,13 @@ if (
   ambientOcclusion.final.scale !== 0.5
 ) {
   throw new Error("R10-E GTAO policy evidence is incomplete");
+}
+if (
+  report.performance?.baselineOverview?.withinBudget !== true ||
+  report.performance?.enhancedOverview?.withinBudget !== true ||
+  report.performance?.cinemaOverview?.withinBudget !== true
+) {
+  throw new Error("R10-E physical performance budget was exceeded");
 }
 if (
   !Array.isArray(report.matrix) ||

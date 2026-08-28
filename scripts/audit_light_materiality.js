@@ -320,10 +320,11 @@ try {
       finalPresentation.toneMapping.effectiveMode !== "agx" ||
       ambientOcclusion.baseline.enabled ||
       ambientOcclusion.baseline.reason !== "baseline-profile" ||
-      !ambientOcclusion.enhanced.enabled ||
+      ambientOcclusion.enhanced.enabled ||
+      ambientOcclusion.enhanced.reason !== "enhanced-budget" ||
       ambientOcclusion.enhanced.scale !== 0.5 ||
-      ambientOcclusion.enhanced.width < 1 ||
-      ambientOcclusion.enhanced.height < 1 ||
+      ambientOcclusion.enhanced.width !== 0 ||
+      ambientOcclusion.enhanced.height !== 0 ||
       !ambientOcclusion.cinema.enabled ||
       ambientOcclusion.cinema.scale !== 0.5 ||
       ambientOcclusion.cinema.width < 1 ||
@@ -333,6 +334,9 @@ try {
       highContrastFallback.fallback.bloom.ambientOcclusion.enabled ||
       highContrastFallback.fallback.bloom.ambientOcclusion.reason !== "high-contrast" ||
       !ambientOcclusion.final.enabled ||
+      !baselinePresentation.budget.views.overview.withinBudget ||
+      !enhancedPresentation.budget.views.overview.withinBudget ||
+      !cinemaPresentation.budget.views.overview.withinBudget ||
       sixViews.some((entry) =>
         entry.view === "overview"
           ? !entry.ambientOcclusion.enabled
