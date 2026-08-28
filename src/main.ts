@@ -98,6 +98,13 @@ import {
   VascularTopologyModule,
   vascularTopologyDetailsFor,
 } from "./vascular";
+import {
+  DEFAULT_USAGE_MODE,
+  isUsageModeControlVisible,
+  parseUsageMode,
+  USAGE_MODE_DEFINITIONS,
+} from "./usage-mode";
+import type { UsageMode } from "./usage-mode";
 
 declare global {
   interface Window {
@@ -248,6 +255,9 @@ let captureTime = 0;
 let metricAccumulator = 0;
 let currentFocusRegion: BrainRegion | "all" = "all";
 let activeView: SimulationView = "overview";
+let usageMode: UsageMode = parseUsageMode(
+  new URLSearchParams(window.location.search).get("usageMode"),
+) ?? DEFAULT_USAGE_MODE;
 let selectedCellId = 0;
 let selectionReturnFocus: HTMLElement | undefined;
 let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
@@ -1131,9 +1141,49 @@ function setActiveView(view: SimulationView): void {
   }
 }
 
+function setUsageMode(requested: UsageMode | string): UsageMode {
+  const nextMode = parseUsageMode(requested) ?? usageMode;
+  const focused = document.activeElement;
+  usageMode = nextMode;
+  document.body.dataset.usageMode = nextMode;
+
+  const selector = element<HTMLSelectElement>("#usage-mode");
+  selector.value = nextMode;
+  element("#usage-mode-status").textContent = USAGE_MODE_DEFINITIONS[nextMode].summary;
+
+  for (const control of document.querySelectorAll<HTMLElement>("[data-usage-mode-minimum]")) {
+    const minimumMode = parseUsageMode(control.dataset.usageModeMinimum);
+    control.hidden = minimumMode === undefined ||
+      !isUsageModeControlVisible(nextMode, minimumMode);
+  }
+
+  if (
+    focused instanceof HTMLElement &&
+    focused.closest("[data-usage-mode-minimum][hidden]")
+  ) {
+    selector.focus();
+  }
+
+  return nextMode;
+}
+
+function setupUsageModeInterface(): void {
+  const selector = element<HTMLSelectElement>("#usage-mode");
+  selector.addEventListener("change", () => {
+    const requested = parseUsageMode(selector.value);
+    if (!requested) {
+      selector.value = usageMode;
+      return;
+    }
+    setUsageMode(requested);
+  });
+  setUsageMode(usageMode);
+}
+
 function setupInterface(): void {
   element("#node-count").textContent = formatCount(brainData.nodes.length);
   element("#synapse-count").textContent = formatCount(brainData.synapses.length);
+  setupUsageModeInterface();
 
   anatomyExplorer = new AnatomyExplorerController({
     search: element<HTMLInputElement>("#anatomy-search"),
@@ -1390,6 +1440,7 @@ function setupInterface(): void {
     const target = event.target;
     if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement ||
         target instanceof HTMLTextAreaElement) return;
+    if (!isUsageModeControlVisible(usageMode, "explorer")) return;
     const order = ["coronal", "sagittal", "axial", "oblique"] as const;
     if (event.code === "KeyC") {
       const state = clippingSystem.getState();

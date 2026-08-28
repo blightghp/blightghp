@@ -41,6 +41,99 @@ try {
   );
   const diagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   const abi = await page.evaluate(() => window.__BRAIN_ENGINE__.abiEvidence());
+  const usageModes = await page.evaluate(() => {
+    const selector = document.querySelector("#usage-mode");
+    const learningRate = document.querySelector("#learning-rate");
+    if (!(selector instanceof HTMLSelectElement) || !(learningRate instanceof HTMLInputElement)) {
+      throw new Error("controles de modo de uso indisponíveis");
+    }
+    const groups = (minimum) =>
+      Array.from(document.querySelectorAll(`[data-usage-mode-minimum="${minimum}"]`));
+    const groupVisibility = (minimum) => groups(minimum).map((element) => !element.hidden);
+    const changeMode = (value) => {
+      selector.value = value;
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+      return {
+        mode: selector.value,
+        explorer: groupVisibility("explorer"),
+        laboratory: groupVisibility("laboratory"),
+      };
+    };
+    const hashFields = [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash",
+    ];
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    const guided = {
+      mode: selector.value,
+      label: selector.labels?.[0]?.textContent?.trim(),
+      status: document.querySelector("#usage-mode-status")?.textContent,
+      explorer: groupVisibility("explorer"),
+      laboratory: groupVisibility("laboratory"),
+      learningRate: learningRate.value,
+    };
+    const explorer = changeMode("explorer");
+    const laboratory = changeMode("laboratory");
+    learningRate.focus();
+    const restored = changeMode("guided");
+    const after = window.__BRAIN_ENGINE__.diagnostics();
+    return {
+      before,
+      after,
+      hashFields,
+      guided,
+      explorer,
+      laboratory,
+      restored,
+      restoredFocus: document.activeElement?.id,
+      restoredLearningRate: learningRate.value,
+    };
+  });
+  if (
+    usageModes.guided.mode !== "guided" ||
+    usageModes.guided.label !== "MODO" ||
+    !usageModes.guided.status?.startsWith("Modo guiado:") ||
+    usageModes.guided.explorer.length === 0 ||
+    usageModes.guided.laboratory.length === 0 ||
+    usageModes.guided.explorer.some(Boolean) ||
+    usageModes.guided.laboratory.some(Boolean) ||
+    usageModes.explorer.mode !== "explorer" ||
+    usageModes.explorer.explorer.some((visible) => !visible) ||
+    usageModes.explorer.laboratory.some(Boolean) ||
+    usageModes.laboratory.mode !== "laboratory" ||
+    usageModes.laboratory.explorer.some((visible) => !visible) ||
+    usageModes.laboratory.laboratory.some((visible) => !visible) ||
+    usageModes.restored.mode !== "guided" ||
+    usageModes.restoredFocus !== "usage-mode" ||
+    usageModes.restoredLearningRate !== usageModes.guided.learningRate ||
+    usageModes.hashFields.some((field) => usageModes.before[field] !== usageModes.after[field])
+  ) {
+    throw new Error(`modo de uso inválido: ${JSON.stringify(usageModes)}`);
+  }
+  await page.focus("#usage-mode");
+  await page.keyboard.press("ArrowDown");
+  await page.waitForFunction(
+    () => document.querySelector("#usage-mode")?.value === "explorer",
+    { timeout: 5_000 },
+  );
+  await page.select("#usage-mode", "guided");
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobileUsageMode = await page.evaluate(() => {
+    const selector = document.querySelector("#usage-mode");
+    if (!(selector instanceof HTMLSelectElement)) return undefined;
+    const bounds = selector.getBoundingClientRect();
+    return {
+      visible: getComputedStyle(selector).display !== "none",
+      withinViewport: bounds.left >= 0 && bounds.right <= window.innerWidth,
+    };
+  });
+  if (!mobileUsageMode?.visible || !mobileUsageMode.withinViewport) {
+    throw new Error(`seletor de modo não cabe no móvel: ${JSON.stringify(mobileUsageMode)}`);
+  }
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
   const materialProfiles = await page.evaluate(
     () => window.__BRAIN_ENGINE__.materialProfileAudit(),
   );

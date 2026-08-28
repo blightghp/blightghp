@@ -119,6 +119,29 @@ a:focus-visible {
   box-shadow: 0 0 10px #41d9a5;
 }
 
+.usage-mode-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  margin-right: 18px;
+}
+
+.usage-mode-selector label {
+  color: #527393;
+  font: 600 8px/1 "JetBrains Mono", monospace;
+  letter-spacing: .1em;
+}
+
+#usage-mode {
+  width: 146px;
+  min-height: 28px;
+  padding: 5px 8px;
+  color: #bde9ff;
+  font-size: 8px;
+  letter-spacing: .04em;
+}
+
 .view-tabs {
   position: fixed;
   top: 82px;
@@ -686,6 +709,17 @@ h1 span {
   font-size: 10px;
 }
 
+.control-envelope {
+  margin: 9px 0 0;
+  color: #5f809e;
+  font: 500 8px/1.45 "JetBrains Mono", monospace;
+}
+
+.control-envelope code {
+  color: #8edfff;
+  font: inherit;
+}
+
 output {
   color: #61c3ff;
   font: 500 9px "JetBrains Mono", monospace;
@@ -864,6 +898,7 @@ body[data-capture="true"] .interaction-hint { display: none !important; }
 @media (max-width: 820px) {
   .topbar { padding: 0 16px; }
   .runtime { display: none; }
+  .usage-mode-selector { margin-right: 0; }
   .view-tabs { top: 72px; }
   .presentation-panel { top: 116px; left: 14px; width: 205px; }
   .control-panel { top: 116px; right: 14px; width: 250px; max-height: calc(100vh - 130px); padding: 18px; }
@@ -874,6 +909,7 @@ body[data-capture="true"] .interaction-hint { display: none !important; }
 }
 
 @media (max-width: 560px) {
+  #usage-mode { width: 128px; }
   .view-tabs { max-width: calc(100vw - 20px); overflow-x: auto; }
   .view-tabs button { padding-inline: 9px; white-space: nowrap; }
   .control-panel { width: 210px; }
@@ -881,6 +917,13 @@ body[data-capture="true"] .interaction-hint { display: none !important; }
   .inference-panel { width: calc(100vw - 28px); }
   .inference-copy { padding: 15px 18px; }
   .interaction-hint { display: none; }
+}
+
+@media (max-width: 420px) {
+  .topbar { padding: 0 14px; }
+  .brand > span:last-child,
+  .usage-mode-selector label { display: none; }
+  #usage-mode { width: 136px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
