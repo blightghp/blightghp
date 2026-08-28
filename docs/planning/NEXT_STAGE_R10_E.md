@@ -1,11 +1,15 @@
 # Diretivas da próxima etapa · R10-E luz e materialidade
 
-**Estado:** em andamento — corte 1 (tone mapping reversível); não promovido, com gates
-físicos, acessibilidade e comparação visual ainda pendentes.
+**Estado:** em andamento — cortes 1–2 (tone mapping, ambiente e luz); não promovido,
+com gates físicos, acessibilidade e comparação visual ainda pendentes.
 
 **Corte 1:** `?toneMapping=agx` é o candidato atual; `?toneMapping=aces` preserva a
 reversão explícita e `neutral` fica disponível apenas para comparação A/B. Alto contraste,
 perda de contexto e erro de shader efetivam ACES até a condição segura ser restaurada.
+
+**Corte 2:** o ambiente agora é um equiretangular procedural convertido uma vez por PMREM,
+sem asset externo; o rig `hemisphere` + key/fill/rim é de apresentação e não altera geometria,
+estado científico ou passes de `baseline`.
 
 **Branch prevista:** `blightghp/r10-e-light-materiality`
 

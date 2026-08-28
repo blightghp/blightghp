@@ -624,7 +624,7 @@ describe("MaterialProfileManager contract", () => {
     const physical = board.material as THREE.MeshPhysicalMaterial;
     const disposed = vi.fn();
     physical.addEventListener("dispose", disposed);
-    expect(manager.audit()).toMatchObject({ environmentMapActive: true, lightCount: 3 });
+    expect(manager.audit()).toMatchObject({ environmentMapActive: true, lightCount: 4 });
     expect(scene.getObjectByName("realistic-illustrative-light-rig")?.visible).toBe(true);
     manager.setProfile("schematic");
     expect(scene.environment).toBeNull();

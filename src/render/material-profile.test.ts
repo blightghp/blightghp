@@ -4,6 +4,7 @@ import { CellRenderLayer } from "./cell-layer";
 import { ElectricalBoardLayer } from "./electrical-board-layer";
 import { LaminarRenderLayer } from "./laminar-layer";
 import {
+  createR10EProceduralEnvironmentSource,
   PresentationMaterialEffects,
   REALISTIC_ILLUSTRATIVE_MANIFEST,
   RealisticIllustrativeMaterialManager,
@@ -90,6 +91,7 @@ describe("R09-F realistic-illustrative material manager", () => {
       semanticGeometryChanges: 0,
       estimatedAdditionalObjectDraws: 6,
       estimatedTransmissionPasses: 1,
+      lightCount: 4,
       environmentMapActive: true,
       proceduralNormalMapTextures: 3,
     });
@@ -110,6 +112,31 @@ describe("R09-F realistic-illustrative material manager", () => {
     neuron.dispose();
     electricity.dispose();
     synapse.dispose();
+  });
+
+  it("builds the R10-E studio source and four-light rig without external assets", () => {
+    const source = createR10EProceduralEnvironmentSource();
+    const image = source.image as { data: Uint8Array; width: number; height: number };
+    expect(source.name).toBe("r10-e-procedural-studio-equirectangular");
+    expect(source.mapping).toBe(THREE.EquirectangularReflectionMapping);
+    expect(source.colorSpace).toBe(THREE.SRGBColorSpace);
+    expect(image).toMatchObject({ width: 128, height: 64 });
+    expect(image.data).toHaveLength(128 * 64 * 4);
+    expect(image.data.every(Number.isFinite)).toBe(true);
+    expect(Math.max(...image.data)).toBeGreaterThan(200);
+    source.dispose();
+
+    const scene = new THREE.Scene();
+    const manager = managerForTest(scene);
+    const rig = scene.getObjectByName("realistic-illustrative-light-rig") as THREE.Group;
+    const lights = rig.children.filter((child): child is THREE.Light => child instanceof THREE.Light);
+    expect(lights).toHaveLength(4);
+    expect(lights.filter((light) => light instanceof THREE.DirectionalLight)).toHaveLength(3);
+    for (const light of lights) {
+      expect(Number.isFinite(light.intensity)).toBe(true);
+      expect(light.intensity).toBeGreaterThan(0);
+    }
+    manager.dispose();
   });
 
   it("falls back atomically for high contrast and context loss", () => {

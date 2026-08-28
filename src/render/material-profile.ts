@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { SimulationView } from "./laminar-layer";
 import { ProceduralNormalMapCache } from "./procedural-textures";
 import type { ProceduralNormalMapProvider, ProceduralNormalMapType } from "./procedural-textures";
@@ -161,6 +160,76 @@ interface SurfaceParams {
   sheenRoughness: number;
   sheenColor: number;
   ior: number;
+}
+
+const R10_E_ENVIRONMENT_WIDTH = 128;
+const R10_E_ENVIRONMENT_HEIGHT = 64;
+
+function clampByte(value: number): number {
+  return Math.round(THREE.MathUtils.clamp(value, 0, 1) * 255);
+}
+
+function wrappedDistance(value: number, center: number): number {
+  const distance = Math.abs(value - center);
+  return Math.min(distance, 1 - distance);
+}
+
+/**
+ * Creates the small, deterministic studio source consumed once by PMREM. It
+ * contains only a neutral sky/ground gradient and broad key/fill panels; no
+ * URL, bitmap asset, or scene geometry participates in the environment.
+ */
+export function createR10EProceduralEnvironmentSource(): THREE.DataTexture {
+  const pixels = new Uint8Array(R10_E_ENVIRONMENT_WIDTH * R10_E_ENVIRONMENT_HEIGHT * 4);
+  for (let y = 0; y < R10_E_ENVIRONMENT_HEIGHT; y += 1) {
+    const v = y / (R10_E_ENVIRONMENT_HEIGHT - 1);
+    const horizonWeight = THREE.MathUtils.smoothstep(v, 0, 0.52);
+    const groundWeight = THREE.MathUtils.smoothstep(v, 0.48, 1);
+    const baseRed = THREE.MathUtils.lerp(
+      THREE.MathUtils.lerp(0.105, 0.285, horizonWeight),
+      0.055,
+      groundWeight,
+    );
+    const baseGreen = THREE.MathUtils.lerp(
+      THREE.MathUtils.lerp(0.125, 0.235, horizonWeight),
+      0.052,
+      groundWeight,
+    );
+    const baseBlue = THREE.MathUtils.lerp(
+      THREE.MathUtils.lerp(0.17, 0.205, horizonWeight),
+      0.064,
+      groundWeight,
+    );
+    for (let x = 0; x < R10_E_ENVIRONMENT_WIDTH; x += 1) {
+      const u = x / (R10_E_ENVIRONMENT_WIDTH - 1);
+      const key = Math.exp(
+        -((wrappedDistance(u, 0.18) / 0.105) ** 2 + ((v - 0.46) / 0.31) ** 2) * 3.2,
+      );
+      const fill = Math.exp(
+        -((wrappedDistance(u, 0.72) / 0.16) ** 2 + ((v - 0.5) / 0.38) ** 2) * 3.2,
+      );
+      const horizon = Math.exp(-(((v - 0.49) / 0.13) ** 2));
+      const index = (y * R10_E_ENVIRONMENT_WIDTH + x) * 4;
+      pixels[index] = clampByte(baseRed + key * 0.62 + fill * 0.09 + horizon * 0.055);
+      pixels[index + 1] = clampByte(baseGreen + key * 0.46 + fill * 0.14 + horizon * 0.04);
+      pixels[index + 2] = clampByte(baseBlue + key * 0.32 + fill * 0.24 + horizon * 0.025);
+      pixels[index + 3] = 255;
+    }
+  }
+  const texture = new THREE.DataTexture(
+    pixels,
+    R10_E_ENVIRONMENT_WIDTH,
+    R10_E_ENVIRONMENT_HEIGHT,
+    THREE.RGBAFormat,
+  );
+  texture.name = "r10-e-procedural-studio-equirectangular";
+  texture.mapping = THREE.EquirectangularReflectionMapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  texture.needsUpdate = true;
+  return texture;
 }
 
 function sphericalUvAttribute(geometry: THREE.BufferGeometry): THREE.BufferAttribute {
@@ -363,20 +432,20 @@ export class RealisticIllustrativeMaterialManager {
       this.ownsEnvironmentTexture = false;
     } else if (options.renderer) {
       let generator: THREE.PMREMGenerator | undefined;
-      let room: RoomEnvironment | undefined;
+      let source: THREE.DataTexture | undefined;
       let generated: THREE.Texture | undefined;
       try {
         generator = new THREE.PMREMGenerator(options.renderer);
-        room = new RoomEnvironment();
-        generated = generator.fromScene(room, 0.04).texture;
-        generated.name = "r09-f-room-environment-pmrem";
+        source = createR10EProceduralEnvironmentSource();
+        generated = generator.fromEquirectangular(source).texture;
+        generated.name = "r10-e-procedural-studio-pmrem";
       } catch (error) {
         generated?.dispose();
         this.resourceFailureReason = error instanceof Error
           ? `environment-map-failure: ${error.message}`
           : "environment-map-failure";
       } finally {
-        room?.dispose();
+        source?.dispose();
         generator?.dispose();
       }
       this.environmentTexture = generated;
@@ -388,12 +457,14 @@ export class RealisticIllustrativeMaterialManager {
     }
     this.lightRig.name = "realistic-illustrative-light-rig";
     this.lightRig.userData.epistemicClass = "DECORATION";
-    const hemisphere = new THREE.HemisphereLight(0xd9efff, 0x07101c, 1.45);
-    const key = new THREE.DirectionalLight(0xe8f5ff, 2.25);
-    const fill = new THREE.DirectionalLight(0x5b91c8, 0.82);
-    key.position.set(3.4, 4.8, 5.6);
-    fill.position.set(-4.2, 1.4, -3.1);
-    for (const light of [hemisphere, key, fill]) {
+    const hemisphere = new THREE.HemisphereLight(0xbdd4e6, 0x171018, 0.82);
+    const key = new THREE.DirectionalLight(0xffdfc2, 2.05);
+    const fill = new THREE.DirectionalLight(0x8aa7ca, 0.52);
+    const rim = new THREE.DirectionalLight(0xffc9ae, 0.94);
+    key.position.set(3.8, 4.5, 5.7);
+    fill.position.set(-4.5, 1.8, -3.4);
+    rim.position.set(-2.8, 3.2, -5.4);
+    for (const light of [hemisphere, key, fill, rim]) {
       declareVisual(light, "matter", "decoration");
       this.lightRig.add(light);
     }

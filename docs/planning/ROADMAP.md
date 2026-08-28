@@ -87,7 +87,7 @@ O contrato executável completo está no [plano 0.10](PLAN_0.10.md).
 | R10-B · vascular topológico | concluído em 13 ago 2026 | 42 segmentos, 12 draws, grafo/picking e hashes | remover `src/vascular` |
 | R10-C · orçamento | concluído em 20 ago 2026 | seis vistas × 24 amostras, governador e baseline física | manter `enhanced`, desligar governador |
 | R10-D · superfície procedural | concluído em 21 ago 2026 | dois LODs, hash, atributos assados e p95 no orçamento | `ConvexGeometry` atômica |
-| R10-E · luz/materialidade | em andamento · corte 1 | gates de cor, custo físico, cinco hashes e comparação estética multiperspectiva | feature para ACES/material anterior |
+| R10-E · luz/materialidade | em andamento · cortes 1–2 | gates de cor, custo físico, cinco hashes e comparação estética multiperspectiva | feature para ACES/material anterior |
 | R10-F · UI/interação | planejado | teclado, foco, equivalente textual, móvel e movimento reduzido | manter painel atual |
 | R10-H · asset dormente | planejado | oito rejeições, manifesto/licença/hash, zero asset distribuído | remover pipeline |
 | R10-G · captura/GIF | planejado | determinismo, bytes/tempo e manifesto schema 4 sincronizado | schema 3 |
