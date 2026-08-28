@@ -182,7 +182,13 @@ try {
     throw new Error(`perfil R10-E não ativou: ${activeProfile}`);
   }
   const baselinePresentation = await sampleProfile(page, "baseline");
+  const enhancedPresentation = await sampleProfile(page, "enhanced");
   const cinemaPresentation = await sampleProfile(page, "cinema");
+  const ambientOcclusion = {
+    baseline: baselinePresentation.bloom.ambientOcclusion,
+    enhanced: enhancedPresentation.bloom.ambientOcclusion,
+    cinema: cinemaPresentation.bloom.ambientOcclusion,
+  };
 
   const matrix = [];
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
@@ -222,6 +228,7 @@ try {
     rotation: 0.31,
     clipping: coronalPresentation.clipping,
     probe: coronalPresentation.probe,
+    ambientOcclusion: coronalPresentation.bloom.ambientOcclusion,
   });
   await page.evaluate(() => window.__BRAIN_ENGINE__.setClipping({ enabled: false, slab: false }));
 
@@ -234,6 +241,9 @@ try {
       view,
       capture: filename,
       renderer: await page.evaluate(() => window.__BRAIN_ENGINE__.presentationAudit().renderer),
+      ambientOcclusion: await page.evaluate(
+        () => window.__BRAIN_ENGINE__.presentationAudit().bloom.ambientOcclusion,
+      ),
     });
   }
   await page.evaluate(() => {
@@ -281,6 +291,7 @@ try {
     return { before, active, fallback, restored };
   });
   const finalPresentation = await page.evaluate(() => window.__BRAIN_ENGINE__.presentationAudit());
+  ambientOcclusion.final = finalPresentation.bloom.ambientOcclusion;
   const finalDiagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   const runtime = await page.evaluate(() => window.__BRAIN_ENGINE__.profile());
   const rendererName = runtime.environment.hardware.webglRenderer;
@@ -307,6 +318,26 @@ try {
       !finalPresentation.material.environmentMapActive ||
       finalPresentation.material.proceduralNormalMapTextures !== 3 ||
       finalPresentation.toneMapping.effectiveMode !== "agx" ||
+      ambientOcclusion.baseline.enabled ||
+      ambientOcclusion.baseline.reason !== "baseline-profile" ||
+      !ambientOcclusion.enhanced.enabled ||
+      ambientOcclusion.enhanced.scale !== 0.5 ||
+      ambientOcclusion.enhanced.width < 1 ||
+      ambientOcclusion.enhanced.height < 1 ||
+      !ambientOcclusion.cinema.enabled ||
+      ambientOcclusion.cinema.scale !== 0.5 ||
+      ambientOcclusion.cinema.width < 1 ||
+      ambientOcclusion.cinema.height < 1 ||
+      matrix.at(-1).ambientOcclusion.enabled ||
+      matrix.at(-1).ambientOcclusion.reason !== "clipping-active" ||
+      highContrastFallback.fallback.bloom.ambientOcclusion.enabled ||
+      highContrastFallback.fallback.bloom.ambientOcclusion.reason !== "high-contrast" ||
+      !ambientOcclusion.final.enabled ||
+      sixViews.some((entry) =>
+        entry.view === "overview"
+          ? !entry.ambientOcclusion.enabled
+          : entry.ambientOcclusion.enabled || entry.ambientOcclusion.reason !== "non-overview-view"
+      ) ||
       !matrix.at(-1).probe.available ||
       matrix.at(-1).clipping.cutFaceShaderCaps !== 1 ||
       highContrastFallback.active !== "schematic" ||
@@ -351,8 +382,10 @@ try {
     performance: {
       samplesPerProfile: 24,
       baselineOverview: baselinePresentation.budget.views.overview,
+      enhancedOverview: enhancedPresentation.budget.views.overview,
       cinemaOverview: cinemaPresentation.budget.views.overview,
     },
+    ambientOcclusion,
     matrix,
     sixViews,
     accessibility: {

@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,9 +17,40 @@ const expectedMatrix = [
   "coronal-corte",
 ];
 const expectedViews = ["cell", "electricity", "laminar", "neuron", "overview", "synapse"];
+const evidenceOnlyPaths = [
+  "artifacts/light-materiality/",
+  "docs/audits/0.10/AUDIT_0.10_R10_E.md",
+  "docs/reviews/VISUAL_REVIEW_R10_E.md",
+  "docs/planning/NEXT_STAGE_R10_E.md",
+  "docs/planning/ROADMAP.md",
+];
 
 if (report.schemaVersion !== 1 || report.kind !== "r10-e-light-materiality") {
   throw new Error("R10-E light-materiality artifact must use schema 1");
+}
+if (!/^[0-9a-f]{40}$/u.test(report.source?.commit ?? "")) {
+  throw new Error("R10-E light-materiality artifact has no immutable source commit");
+}
+try {
+  execFileSync("git", ["merge-base", "--is-ancestor", report.source.commit, "HEAD"], {
+    cwd: root,
+    stdio: "ignore",
+  });
+} catch {
+  throw new Error("R10-E light-materiality evidence source is not an ancestor of HEAD");
+}
+const changedAfterEvidence = execFileSync(
+  "git",
+  ["diff", "--name-only", `${report.source.commit}..HEAD`],
+  { cwd: root, encoding: "utf8" },
+).split(/\r?\n/u).filter(Boolean);
+const staleChanges = changedAfterEvidence.filter(
+  (file) => !evidenceOnlyPaths.some((allowed) => file === allowed || file.startsWith(allowed)),
+);
+if (staleChanges.length > 0) {
+  throw new Error(
+    `R10-E light-materiality evidence is stale after source changes: ${staleChanges.join(", ")}`,
+  );
 }
 const renderer = report.environment?.hardware?.webglRenderer;
 if (
@@ -50,21 +82,47 @@ if (report.toneMapping?.requestedMode !== "agx" || report.toneMapping?.effective
 if (
   report.performance?.samplesPerProfile < 24 ||
   report.performance?.baselineOverview?.sampleCount < 24 ||
+  report.performance?.enhancedOverview?.sampleCount < 24 ||
   report.performance?.cinemaOverview?.sampleCount < 24
 ) {
   throw new Error("R10-E physical performance sample is incomplete");
+}
+const ambientOcclusion = report.ambientOcclusion;
+if (
+  ambientOcclusion?.baseline?.enabled !== false ||
+  ambientOcclusion.baseline.reason !== "baseline-profile" ||
+  ambientOcclusion?.enhanced?.enabled !== true ||
+  ambientOcclusion.enhanced.scale !== 0.5 ||
+  ambientOcclusion.enhanced.width < 1 ||
+  ambientOcclusion.enhanced.height < 1 ||
+  ambientOcclusion?.cinema?.enabled !== true ||
+  ambientOcclusion.cinema.scale !== 0.5 ||
+  ambientOcclusion.cinema.width < 1 ||
+  ambientOcclusion.cinema.height < 1 ||
+  ambientOcclusion?.final?.enabled !== true ||
+  ambientOcclusion.final.scale !== 0.5
+) {
+  throw new Error("R10-E GTAO policy evidence is incomplete");
 }
 if (
   !Array.isArray(report.matrix) ||
   report.matrix.map((entry) => entry.name).join(",") !== expectedMatrix.join(",") ||
   report.matrix.at(-1)?.clipping?.cutFaceShaderCaps !== 1 ||
-  report.matrix.at(-1)?.probe?.available !== true
+  report.matrix.at(-1)?.probe?.available !== true ||
+  report.matrix.at(-1)?.ambientOcclusion?.enabled !== false ||
+  report.matrix.at(-1)?.ambientOcclusion?.reason !== "clipping-active"
 ) {
   throw new Error("R10-E visual matrix is incomplete");
 }
 if (
   !Array.isArray(report.sixViews) ||
-  report.sixViews.map((entry) => entry.view).sort().join(",") !== expectedViews.join(",")
+  report.sixViews.map((entry) => entry.view).sort().join(",") !== expectedViews.join(",") ||
+  report.sixViews.some((entry) =>
+    entry.view === "overview"
+      ? entry.ambientOcclusion?.enabled !== true
+      : entry.ambientOcclusion?.enabled !== false ||
+        entry.ambientOcclusion?.reason !== "non-overview-view"
+  )
 ) {
   throw new Error("R10-E six-view coverage is incomplete");
 }
@@ -77,6 +135,9 @@ if (
   accessibility?.reducedMotion?.audit?.activeProfile !== "realistic-illustrative" ||
   accessibility?.highContrastFallback?.active !== "schematic" ||
   accessibility?.highContrastFallback?.fallback?.toneMapping?.effectiveMode !== "aces" ||
+  accessibility?.highContrastFallback?.fallback?.bloom?.ambientOcclusion?.enabled !== false ||
+  accessibility?.highContrastFallback?.fallback?.bloom?.ambientOcclusion?.reason !==
+    "high-contrast" ||
   accessibility?.highContrastFallback?.restored?.effectiveMode !== "agx"
 ) {
   throw new Error("R10-E accessibility/fallback evidence is incomplete");

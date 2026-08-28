@@ -55,6 +55,7 @@ import {
   SynapseRenderLayer,
   VISUAL_COLORS,
   ACTIVITY_TRACE_STOPS,
+  ambientOcclusionDecision,
   freezeStaticPresentationMatrices,
   voltsToMillivolts,
 } from "./render";
@@ -266,6 +267,7 @@ let lastCutProbe: ReturnType<typeof sampleMacroscopicCutProbe> = {
 };
 let applicationDisposed = false;
 let webGlShaderCompilationFailed = false;
+let webGlAmbientOcclusionSafe = true;
 let sceneGraphRevision = 0;
 let frozenStaticMatrixCount = 0;
 let materialEnvironmentTextureBytes = 0;
@@ -641,6 +643,7 @@ function applyRenderProfile(profile: RenderProfile, resetSamples = true): void {
   layers?.setSurfaceLod(profile === "baseline" ? "low" : "high");
   presentationResourceCache.invalidate();
   if (resetSamples) presentationBudgetMonitor.reset();
+  synchronizeAmbientOcclusion();
   updateRenderProfileUi();
 }
 
@@ -688,6 +691,7 @@ function setMaterialProfile(profile: VisualMaterialProfile): VisualMaterialProfi
     .estimatedEnvironmentTextureBytes;
   presentationResourceCache.invalidate();
   clippingSystem.refresh();
+  synchronizeAmbientOcclusion();
   updateMaterialProfileUi(active);
   updatePresentationCostUi();
   if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
@@ -707,6 +711,18 @@ function updateToneMappingSafetyFallback(): void {
   }
   const highContrast = document.body.dataset.highContrast === "true";
   toneMappingController?.setSafetyFallback(highContrast ? "high-contrast" : undefined);
+}
+
+function synchronizeAmbientOcclusion(): void {
+  if (!renderPipeline || !materialProfileManager || !clippingSystem) return;
+  renderPipeline.setAmbientOcclusion(ambientOcclusionDecision({
+    renderProfile: renderProfileGovernor.profile(),
+    activeView,
+    materialProfile: materialProfileManager.profile(),
+    clippingEnabled: clippingSystem.getState().enabled,
+    highContrast: document.body.dataset.highContrast === "true",
+    webglSafe: webGlAmbientOcclusionSafe && !webGlShaderCompilationFailed,
+  }));
 }
 
 function updateCutProbe(snapshot: NeuralSnapshot, alpha: number): void {
@@ -811,6 +827,7 @@ function setCutPlaneState(update: Partial<CutPlaneState>): CutPlaneState {
   const state = clippingSystem.setState(update);
   sceneGraphRevision += 1;
   renderPipeline.invalidateSceneGraph();
+  synchronizeAmbientOcclusion();
   updatePresentationUi(state);
   if (latestSnapshot) {
     const alpha = Math.min(
@@ -1095,6 +1112,7 @@ function setActiveView(view: SimulationView): void {
   electricalBoardLayer.setVisible(view === "electricity");
   synapseLayer.setVisible(view === "synapse");
   clippingSystem.setActiveLayer(view);
+  synchronizeAmbientOcclusion();
   element("#overview-panel").hidden = view !== "overview";
   element("#laminar-panel").hidden = view !== "laminar";
   element("#cell-panel").hidden = view !== "cell";
@@ -1484,26 +1502,32 @@ function onResize(): void {
 
 function onWebGlContextLost(event: Event): void {
   event.preventDefault();
+  webGlAmbientOcclusionSafe = false;
   toneMappingController?.setSafetyFallback("webgl-context-lost");
   materialProfileManager?.failAtomic("webgl-context-lost");
   clippingSystem?.disable();
+  synchronizeAmbientOcclusion();
   updateMaterialProfileUi("schematic");
 }
 
 function onWebGlContextRestored(): void {
+  webGlAmbientOcclusionSafe = !webGlShaderCompilationFailed;
   updateToneMappingSafetyFallback();
   materialProfileManager?.setEnvironment({ contextAvailable: true });
   clippingSystem?.refresh();
+  synchronizeAmbientOcclusion();
 }
 
 function onWebGlShaderError(): void {
   webGlShaderCompilationFailed = true;
+  webGlAmbientOcclusionSafe = false;
   console.error("falha de compilação WebGL; perfil realista revertido atomicamente");
   failClosedForWebGlShaderCompilation({
     toneMapping: toneMappingController,
     materialProfile: materialProfileManager,
     clipping: clippingSystem,
   });
+  synchronizeAmbientOcclusion();
   if (clippingSystem) updatePresentationUi(clippingSystem.getState());
   if (materialProfileManager) updateMaterialProfileUi(materialProfileManager.profile());
 }
@@ -1886,6 +1910,7 @@ async function init(): Promise<void> {
         .estimatedEnvironmentTextureBytes;
       presentationResourceCache.invalidate();
       clippingSystem.refresh();
+      synchronizeAmbientOcclusion();
       const profile = materialProfileManager.profile();
       updateMaterialProfileUi(profile);
       if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
