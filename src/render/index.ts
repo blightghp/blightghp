@@ -16,3 +16,4 @@ export * from "./synapse-layer";
 export * from "./tone-mapping";
 export * from "./visual-tokens";
 export * from "./visual-encoding";
+export * from "./webgl-safety-fallback";

@@ -1,6 +1,6 @@
 # Diretivas da próxima etapa · R10-E luz e materialidade
 
-**Estado:** em andamento — cortes 1–5 (tone mapping, ambiente/luz e material regional); não promovido,
+**Estado:** em andamento — cortes 1–6 (tone mapping, ambiente/luz, material regional e fallback); não promovido,
 com gates físicos, acessibilidade e comparação visual ainda pendentes.
 
 **Corte 1:** `?toneMapping=agx` é o candidato atual; `?toneMapping=aces` preserva a
@@ -27,6 +27,11 @@ classes arterial/venosa/capilar continuam distinguíveis pelo contrato vascular 
 `MeshBasicMaterial`, com padrão neutro em espaço-mundo e proveniência explicitamente não
 anatômica. Continua uma tampa por plano, com o mesmo stencil, clipping, opacidade, bloom
 excluído e orçamento de 9/18 draws; não há textura, geometria, passe, Worker ou estado novo.
+
+**Corte 6:** a injeção da face de corte valida todas as âncoras antes de mutar o shader e
+saneia cor, `NaN`, infinito e limites de opacidade/padrão. Uma falha de compilação WebGL
+continua a reverter AgX/material para ACES/esquemático e agora também desliga clipping,
+removendo a tampa que poderia repetir o programa falho.
 
 **Branch prevista:** `blightghp/r10-e-light-materiality`
 

@@ -45,6 +45,7 @@ import {
   receptorCurrentTotals,
   RenderProfileGovernor,
   ToneMappingController,
+  failClosedForWebGlShaderCompilation,
   auditRenderedStatePixels,
   SelectiveBloomPipeline,
   PresentationMaterialEffects,
@@ -1496,9 +1497,13 @@ function onWebGlContextRestored(): void {
 
 function onWebGlShaderError(): void {
   webGlShaderCompilationFailed = true;
-  toneMappingController?.setSafetyFallback("webgl-shader-compilation-failure");
   console.error("falha de compilação WebGL; perfil realista revertido atomicamente");
-  materialProfileManager?.failAtomic("webgl-shader-compilation-failure");
+  failClosedForWebGlShaderCompilation({
+    toneMapping: toneMappingController,
+    materialProfile: materialProfileManager,
+    clipping: clippingSystem,
+  });
+  if (clippingSystem) updatePresentationUi(clippingSystem.getState());
   if (materialProfileManager) updateMaterialProfileUi(materialProfileManager.profile());
 }
 

@@ -133,12 +133,28 @@ function boundedCutFaceValue(value: number, minimum: number, maximum: number, fa
   return Number.isFinite(value) ? THREE.MathUtils.clamp(value, minimum, maximum) : fallback;
 }
 
+function boundedCutFaceColor(
+  value: THREE.ColorRepresentation,
+  fallback: THREE.ColorRepresentation,
+): THREE.Color {
+  if (typeof value === "number" && !Number.isFinite(value)) return new THREE.Color(fallback);
+  const candidate = new THREE.Color();
+  try {
+    candidate.set(value);
+  } catch {
+    return new THREE.Color(fallback);
+  }
+  return [candidate.r, candidate.g, candidate.b].every(Number.isFinite)
+    ? candidate
+    : new THREE.Color(fallback);
+}
+
 function cutFaceParameters(
   parameters: R10ECutFaceParameters = R10_E_CUT_FACE_PARAMETERS,
 ): R10ECutFaceParameters {
   return {
-    color: parameters.color,
-    tint: parameters.tint,
+    color: boundedCutFaceColor(parameters.color, R10_E_CUT_FACE_PARAMETERS.color),
+    tint: boundedCutFaceColor(parameters.tint, R10_E_CUT_FACE_PARAMETERS.tint),
     opacity: boundedCutFaceValue(parameters.opacity, 0.1, 1, 0.86),
     patternStrength: boundedCutFaceValue(parameters.patternStrength, 0, 0.32, 0.16),
     patternScale: boundedCutFaceValue(parameters.patternScale, 0.1, 8, 2.2),
@@ -155,14 +171,25 @@ function replaceCutFaceShaderAnchor(
   return source.replace(anchor, replacement);
 }
 
+function assertR10ECutFaceShaderAnchors(shader: R10ECutFaceShaderSource): void {
+  const anchors = [
+    [shader.vertexShader, "#include <common>", "vertex common"],
+    [shader.vertexShader, "#include <worldpos_vertex>", "vertex model position"],
+    [shader.fragmentShader, "#include <common>", "fragment common"],
+    [shader.fragmentShader, "#include <aomap_fragment>", "ambient-occlusion modulation"],
+  ] as const;
+  for (const [source, anchor, label] of anchors) {
+    if (!source.includes(anchor)) {
+      throw new Error(`R10-E cut-face shader anchor is missing: ${label}`);
+    }
+  }
+}
+
 function ensureR10ECutFaceShaderAnchors(): void {
   const basic = THREE.ShaderLib.basic;
-  if (
-    !basic.vertexShader.includes("#include <common>") ||
-    !basic.vertexShader.includes("#include <worldpos_vertex>") ||
-    !basic.fragmentShader.includes("#include <common>") ||
-    !basic.fragmentShader.includes("#include <aomap_fragment>")
-  ) {
+  try {
+    assertR10ECutFaceShaderAnchors(basic);
+  } catch {
     throw new Error("R10-E cut-face shader contract is incompatible with this Three.js build");
   }
 }
@@ -172,6 +199,7 @@ export function applyR10ECutFaceShader(
   shader: R10ECutFaceShaderSource,
   parameters: R10ECutFaceParameters = R10_E_CUT_FACE_PARAMETERS,
 ): void {
+  assertR10ECutFaceShaderAnchors(shader);
   const bounded = cutFaceParameters(parameters);
   shader.uniforms.r10eCutFaceTint = { value: new THREE.Color(bounded.tint) };
   shader.uniforms.r10eCutFacePatternStrength = { value: bounded.patternStrength };
