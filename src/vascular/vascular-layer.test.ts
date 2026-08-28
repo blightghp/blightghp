@@ -72,6 +72,7 @@ describe("R10-B vascular topology layer", () => {
     expect(entries).toHaveLength(12);
     expect(new Set(entries.map((entry) => entry.id)).size).toBe(12);
     expect(entries.every((entry) => entry.surface === "membrane")).toBe(true);
+    expect(entries.every((entry) => entry.materialRegion === "vascular")).toBe(true);
   });
 
   it("disposes every owned geometry and material exactly once", () => {

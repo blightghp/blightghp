@@ -9,6 +9,7 @@ import {
   PresentationMaterialEffects,
   REALISTIC_ILLUSTRATIVE_MANIFEST,
   RealisticIllustrativeMaterialManager,
+  surfaceParameters,
 } from "./material-profile";
 import type { MaterialProfileManagerOptions } from "./material-profile";
 import { NeuronRenderLayer } from "./neuron-layer";
@@ -261,6 +262,45 @@ describe("R09-F realistic-illustrative material manager", () => {
     manager.dispose();
     mesh.geometry.dispose();
     schematic.dispose();
+  });
+
+  it("applies the vascular preset without extending the baked overview shader path", () => {
+    const scene = new THREE.Scene();
+    const root = new THREE.Group();
+    const geometry = new THREE.SphereGeometry(0.2, 8, 6);
+    const vertexCount = geometry.getAttribute("position").count;
+    for (const name of ["aoFactor", "curvature", "thickness"] as const) {
+      geometry.setAttribute(name, new THREE.BufferAttribute(new Float32Array(vertexCount).fill(0.6), 1));
+    }
+    const vessel = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xa65e52 }));
+    vessel.name = "vascular-test-segment";
+    vessel.userData.vascularTopology = true;
+    declareVisual(vessel, "matter", "topology");
+    root.add(vessel);
+    const manager = managerForTest(scene);
+    manager.registerLayer("overview", root, [{
+      id: "test:vascular-test-segment",
+      objectName: vessel.name,
+      surface: "membrane",
+      maximumLocalRadius: 0.3,
+      opacityRange: [0, 1],
+      source: "procedural-scene-graph",
+      materialRegion: "vascular",
+    }]);
+    expect(manager.setProfile("realistic-illustrative")).toBe("realistic-illustrative");
+    const material = vessel.material as unknown as THREE.MeshPhysicalMaterial;
+    expect(material.roughness).toBeCloseTo(surfaceParameters("membrane", "vascular").roughness);
+    expect(material.clearcoat).toBeCloseTo(surfaceParameters("membrane", "vascular").clearcoat);
+    expect(material.userData.r10eMaterialRegion).toBe("vascular");
+    expect(material.userData.r10eBakedSurfaceShader).toBeUndefined();
+    expect(manager.audit()).toMatchObject({
+      vascularMaterialObjects: 1,
+      bakedSurfaceShaderObjects: 0,
+      transmissionObjects: 0,
+    });
+    manager.dispose();
+    geometry.dispose();
+    (vessel.material as THREE.Material).dispose();
   });
 
   it("falls back atomically for high contrast and context loss", () => {

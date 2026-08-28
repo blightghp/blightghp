@@ -20,6 +20,8 @@ import type {
 
 export interface MaterialManifestEntry extends VisualMaterialEligibility {
   readonly objectName: string;
+  /** Presentation-only regional preset; omitted from scientific eligibility metadata. */
+  readonly materialRegion?: R10EMaterialRegion;
 }
 
 export type RealisticIllustrativeManifest = Readonly<
@@ -88,6 +90,7 @@ interface PhysicalMaterialRecord {
   readonly object: MaterialMesh;
   readonly schematic: THREE.Material;
   readonly eligibility: VisualMaterialEligibility;
+  readonly materialRegion: R10EMaterialRegion;
 }
 
 interface ManagedMaterial extends PhysicalMaterialRecord {
@@ -102,6 +105,7 @@ export interface MaterialProfileAudit {
   readonly physicalMaterialObjects: number;
   readonly transmissionObjects: number;
   readonly bakedSurfaceShaderObjects: number;
+  readonly vascularMaterialObjects: number;
   readonly semanticGeometryChanges: number;
   readonly estimatedAdditionalObjectDraws: number;
   readonly estimatedTransmissionPasses: number;
@@ -128,6 +132,7 @@ export interface MaterialProfileManagerOptions {
       object: MaterialMesh;
       schematic: THREE.Material;
       eligibility: VisualMaterialEligibility;
+      materialRegion: R10EMaterialRegion;
     }>,
     normalMapProvider: ProceduralNormalMapProvider,
   ) => THREE.MeshPhysicalMaterial;
@@ -166,6 +171,7 @@ export const R10_E_MATERIAL_REGIONS = [
   "cortex",
   "cerebellum",
   "stem",
+  "vascular",
 ] as const;
 
 export type R10EMaterialRegion = (typeof R10_E_MATERIAL_REGIONS)[number];
@@ -247,6 +253,19 @@ const R10_E_REGIONAL_MATERIAL_PARAMETERS: Readonly<
       tint: 0xcda88e,
     },
   },
+  vascular: {
+    roughnessOffset: -0.04,
+    clearcoatMultiplier: 1.1,
+    bakedSurface: {
+      aoStrength: 0.25,
+      curvatureStrength: 0.06,
+      diffuseWrapStrength: 0.02,
+      thicknessStrength: 0.01,
+      fresnelStrength: 0.025,
+      fresnelPower: 3.5,
+      tint: 0xc6a59b,
+    },
+  },
 };
 
 const R10_E_BAKED_SURFACE_SHADER_VERSION = "r10-e-baked-surface-v1";
@@ -285,6 +304,12 @@ export function r10EBakedSurfaceParameters(
   region: R10EMaterialRegion = "generic",
 ): R10EBakedSurfaceParameters {
   return boundedBakedSurfaceParameters(R10_E_REGIONAL_MATERIAL_PARAMETERS[region].bakedSurface);
+}
+
+function materialRegion(value: unknown): R10EMaterialRegion {
+  return R10_E_MATERIAL_REGIONS.includes(value as R10EMaterialRegion)
+    ? value as R10EMaterialRegion
+    : "generic";
 }
 
 function r10EOverviewShellRegion(record: PhysicalMaterialRecord): R10EMaterialRegion | undefined {
@@ -591,7 +616,7 @@ function createPhysicalMaterial(
   normalMapProvider: ProceduralNormalMapProvider,
 ): THREE.MeshPhysicalMaterial {
   const bakedSurfaceRegion = r10EOverviewShellRegion(record);
-  const region = bakedSurfaceRegion ?? "generic";
+  const region = bakedSurfaceRegion ?? record.materialRegion;
   const parameters = surfaceParameters(record.eligibility.surface, region);
   const textureType = normalMapType(record);
   const material = new THREE.MeshPhysicalMaterial({
@@ -614,6 +639,7 @@ function createPhysicalMaterial(
   material.emissive.copy(material.color).multiplyScalar(0.035);
   material.emissiveIntensity = 0.18;
   copyRenderContract(record.schematic, material);
+  material.userData.r10eMaterialRegion = region;
   if (bakedSurfaceRegion) {
     if (!installR10EBakedSurfaceShader(
       material,
@@ -774,13 +800,14 @@ export class RealisticIllustrativeMaterialManager {
         throw new Error(`material manifest envelope exceeded: ${declaration.objectName}`);
       }
       seen.add(object);
-      const { objectName: _objectName, ...eligibility } = declaration;
+      const { objectName: _objectName, materialRegion: declaredRegion, ...eligibility } = declaration;
       pending.push({
         view,
         root,
         object,
         schematic: object.material,
         eligibility,
+        materialRegion: materialRegion(declaredRegion),
       });
     }
     for (const record of pending) {
@@ -855,6 +882,7 @@ export class RealisticIllustrativeMaterialManager {
             R10_E_BAKED_SURFACE_SHADER_FLAG
           ] === true,
       ).length,
+      vascularMaterialObjects: physical.filter((record) => record.materialRegion === "vascular").length,
       semanticGeometryChanges: records.filter(
         (record) => this.originalGeometryIds.get(record.object) !==
           semanticGeometryIdentity(record.object.geometry),

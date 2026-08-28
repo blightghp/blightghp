@@ -1,6 +1,6 @@
 # Diretivas da próxima etapa · R10-E luz e materialidade
 
-**Estado:** em andamento — cortes 1–3 (tone mapping, ambiente/luz e material); não promovido,
+**Estado:** em andamento — cortes 1–4 (tone mapping, ambiente/luz e material regional); não promovido,
 com gates físicos, acessibilidade e comparação visual ainda pendentes.
 
 **Corte 1:** `?toneMapping=agx` é o candidato atual; `?toneMapping=aces` preserva a
@@ -17,6 +17,11 @@ overview R10-D consomem `aoFactor`, `curvature` e `thickness` já assados por um
 malformado ou shader incompatível aciona reversão atômica para `schematic`; os demais
 objetos, inclusive vasos, não recebem esse hook. A sincronização dinâmica não recompila
 material por quadro.
+
+**Corte 4:** as doze entradas de topologia vascular declaram a região de apresentação
+`vascular`, que recebe apenas ajuste moderado de reflectância no mesmo material físico.
+Ela não recebe o shader assado R10-D, não troca cor, topologia, clipping ou bindings; as
+classes arterial/venosa/capilar continuam distinguíveis pelo contrato vascular existente.
 
 **Branch prevista:** `blightghp/r10-e-light-materiality`
 

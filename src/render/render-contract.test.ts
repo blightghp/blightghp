@@ -557,6 +557,8 @@ describe("MaterialProfileManager contract", () => {
     expect(surfaceParameters("membrane")).not.toHaveProperty("transmission");
     expect(surfaceParameters("tissue", "cortex").roughness).toBeCloseTo(0.49);
     expect(surfaceParameters("tissue", "cerebellum").roughness).toBeCloseTo(0.56);
+    expect(surfaceParameters("membrane", "vascular").roughness).toBeCloseTo(0.28);
+    expect(surfaceParameters("membrane", "vascular").clearcoat).toBeCloseTo(0.308);
   });
 
   it("keeps geometry UUIDs and five scientific hashes stable across profile switches", () => {
