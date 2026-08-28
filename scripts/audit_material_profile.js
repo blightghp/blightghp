@@ -188,6 +188,7 @@ try {
     })}`);
   }
   if (
+    finalPresentation.clipping.cutFaceShaderCaps !== finalPresentation.clipping.planeCount ||
     finalPresentation.clipping.estimatedAdditionalDrawCalls >
       finalPresentation.clipping.maximumAdditionalDrawCalls
   ) {

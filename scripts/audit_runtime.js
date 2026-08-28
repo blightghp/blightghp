@@ -220,6 +220,7 @@ try {
     r09fGate.active.material.semanticGeometryChanges !== 0 ||
     r09fGate.active.clipping.planeCount !== 1 ||
     r09fGate.active.clipping.capSources !== 4 ||
+    r09fGate.active.clipping.cutFaceShaderCaps !== 1 ||
     r09fGate.active.clipping.estimatedAdditionalDrawCalls >
       r09fGate.active.clipping.maximumAdditionalDrawCalls ||
     !r09fGate.active.probe.available ||

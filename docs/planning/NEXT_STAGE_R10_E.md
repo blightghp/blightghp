@@ -1,6 +1,6 @@
 # Diretivas da próxima etapa · R10-E luz e materialidade
 
-**Estado:** em andamento — cortes 1–4 (tone mapping, ambiente/luz e material regional); não promovido,
+**Estado:** em andamento — cortes 1–5 (tone mapping, ambiente/luz e material regional); não promovido,
 com gates físicos, acessibilidade e comparação visual ainda pendentes.
 
 **Corte 1:** `?toneMapping=agx` é o candidato atual; `?toneMapping=aces` preserva a
@@ -22,6 +22,11 @@ material por quadro.
 `vascular`, que recebe apenas ajuste moderado de reflectância no mesmo material físico.
 Ela não recebe o shader assado R10-D, não troca cor, topologia, clipping ou bindings; as
 classes arterial/venosa/capilar continuam distinguíveis pelo contrato vascular existente.
+
+**Corte 5:** a tampa de stencil já existente recebe o material procedimental `cut-face` em
+`MeshBasicMaterial`, com padrão neutro em espaço-mundo e proveniência explicitamente não
+anatômica. Continua uma tampa por plano, com o mesmo stencil, clipping, opacidade, bloom
+excluído e orçamento de 9/18 draws; não há textura, geometria, passe, Worker ou estado novo.
 
 **Branch prevista:** `blightghp/r10-e-light-materiality`
 

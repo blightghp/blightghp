@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { describe, expect, it, vi } from "vitest";
 import { generateBrainData } from "../brain";
+import { anatomicalDeclarationOf } from "./anatomical-provenance";
 import {
   ClippingSystem,
   createCutPlanes,
@@ -96,6 +97,7 @@ describe("R09-F clipping planes and stencil caps", () => {
       enabled: true,
       planeCount: 1,
       capSources: 1,
+      cutFaceShaderCaps: 1,
       estimatedAdditionalDrawCalls: 3,
       maximumAdditionalDrawCalls: 18,
     });
@@ -105,6 +107,38 @@ describe("R09-F clipping planes and stencil caps", () => {
     expect(stencil.geometry).toBe(source.geometry);
     expect(visualProvenanceOf(stencil)).toBe("decoration");
     expect(visualProvenanceOf(cap)).toBe("decoration");
+    expect(anatomicalDeclarationOf(cap)).toMatchObject({ kind: "not-anatomical" });
+    const capMaterial = cap.material as THREE.MeshBasicMaterial;
+    expect(capMaterial.userData.r10eMaterialRegion).toBe("cut-face");
+    expect(capMaterial.userData.r10eCutFaceShader).toBe(true);
+    expect(capMaterial.customProgramCacheKey()).toBe("r10-e-cut-face-v1");
+    expect(capMaterial.clippingPlanes).toHaveLength(0);
+    expect(capMaterial.depthTest).toBe(true);
+    expect(capMaterial.depthWrite).toBe(true);
+    expect(capMaterial.stencilWrite).toBe(true);
+    expect(capMaterial.stencilRef).toBe(0);
+    expect(capMaterial.stencilFunc).toBe(THREE.NotEqualStencilFunc);
+    expect(capMaterial.stencilFail).toBe(THREE.ReplaceStencilOp);
+    expect(capMaterial.stencilZFail).toBe(THREE.ReplaceStencilOp);
+    expect(capMaterial.stencilZPass).toBe(THREE.ReplaceStencilOp);
+    const shader = {
+      vertexShader: THREE.ShaderLib.basic.vertexShader,
+      fragmentShader: THREE.ShaderLib.basic.fragmentShader,
+      uniforms: {},
+    } as unknown as THREE.WebGLProgramParametersWithUniforms;
+    capMaterial.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+    expect(shader.vertexShader).toContain("varying vec3 vR10ECutFaceWorldPosition;");
+    expect(shader.vertexShader).toContain(
+      "vR10ECutFaceWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;",
+    );
+    expect(shader.fragmentShader).toContain("uniform vec3 r10eCutFaceTint;");
+    const patternIndex = shader.fragmentShader.indexOf("vec3 r10eCutFaceCell");
+    expect(patternIndex).toBeGreaterThan(shader.fragmentShader.indexOf("#include <aomap_fragment>"));
+    expect(patternIndex).toBeLessThan(
+      shader.fragmentShader.indexOf("reflectedLight.indirectDiffuse *= diffuseColor.rgb"),
+    );
+    expect(Number.isFinite(shader.uniforms.r10eCutFacePatternStrength.value as number)).toBe(true);
+    expect(Number.isFinite(shader.uniforms.r10eCutFacePatternScale.value as number)).toBe(true);
     const stencilDispose = vi.spyOn(stencil.material as THREE.Material, "dispose");
     const capGeometryDispose = vi.spyOn(cap.geometry, "dispose");
     const capMaterialDispose = vi.spyOn(cap.material as THREE.Material, "dispose");
@@ -113,8 +147,19 @@ describe("R09-F clipping planes and stencil caps", () => {
     clipping.update();
     expect(clipping.audit()).toMatchObject({
       planeCount: 2,
+      cutFaceShaderCaps: 2,
       estimatedAdditionalDrawCalls: 6,
     });
+    const slabCap0 = scene.getObjectByName("cut-cap-0") as THREE.Mesh<
+      THREE.PlaneGeometry,
+      THREE.MeshBasicMaterial
+    >;
+    const slabCap1 = scene.getObjectByName("cut-cap-1") as THREE.Mesh<
+      THREE.PlaneGeometry,
+      THREE.MeshBasicMaterial
+    >;
+    expect(slabCap0.material.clippingPlanes).toHaveLength(1);
+    expect(slabCap1.material.clippingPlanes).toHaveLength(1);
     expect(stencilDispose).toHaveBeenCalledOnce();
     expect(capGeometryDispose).toHaveBeenCalledOnce();
     expect(capMaterialDispose).toHaveBeenCalledOnce();

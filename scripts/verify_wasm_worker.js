@@ -149,6 +149,7 @@ try {
     r09f.active.material.semanticGeometryChanges !== 0 ||
     r09f.active.clipping.planeCount !== 1 ||
     r09f.active.clipping.capSources !== 4 ||
+    r09f.active.clipping.cutFaceShaderCaps !== 1 ||
     r09f.active.clipping.estimatedAdditionalDrawCalls >
       r09f.active.clipping.maximumAdditionalDrawCalls ||
     !r09f.active.probe.available ||
