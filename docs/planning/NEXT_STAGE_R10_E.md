@@ -147,6 +147,8 @@ npm run typecheck
 npm run test
 npm run build
 npm run audit:material
+npm run audit:light-materiality
+npm run verify:light-materiality
 npm run audit:presentation-budget
 npm run verify:presentation-budget
 npm run verify:procedural-surface

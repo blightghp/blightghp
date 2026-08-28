@@ -105,6 +105,7 @@ declare global {
       capture: (time: number, rotation: number) => Promise<void>;
       setCaptureMode: (enabled: boolean) => Promise<void>;
       setCameraRotation: (rotation: number) => void;
+      resetCameraForCut: () => void;
       setSelectedCell: (cellId: number) => void;
       setAnatomySelection: (entryId: string) => string;
       searchAnatomy: (query: string) => readonly AnatomicalCatalogEntry[];
@@ -1746,6 +1747,10 @@ async function init(): Promise<void> {
       if (latestSnapshot) {
         renderFrame(latestSnapshot, simulationClock.renderTimeSeconds, rotation);
       }
+    },
+    resetCameraForCut() {
+      resetCameraForCut();
+      if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
     },
     setSelectedCell(cellId) {
       selectCell(cellId);
