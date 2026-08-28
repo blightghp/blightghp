@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
@@ -142,6 +143,7 @@ export class SelectiveBloomPipeline {
     this.finalComposer = new EffectComposer(renderer, createStencilTarget());
     this.finalComposer.addPass(new RenderPass(scene, this.camera));
     this.finalComposer.addPass(finalPass);
+    this.finalComposer.addPass(new OutputPass());
   }
 
   render(options: { bloomEnabled?: boolean; sceneRevision?: number } = {}): void {
@@ -199,6 +201,7 @@ export class SelectiveBloomPipeline {
     readonly excludedObjects: number;
     readonly directRenders: number;
     readonly bloomRenders: number;
+    readonly finalOutputPass: true;
     readonly estimatedOwnedTextureBytes: number;
   } {
     return {
@@ -208,6 +211,7 @@ export class SelectiveBloomPipeline {
       excludedObjects: this.excludedObjects.length,
       directRenders: this.directRenders,
       bloomRenders: this.bloomRenders,
+      finalOutputPass: true,
       estimatedOwnedTextureBytes: estimateSelectiveBloomTextureBytes(
         this.width,
         this.height,

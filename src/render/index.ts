@@ -13,5 +13,6 @@ export * from "./render-types";
 export * from "./rendered-state-probe";
 export * from "./selective-bloom";
 export * from "./synapse-layer";
+export * from "./tone-mapping";
 export * from "./visual-tokens";
 export * from "./visual-encoding";

@@ -44,6 +44,7 @@ import {
   PresentationResourceCache,
   receptorCurrentTotals,
   RenderProfileGovernor,
+  ToneMappingController,
   auditRenderedStatePixels,
   SelectiveBloomPipeline,
   PresentationMaterialEffects,
@@ -62,6 +63,7 @@ import type {
   PresentationBudgetAudit,
   RenderProfile,
   SimulationView,
+  ToneMappingMode,
   VisualColorMode,
   VisualMaterialProfile,
 } from "./render";
@@ -140,6 +142,8 @@ declare global {
       setColorMode: (mode: VisualColorMode) => void;
       setMaterialProfile: (profile: VisualMaterialProfile) => VisualMaterialProfile;
       setRenderProfile: (profile: RenderProfile) => RenderProfile;
+      setToneMapping: (mode: ToneMappingMode, exposure?: number) => ToneMappingMode;
+      toneMappingAudit: () => ReturnType<ToneMappingController["audit"]>;
       resetPresentationBudgetSamples: () => void;
       setClipping: (state: Partial<CutPlaneState>) => CutPlaneState;
       setPresentationEffects: (state: {
@@ -178,6 +182,7 @@ declare global {
           geometries: number;
           textures: number;
         };
+        toneMapping: ReturnType<ToneMappingController["audit"]>;
       };
       renderedStateAudit: () => ReturnType<typeof auditRenderedStatePixels>;
       electricalBoardAudit: () => {
@@ -215,6 +220,7 @@ let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let controls: OrbitControls;
 let renderPipeline: SelectiveBloomPipeline;
+let toneMappingController: ToneMappingController;
 let clippingSystem: ClippingSystem;
 let materialProfileManager: RealisticIllustrativeMaterialManager;
 let presentationEffects: PresentationMaterialEffects;
@@ -245,6 +251,8 @@ let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
 let visualColorMode = parseVisualColorMode(
   new URLSearchParams(window.location.search).get("colorMode"),
 );
+const initialToneMappingRequest = new URLSearchParams(window.location.search).get("toneMapping") ??
+  "agx";
 let lastCutProbe: ReturnType<typeof sampleMacroscopicCutProbe> = {
   available: false,
   field: "field.waveActivity",
@@ -679,6 +687,21 @@ function setMaterialProfile(profile: VisualMaterialProfile): VisualMaterialProfi
   updatePresentationCostUi();
   if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   return active;
+}
+
+function setToneMapping(mode: ToneMappingMode, exposure?: number): ToneMappingMode {
+  const active = toneMappingController.setRequested(mode, exposure);
+  if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+  return active;
+}
+
+function updateToneMappingSafetyFallback(): void {
+  if (webGlShaderCompilationFailed) {
+    toneMappingController?.setSafetyFallback("webgl-shader-compilation-failure");
+    return;
+  }
+  const highContrast = document.body.dataset.highContrast === "true";
+  toneMappingController?.setSafetyFallback(highContrast ? "high-contrast" : undefined);
 }
 
 function updateCutProbe(snapshot: NeuralSnapshot, alpha: number): void {
@@ -1320,6 +1343,7 @@ function setupInterface(): void {
   const prefersHighContrast = window.matchMedia?.("(prefers-contrast: more)").matches ?? false;
   highContrastToggle.checked = prefersHighContrast;
   document.body.dataset.highContrast = String(prefersHighContrast);
+  updateToneMappingSafetyFallback();
   materialProfileManager.setEnvironment({ highContrast: prefersHighContrast });
   materialEnvironmentTextureBytes = materialProfileManager.audit()
     .estimatedEnvironmentTextureBytes;
@@ -1327,6 +1351,7 @@ function setupInterface(): void {
   updateMaterialProfileUi(materialProfileManager.profile());
   highContrastToggle.addEventListener("change", () => {
     document.body.dataset.highContrast = String(highContrastToggle.checked);
+    updateToneMappingSafetyFallback();
     materialProfileManager.setEnvironment({ highContrast: highContrastToggle.checked });
     materialEnvironmentTextureBytes = materialProfileManager.audit()
       .estimatedEnvironmentTextureBytes;
@@ -1454,18 +1479,21 @@ function onResize(): void {
 
 function onWebGlContextLost(event: Event): void {
   event.preventDefault();
+  toneMappingController?.setSafetyFallback("webgl-context-lost");
   materialProfileManager?.failAtomic("webgl-context-lost");
   clippingSystem?.disable();
   updateMaterialProfileUi("schematic");
 }
 
 function onWebGlContextRestored(): void {
+  updateToneMappingSafetyFallback();
   materialProfileManager?.setEnvironment({ contextAvailable: true });
   clippingSystem?.refresh();
 }
 
 function onWebGlShaderError(): void {
   webGlShaderCompilationFailed = true;
+  toneMappingController?.setSafetyFallback("webgl-shader-compilation-failure");
   console.error("falha de compilação WebGL; perfil realista revertido atomicamente");
   materialProfileManager?.failAtomic("webgl-shader-compilation-failure");
   if (materialProfileManager) updateMaterialProfileUi(materialProfileManager.profile());
@@ -1511,8 +1539,8 @@ async function init(): Promise<void> {
   renderer.setClearColor(VISUAL_COLORS.transparentBlack, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.info.autoReset = false;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  toneMappingController = new ToneMappingController(renderer, "agx");
+  toneMappingController.setRequested(initialToneMappingRequest);
   renderer.debug.onShaderError = onWebGlShaderError;
   element("#canvas-container").appendChild(renderer.domElement);
   renderer.domElement.addEventListener("webglcontextlost", onWebGlContextLost, false);
@@ -1795,6 +1823,12 @@ async function init(): Promise<void> {
     setRenderProfile(profile) {
       return requestRenderProfile(profile);
     },
+    setToneMapping(mode, exposure) {
+      return setToneMapping(mode, exposure);
+    },
+    toneMappingAudit() {
+      return toneMappingController.audit();
+    },
     resetPresentationBudgetSamples() {
       presentationBudgetMonitor.reset();
     },
@@ -1833,6 +1867,7 @@ async function init(): Promise<void> {
     setHighContrast(enabled) {
       document.body.dataset.highContrast = String(enabled);
       element<HTMLInputElement>("#high-contrast-mode").checked = enabled;
+      updateToneMappingSafetyFallback();
       materialProfileManager.setEnvironment({ highContrast: enabled });
       materialEnvironmentTextureBytes = materialProfileManager.audit()
         .estimatedEnvironmentTextureBytes;
@@ -1876,6 +1911,7 @@ async function init(): Promise<void> {
           geometries: renderer.info.memory.geometries,
           textures: renderer.info.memory.textures,
         },
+        toneMapping: toneMappingController.audit(),
       };
     },
     renderedStateAudit() {
