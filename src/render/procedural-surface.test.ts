@@ -38,9 +38,19 @@ describe("R10-D procedural anatomical surface", () => {
     for (const geometry of Object.values(first.geometries)) {
       for (const candidate of [geometry.high, geometry.low]) {
         const positions = candidate.getAttribute("position");
-        expect(candidate.getAttribute("aoFactor").count).toBe(positions.count);
-        expect(candidate.getAttribute("curvature").count).toBe(positions.count);
-        expect(candidate.getAttribute("thickness").count).toBe(positions.count);
+        for (const name of ["aoFactor", "curvature", "thickness"] as const) {
+          const attribute = candidate.getAttribute(name);
+          expect(attribute.itemSize).toBe(1);
+          expect(attribute.count).toBe(positions.count);
+          let finite = true;
+          for (let index = 0; index < attribute.count; index += 1) {
+            if (!Number.isFinite(attribute.getX(index))) {
+              finite = false;
+              break;
+            }
+          }
+          expect(finite).toBe(true);
+        }
         expect(candidate.getAttribute("color").count).toBe(positions.count);
         expect(candidate.getAttribute("uv").count).toBe(positions.count);
       }

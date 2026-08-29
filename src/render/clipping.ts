@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { BrainData } from "../brain";
+import { declareNonAnatomical } from "./anatomical-provenance";
 import type { SimulationView } from "./laminar-layer";
 import {
   declareVisual,
@@ -104,6 +105,179 @@ interface StencilPlaneRender {
   readonly cap: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
 }
 
+const R10_E_CUT_FACE_SHADER_VERSION = "r10-e-cut-face-v1";
+const R10_E_CUT_FACE_SHADER_FLAG = "r10eCutFaceShader";
+
+interface R10ECutFaceParameters {
+  readonly color: THREE.ColorRepresentation;
+  readonly tint: THREE.ColorRepresentation;
+  readonly opacity: number;
+  readonly patternStrength: number;
+  readonly patternScale: number;
+}
+
+const R10_E_CUT_FACE_PARAMETERS: R10ECutFaceParameters = {
+  color: 0x958b82,
+  tint: 0xd8d0c6,
+  opacity: 0.86,
+  patternStrength: 0.16,
+  patternScale: 2.2,
+};
+
+type R10ECutFaceShaderSource = Pick<
+  THREE.WebGLProgramParametersWithUniforms,
+  "vertexShader" | "fragmentShader" | "uniforms"
+>;
+
+function boundedCutFaceValue(value: number, minimum: number, maximum: number, fallback: number): number {
+  return Number.isFinite(value) ? THREE.MathUtils.clamp(value, minimum, maximum) : fallback;
+}
+
+function boundedCutFaceColor(
+  value: THREE.ColorRepresentation,
+  fallback: THREE.ColorRepresentation,
+): THREE.Color {
+  if (typeof value === "number" && !Number.isFinite(value)) return new THREE.Color(fallback);
+  const candidate = new THREE.Color();
+  try {
+    candidate.set(value);
+  } catch {
+    return new THREE.Color(fallback);
+  }
+  return [candidate.r, candidate.g, candidate.b].every(Number.isFinite)
+    ? candidate
+    : new THREE.Color(fallback);
+}
+
+function cutFaceParameters(
+  parameters: R10ECutFaceParameters = R10_E_CUT_FACE_PARAMETERS,
+): R10ECutFaceParameters {
+  return {
+    color: boundedCutFaceColor(parameters.color, R10_E_CUT_FACE_PARAMETERS.color),
+    tint: boundedCutFaceColor(parameters.tint, R10_E_CUT_FACE_PARAMETERS.tint),
+    opacity: boundedCutFaceValue(parameters.opacity, 0.1, 1, 0.86),
+    patternStrength: boundedCutFaceValue(parameters.patternStrength, 0, 0.32, 0.16),
+    patternScale: boundedCutFaceValue(parameters.patternScale, 0.1, 8, 2.2),
+  };
+}
+
+function replaceCutFaceShaderAnchor(
+  source: string,
+  anchor: string,
+  replacement: string,
+  label: string,
+): string {
+  if (!source.includes(anchor)) throw new Error(`R10-E cut-face shader anchor is missing: ${label}`);
+  return source.replace(anchor, replacement);
+}
+
+function assertR10ECutFaceShaderAnchors(shader: R10ECutFaceShaderSource): void {
+  const anchors = [
+    [shader.vertexShader, "#include <common>", "vertex common"],
+    [shader.vertexShader, "#include <worldpos_vertex>", "vertex model position"],
+    [shader.fragmentShader, "#include <common>", "fragment common"],
+    [shader.fragmentShader, "#include <aomap_fragment>", "ambient-occlusion modulation"],
+  ] as const;
+  for (const [source, anchor, label] of anchors) {
+    if (!source.includes(anchor)) {
+      throw new Error(`R10-E cut-face shader anchor is missing: ${label}`);
+    }
+  }
+}
+
+function ensureR10ECutFaceShaderAnchors(): void {
+  const basic = THREE.ShaderLib.basic;
+  try {
+    assertR10ECutFaceShaderAnchors(basic);
+  } catch {
+    throw new Error("R10-E cut-face shader contract is incompatible with this Three.js build");
+  }
+}
+
+/** Keeps an illustrative, non-anatomical section pattern in linear shader space. */
+export function applyR10ECutFaceShader(
+  shader: R10ECutFaceShaderSource,
+  parameters: R10ECutFaceParameters = R10_E_CUT_FACE_PARAMETERS,
+): void {
+  assertR10ECutFaceShaderAnchors(shader);
+  const bounded = cutFaceParameters(parameters);
+  shader.uniforms.r10eCutFaceTint = { value: new THREE.Color(bounded.tint) };
+  shader.uniforms.r10eCutFacePatternStrength = { value: bounded.patternStrength };
+  shader.uniforms.r10eCutFacePatternScale = { value: bounded.patternScale };
+  shader.vertexShader = replaceCutFaceShaderAnchor(
+    shader.vertexShader,
+    "#include <common>",
+    `#include <common>
+varying vec3 vR10ECutFaceWorldPosition;`,
+    "vertex common",
+  );
+  shader.vertexShader = replaceCutFaceShaderAnchor(
+    shader.vertexShader,
+    "#include <worldpos_vertex>",
+    `#include <worldpos_vertex>
+vR10ECutFaceWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;`,
+    "vertex model position",
+  );
+  shader.fragmentShader = replaceCutFaceShaderAnchor(
+    shader.fragmentShader,
+    "#include <common>",
+    `#include <common>
+varying vec3 vR10ECutFaceWorldPosition;
+uniform vec3 r10eCutFaceTint;
+uniform float r10eCutFacePatternStrength;
+uniform float r10eCutFacePatternScale;`,
+    "fragment common",
+  );
+  shader.fragmentShader = replaceCutFaceShaderAnchor(
+    shader.fragmentShader,
+    "#include <aomap_fragment>",
+    `#include <aomap_fragment>
+vec3 r10eCutFaceCell = floor(vR10ECutFaceWorldPosition * 17.0);
+float r10eCutFaceGrain = fract(sin(dot(r10eCutFaceCell, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+float r10eCutFaceBand = 0.5 + 0.5 * sin(
+  dot(vR10ECutFaceWorldPosition, vec3(1.7, 2.3, 2.9)) * r10eCutFacePatternScale
+);
+float r10eCutFaceTone = mix(0.92, 1.08, r10eCutFaceBand) +
+  (r10eCutFaceGrain - 0.5) * r10eCutFacePatternStrength * 0.2;
+vec3 r10eCutFaceBase = mix(diffuseColor.rgb, r10eCutFaceTint, 0.24);
+diffuseColor.rgb = clamp(
+  r10eCutFaceBase * mix(1.0, r10eCutFaceTone, r10eCutFacePatternStrength),
+  0.0,
+  1.0
+);`,
+    "ambient-occlusion modulation",
+  );
+}
+
+export function createR10ECutFaceMaterial(
+  clippingPlanes: THREE.Plane[],
+  parameters: R10ECutFaceParameters = R10_E_CUT_FACE_PARAMETERS,
+): THREE.MeshBasicMaterial {
+  const bounded = cutFaceParameters(parameters);
+  ensureR10ECutFaceShaderAnchors();
+  const material = new THREE.MeshBasicMaterial({
+    color: bounded.color,
+    transparent: true,
+    opacity: bounded.opacity,
+    side: THREE.DoubleSide,
+    depthTest: true,
+    depthWrite: true,
+    clippingPlanes,
+    stencilWrite: true,
+    stencilRef: 0,
+    stencilFunc: THREE.NotEqualStencilFunc,
+    stencilFail: THREE.ReplaceStencilOp,
+    stencilZFail: THREE.ReplaceStencilOp,
+    stencilZPass: THREE.ReplaceStencilOp,
+  });
+  material.onBeforeCompile = (shader) => applyR10ECutFaceShader(shader, bounded);
+  material.customProgramCacheKey = () => R10_E_CUT_FACE_SHADER_VERSION;
+  material.userData.r10eMaterialRegion = "cut-face";
+  material.userData[R10_E_CUT_FACE_SHADER_FLAG] = true;
+  material.needsUpdate = true;
+  return material;
+}
+
 function stencilMaterial(
   plane: THREE.Plane,
   side: THREE.Side,
@@ -198,26 +372,18 @@ export class StencilCapPass {
         return { source, back, front, backMaterial, frontMaterial };
       });
 
-      const capMaterial = new THREE.MeshBasicMaterial({
-        color: 0x255b77,
-        transparent: true,
-        opacity: 0.86,
-        side: THREE.DoubleSide,
-        depthTest: true,
-        depthWrite: true,
-        clippingPlanes: stablePlanes.filter((_, index) => index !== planeIndex),
-        stencilWrite: true,
-        stencilRef: 0,
-        stencilFunc: THREE.NotEqualStencilFunc,
-        stencilFail: THREE.ReplaceStencilOp,
-        stencilZFail: THREE.ReplaceStencilOp,
-        stencilZPass: THREE.ReplaceStencilOp,
-      });
+      const capMaterial = createR10ECutFaceMaterial(
+        stablePlanes.filter((_, index) => index !== planeIndex),
+      );
       const cap = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), capMaterial);
       cap.name = `cut-cap-${planeIndex}`;
       cap.renderOrder = 42 + planeIndex * 4;
       cap.onAfterRender = (renderer) => renderer.clearStencil();
       declareVisual(cap, "matter", "decoration");
+      declareNonAnatomical(
+        cap,
+        "Procedural illustrative cut face; it does not encode anatomy, patient data, or state.",
+      );
       excludeFromSelectiveBloom(cap);
       this.group.add(cap);
       this.renders.push({ plane, pairs, cap });
@@ -251,6 +417,12 @@ export class StencilCapPass {
         total + render.pairs.filter((pair) => pair.back.visible).length * 2 + 1,
       0,
     );
+  }
+
+  cutFaceShaderCaps(): number {
+    return this.renders.filter(
+      (render) => render.cap.material.userData[R10_E_CUT_FACE_SHADER_FLAG] === true,
+    ).length;
   }
 
   dispose(): void {
@@ -323,6 +495,7 @@ export interface ClippingAudit {
   readonly optedInLayers: number;
   readonly clippedMaterials: number;
   readonly capSources: number;
+  readonly cutFaceShaderCaps: number;
   readonly estimatedAdditionalDrawCalls: number;
   readonly maximumAdditionalDrawCalls: number;
 }
@@ -453,6 +626,7 @@ export class ClippingSystem {
       optedInLayers: [...this.layers.values()].filter((layer) => layer.optIn).length,
       clippedMaterials,
       capSources: this.capSources.length,
+      cutFaceShaderCaps: this.capPass.cutFaceShaderCaps(),
       estimatedAdditionalDrawCalls: this.capPass.estimatedDrawCalls(),
       maximumAdditionalDrawCalls: MAXIMUM_CAP_DRAW_CALLS,
     };

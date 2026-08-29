@@ -6,6 +6,9 @@ import {
   PresentationBudgetMonitor,
   RenderProfileGovernor,
 } from "./presentation-budget";
+import {
+  estimateHalfResolutionAmbientOcclusionTextureBytes,
+} from "./ambient-occlusion";
 import { estimateSelectiveBloomTextureBytes } from "./selective-bloom";
 import type { PresentationFrameSample } from "./presentation-budget";
 import { declareVisual } from "./render-types";
@@ -111,5 +114,6 @@ describe("R10-C presentation budget", () => {
   it("accounts for composer targets, bloom mips and device pixel ratio", () => {
     expect(estimateSelectiveBloomTextureBytes(100, 50, 1)).toBe(197_232);
     expect(estimateSelectiveBloomTextureBytes(100, 50, 2)).toBe(787_104);
+    expect(estimateHalfResolutionAmbientOcclusionTextureBytes(100, 50, 1)).toBe(67_768);
   });
 });

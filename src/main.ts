@@ -44,6 +44,8 @@ import {
   PresentationResourceCache,
   receptorCurrentTotals,
   RenderProfileGovernor,
+  ToneMappingController,
+  failClosedForWebGlShaderCompilation,
   auditRenderedStatePixels,
   SelectiveBloomPipeline,
   PresentationMaterialEffects,
@@ -53,6 +55,7 @@ import {
   SynapseRenderLayer,
   VISUAL_COLORS,
   ACTIVITY_TRACE_STOPS,
+  ambientOcclusionDecision,
   freezeStaticPresentationMatrices,
   voltsToMillivolts,
 } from "./render";
@@ -62,6 +65,7 @@ import type {
   PresentationBudgetAudit,
   RenderProfile,
   SimulationView,
+  ToneMappingMode,
   VisualColorMode,
   VisualMaterialProfile,
 } from "./render";
@@ -102,6 +106,7 @@ declare global {
       capture: (time: number, rotation: number) => Promise<void>;
       setCaptureMode: (enabled: boolean) => Promise<void>;
       setCameraRotation: (rotation: number) => void;
+      resetCameraForCut: () => void;
       setSelectedCell: (cellId: number) => void;
       setAnatomySelection: (entryId: string) => string;
       searchAnatomy: (query: string) => readonly AnatomicalCatalogEntry[];
@@ -140,6 +145,8 @@ declare global {
       setColorMode: (mode: VisualColorMode) => void;
       setMaterialProfile: (profile: VisualMaterialProfile) => VisualMaterialProfile;
       setRenderProfile: (profile: RenderProfile) => RenderProfile;
+      setToneMapping: (mode: ToneMappingMode, exposure?: number) => ToneMappingMode;
+      toneMappingAudit: () => ReturnType<ToneMappingController["audit"]>;
       resetPresentationBudgetSamples: () => void;
       setClipping: (state: Partial<CutPlaneState>) => CutPlaneState;
       setPresentationEffects: (state: {
@@ -178,6 +185,7 @@ declare global {
           geometries: number;
           textures: number;
         };
+        toneMapping: ReturnType<ToneMappingController["audit"]>;
       };
       renderedStateAudit: () => ReturnType<typeof auditRenderedStatePixels>;
       electricalBoardAudit: () => {
@@ -215,6 +223,7 @@ let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let controls: OrbitControls;
 let renderPipeline: SelectiveBloomPipeline;
+let toneMappingController: ToneMappingController;
 let clippingSystem: ClippingSystem;
 let materialProfileManager: RealisticIllustrativeMaterialManager;
 let presentationEffects: PresentationMaterialEffects;
@@ -245,6 +254,8 @@ let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
 let visualColorMode = parseVisualColorMode(
   new URLSearchParams(window.location.search).get("colorMode"),
 );
+const initialToneMappingRequest = new URLSearchParams(window.location.search).get("toneMapping") ??
+  "agx";
 let lastCutProbe: ReturnType<typeof sampleMacroscopicCutProbe> = {
   available: false,
   field: "field.waveActivity",
@@ -256,6 +267,7 @@ let lastCutProbe: ReturnType<typeof sampleMacroscopicCutProbe> = {
 };
 let applicationDisposed = false;
 let webGlShaderCompilationFailed = false;
+let webGlAmbientOcclusionSafe = true;
 let sceneGraphRevision = 0;
 let frozenStaticMatrixCount = 0;
 let materialEnvironmentTextureBytes = 0;
@@ -631,6 +643,7 @@ function applyRenderProfile(profile: RenderProfile, resetSamples = true): void {
   layers?.setSurfaceLod(profile === "baseline" ? "low" : "high");
   presentationResourceCache.invalidate();
   if (resetSamples) presentationBudgetMonitor.reset();
+  synchronizeAmbientOcclusion();
   updateRenderProfileUi();
 }
 
@@ -657,7 +670,10 @@ function updatePresentationCostUi(): void {
   const material = materialProfileManager.audit(activeView);
   target.textContent = `+${clipping.estimatedAdditionalDrawCalls} corte · ` +
     `+${material.estimatedAdditionalObjectDraws} dupla face · ` +
-    `+${material.estimatedTransmissionPasses} refração`;
+    `${material.bakedSurfaceShaderObjects} superfície assada · ` +
+    (material.estimatedTransmissionPasses > 0
+      ? `+${material.estimatedTransmissionPasses} refração`
+      : "sem refração");
 }
 
 function renderRootForView(view: SimulationView): THREE.Group {
@@ -675,10 +691,38 @@ function setMaterialProfile(profile: VisualMaterialProfile): VisualMaterialProfi
     .estimatedEnvironmentTextureBytes;
   presentationResourceCache.invalidate();
   clippingSystem.refresh();
+  synchronizeAmbientOcclusion();
   updateMaterialProfileUi(active);
   updatePresentationCostUi();
   if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   return active;
+}
+
+function setToneMapping(mode: ToneMappingMode, exposure?: number): ToneMappingMode {
+  const active = toneMappingController.setRequested(mode, exposure);
+  if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+  return active;
+}
+
+function updateToneMappingSafetyFallback(): void {
+  if (webGlShaderCompilationFailed) {
+    toneMappingController?.setSafetyFallback("webgl-shader-compilation-failure");
+    return;
+  }
+  const highContrast = document.body.dataset.highContrast === "true";
+  toneMappingController?.setSafetyFallback(highContrast ? "high-contrast" : undefined);
+}
+
+function synchronizeAmbientOcclusion(): void {
+  if (!renderPipeline || !materialProfileManager || !clippingSystem) return;
+  renderPipeline.setAmbientOcclusion(ambientOcclusionDecision({
+    renderProfile: renderProfileGovernor.profile(),
+    activeView,
+    materialProfile: materialProfileManager.profile(),
+    clippingEnabled: clippingSystem.getState().enabled,
+    highContrast: document.body.dataset.highContrast === "true",
+    webglSafe: webGlAmbientOcclusionSafe && !webGlShaderCompilationFailed,
+  }));
 }
 
 function updateCutProbe(snapshot: NeuralSnapshot, alpha: number): void {
@@ -783,6 +827,7 @@ function setCutPlaneState(update: Partial<CutPlaneState>): CutPlaneState {
   const state = clippingSystem.setState(update);
   sceneGraphRevision += 1;
   renderPipeline.invalidateSceneGraph();
+  synchronizeAmbientOcclusion();
   updatePresentationUi(state);
   if (latestSnapshot) {
     const alpha = Math.min(
@@ -1067,6 +1112,7 @@ function setActiveView(view: SimulationView): void {
   electricalBoardLayer.setVisible(view === "electricity");
   synapseLayer.setVisible(view === "synapse");
   clippingSystem.setActiveLayer(view);
+  synchronizeAmbientOcclusion();
   element("#overview-panel").hidden = view !== "overview";
   element("#laminar-panel").hidden = view !== "laminar";
   element("#cell-panel").hidden = view !== "cell";
@@ -1320,6 +1366,7 @@ function setupInterface(): void {
   const prefersHighContrast = window.matchMedia?.("(prefers-contrast: more)").matches ?? false;
   highContrastToggle.checked = prefersHighContrast;
   document.body.dataset.highContrast = String(prefersHighContrast);
+  updateToneMappingSafetyFallback();
   materialProfileManager.setEnvironment({ highContrast: prefersHighContrast });
   materialEnvironmentTextureBytes = materialProfileManager.audit()
     .estimatedEnvironmentTextureBytes;
@@ -1327,6 +1374,7 @@ function setupInterface(): void {
   updateMaterialProfileUi(materialProfileManager.profile());
   highContrastToggle.addEventListener("change", () => {
     document.body.dataset.highContrast = String(highContrastToggle.checked);
+    updateToneMappingSafetyFallback();
     materialProfileManager.setEnvironment({ highContrast: highContrastToggle.checked });
     materialEnvironmentTextureBytes = materialProfileManager.audit()
       .estimatedEnvironmentTextureBytes;
@@ -1454,20 +1502,33 @@ function onResize(): void {
 
 function onWebGlContextLost(event: Event): void {
   event.preventDefault();
+  webGlAmbientOcclusionSafe = false;
+  toneMappingController?.setSafetyFallback("webgl-context-lost");
   materialProfileManager?.failAtomic("webgl-context-lost");
   clippingSystem?.disable();
+  synchronizeAmbientOcclusion();
   updateMaterialProfileUi("schematic");
 }
 
 function onWebGlContextRestored(): void {
+  webGlAmbientOcclusionSafe = !webGlShaderCompilationFailed;
+  updateToneMappingSafetyFallback();
   materialProfileManager?.setEnvironment({ contextAvailable: true });
   clippingSystem?.refresh();
+  synchronizeAmbientOcclusion();
 }
 
 function onWebGlShaderError(): void {
   webGlShaderCompilationFailed = true;
+  webGlAmbientOcclusionSafe = false;
   console.error("falha de compilação WebGL; perfil realista revertido atomicamente");
-  materialProfileManager?.failAtomic("webgl-shader-compilation-failure");
+  failClosedForWebGlShaderCompilation({
+    toneMapping: toneMappingController,
+    materialProfile: materialProfileManager,
+    clipping: clippingSystem,
+  });
+  synchronizeAmbientOcclusion();
+  if (clippingSystem) updatePresentationUi(clippingSystem.getState());
   if (materialProfileManager) updateMaterialProfileUi(materialProfileManager.profile());
 }
 
@@ -1511,8 +1572,8 @@ async function init(): Promise<void> {
   renderer.setClearColor(VISUAL_COLORS.transparentBlack, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.info.autoReset = false;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  toneMappingController = new ToneMappingController(renderer, "agx");
+  toneMappingController.setRequested(initialToneMappingRequest);
   renderer.debug.onShaderError = onWebGlShaderError;
   element("#canvas-container").appendChild(renderer.domElement);
   renderer.domElement.addEventListener("webglcontextlost", onWebGlContextLost, false);
@@ -1711,6 +1772,10 @@ async function init(): Promise<void> {
         renderFrame(latestSnapshot, simulationClock.renderTimeSeconds, rotation);
       }
     },
+    resetCameraForCut() {
+      resetCameraForCut();
+      if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
+    },
     setSelectedCell(cellId) {
       selectCell(cellId);
     },
@@ -1795,6 +1860,12 @@ async function init(): Promise<void> {
     setRenderProfile(profile) {
       return requestRenderProfile(profile);
     },
+    setToneMapping(mode, exposure) {
+      return setToneMapping(mode, exposure);
+    },
+    toneMappingAudit() {
+      return toneMappingController.audit();
+    },
     resetPresentationBudgetSamples() {
       presentationBudgetMonitor.reset();
     },
@@ -1833,11 +1904,13 @@ async function init(): Promise<void> {
     setHighContrast(enabled) {
       document.body.dataset.highContrast = String(enabled);
       element<HTMLInputElement>("#high-contrast-mode").checked = enabled;
+      updateToneMappingSafetyFallback();
       materialProfileManager.setEnvironment({ highContrast: enabled });
       materialEnvironmentTextureBytes = materialProfileManager.audit()
         .estimatedEnvironmentTextureBytes;
       presentationResourceCache.invalidate();
       clippingSystem.refresh();
+      synchronizeAmbientOcclusion();
       const profile = materialProfileManager.profile();
       updateMaterialProfileUi(profile);
       if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
@@ -1876,6 +1949,7 @@ async function init(): Promise<void> {
           geometries: renderer.info.memory.geometries,
           textures: renderer.info.memory.textures,
         },
+        toneMapping: toneMappingController.audit(),
       };
     },
     renderedStateAudit() {

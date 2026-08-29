@@ -4,9 +4,12 @@ import { CellRenderLayer } from "./cell-layer";
 import { ElectricalBoardLayer } from "./electrical-board-layer";
 import { LaminarRenderLayer } from "./laminar-layer";
 import {
+  createR10EProceduralEnvironmentSource,
+  hasR10EBakedSurfaceAttributes,
   PresentationMaterialEffects,
   REALISTIC_ILLUSTRATIVE_MANIFEST,
   RealisticIllustrativeMaterialManager,
+  surfaceParameters,
 } from "./material-profile";
 import type { MaterialProfileManagerOptions } from "./material-profile";
 import { NeuronRenderLayer } from "./neuron-layer";
@@ -89,7 +92,10 @@ describe("R09-F realistic-illustrative material manager", () => {
       physicalMaterialObjects: 21,
       semanticGeometryChanges: 0,
       estimatedAdditionalObjectDraws: 6,
-      estimatedTransmissionPasses: 1,
+      transmissionObjects: 0,
+      estimatedTransmissionPasses: 0,
+      bakedSurfaceShaderObjects: 0,
+      lightCount: 4,
       environmentMapActive: true,
       proceduralNormalMapTextures: 3,
     });
@@ -110,6 +116,212 @@ describe("R09-F realistic-illustrative material manager", () => {
     neuron.dispose();
     electricity.dispose();
     synapse.dispose();
+  });
+
+  it("builds the R10-E studio source and four-light rig without external assets", () => {
+    const source = createR10EProceduralEnvironmentSource();
+    const image = source.image as { data: Uint8Array; width: number; height: number };
+    expect(source.name).toBe("r10-e-procedural-studio-equirectangular");
+    expect(source.mapping).toBe(THREE.EquirectangularReflectionMapping);
+    expect(source.colorSpace).toBe(THREE.SRGBColorSpace);
+    expect(image).toMatchObject({ width: 128, height: 64 });
+    expect(image.data).toHaveLength(128 * 64 * 4);
+    expect(image.data.every(Number.isFinite)).toBe(true);
+    expect(Math.max(...image.data)).toBeGreaterThan(200);
+    source.dispose();
+
+    const scene = new THREE.Scene();
+    const manager = managerForTest(scene);
+    const rig = scene.getObjectByName("realistic-illustrative-light-rig") as THREE.Group;
+    const lights = rig.children.filter((child): child is THREE.Light => child instanceof THREE.Light);
+    expect(lights).toHaveLength(4);
+    expect(lights.filter((light) => light instanceof THREE.DirectionalLight)).toHaveLength(3);
+    for (const light of lights) {
+      expect(Number.isFinite(light.intensity)).toBe(true);
+      expect(light.intensity).toBeGreaterThan(0);
+    }
+    manager.dispose();
+  });
+
+  it("uses baked R10-D attributes only on approved overview shells without transmission", () => {
+    const scene = new THREE.Scene();
+    const root = new THREE.Group();
+    const shellGeometry = new THREE.SphereGeometry(0.2, 8, 6);
+    const vertexCount = shellGeometry.getAttribute("position").count;
+    shellGeometry.setAttribute(
+      "aoFactor",
+      new THREE.BufferAttribute(new Float32Array(vertexCount).fill(0.78), 1),
+    );
+    shellGeometry.setAttribute(
+      "curvature",
+      new THREE.BufferAttribute(new Float32Array(vertexCount).fill(0.12), 1),
+    );
+    shellGeometry.setAttribute(
+      "thickness",
+      new THREE.BufferAttribute(new Float32Array(vertexCount).fill(0.7), 1),
+    );
+    const shell = new THREE.Mesh(shellGeometry, new THREE.MeshBasicMaterial({ color: 0x886655 }));
+    shell.name = "leftHemi-shell";
+    declareVisual(shell, "matter", "topology");
+    const shellSchematic = shell.material as THREE.MeshBasicMaterial;
+
+    const nonShellGeometry = shellGeometry.clone();
+    const nonShell = new THREE.Mesh(nonShellGeometry, new THREE.MeshBasicMaterial({ color: 0x668899 }));
+    nonShell.name = "baked-looking-non-shell";
+    declareVisual(nonShell, "matter", "topology");
+    root.add(shell, nonShell);
+
+    const manager = managerForTest(scene);
+    manager.registerLayer("overview", root, [
+      {
+        id: "test:leftHemi-shell",
+        objectName: shell.name,
+        surface: "tissue",
+        maximumLocalRadius: 0.3,
+        opacityRange: [0, 1],
+        source: "procedural-scene-graph",
+        materialRegion: "cortex",
+      },
+      {
+        id: "test:baked-looking-non-shell",
+        objectName: nonShell.name,
+        surface: "tissue",
+        maximumLocalRadius: 0.3,
+        opacityRange: [0, 1],
+        source: "procedural-scene-graph",
+      },
+    ]);
+    expect(manager.setProfile("realistic-illustrative")).toBe("realistic-illustrative");
+    const shellMaterial = shell.material as unknown as THREE.MeshPhysicalMaterial;
+    const nonShellMaterial = nonShell.material as unknown as THREE.MeshPhysicalMaterial;
+    expect(shellMaterial.transmission).toBe(0);
+    expect(nonShellMaterial.transmission).toBe(0);
+    expect(shellMaterial.userData.r10eBakedSurfaceShader).toBe(true);
+    expect(nonShellMaterial.userData.r10eBakedSurfaceShader).toBeUndefined();
+    expect(shellMaterial.customProgramCacheKey()).toBe("r10-e-baked-surface-v1:cortex");
+    const corticalPresentationColor = new THREE.Color(0x886655).lerp(
+      new THREE.Color(0xc98f78),
+      0.88,
+    );
+    expect(shellMaterial.color).toEqual(corticalPresentationColor);
+    expect(nonShellMaterial.color).toEqual(new THREE.Color(0x668899));
+    expect(manager.audit()).toMatchObject({
+      transmissionObjects: 0,
+      estimatedTransmissionPasses: 0,
+      bakedSurfaceShaderObjects: 1,
+      regionalBaseColorObjects: 1,
+    });
+
+    const versionBeforeSync = shellMaterial.version;
+    shellSchematic.color.set(0x335577);
+    manager.sync();
+    expect(shellMaterial.version).toBe(versionBeforeSync);
+    expect(shellMaterial.color).toEqual(
+      new THREE.Color(0x335577).lerp(new THREE.Color(0xc98f78), 0.88),
+    );
+    expect(shellMaterial.emissive).toEqual(shellMaterial.color.clone().multiplyScalar(0.035));
+    expect(nonShellMaterial.color).toEqual(new THREE.Color(0x668899));
+
+    manager.setEnvironment({ highContrast: true });
+    expect(shell.material).toBe(shellSchematic);
+    expect(shellSchematic.color).toEqual(new THREE.Color(0x335577));
+
+    const shader = {
+      vertexShader: THREE.ShaderLib.physical.vertexShader,
+      fragmentShader: THREE.ShaderLib.physical.fragmentShader,
+      uniforms: {},
+    } as unknown as THREE.WebGLProgramParametersWithUniforms;
+    shellMaterial.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+    expect(shader.vertexShader.split("attribute float aoFactor;")).toHaveLength(2);
+    expect(shader.vertexShader).toContain("vR10EAoFactor = clamp(aoFactor, 0.0, 1.0);");
+    expect(shader.fragmentShader).toContain("uniform float r10eAoStrength;");
+    expect(shader.fragmentShader).toContain("#if NUM_DIR_LIGHTS > 0");
+    const modulationIndex = shader.fragmentShader.indexOf("float r10eAo = clamp");
+    expect(modulationIndex).toBeGreaterThan(shader.fragmentShader.indexOf("#include <aomap_fragment>"));
+    expect(modulationIndex).toBeLessThan(shader.fragmentShader.indexOf("vec3 totalDiffuse"));
+    expect(Number.isFinite(shader.uniforms.r10eAoStrength.value as number)).toBe(true);
+    expect(Number.isFinite(shader.uniforms.r10eFresnelPower.value as number)).toBe(true);
+
+    const malformedGeometry = shellGeometry.clone();
+    malformedGeometry.setAttribute(
+      "thickness",
+      new THREE.BufferAttribute(new Float32Array(vertexCount).fill(Number.NaN), 1),
+    );
+    expect(hasR10EBakedSurfaceAttributes(shellGeometry)).toBe(true);
+    expect(hasR10EBakedSurfaceAttributes(malformedGeometry)).toBe(false);
+
+    manager.dispose();
+    shellGeometry.dispose();
+    nonShellGeometry.dispose();
+    malformedGeometry.dispose();
+    (shell.material as THREE.Material).dispose();
+    (nonShell.material as THREE.Material).dispose();
+  });
+
+  it("falls back atomically when an approved overview shell lacks a baked attribute", () => {
+    const scene = new THREE.Scene();
+    const root = new THREE.Group();
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), new THREE.MeshBasicMaterial());
+    mesh.name = "cerebellum-shell";
+    declareVisual(mesh, "matter", "topology");
+    root.add(mesh);
+    const schematic = mesh.material;
+    const manager = managerForTest(scene);
+    manager.registerLayer("overview", root, [{
+      id: "test:cerebellum-shell",
+      objectName: mesh.name,
+      surface: "tissue",
+      maximumLocalRadius: 0.3,
+      opacityRange: [0, 1],
+      source: "procedural-scene-graph",
+    }]);
+    expect(manager.setProfile("realistic-illustrative")).toBe("schematic");
+    expect(mesh.material).toBe(schematic);
+    expect(manager.audit().fallbackReason).toContain("lacks valid baked surface attributes");
+    manager.dispose();
+    mesh.geometry.dispose();
+    schematic.dispose();
+  });
+
+  it("applies the vascular preset without extending the baked overview shader path", () => {
+    const scene = new THREE.Scene();
+    const root = new THREE.Group();
+    const geometry = new THREE.SphereGeometry(0.2, 8, 6);
+    const vertexCount = geometry.getAttribute("position").count;
+    for (const name of ["aoFactor", "curvature", "thickness"] as const) {
+      geometry.setAttribute(name, new THREE.BufferAttribute(new Float32Array(vertexCount).fill(0.6), 1));
+    }
+    const vessel = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xa65e52 }));
+    vessel.name = "vascular-test-segment";
+    vessel.userData.vascularTopology = true;
+    declareVisual(vessel, "matter", "topology");
+    root.add(vessel);
+    const manager = managerForTest(scene);
+    manager.registerLayer("overview", root, [{
+      id: "test:vascular-test-segment",
+      objectName: vessel.name,
+      surface: "membrane",
+      maximumLocalRadius: 0.3,
+      opacityRange: [0, 1],
+      source: "procedural-scene-graph",
+      materialRegion: "vascular",
+    }]);
+    expect(manager.setProfile("realistic-illustrative")).toBe("realistic-illustrative");
+    const material = vessel.material as unknown as THREE.MeshPhysicalMaterial;
+    expect(material.roughness).toBeCloseTo(surfaceParameters("membrane", "vascular").roughness);
+    expect(material.clearcoat).toBeCloseTo(surfaceParameters("membrane", "vascular").clearcoat);
+    expect(material.userData.r10eMaterialRegion).toBe("vascular");
+    expect(material.userData.r10eBakedSurfaceShader).toBeUndefined();
+    expect(material.color).toEqual(new THREE.Color(0xa65e52));
+    expect(manager.audit()).toMatchObject({
+      vascularMaterialObjects: 1,
+      bakedSurfaceShaderObjects: 0,
+      regionalBaseColorObjects: 0,
+      transmissionObjects: 0,
+    });
+    manager.dispose();
+    geometry.dispose();
+    (vessel.material as THREE.Material).dispose();
   });
 
   it("falls back atomically for high contrast and context loss", () => {

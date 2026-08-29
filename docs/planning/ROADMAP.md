@@ -57,7 +57,7 @@ os gates visuais já promovidos.
 
 | Ordem | Gate | Estado | Resultado promovível |
 | --: | :-- | :-- | :-- |
-| 1 | `R10-E` · luz/materialidade | **próximo** | volume, separação de planos e pele úmida ilustrativa sem regressão científica ou de baseline |
+| 1 | `R10-E` · luz/materialidade | em andamento · cortes 1–8 | volume, separação de planos e pele úmida ilustrativa sem regressão científica ou de baseline |
 | 2 | `R10-F` · UI/interação | planejado | modos, escala, foco, proveniência e navegação acessível |
 | 3 | `R10-H` · asset dormente | planejado | pipeline estrito provado por fixture sintética; zero asset externo distribuído |
 | 4 | `R10-G` · captura/GIF | planejado | perfil cinema e manifesto sincronizado com gerador visual |
@@ -70,7 +70,7 @@ os gates visuais já promovidos.
 
 ```mermaid
 flowchart LR
-    D["R10-D ✓"] --> E["R10-E · próximo"] --> F["R10-F"] --> H["R10-H"]
+    D["R10-D ✓"] --> E["R10-E · em andamento"] --> F["R10-F"] --> H["R10-H"]
     H --> G["R10-G"] --> P["R10-P"] --> R11["R11 · 1.0"]
     R11 --> ENTRY["UM0-ENTRY"] --> A0["UM0-A0 headless"] --> A1["UM0-A1 GPU"]
     A1 --> UM0["UM0-B..F"] --> R12["R12 · 1.1"]
@@ -87,7 +87,7 @@ O contrato executável completo está no [plano 0.10](PLAN_0.10.md).
 | R10-B · vascular topológico | concluído em 13 ago 2026 | 42 segmentos, 12 draws, grafo/picking e hashes | remover `src/vascular` |
 | R10-C · orçamento | concluído em 20 ago 2026 | seis vistas × 24 amostras, governador e baseline física | manter `enhanced`, desligar governador |
 | R10-D · superfície procedural | concluído em 21 ago 2026 | dois LODs, hash, atributos assados e p95 no orçamento | `ConvexGeometry` atômica |
-| R10-E · luz/materialidade | próximo | gates de cor, custo físico, cinco hashes e comparação estética multiperspectiva | feature para ACES/material anterior |
+| R10-E · luz/materialidade | em andamento · cortes 1–8 | matriz física, GTAO 0,5× apenas em `cinema`, gates de cor/acessibilidade, GIF/README e cinco hashes concluídos; falta promoção | feature para ACES/material anterior |
 | R10-F · UI/interação | planejado | teclado, foco, equivalente textual, móvel e movimento reduzido | manter painel atual |
 | R10-H · asset dormente | planejado | oito rejeições, manifesto/licença/hash, zero asset distribuído | remover pipeline |
 | R10-G · captura/GIF | planejado | determinismo, bytes/tempo e manifesto schema 4 sincronizado | schema 3 |

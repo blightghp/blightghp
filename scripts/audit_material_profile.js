@@ -158,15 +158,25 @@ try {
     (total, view) => total + view.manifest.length,
     0,
   );
+  const vascularDeclarations = Object.values(finalManifest)
+    .flatMap((view) => view.manifest)
+    .filter((entry) => entry.id.startsWith("r10-b:"));
   if (
     JSON.stringify(manifestViews) !== JSON.stringify(expectedViews) ||
     Object.values(finalManifest).some((view) => !view.contractReady) ||
     eligibleObjects !== 37 ||
     declaredManifestObjects !== 37 ||
+    vascularDeclarations.length !== 12 ||
+    vascularDeclarations.some((entry) => entry.materialRegion !== "vascular") ||
     Object.values(finalManifest).some((view) =>
       view.manifest.some((entry) => !entry.id || !entry.objectName || !entry.surface)
     ) ||
     finalPresentation.material.physicalMaterialObjects !== 37 ||
+    finalPresentation.material.transmissionObjects !== 0 ||
+    finalPresentation.material.estimatedTransmissionPasses !== 0 ||
+    finalPresentation.material.bakedSurfaceShaderObjects !== 4 ||
+    finalPresentation.material.regionalBaseColorObjects !== 4 ||
+    finalPresentation.material.vascularMaterialObjects !== 12 ||
     finalPresentation.material.semanticGeometryChanges !== 0 ||
     !finalPresentation.material.environmentMapActive ||
     finalPresentation.material.proceduralNormalMapTextures !== 3
@@ -179,6 +189,7 @@ try {
     })}`);
   }
   if (
+    finalPresentation.clipping.cutFaceShaderCaps !== finalPresentation.clipping.planeCount ||
     finalPresentation.clipping.estimatedAdditionalDrawCalls >
       finalPresentation.clipping.maximumAdditionalDrawCalls
   ) {

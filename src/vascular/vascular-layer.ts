@@ -45,6 +45,7 @@ function materialEntry(
     maximumLocalRadius,
     opacityRange: [0, 1],
     source: "procedural-scene-graph",
+    materialRegion: "vascular",
   };
 }
 

@@ -1,0 +1,916 @@
+{
+  "schemaVersion": 1,
+  "kind": "r10-e-light-materiality",
+  "capturedAt": "2026-08-28T21:55:52.726Z",
+  "source": {
+    "commit": "df85e290229e05dc89483baed142863972ef92c9",
+    "productVersion": "0.9.0",
+    "command": "npm run audit:light-materiality",
+    "requestedGraphicsBackend": "hardware"
+  },
+  "environment": {
+    "browser": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
+      "platform": ""
+    },
+    "hardware": {
+      "logicalCores": 8,
+      "deviceMemoryGiB": 8,
+      "webglVendor": "Google Inc. (Intel)",
+      "webglRenderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00009BC4) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    "host": {
+      "cpu": "Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz",
+      "logicalCores": 8,
+      "memoryBytes": 8412778496,
+      "platform": "win32",
+      "release": "10.0.26200",
+      "architecture": "x64"
+    }
+  },
+  "material": {
+    "activeProfile": "realistic-illustrative",
+    "requestedProfile": "realistic-illustrative",
+    "eligibleObjects": 37,
+    "physicalMaterialObjects": 37,
+    "transmissionObjects": 0,
+    "bakedSurfaceShaderObjects": 4,
+    "regionalBaseColorObjects": 4,
+    "vascularMaterialObjects": 12,
+    "semanticGeometryChanges": 0,
+    "estimatedAdditionalObjectDraws": 10,
+    "estimatedTransmissionPasses": 0,
+    "lightCount": 4,
+    "environmentMapActive": true,
+    "environmentMapWidth": 336,
+    "environmentMapHeight": 128,
+    "estimatedEnvironmentTextureBytes": 344064,
+    "proceduralNormalMapTextures": 3,
+    "estimatedProceduralTextureBytes": 1048576,
+    "estimatedOwnedTextureBytes": 1392640,
+    "generatedPresentationUvAttributes": 0
+  },
+  "toneMapping": {
+    "requestedMode": "agx",
+    "effectiveMode": "agx",
+    "requestedExposure": 1,
+    "effectiveExposure": 1
+  },
+  "performance": {
+    "samplesPerProfile": 24,
+    "baselineOverview": {
+      "drawCalls": 54,
+      "triangles": 155000,
+      "textureBytes": 100663296,
+      "geometryBytes": 25165824,
+      "frameMillisecondsP95": 33.4,
+      "sampleCount": 24,
+      "frameMillisecondsP50": 1.7999999970197678,
+      "measuredFrameMillisecondsP95": 3.5,
+      "measuredDrawCalls": 24,
+      "measuredTriangles": 14520,
+      "measuredTextureBytes": 55239648,
+      "measuredGeometryBytes": 453940,
+      "withinBudget": true
+    },
+    "enhancedOverview": {
+      "drawCalls": 64,
+      "triangles": 160000,
+      "textureBytes": 167772160,
+      "geometryBytes": 25165824,
+      "frameMillisecondsP95": 20,
+      "sampleCount": 24,
+      "frameMillisecondsP50": 1.8000000044703484,
+      "measuredFrameMillisecondsP95": 3.6999999955296516,
+      "measuredDrawCalls": 56,
+      "measuredTriangles": 35595,
+      "measuredTextureBytes": 55239648,
+      "measuredGeometryBytes": 599460,
+      "withinBudget": true
+    },
+    "cinemaOverview": {
+      "drawCalls": 72,
+      "triangles": 180000,
+      "textureBytes": 268435456,
+      "geometryBytes": 33554432,
+      "frameMillisecondsP95": 50,
+      "sampleCount": 24,
+      "frameMillisecondsP50": 2.600000001490116,
+      "measuredFrameMillisecondsP95": 8.699999995529652,
+      "measuredDrawCalls": 67,
+      "measuredTriangles": 46179,
+      "measuredTextureBytes": 64949216,
+      "measuredGeometryBytes": 599460,
+      "withinBudget": true
+    }
+  },
+  "ambientOcclusion": {
+    "baseline": {
+      "enabled": false,
+      "scale": 0.5,
+      "width": 0,
+      "height": 0,
+      "reason": "baseline-profile"
+    },
+    "enhanced": {
+      "enabled": false,
+      "scale": 0.5,
+      "width": 0,
+      "height": 0,
+      "reason": "enhanced-budget"
+    },
+    "cinema": {
+      "enabled": true,
+      "scale": 0.5,
+      "width": 720,
+      "height": 480
+    },
+    "final": {
+      "enabled": true,
+      "scale": 0.5,
+      "width": 720,
+      "height": 480
+    }
+  },
+  "matrix": [
+    {
+      "name": "frontal",
+      "capture": "matrix-frontal.png",
+      "rotation": 0,
+      "clipping": {
+        "enabled": false
+      }
+    },
+    {
+      "name": "lateral-esquerda",
+      "capture": "matrix-lateral-esquerda.png",
+      "rotation": 1.5707963267948966,
+      "clipping": {
+        "enabled": false
+      }
+    },
+    {
+      "name": "lateral-direita",
+      "capture": "matrix-lateral-direita.png",
+      "rotation": 4.71238898038469,
+      "clipping": {
+        "enabled": false
+      }
+    },
+    {
+      "name": "superior",
+      "capture": "matrix-superior.png",
+      "rotation": 0.31,
+      "clipping": {
+        "enabled": false
+      }
+    },
+    {
+      "name": "obliqua",
+      "capture": "matrix-obliqua.png",
+      "rotation": 0.31,
+      "clipping": {
+        "enabled": false
+      }
+    },
+    {
+      "name": "coronal-corte",
+      "capture": "matrix-coronal-corte.png",
+      "rotation": 0.31,
+      "clipping": {
+        "enabled": true,
+        "orientation": "coronal",
+        "slab": false,
+        "planeCount": 1,
+        "registeredLayers": 6,
+        "optedInLayers": 6,
+        "clippedMaterials": 110,
+        "capSources": 4,
+        "cutFaceShaderCaps": 1,
+        "estimatedAdditionalDrawCalls": 9,
+        "maximumAdditionalDrawCalls": 18
+      },
+      "probe": {
+        "field": "field.waveActivity",
+        "unit": "normalized field activity",
+        "interpolation": "linear between adjacent published snapshots",
+        "available": true,
+        "sampling": "arithmetic mean of published cortical vertices within ±0.08 procedural scene units",
+        "sampleCount": 91,
+        "value": 7.590904805199615e-8
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "clipping-active"
+      }
+    }
+  ],
+  "sixViews": [
+    {
+      "view": "overview",
+      "capture": "view-overview.png",
+      "renderer": {
+        "drawCalls": 67,
+        "triangles": 46179,
+        "geometries": 25,
+        "textures": 25
+      },
+      "ambientOcclusion": {
+        "enabled": true,
+        "scale": 0.5,
+        "width": 720,
+        "height": 480
+      }
+    },
+    {
+      "view": "laminar",
+      "capture": "view-laminar.png",
+      "renderer": {
+        "drawCalls": 95,
+        "triangles": 13167,
+        "geometries": 63,
+        "textures": 19
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
+      }
+    },
+    {
+      "view": "cell",
+      "capture": "view-cell.png",
+      "renderer": {
+        "drawCalls": 6,
+        "triangles": 4892,
+        "geometries": 69,
+        "textures": 19
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
+      }
+    },
+    {
+      "view": "neuron",
+      "capture": "view-neuron.png",
+      "renderer": {
+        "drawCalls": 33,
+        "triangles": 4663,
+        "geometries": 78,
+        "textures": 19
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
+      }
+    },
+    {
+      "view": "electricity",
+      "capture": "view-electricity.png",
+      "renderer": {
+        "drawCalls": 35,
+        "triangles": 2387,
+        "geometries": 88,
+        "textures": 19
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
+      }
+    },
+    {
+      "view": "synapse",
+      "capture": "view-synapse.png",
+      "renderer": {
+        "drawCalls": 41,
+        "triangles": 33543,
+        "geometries": 103,
+        "textures": 20
+      },
+      "ambientOcclusion": {
+        "enabled": false,
+        "scale": 0.5,
+        "width": 0,
+        "height": 0,
+        "reason": "non-overview-view"
+      }
+    }
+  ],
+  "accessibility": {
+    "monochrome": {
+      "capture": "accessibility-overview-monochrome.png",
+      "audit": {
+        "colorMode": "monochrome",
+        "provenance": {
+          "total": 110,
+          "state": 89,
+          "topology": 18,
+          "decoration": 3,
+          "undeclared": 0
+        },
+        "bindings": {
+          "totalStateObjects": 89,
+          "declaredBindings": 89,
+          "missingBindings": [],
+          "missingRedundancy": []
+        },
+        "invertibility": {
+          "samples": 25,
+          "tolerance": 0.000001,
+          "maximumError": 2.220446049250313e-16
+        },
+        "redundancy": {
+          "overview": "pulsos E/I usam diâmetros distintos e legenda textual",
+          "laminar": "excitação é cilindro; inibição e TRN são toros",
+          "cell": "somata E/I usam razões de aspecto opostas",
+          "neuron": "soma E/I muda de forma; soma/proximal/distal têm luminância e rótulos textuais independentes",
+          "electricity": "setas preservam sentido; nós E/I usam círculo/quadrado e shunt usa anel",
+          "synapse": "vesículas, transmissores, receptores e recaptura têm formas e posições distintas"
+        }
+      }
+    },
+    "mobile": {
+      "capture": "accessibility-overview-mobile.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    "reducedMotion": {
+      "capture": "accessibility-overview-reduced-motion.png",
+      "audit": {
+        "rotationSpeed": "0",
+        "activeProfile": "realistic-illustrative"
+      }
+    },
+    "highContrastFallback": {
+      "before": {
+        "requestedMode": "agx",
+        "effectiveMode": "agx",
+        "requestedExposure": 1,
+        "effectiveExposure": 1
+      },
+      "active": "schematic",
+      "fallback": {
+        "material": {
+          "activeProfile": "schematic",
+          "requestedProfile": "realistic-illustrative",
+          "eligibleObjects": 37,
+          "physicalMaterialObjects": 0,
+          "transmissionObjects": 0,
+          "bakedSurfaceShaderObjects": 0,
+          "regionalBaseColorObjects": 0,
+          "vascularMaterialObjects": 0,
+          "semanticGeometryChanges": 0,
+          "estimatedAdditionalObjectDraws": 0,
+          "estimatedTransmissionPasses": 0,
+          "lightCount": 4,
+          "environmentMapActive": false,
+          "environmentMapWidth": 336,
+          "environmentMapHeight": 128,
+          "estimatedEnvironmentTextureBytes": 344064,
+          "proceduralNormalMapTextures": 3,
+          "estimatedProceduralTextureBytes": 1048576,
+          "estimatedOwnedTextureBytes": 1392640,
+          "generatedPresentationUvAttributes": 0,
+          "fallbackReason": "high-contrast-requires-schematic"
+        },
+        "surface": {
+          "schemaVersion": 1,
+          "algorithmVersion": "r10-d-simplex-ridge-v1",
+          "activeLod": "high",
+          "fallbackUsed": false,
+          "zeroPerFrameCpu": true,
+          "procedural": {
+            "schemaVersion": 1,
+            "algorithmVersion": "r10-d-simplex-ridge-v1",
+            "seed": 1369948382,
+            "buildMilliseconds": 36.100000001490116,
+            "buildCeilingMilliseconds": 120,
+            "totalTriangles": {
+              "high": 5780,
+              "low": 1500
+            },
+            "totalGeometryBytes": {
+              "high": 196968,
+              "low": 51448
+            },
+            "regions": [
+              {
+                "region": "leftHemi",
+                "lod": "high",
+                "seed": 1369948382,
+                "stream": 2091934749,
+                "algorithm": "r10-d-simplex-ridge-v1",
+                "detail": 9,
+                "vertices": 1002,
+                "triangles": 2000,
+                "geometryBytes": 68112,
+                "hash": "ebbc1fa4fe4691cf",
+                "bakedAttributes": [
+                  "aoFactor",
+                  "curvature",
+                  "thickness"
+                ]
+              },
+              {
+                "region": "leftHemi",
+                "lod": "low",
+                "seed": 1369948382,
+                "stream": 2091934749,
+                "algorithm": "r10-d-simplex-ridge-v1",
+                "detail": 4,
+                "vertices": 252,
+                "triangles": 500,
+                "geometryBytes": 17112,
+                "hash": "46d4419238fb02f7",
+                "bakedAttributes": [
+                  "aoFactor",
+                  "curvature",
+                  "thickness"
+                ]
+              },
+              {
+                "region": "rightHemi",
+                "lod": "high",
+                "seed": 1369948382,
+                "stream": 543448827,
+                "algorithm": "r10-d-simplex-ridge-v1",
+                "detail": 9,
+                "vertices": 1002,
+                "triangles": 2000,
+                "geometryBytes": 68112,
+                "hash": "c0e03595e0cd8f85",
+                "bakedAttributes": [
+                  "aoFactor",
+                  "curvature",
+                  "thickness"
+                ]
+              },
+              {
+                "region": "rightHemi",
+                "lod": "low",
+                "seed": 1369948382,
+                "stream": 543448827,
+                "algorithm": "r10-d-simplex-ridge-v1",
+                "detail": 4,
+                "vertices": 252,
+                "triangles": 500,
+                "geometryBytes": 17112,
+                "hash": "c42613411e67df87",
+                "bakedAttributes": [
+                  "aoFactor",
+                  "curvature",
+                  "thickness"
+                ]
+              },
+              {
+                "region": "cerebellum",
+                "lod": "high",
+                "seed": 1369948382,
+                "stream": 404690641,
+                "algorithm": "r10-d-simplex-ridge-v1",
+                "detail": 7,
+                "vertices": 642,
+                "triangles": 1280,
+                "geometryBytes": 43632,
+                "hash": "7460fc92b5e3227e",
+                "bakedAttributes": [
+                  "aoFactor",
+                  "curvature",
+                  "thickness"
+                ]
+              },
+              {
+                "region": "cerebellum",
+                "lod": "low",
+                "seed": 1369948382,
+                "stream": 404690641,
+                "algorithm": "r10-d-simplex-ridge-v1",
+                "detail": 3,
+                "vertices": 162,
+                "triangles": 320,
+                "geometryBytes": 10992,
+                "hash": "377fca8243ba99a1",
+                "bakedAttributes": [
+                  "aoFactor",
+                  "curvature",
+                  "thickness"
+                ]
+              },
+              {
+                "region": "stem",
+                "lod": "high",
+                "seed": 1369948382,
+                "stream": 1111518287,
+                "algorithm": "r10-d-simplex-ridge-v1",
+                "detail": 4,
+                "vertices": 252,
+                "triangles": 500,
+                "geometryBytes": 17112,
+                "hash": "856d68d387895ebf",
+                "bakedAttributes": [
+                  "aoFactor",
+                  "curvature",
+                  "thickness"
+                ]
+              },
+              {
+                "region": "stem",
+                "lod": "low",
+                "seed": 1369948382,
+                "stream": 1111518287,
+                "algorithm": "r10-d-simplex-ridge-v1",
+                "detail": 2,
+                "vertices": 92,
+                "triangles": 180,
+                "geometryBytes": 6232,
+                "hash": "72cc3028af261b0b",
+                "bakedAttributes": [
+                  "aoFactor",
+                  "curvature",
+                  "thickness"
+                ]
+              }
+            ],
+            "surfaceGeometryHash": "7dfdd64207190121",
+            "contractReady": true
+          }
+        },
+        "clipping": {
+          "enabled": false,
+          "orientation": "coronal",
+          "slab": false,
+          "planeCount": 0,
+          "registeredLayers": 6,
+          "optedInLayers": 6,
+          "clippedMaterials": 0,
+          "capSources": 0,
+          "cutFaceShaderCaps": 0,
+          "estimatedAdditionalDrawCalls": 0,
+          "maximumAdditionalDrawCalls": 18
+        },
+        "effects": {
+          "opacity": 1,
+          "xray": false,
+          "isolateMatter": false,
+          "isolateVascular": false
+        },
+        "effectsCache": {
+          "roots": 6,
+          "records": 110,
+          "builds": 14
+        },
+        "clippingCache": {
+          "layers": 6,
+          "objects": 110,
+          "builds": 6
+        },
+        "bloom": {
+          "sceneRevision": 9,
+          "matterObjects": 58,
+          "emissionObjects": 40,
+          "excludedObjects": 12,
+          "directRenders": 33,
+          "bloomRenders": 114,
+          "finalOutputPass": true,
+          "ambientOcclusion": {
+            "enabled": false,
+            "scale": 0.5,
+            "width": 0,
+            "height": 0,
+            "reason": "high-contrast"
+          },
+          "estimatedOwnedTextureBytes": 54367200
+        },
+        "budget": {
+          "schemaVersion": 1,
+          "profile": "cinema",
+          "governor": {
+            "profile": "cinema",
+            "consecutiveOverBudgetFrames": 0,
+            "recoveryFrames": 0,
+            "recoveryAvailable": true,
+            "transitions": 3
+          },
+          "views": {
+            "overview": {
+              "drawCalls": 72,
+              "triangles": 180000,
+              "textureBytes": 268435456,
+              "geometryBytes": 33554432,
+              "frameMillisecondsP95": 50,
+              "sampleCount": 50,
+              "frameMillisecondsP50": 3,
+              "measuredFrameMillisecondsP95": 36,
+              "measuredDrawCalls": 52,
+              "measuredTriangles": 29815,
+              "measuredTextureBytes": 54715360,
+              "measuredGeometryBytes": 599460,
+              "withinBudget": true
+            },
+            "laminar": {
+              "drawCalls": 120,
+              "triangles": 22000,
+              "textureBytes": 268435456,
+              "geometryBytes": 33554432,
+              "frameMillisecondsP95": 50,
+              "sampleCount": 3,
+              "frameMillisecondsP50": 7,
+              "measuredFrameMillisecondsP95": 329.19999999552965,
+              "measuredDrawCalls": 95,
+              "measuredTriangles": 13167,
+              "measuredTextureBytes": 55235552,
+              "measuredGeometryBytes": 204924,
+              "withinBudget": false
+            },
+            "cell": {
+              "drawCalls": 36,
+              "triangles": 18000,
+              "textureBytes": 268435456,
+              "geometryBytes": 33554432,
+              "frameMillisecondsP95": 50,
+              "sampleCount": 2,
+              "frameMillisecondsP50": 2.1999999955296516,
+              "measuredFrameMillisecondsP95": 667.5,
+              "measuredDrawCalls": 6,
+              "measuredTriangles": 4892,
+              "measuredTextureBytes": 54973408,
+              "measuredGeometryBytes": 96648,
+              "withinBudget": false
+            },
+            "neuron": {
+              "drawCalls": 46,
+              "triangles": 14000,
+              "textureBytes": 268435456,
+              "geometryBytes": 33554432,
+              "frameMillisecondsP95": 50,
+              "sampleCount": 3,
+              "frameMillisecondsP50": 6.4000000059604645,
+              "measuredFrameMillisecondsP95": 22.200000002980232,
+              "measuredDrawCalls": 33,
+              "measuredTriangles": 4663,
+              "measuredTextureBytes": 54973408,
+              "measuredGeometryBytes": 68228,
+              "withinBudget": true
+            },
+            "electricity": {
+              "drawCalls": 48,
+              "triangles": 10000,
+              "textureBytes": 268435456,
+              "geometryBytes": 33554432,
+              "frameMillisecondsP95": 50,
+              "sampleCount": 3,
+              "frameMillisecondsP50": 1,
+              "measuredFrameMillisecondsP95": 243.90000000596046,
+              "measuredDrawCalls": 35,
+              "measuredTriangles": 2387,
+              "measuredTextureBytes": 54711264,
+              "measuredGeometryBytes": 7580,
+              "withinBudget": false
+            },
+            "synapse": {
+              "drawCalls": 54,
+              "triangles": 48000,
+              "textureBytes": 268435456,
+              "geometryBytes": 33554432,
+              "frameMillisecondsP95": 50,
+              "sampleCount": 3,
+              "frameMillisecondsP50": 2.399999998509884,
+              "measuredFrameMillisecondsP95": 301.1000000014901,
+              "measuredDrawCalls": 41,
+              "measuredTriangles": 33543,
+              "measuredTextureBytes": 55235552,
+              "measuredGeometryBytes": 160664,
+              "withinBudget": false
+            }
+          },
+          "contractReady": false
+        },
+        "frozenStaticMatrices": 21,
+        "probe": {
+          "field": "field.waveActivity",
+          "unit": "normalized field activity",
+          "interpolation": "linear between adjacent published snapshots",
+          "available": false,
+          "sampling": "mean on the cut-face band",
+          "sampleCount": 0,
+          "reason": "clipping or the published cortical field is unavailable"
+        },
+        "renderer": {
+          "drawCalls": 52,
+          "triangles": 29815,
+          "geometries": 103,
+          "textures": 20
+        },
+        "toneMapping": {
+          "requestedMode": "agx",
+          "effectiveMode": "aces",
+          "requestedExposure": 1,
+          "effectiveExposure": 1,
+          "fallbackReason": "high-contrast"
+        }
+      },
+      "restored": {
+        "requestedMode": "agx",
+        "effectiveMode": "agx",
+        "requestedExposure": 1,
+        "effectiveExposure": 1
+      }
+    }
+  },
+  "hashInvariance": {
+    "fields": [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash"
+    ],
+    "baseline": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "final": {
+      "runtime": "rust-wasm",
+      "schemaVersion": 8,
+      "stateHash": "b342793f3d23c6ae",
+      "corticothalamicHash": "28cb2c021f56dbf7",
+      "cellPatchHash": "cff663ed3fc20880",
+      "chemicalHash": "d6f6b8dd06975c24",
+      "cellSpikeEventHash": "602d9181b8d246dc",
+      "degraded": false
+    },
+    "invariant": true
+  },
+  "captures": [
+    "overview-schematic-reference.png",
+    "matrix-frontal.png",
+    "matrix-lateral-esquerda.png",
+    "matrix-lateral-direita.png",
+    "matrix-superior.png",
+    "matrix-obliqua.png",
+    "matrix-coronal-corte.png",
+    "view-overview.png",
+    "view-laminar.png",
+    "view-cell.png",
+    "view-neuron.png",
+    "view-electricity.png",
+    "view-synapse.png",
+    "accessibility-overview-monochrome.png",
+    "accessibility-overview-mobile.png",
+    "accessibility-overview-reduced-motion.png"
+  ],
+  "captureCoverage": {
+    "overview-schematic-reference.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2288,
+      "sampledPixels": 6144,
+      "warmPixels": 181,
+      "coolPixels": 2107
+    },
+    "matrix-frontal.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2281,
+      "sampledPixels": 6144,
+      "warmPixels": 1987,
+      "coolPixels": 254
+    },
+    "matrix-lateral-esquerda.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2206,
+      "sampledPixels": 6144,
+      "warmPixels": 2045,
+      "coolPixels": 146
+    },
+    "matrix-lateral-direita.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2216,
+      "sampledPixels": 6144,
+      "warmPixels": 2028,
+      "coolPixels": 177
+    },
+    "matrix-superior.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2258,
+      "sampledPixels": 6144,
+      "warmPixels": 1787,
+      "coolPixels": 443
+    },
+    "matrix-obliqua.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 1679,
+      "sampledPixels": 6144,
+      "warmPixels": 1491,
+      "coolPixels": 165
+    },
+    "matrix-coronal-corte.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 1954,
+      "sampledPixels": 6144,
+      "warmPixels": 1727,
+      "coolPixels": 67
+    },
+    "view-overview.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2312,
+      "sampledPixels": 6144,
+      "warmPixels": 2067,
+      "coolPixels": 214
+    },
+    "view-laminar.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 433,
+      "sampledPixels": 6144,
+      "warmPixels": 20,
+      "coolPixels": 399
+    },
+    "view-cell.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 493,
+      "sampledPixels": 6144,
+      "warmPixels": 87,
+      "coolPixels": 312
+    },
+    "view-neuron.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 129,
+      "sampledPixels": 6144,
+      "warmPixels": 62,
+      "coolPixels": 23
+    },
+    "view-electricity.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2811,
+      "sampledPixels": 6144,
+      "warmPixels": 0,
+      "coolPixels": 2771
+    },
+    "view-synapse.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 1067,
+      "sampledPixels": 6144,
+      "warmPixels": 427,
+      "coolPixels": 335
+    },
+    "accessibility-overview-monochrome.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2312,
+      "sampledPixels": 6144,
+      "warmPixels": 2067,
+      "coolPixels": 214
+    },
+    "accessibility-overview-mobile.png": {
+      "width": 390,
+      "height": 844,
+      "visiblePixels": 4627,
+      "sampledPixels": 6144,
+      "warmPixels": 4164,
+      "coolPixels": 348
+    },
+    "accessibility-overview-reduced-motion.png": {
+      "width": 1440,
+      "height": 960,
+      "visiblePixels": 2309,
+      "sampledPixels": 6144,
+      "warmPixels": 2067,
+      "coolPixels": 218
+    }
+  },
+  "browserErrors": []
+}

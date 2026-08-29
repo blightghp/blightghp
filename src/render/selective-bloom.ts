@@ -1,8 +1,16 @@
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import {
+  estimateHalfResolutionAmbientOcclusionTextureBytes,
+  HalfResolutionGtaoPass,
+  HALF_RESOLUTION_AMBIENT_OCCLUSION_SCALE,
+  sameAmbientOcclusionDecision,
+} from "./ambient-occlusion";
+import type { AmbientOcclusionDecision } from "./ambient-occlusion";
 import { isExcludedFromSelectiveBloom, visualPassOf } from "./render-types";
 import { VISUAL_COLORS } from "./visual-tokens";
 
@@ -93,6 +101,12 @@ export class SelectiveBloomPipeline {
   private readonly depthMaskMaterials = new Map<THREE.Material, THREE.MeshBasicMaterial>();
   private readonly savedMaterials = new Map<MaterialObject, THREE.Material | THREE.Material[]>();
   private readonly savedVisibilities = new Map<THREE.Object3D, boolean>();
+  private ambientOcclusionPass: HalfResolutionGtaoPass | undefined;
+  private ambientOcclusionState: AmbientOcclusionDecision = {
+    enabled: false,
+    scale: HALF_RESOLUTION_AMBIENT_OCCLUSION_SCALE,
+    reason: "baseline-profile",
+  };
   private matterObjects: MaterialObject[] = [];
   private emissionObjects: MaterialObject[] = [];
   private excludedObjects: THREE.Object3D[] = [];
@@ -142,6 +156,7 @@ export class SelectiveBloomPipeline {
     this.finalComposer = new EffectComposer(renderer, createStencilTarget());
     this.finalComposer.addPass(new RenderPass(scene, this.camera));
     this.finalComposer.addPass(finalPass);
+    this.finalComposer.addPass(new OutputPass());
   }
 
   render(options: { bloomEnabled?: boolean; sceneRevision?: number } = {}): void {
@@ -188,6 +203,17 @@ export class SelectiveBloomPipeline {
     this.finalComposer.setPixelRatio(pixelRatio);
   }
 
+  /** Adds GTAO only after the policy has ruled out baseline and unsafe modes. */
+  setAmbientOcclusion(decision: AmbientOcclusionDecision): void {
+    if (sameAmbientOcclusionDecision(this.ambientOcclusionState, decision)) return;
+    this.removeAmbientOcclusionPass();
+    this.ambientOcclusionState = decision;
+    if (!decision.enabled) return;
+    const pass = new HalfResolutionGtaoPass(this.scene, this.camera, this.width, this.height);
+    this.finalComposer.insertPass(pass, 1);
+    this.ambientOcclusionPass = pass;
+  }
+
   invalidateSceneGraph(): void {
     this.sceneRevision = -1;
   }
@@ -199,6 +225,14 @@ export class SelectiveBloomPipeline {
     readonly excludedObjects: number;
     readonly directRenders: number;
     readonly bloomRenders: number;
+    readonly finalOutputPass: true;
+    readonly ambientOcclusion: {
+      readonly enabled: boolean;
+      readonly scale: typeof HALF_RESOLUTION_AMBIENT_OCCLUSION_SCALE;
+      readonly width: number;
+      readonly height: number;
+      readonly reason?: string;
+    };
     readonly estimatedOwnedTextureBytes: number;
   } {
     return {
@@ -208,15 +242,32 @@ export class SelectiveBloomPipeline {
       excludedObjects: this.excludedObjects.length,
       directRenders: this.directRenders,
       bloomRenders: this.bloomRenders,
+      finalOutputPass: true,
+      ambientOcclusion: {
+        enabled: this.ambientOcclusionState.enabled,
+        scale: this.ambientOcclusionState.scale,
+        width: this.ambientOcclusionPass?.width ?? 0,
+        height: this.ambientOcclusionPass?.height ?? 0,
+        ...(!this.ambientOcclusionState.enabled
+          ? { reason: this.ambientOcclusionState.reason }
+          : {}),
+      },
       estimatedOwnedTextureBytes: estimateSelectiveBloomTextureBytes(
         this.width,
         this.height,
         this.pixelRatio,
-      ),
+      ) + (this.ambientOcclusionPass
+        ? estimateHalfResolutionAmbientOcclusionTextureBytes(
+            this.width,
+            this.height,
+            this.pixelRatio,
+          )
+        : 0),
     };
   }
 
   dispose(): void {
+    this.removeAmbientOcclusionPass();
     for (const material of this.depthMaskMaterials.values()) material.dispose();
     this.depthMaskMaterials.clear();
     this.bloomComposer.dispose();
@@ -243,6 +294,13 @@ export class SelectiveBloomPipeline {
     this.emissionObjects = emission;
     this.excludedObjects = excluded;
     this.sceneRevision = revision;
+  }
+
+  private removeAmbientOcclusionPass(): void {
+    if (!this.ambientOcclusionPass) return;
+    this.finalComposer.removePass(this.ambientOcclusionPass);
+    this.ambientOcclusionPass.dispose();
+    this.ambientOcclusionPass = undefined;
   }
 
   private depthMaskFor(source: THREE.Material): THREE.MeshBasicMaterial {

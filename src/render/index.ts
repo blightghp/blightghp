@@ -1,5 +1,6 @@
 export * from "./brain-layer";
 export * from "./anatomical-provenance";
+export * from "./ambient-occlusion";
 export * from "./cell-layer";
 export * from "./clipping";
 export * from "./electrical-board-layer";
@@ -13,5 +14,7 @@ export * from "./render-types";
 export * from "./rendered-state-probe";
 export * from "./selective-bloom";
 export * from "./synapse-layer";
+export * from "./tone-mapping";
 export * from "./visual-tokens";
 export * from "./visual-encoding";
+export * from "./webgl-safety-fallback";

@@ -1,6 +1,54 @@
 # Diretivas da próxima etapa · R10-E luz e materialidade
 
-**Estado:** pronto para implementação
+**Estado:** em andamento — cortes 1–8 (tone mapping, ambiente/luz, material regional,
+fallback, cor-base regional e GTAO contido); não promovido. A matriz física versionada,
+a revisão visual, a decisão GTAO e o GIF/manifesto/README foram sincronizados; a
+promoção ainda pende.
+
+**Corte 1:** `?toneMapping=agx` é o candidato atual; `?toneMapping=aces` preserva a
+reversão explícita e `neutral` fica disponível apenas para comparação A/B. Alto contraste,
+perda de contexto e erro de shader efetivam ACES até a condição segura ser restaurada.
+
+**Corte 2:** o ambiente agora é um equiretangular procedural convertido uma vez por PMREM,
+sem asset externo; o rig `hemisphere` + key/fill/rim é de apresentação e não altera geometria,
+estado científico ou passes de `baseline`.
+
+**Corte 3:** `transmission` e a atenuação associada saem do perfil; as quatro shells
+overview R10-D consomem `aoFactor`, `curvature` e `thickness` já assados por um contrato
+`onBeforeCompile` limitado, com parâmetros de córtex/cerebelo/tronco. Atributo ausente,
+malformado ou shader incompatível aciona reversão atômica para `schematic`; os demais
+objetos, inclusive vasos, não recebem esse hook. A sincronização dinâmica não recompila
+material por quadro.
+
+**Corte 4:** as doze entradas de topologia vascular declaram a região de apresentação
+`vascular`, que recebe apenas ajuste moderado de reflectância no mesmo material físico.
+Ela não recebe o shader assado R10-D, não troca cor, topologia, clipping ou bindings; as
+classes arterial/venosa/capilar continuam distinguíveis pelo contrato vascular existente.
+
+**Corte 5:** a tampa de stencil já existente recebe o material procedimental `cut-face` em
+`MeshBasicMaterial`, com padrão neutro em espaço-mundo e proveniência explicitamente não
+anatômica. Continua uma tampa por plano, com o mesmo stencil, clipping, opacidade, bloom
+excluído e orçamento de 9/18 draws; não há textura, geometria, passe, Worker ou estado novo.
+
+**Corte 6:** a injeção da face de corte valida todas as âncoras antes de mutar o shader e
+saneia cor, `NaN`, infinito e limites de opacidade/padrão. Uma falha de compilação WebGL
+continua a reverter AgX/material para ACES/esquemático e agora também desliga clipping,
+removendo a tampa que poderia repetir o programa falho.
+
+**Corte 7:** as quatro shells overview recebem uma cor-base quente/neutra limitada por
+região (córtex, cerebelo e tronco), aplicada somente ao material físico de apresentação.
+O valor-fonte e a codificação dinâmica continuam preservados: a ligação científica dessas
+shells segue transformando estado apenas em opacidade. Vasos, overlays, topologia,
+geometria, draws e o diagrama das outras vistas não recebem essa mistura; a sincronização
+não aloca nem recompila material por quadro.
+
+**Corte 8:** GTAO entra como experimento de meia resolução somente em `cinema`, na Visão
+Geral realista e entre o render-base e a composição de bloom. O G-buffer oculta emissão e
+decoração transitoriamente; clipping, alto contraste, `baseline`, `enhanced` e qualquer
+fallback WebGL removem o passe e seus alvos. A evidência física mede 24 amostras separadas
+em `baseline`, `enhanced` e `cinema`, registra escala 0,5 e prova os rollbacks de corte e
+contraste antes de manter o efeito. `enhanced` mediu 67 draws com GTAO contra o teto 64 e
+foi rejeitado sem elevar o orçamento; desligado, volta a 56 draws.
 
 **Branch prevista:** `blightghp/r10-e-light-materiality`
 
@@ -59,16 +107,21 @@ diferenças; não importa pixels ou geometria dessas fontes.
 4. Remover `transmission` do `baseline`; compor material em camadas baratas:
    base difusa, wrap diffuse, Fresnel/lobo úmido, `thickness`, `aoFactor` e grade.
 5. Criar parâmetros regionais para córtex, cerebelo, tronco, vasos e face de
-   corte; estado científico colorido permanece em overlay/emissão separada.
+   corte; a cor-base quente/neutra permanece apresentação estática e o estado
+   científico colorido fica em overlay/emissão/opacidade separada.
 6. Validar o contrato `onBeforeCompile`, clamps, `NaN`/infinito e fallback WebGL.
 7. Aplicar a disciplina às seis vistas, sem forçar o diagrama Eletricidade a
    imitar fotografia nem atribuir anatomia falsa a Célula/Neurônio/Sinapse.
 8. Só ativar GTAO em meia resolução no perfil `enhanced` se a GPU física provar
-   margem; `baseline` não recebe passe novo.
+   margem; `baseline` não recebe passe novo. **Concluído:** a medição rejeitou `enhanced`
+   (67/64 draws), portanto o passe fica apenas em `overview` realista `cinema`; a Intel
+   UHD/D3D11 mediu 67/72 draws e p95 de 8,7 ms sob teto de 50 ms.
 9. Gerar matriz final frontal, laterais, superior, oblíqua e coronal, mais seis
-   vistas, monocromia, móvel e movimento reduzido.
+   vistas, monocromia, móvel e movimento reduzido. **Concluído:**
+   [`artifacts/light-materiality`](../../artifacts/light-materiality/) registra 16 capturas físicas.
 10. Executar auditoria, sincronizar gerador/GIF/manifesto, atualizar README e só
-    então promover/mergear.
+    então promover/mergear. **Parcial:** auditoria, revisão, decisão GTAO e GIF/manifesto/
+    README R10-E existem; ainda falta a promoção agregada.
 
 ## Gates de segurança
 
@@ -107,6 +160,8 @@ npm run typecheck
 npm run test
 npm run build
 npm run audit:material
+npm run audit:light-materiality
+npm run verify:light-materiality
 npm run audit:presentation-budget
 npm run verify:presentation-budget
 npm run verify:procedural-surface

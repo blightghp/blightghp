@@ -213,9 +213,15 @@ try {
     r09fGate.active.material.activeProfile !== "realistic-illustrative" ||
     r09fGate.active.material.physicalMaterialObjects !==
       EXPECTED_R09F_MATERIALS + EXPECTED_R10B_VASCULAR_MATERIALS ||
+    r09fGate.active.material.transmissionObjects !== 0 ||
+    r09fGate.active.material.estimatedTransmissionPasses !== 0 ||
+    r09fGate.active.material.bakedSurfaceShaderObjects !== 4 ||
+    r09fGate.active.material.regionalBaseColorObjects !== 4 ||
+    r09fGate.active.material.vascularMaterialObjects !== EXPECTED_R10B_VASCULAR_MATERIALS ||
     r09fGate.active.material.semanticGeometryChanges !== 0 ||
     r09fGate.active.clipping.planeCount !== 1 ||
     r09fGate.active.clipping.capSources !== 4 ||
+    r09fGate.active.clipping.cutFaceShaderCaps !== 1 ||
     r09fGate.active.clipping.estimatedAdditionalDrawCalls >
       r09fGate.active.clipping.maximumAdditionalDrawCalls ||
     !r09fGate.active.probe.available ||
@@ -228,17 +234,24 @@ try {
     throw new Error(`gate de materialidade/corte inválido: ${JSON.stringify(r09fGate)}`);
   }
   const r09fFallback = await page.evaluate(() => {
+    const before = window.__BRAIN_ENGINE__.toneMappingAudit();
     const active = window.__BRAIN_ENGINE__.setHighContrast(true);
     const report = window.__BRAIN_ENGINE__.presentationAudit();
     window.__BRAIN_ENGINE__.setHighContrast(false);
+    const restored = window.__BRAIN_ENGINE__.toneMappingAudit();
     window.__BRAIN_ENGINE__.setMaterialProfile("schematic");
     window.__BRAIN_ENGINE__.setClipping({ enabled: false, slab: false });
     window.__BRAIN_ENGINE__.setPresentationEffects({ opacity: 1, xray: false });
-    return { active, report };
+    return { active, before, report, restored };
   });
   if (
     r09fFallback.active !== "schematic" ||
-    r09fFallback.report.material.fallbackReason !== "high-contrast-requires-schematic"
+    r09fFallback.report.material.fallbackReason !== "high-contrast-requires-schematic" ||
+    r09fFallback.before.effectiveMode !== "agx" ||
+    r09fFallback.report.toneMapping.requestedMode !== "agx" ||
+    r09fFallback.report.toneMapping.effectiveMode !== "aces" ||
+    r09fFallback.report.toneMapping.fallbackReason !== "high-contrast" ||
+    r09fFallback.restored.effectiveMode !== "agx"
   ) {
     throw new Error(`fallback R09-F inválido: ${JSON.stringify(r09fFallback)}`);
   }

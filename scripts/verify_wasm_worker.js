@@ -142,9 +142,15 @@ try {
     r09f.highContrastProfile !== "schematic" ||
     r09f.active.material.physicalMaterialObjects !==
       EXPECTED_R09F_MATERIALS + EXPECTED_R10B_VASCULAR_MATERIALS ||
+    r09f.active.material.transmissionObjects !== 0 ||
+    r09f.active.material.estimatedTransmissionPasses !== 0 ||
+    r09f.active.material.bakedSurfaceShaderObjects !== 4 ||
+    r09f.active.material.regionalBaseColorObjects !== 4 ||
+    r09f.active.material.vascularMaterialObjects !== EXPECTED_R10B_VASCULAR_MATERIALS ||
     r09f.active.material.semanticGeometryChanges !== 0 ||
     r09f.active.clipping.planeCount !== 1 ||
     r09f.active.clipping.capSources !== 4 ||
+    r09f.active.clipping.cutFaceShaderCaps !== 1 ||
     r09f.active.clipping.estimatedAdditionalDrawCalls >
       r09f.active.clipping.maximumAdditionalDrawCalls ||
     !r09f.active.probe.available ||
