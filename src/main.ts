@@ -60,6 +60,7 @@ import {
   voltsToMillivolts,
 } from "./render";
 import type {
+  CutOrientation,
   CutPlaneState,
   MaterialProfileAudit,
   PresentationBudgetAudit,
@@ -105,6 +106,12 @@ import {
   USAGE_MODE_DEFINITIONS,
 } from "./usage-mode";
 import type { UsageMode } from "./usage-mode";
+import {
+  assertCommandPaletteCommands,
+  filterCommandPaletteCommands,
+  moveCommandPaletteSelection,
+} from "./command-palette";
+import type { CommandPaletteCommand } from "./command-palette";
 
 declare global {
   interface Window {
@@ -214,6 +221,10 @@ interface RuntimeInfo {
   brainEngineSchema: number;
 }
 
+interface ApplicationCommand extends CommandPaletteCommand {
+  readonly execute: () => string;
+}
+
 const state: BrainSettings = getInitialBrainSettings();
 const taskExperiment = new BayesianObservationExperiment(0.35);
 const simulationClock = new FixedStepClock({
@@ -258,6 +269,11 @@ let activeView: SimulationView = "overview";
 let usageMode: UsageMode = parseUsageMode(
   new URLSearchParams(window.location.search).get("usageMode"),
 ) ?? DEFAULT_USAGE_MODE;
+let commandPaletteOpen = false;
+let commandPaletteReturnFocus: HTMLElement | undefined;
+let commandPaletteCommands: readonly ApplicationCommand[] = [];
+let commandPaletteResults: readonly ApplicationCommand[] = [];
+let commandPaletteSelectedIndex = -1;
 let selectedCellId = 0;
 let selectionReturnFocus: HTMLElement | undefined;
 let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
@@ -1180,10 +1196,386 @@ function setupUsageModeInterface(): void {
   setUsageMode(usageMode);
 }
 
+const COMMAND_VIEW_LABELS: Readonly<Record<SimulationView, string>> = {
+  overview: "Visão geral",
+  laminar: "Lâminas",
+  cell: "Célula",
+  neuron: "Neurônio",
+  electricity: "Eletricidade",
+  synapse: "Sinapse",
+};
+
+function revealExplorerPanel(selector: string): void {
+  const panel = element<HTMLDetailsElement>(selector);
+  panel.open = true;
+}
+
+function executePaletteView(view: SimulationView): string {
+  setActiveView(view);
+  element<HTMLButtonElement>(`#tab-${view}`).focus();
+  return `Vista alterada para ${COMMAND_VIEW_LABELS[view]}.`;
+}
+
+function executePaletteCut(orientation: CutOrientation): string {
+  revealExplorerPanel("#presentation-effects-panel");
+  setCutPlaneState({ enabled: true, orientation });
+  element<HTMLSelectElement>("#cut-orientation").focus();
+  return `Corte ${orientation} ativado.`;
+}
+
+function createCommandPaletteCommands(): readonly ApplicationCommand[] {
+  const viewCommands: ApplicationCommand[] = (
+    Object.entries(COMMAND_VIEW_LABELS) as Array<[SimulationView, string]>
+  ).map(([view, label]) => ({
+    id: `view-${view}`,
+    label: `Abrir ${label}`,
+    category: "Vistas",
+    keywords: [view, label, "navegação"],
+    minimumMode: "guided",
+    execute: () => executePaletteView(view),
+  }));
+
+  return [
+    ...viewCommands,
+    {
+      id: "mode-guided",
+      label: "Usar modo Guiado",
+      category: "Modos",
+      keywords: ["essencial", "inicial", "modo"],
+      minimumMode: "guided",
+      execute: () => {
+        setUsageMode("guided");
+        element<HTMLSelectElement>("#usage-mode").focus();
+        return "Modo Guiado ativado.";
+      },
+    },
+    {
+      id: "mode-explorer",
+      label: "Usar modo Explorador",
+      category: "Modos",
+      keywords: ["busca", "corte", "comparação", "modo"],
+      minimumMode: "guided",
+      execute: () => {
+        setUsageMode("explorer");
+        element<HTMLSelectElement>("#usage-mode").focus();
+        return "Modo Explorador ativado.";
+      },
+    },
+    {
+      id: "mode-laboratory",
+      label: "Usar modo Laboratório",
+      category: "Modos",
+      keywords: ["avançado", "parâmetros", "envelope", "modo"],
+      minimumMode: "guided",
+      execute: () => {
+        setUsageMode("laboratory");
+        element<HTMLSelectElement>("#usage-mode").focus();
+        return "Modo Laboratório ativado.";
+      },
+    },
+    {
+      id: "render-profile-baseline",
+      label: "Usar perfil gráfico Baseline",
+      category: "Perfis",
+      keywords: ["render", "econômico", "qualidade"],
+      minimumMode: "guided",
+      execute: () => {
+        const active = requestRenderProfile("baseline");
+        element<HTMLSelectElement>("#render-profile").focus();
+        return `Perfil gráfico ${active} ativado.`;
+      },
+    },
+    {
+      id: "render-profile-enhanced",
+      label: "Usar perfil gráfico Enhanced",
+      category: "Perfis",
+      keywords: ["render", "interativo", "qualidade"],
+      minimumMode: "guided",
+      execute: () => {
+        const active = requestRenderProfile("enhanced");
+        element<HTMLSelectElement>("#render-profile").focus();
+        return `Perfil gráfico ${active} ativado.`;
+      },
+    },
+    {
+      id: "anatomy-search",
+      label: "Buscar estrutura anatômica",
+      category: "Anatomia",
+      keywords: ["catálogo", "cérebro", "breadcrumb", "busca"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#anatomy-explorer");
+        element<HTMLInputElement>("#anatomy-search").focus();
+        return "Busca anatômica pronta para consulta.";
+      },
+    },
+    {
+      id: "material-profile-schematic",
+      label: "Usar materialidade Esquemática",
+      category: "Perfis",
+      keywords: ["material", "fallback", "apresentação"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#presentation-effects-panel");
+        const active = setMaterialProfile("schematic");
+        element<HTMLSelectElement>("#material-profile").focus();
+        return `Materialidade ${active === "schematic" ? "Esquemática" : "Realista"} ativada.`;
+      },
+    },
+    {
+      id: "material-profile-realistic",
+      label: "Usar materialidade Realista-ilustrativa",
+      category: "Perfis",
+      keywords: ["material", "realista", "ilustrativa", "apresentação"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#presentation-effects-panel");
+        const active = setMaterialProfile("realistic-illustrative");
+        element<HTMLSelectElement>("#material-profile").focus();
+        return `Materialidade ${active === "realistic-illustrative" ? "Realista-ilustrativa" : "Esquemática"} ativada.`;
+      },
+    },
+    {
+      id: "cut-disable",
+      label: "Desativar corte",
+      category: "Corte",
+      keywords: ["plano", "clipping", "seção"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#presentation-effects-panel");
+        setCutPlaneState({ enabled: false });
+        element<HTMLSelectElement>("#cut-orientation").focus();
+        return "Corte desativado.";
+      },
+    },
+    ...(["coronal", "sagittal", "axial", "oblique"] as const).map((orientation) => ({
+      id: `cut-${orientation}`,
+      label: `Ativar corte ${orientation}`,
+      category: "Corte",
+      keywords: ["plano", "clipping", "seção", orientation],
+      minimumMode: "explorer" as const,
+      execute: () => executePaletteCut(orientation),
+    })),
+    {
+      id: "camera-reset-cut",
+      label: "Restaurar câmera do corte",
+      category: "Câmera",
+      keywords: ["enquadramento", "reset", "corte"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#presentation-effects-panel");
+        resetCameraForCut();
+        element<HTMLButtonElement>("#reset-cut-camera").focus();
+        return "Câmera do corte restaurada.";
+      },
+    },
+  ];
+}
+
+function commandPaletteDialog(): HTMLDialogElement {
+  return element<HTMLDialogElement>("#command-palette");
+}
+
+function announceCommandPalette(message: string): void {
+  element("#command-palette-announcement").textContent = message;
+}
+
+function renderCommandPaletteResults(): void {
+  const input = element<HTMLInputElement>("#command-palette-input");
+  const results = element<HTMLUListElement>("#command-palette-results");
+  const status = element("#command-palette-status");
+  commandPaletteResults = filterCommandPaletteCommands(
+    commandPaletteCommands,
+    input.value,
+    usageMode,
+  );
+  if (commandPaletteResults.length === 0) {
+    commandPaletteSelectedIndex = -1;
+  } else if (commandPaletteSelectedIndex < 0 ||
+    commandPaletteSelectedIndex >= commandPaletteResults.length) {
+    commandPaletteSelectedIndex = 0;
+  }
+
+  results.replaceChildren();
+  if (commandPaletteResults.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "command-palette-empty";
+    empty.textContent = "Nenhum comando disponível para esta busca e modo.";
+    results.appendChild(empty);
+    input.removeAttribute("aria-activedescendant");
+    status.textContent = "Nenhum comando disponível.";
+    return;
+  }
+
+  for (const [index, command] of commandPaletteResults.entries()) {
+    const option = document.createElement("li");
+    option.id = `command-palette-option-${command.id}`;
+    option.dataset.commandId = command.id;
+    option.setAttribute("role", "option");
+    option.setAttribute("aria-selected", String(index === commandPaletteSelectedIndex));
+    const label = document.createElement("span");
+    label.textContent = command.label;
+    const category = document.createElement("span");
+    category.className = "command-palette-category";
+    category.textContent = command.category;
+    option.append(label, category);
+    results.appendChild(option);
+  }
+
+  const selected = commandPaletteResults[commandPaletteSelectedIndex];
+  input.setAttribute("aria-activedescendant", `command-palette-option-${selected.id}`);
+  status.textContent = commandPaletteResults.length === 1
+    ? "1 comando disponível."
+    : `${commandPaletteResults.length} comandos disponíveis.`;
+}
+
+function closeCommandPalette(restoreFocus = true): void {
+  if (!commandPaletteOpen) return;
+  const dialog = commandPaletteDialog();
+  const input = element<HTMLInputElement>("#command-palette-input");
+  commandPaletteOpen = false;
+  input.setAttribute("aria-expanded", "false");
+  input.removeAttribute("aria-activedescendant");
+  commandPaletteResults = [];
+  commandPaletteSelectedIndex = -1;
+  if (dialog.open) dialog.close();
+
+  const returnFocus = commandPaletteReturnFocus;
+  commandPaletteReturnFocus = undefined;
+  if (!restoreFocus) return;
+  if (returnFocus && document.contains(returnFocus) && !returnFocus.closest("[hidden]")) {
+    returnFocus.focus();
+  } else {
+    element<HTMLButtonElement>("#open-command-palette").focus();
+  }
+}
+
+function openCommandPalette(): void {
+  if (captureMode || commandPaletteOpen) return;
+  const dialog = commandPaletteDialog();
+  const input = element<HTMLInputElement>("#command-palette-input");
+  commandPaletteReturnFocus = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : undefined;
+  commandPaletteOpen = true;
+  commandPaletteSelectedIndex = 0;
+  input.value = "";
+  dialog.showModal();
+  input.setAttribute("aria-expanded", "true");
+  renderCommandPaletteResults();
+  input.focus();
+  announceCommandPalette("Paleta de comandos aberta.");
+}
+
+function executeCommandPaletteSelection(): void {
+  const command = commandPaletteResults[commandPaletteSelectedIndex];
+  if (!command) return;
+  if (!isUsageModeControlVisible(usageMode, command.minimumMode)) {
+    commandPaletteSelectedIndex = 0;
+    renderCommandPaletteResults();
+    announceCommandPalette("Comando indisponível no modo de uso atual.");
+    return;
+  }
+
+  closeCommandPalette(false);
+  try {
+    announceCommandPalette(`Comando executado: ${command.execute()}`);
+  } catch (error) {
+    element<HTMLButtonElement>("#open-command-palette").focus();
+    announceCommandPalette(
+      `Não foi possível executar o comando: ${error instanceof Error ? error.message : "erro seguro"}.`,
+    );
+  }
+}
+
+function setupCommandPaletteInterface(): void {
+  commandPaletteCommands = createCommandPaletteCommands();
+  assertCommandPaletteCommands(commandPaletteCommands);
+
+  const dialog = commandPaletteDialog();
+  const input = element<HTMLInputElement>("#command-palette-input");
+  const close = element<HTMLButtonElement>("#command-palette-close");
+  const results = element<HTMLUListElement>("#command-palette-results");
+  element<HTMLButtonElement>("#open-command-palette").addEventListener("click", openCommandPalette);
+  close.addEventListener("click", () => closeCommandPalette());
+  input.addEventListener("input", () => {
+    commandPaletteSelectedIndex = 0;
+    renderCommandPaletteResults();
+  });
+  results.addEventListener("click", (event) => {
+    const option = (event.target as HTMLElement).closest<HTMLElement>("[data-command-id]");
+    if (!option) return;
+    const index = commandPaletteResults.findIndex((command) => command.id === option.dataset.commandId);
+    if (index < 0) return;
+    commandPaletteSelectedIndex = index;
+    executeCommandPaletteSelection();
+  });
+  dialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeCommandPalette();
+  });
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) closeCommandPalette();
+  });
+  document.addEventListener("keydown", (event) => {
+    const keyboardShortcut = (event.ctrlKey || event.metaKey) && !event.altKey &&
+      event.code === "KeyK";
+    if (keyboardShortcut) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (commandPaletteOpen) closeCommandPalette();
+      else openCommandPalette();
+      return;
+    }
+    if (!commandPaletteOpen) return;
+
+    const closeButton = element<HTMLButtonElement>("#command-palette-close");
+    if (event.key === "Escape") {
+      closeCommandPalette();
+    } else if (event.key === "ArrowDown") {
+      commandPaletteSelectedIndex = moveCommandPaletteSelection(
+        commandPaletteSelectedIndex,
+        1,
+        commandPaletteResults.length,
+      );
+      renderCommandPaletteResults();
+    } else if (event.key === "ArrowUp") {
+      commandPaletteSelectedIndex = moveCommandPaletteSelection(
+        commandPaletteSelectedIndex,
+        -1,
+        commandPaletteResults.length,
+      );
+      renderCommandPaletteResults();
+    } else if (event.key === "Home") {
+      commandPaletteSelectedIndex = commandPaletteResults.length > 0 ? 0 : -1;
+      renderCommandPaletteResults();
+    } else if (event.key === "End") {
+      commandPaletteSelectedIndex = commandPaletteResults.length - 1;
+      renderCommandPaletteResults();
+    } else if (event.key === "Enter" && document.activeElement !== closeButton) {
+      executeCommandPaletteSelection();
+    } else if (
+      (event.key === "Enter" || event.key === " ") && document.activeElement === closeButton
+    ) {
+      closeCommandPalette();
+    } else if (event.key === "Tab") {
+      const current = document.activeElement;
+      if (event.shiftKey || current === closeButton) input.focus();
+      else closeButton.focus();
+    } else {
+      event.stopImmediatePropagation();
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+}
+
 function setupInterface(): void {
   element("#node-count").textContent = formatCount(brainData.nodes.length);
   element("#synapse-count").textContent = formatCount(brainData.synapses.length);
   setupUsageModeInterface();
+  setupCommandPaletteInterface();
 
   anatomyExplorer = new AnatomyExplorerController({
     search: element<HTMLInputElement>("#anatomy-search"),
@@ -1226,7 +1618,7 @@ function setupInterface(): void {
   }
   element<HTMLButtonElement>("#neuron-back").addEventListener("click", leaveNeuron);
   document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || activeView !== "neuron") return;
+    if (commandPaletteOpen || event.key !== "Escape" || activeView !== "neuron") return;
     event.preventDefault();
     leaveNeuron();
   });
@@ -1438,7 +1830,7 @@ function setupInterface(): void {
 
   document.addEventListener("keydown", (event) => {
     const target = event.target;
-    if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement ||
+    if (commandPaletteOpen || target instanceof HTMLInputElement || target instanceof HTMLSelectElement ||
         target instanceof HTMLTextAreaElement) return;
     if (!isUsageModeControlVisible(usageMode, "explorer")) return;
     const order = ["coronal", "sagittal", "axial", "oblique"] as const;
@@ -1776,6 +2168,7 @@ async function init(): Promise<void> {
       return searchAnatomicalCatalog(query);
     },
     async setCaptureMode(enabled) {
+      if (enabled) closeCommandPalette(false);
       captureMode = enabled;
       document.body.dataset.capture = String(enabled);
       if (enabled) {

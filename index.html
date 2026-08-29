@@ -30,6 +30,7 @@
         </select>
         <p id="usage-mode-status" class="sr-only" role="status" aria-live="polite">Modo guiado: navegação e leituras essenciais; o motor permanece o mesmo.</p>
       </div>
+      <button id="open-command-palette" class="command-palette-trigger" type="button" aria-haspopup="dialog" aria-controls="command-palette"><span>COMANDOS</span><kbd>CTRL K</kbd></button>
       <div class="runtime"><span class="runtime-dot"></span><span id="runtime-status">INICIALIZANDO MOTOR</span></div>
     </header>
 
@@ -57,7 +58,7 @@
         <button id="recover-render-profile" class="presentation-reset" type="button" disabled>RECUPERAR ENHANCED</button>
         <p class="cut-shortcuts">O governador reduz o perfil após pressão sustentada. A recuperação é manual e só libera após a janela de histerese.</p>
       </details>
-      <details data-usage-mode-minimum="explorer">
+      <details id="presentation-effects-panel" data-usage-mode-minimum="explorer">
         <summary>PELÍCULA & CORTE</summary>
         <div class="control-group compact">
           <label for="material-profile"><span>Materialidade</span><span id="material-profile-status" class="material-profile-status" role="status" aria-live="polite">Esquemática</span></label>
@@ -496,6 +497,24 @@
         <button id="btn-intensity-up" type="button" aria-label="Aumentar estímulo">+</button>
       </div>
     </section>
+
+    <dialog id="command-palette" class="command-palette" role="dialog" aria-modal="true" aria-labelledby="command-palette-title">
+      <div class="command-palette-card">
+        <div class="command-palette-heading">
+          <div>
+            <div class="eyebrow">UI-032 · NAVEGAÇÃO POR TECLADO</div>
+            <h2 id="command-palette-title">Comandos</h2>
+          </div>
+          <button id="command-palette-close" class="command-palette-close" type="button">ESC · FECHAR</button>
+        </div>
+        <label class="sr-only" for="command-palette-input">Filtrar comandos</label>
+        <input id="command-palette-input" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="command-palette-results" aria-describedby="command-palette-status" autocomplete="off" spellcheck="false" placeholder="Buscar vista, corte, perfil ou modo" />
+        <p id="command-palette-status" class="command-palette-status" role="status" aria-live="polite">Digite para filtrar comandos.</p>
+        <ul id="command-palette-results" class="command-palette-results" role="listbox" aria-label="Resultados de comandos"></ul>
+        <p class="command-palette-hint">↑ ↓ selecionar · Enter executar · Esc fechar</p>
+      </div>
+    </dialog>
+    <p id="command-palette-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
 
     <div class="interaction-hint">ARRASTE PARA ORBITAR · SCROLL PARA APROXIMAR</div>
   </body>

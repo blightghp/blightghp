@@ -134,6 +134,206 @@ try {
     throw new Error(`seletor de modo não cabe no móvel: ${JSON.stringify(mobileUsageMode)}`);
   }
   await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  const paletteCommands = await page.evaluate(() => {
+    const trigger = document.querySelector("#open-command-palette");
+    const dialog = document.querySelector("#command-palette");
+    const input = document.querySelector("#command-palette-input");
+    const selector = document.querySelector("#usage-mode");
+    const cut = document.querySelector("#cut-orientation");
+    if (
+      !(trigger instanceof HTMLButtonElement) ||
+      !(dialog instanceof HTMLDialogElement) ||
+      !(input instanceof HTMLInputElement) ||
+      !(selector instanceof HTMLSelectElement) ||
+      !(cut instanceof HTMLSelectElement)
+    ) {
+      throw new Error("paleta de comandos indisponível");
+    }
+    const hashFields = [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash",
+    ];
+    const press = (key, options = {}) => input.dispatchEvent(new KeyboardEvent("keydown", {
+      key,
+      bubbles: true,
+      cancelable: true,
+      ...options,
+    }));
+    const choose = (query, id) => {
+      trigger.click();
+      if (!dialog.open) throw new Error("paleta não abriu");
+      input.value = query;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      const options = [...document.querySelectorAll("#command-palette-results [role='option']")];
+      if (options.length !== 1 || options[0].getAttribute("data-command-id") !== id) {
+        throw new Error(`resultado inesperado para ${query}: ${options.map((option) => option.getAttribute("data-command-id")).join(",")}`);
+      }
+      press("Enter");
+      if (dialog.open) throw new Error(`comando não fechou a paleta: ${id}`);
+      return document.activeElement?.id;
+    };
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    trigger.click();
+    const guidedCommands = [...document.querySelectorAll("#command-palette-results [role='option']")]
+      .map((option) => option.getAttribute("data-command-id"));
+    press("Escape");
+    const viewFocus = choose("abrir laminas", "view-laminar");
+    const explorerFocus = choose("usar modo explorador", "mode-explorer");
+    const anatomyFocus = choose("buscar estrutura anatomica", "anatomy-search");
+    const cutFocus = choose("ativar corte coronal", "cut-coronal");
+    const cameraFocus = choose("restaurar camera", "camera-reset-cut");
+    const baselineFocus = choose("perfil grafico baseline", "render-profile-baseline");
+    const enhancedFocus = choose("perfil grafico enhanced", "render-profile-enhanced");
+    choose("desativar corte", "cut-disable");
+    const guidedFocus = choose("usar modo guiado", "mode-guided");
+    const after = window.__BRAIN_ENGINE__.diagnostics();
+    return {
+      before,
+      after,
+      hashFields,
+      guidedCommands,
+      viewFocus,
+      explorerFocus,
+      anatomyFocus,
+      cutFocus,
+      cameraFocus,
+      baselineFocus,
+      enhancedFocus,
+      guidedFocus,
+      mode: selector.value,
+      cut: cut.value,
+      activeTab: document.querySelector("[role='tab'][aria-selected='true']")?.id,
+      announcement: document.querySelector("#command-palette-announcement")?.textContent,
+    };
+  });
+  if (
+    paletteCommands.guidedCommands.includes("anatomy-search") ||
+    paletteCommands.guidedCommands.some((id) => id?.startsWith("cut-")) ||
+    paletteCommands.viewFocus !== "tab-laminar" ||
+    paletteCommands.explorerFocus !== "usage-mode" ||
+    paletteCommands.anatomyFocus !== "anatomy-search" ||
+    paletteCommands.cutFocus !== "cut-orientation" ||
+    paletteCommands.cameraFocus !== "reset-cut-camera" ||
+    paletteCommands.baselineFocus !== "render-profile" ||
+    paletteCommands.enhancedFocus !== "render-profile" ||
+    paletteCommands.guidedFocus !== "usage-mode" ||
+    paletteCommands.mode !== "guided" ||
+    paletteCommands.cut !== "none" ||
+    paletteCommands.activeTab !== "tab-laminar" ||
+    !paletteCommands.announcement?.startsWith("Comando executado: Modo Guiado") ||
+    paletteCommands.hashFields.some((field) =>
+      paletteCommands.before[field] !== paletteCommands.after[field],
+    )
+  ) {
+    throw new Error(`paleta de comandos inválida: ${JSON.stringify(paletteCommands)}`);
+  }
+  await page.focus("#open-command-palette");
+  await page.keyboard.down("Control");
+  await page.keyboard.press("KeyK");
+  await page.keyboard.up("Control");
+  await page.waitForFunction(
+    () => document.querySelector("#command-palette")?.open === true &&
+      document.activeElement?.id === "command-palette-input",
+    { timeout: 5_000 },
+  );
+  const paletteAccessibility = await page.evaluate(() => ({
+    role: document.querySelector("#command-palette")?.getAttribute("role"),
+    modal: document.querySelector("#command-palette")?.getAttribute("aria-modal"),
+    expanded: document.querySelector("#command-palette-input")?.getAttribute("aria-expanded"),
+    controls: document.querySelector("#command-palette-input")?.getAttribute("aria-controls"),
+    initialActive: document.querySelector("#command-palette-input")?.getAttribute("aria-activedescendant"),
+  }));
+  await page.keyboard.press("ArrowDown");
+  const movedPaletteOption = await page.evaluate(
+    () => document.querySelector("#command-palette-input")?.getAttribute("aria-activedescendant"),
+  );
+  await page.keyboard.press("End");
+  const lastPaletteOption = await page.evaluate(
+    () => document.querySelector("#command-palette-input")?.getAttribute("aria-activedescendant"),
+  );
+  await page.keyboard.press("Home");
+  const firstPaletteOption = await page.evaluate(
+    () => document.querySelector("#command-palette-input")?.getAttribute("aria-activedescendant"),
+  );
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobilePalette = await page.evaluate(() => {
+    const card = document.querySelector(".command-palette-card");
+    if (!(card instanceof HTMLElement)) return undefined;
+    const bounds = card.getBoundingClientRect();
+    return {
+      visible: getComputedStyle(card).display !== "none",
+      withinViewport: bounds.left >= 0 && bounds.right <= window.innerWidth,
+    };
+  });
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  await page.keyboard.type("resultado ausente");
+  await page.waitForFunction(
+    () => document.querySelectorAll("#command-palette-results [role='option']").length === 0,
+    { timeout: 5_000 },
+  );
+  await page.keyboard.press("Enter");
+  const emptyPalette = await page.evaluate(() => ({
+    open: document.querySelector("#command-palette")?.open,
+    status: document.querySelector("#command-palette-status")?.textContent,
+  }));
+  await page.keyboard.press("Control+A");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("laminas");
+  await page.waitForFunction(
+    () => document.querySelectorAll("#command-palette-results [role='option']").length === 1,
+    { timeout: 5_000 },
+  );
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(
+    () => !document.querySelector("#command-palette")?.open &&
+      document.querySelector("#tab-laminar")?.getAttribute("aria-selected") === "true",
+    { timeout: 5_000 },
+  );
+  if (
+    paletteAccessibility.role !== "dialog" ||
+    paletteAccessibility.modal !== "true" ||
+    paletteAccessibility.expanded !== "true" ||
+    paletteAccessibility.controls !== "command-palette-results" ||
+    !paletteAccessibility.initialActive ||
+    !movedPaletteOption || movedPaletteOption === paletteAccessibility.initialActive ||
+    !lastPaletteOption || lastPaletteOption === firstPaletteOption ||
+    firstPaletteOption !== paletteAccessibility.initialActive ||
+    emptyPalette.open !== true || emptyPalette.status !== "Nenhum comando disponível." ||
+    !mobilePalette?.visible || !mobilePalette.withinViewport
+  ) {
+    throw new Error(`acessibilidade da paleta inválida: ${JSON.stringify({ paletteAccessibility, movedPaletteOption, lastPaletteOption, firstPaletteOption, emptyPalette, mobilePalette })}`);
+  }
+  const metaPaletteOpen = await page.evaluate(() => {
+    const trigger = document.querySelector("#open-command-palette");
+    if (!(trigger instanceof HTMLElement)) return false;
+    trigger.dispatchEvent(new KeyboardEvent("keydown", {
+      key: "k",
+      code: "KeyK",
+      metaKey: true,
+      bubbles: true,
+      cancelable: true,
+    }));
+    return document.querySelector("#command-palette")?.open === true;
+  });
+  if (!metaPaletteOpen) throw new Error("atalho Cmd+K não abriu a paleta");
+  await page.evaluate(() => document.querySelector("#command-palette-close")?.click());
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("neuron"));
+  await page.focus("#open-command-palette");
+  await page.keyboard.down("Control");
+  await page.keyboard.press("KeyK");
+  await page.keyboard.up("Control");
+  await page.waitForFunction(() => document.querySelector("#command-palette")?.open === true);
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(
+    () => !document.querySelector("#command-palette")?.open &&
+      document.querySelector("#tab-neuron")?.getAttribute("aria-selected") === "true" &&
+      document.activeElement?.id === "open-command-palette",
+    { timeout: 5_000 },
+  );
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
   const materialProfiles = await page.evaluate(
     () => window.__BRAIN_ENGINE__.materialProfileAudit(),
   );
