@@ -434,6 +434,83 @@ a:focus-visible {
 .presentation-panel[data-slab="false"] #cut-thickness,
 .presentation-panel[data-slab="false"] label[for="cut-thickness"] { opacity: .42; }
 
+.view-context-panel {
+  margin-top: 9px;
+  padding: 8px 0 2px;
+  border-top: 1px solid rgba(91, 184, 255, .16);
+}
+
+.presentation-panel .view-context-panel > summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 0;
+}
+
+.presentation-panel .view-context-panel > summary span:last-child {
+  color: #527fa7;
+  font-size: 7px;
+  letter-spacing: .06em;
+}
+
+.view-context-facts {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0 0;
+}
+
+.view-context-facts div {
+  padding-top: 6px;
+  border-top: 1px solid rgba(91, 158, 228, .12);
+}
+
+.view-context-facts dt,
+.view-context-selection h2,
+.view-context-selection b {
+  color: #527fa7;
+  font: 600 7px/1.25 "JetBrains Mono", monospace;
+  letter-spacing: .08em;
+}
+
+.view-context-facts dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  color: #a9c5dc;
+  font: 500 8px/1.45 "JetBrains Mono", monospace;
+}
+
+.view-context-selection {
+  margin-top: 11px;
+  padding: 9px 0 2px;
+  border-top: 1px solid rgba(91, 158, 228, .18);
+}
+
+.view-context-selection h2 {
+  margin: 0 0 5px;
+}
+
+.view-context-selection strong {
+  display: block;
+  color: #ddecff;
+  font: 600 8px/1.35 "JetBrains Mono", monospace;
+}
+
+.view-context-selection code {
+  display: block;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+  color: #6e9abf;
+  font: 500 6px/1.35 "JetBrains Mono", monospace;
+}
+
+.view-context-selection p {
+  margin: 7px 0 0;
+  color: #789ab7;
+  font: 500 7px/1.45 "JetBrains Mono", monospace;
+}
+
+.view-context-selection b { color: #77bde9; }
+
 .material-profile-status {
   padding: 2px 5px;
   border: 1px solid rgba(85, 166, 244, .18);
@@ -692,6 +769,17 @@ body[data-high-contrast="true"] .anatomy-focus-kicker,
 body[data-high-contrast="true"] .anatomy-focus-facts small,
 body[data-high-contrast="true"] .anatomy-focus-facts b,
 body[data-high-contrast="true"] .anatomy-focus-representation {
+  color: #fff;
+}
+
+body[data-high-contrast="true"] .view-context-facts dt,
+body[data-high-contrast="true"] .view-context-facts dd,
+body[data-high-contrast="true"] .view-context-selection h2,
+body[data-high-contrast="true"] .view-context-selection strong,
+body[data-high-contrast="true"] .view-context-selection code,
+body[data-high-contrast="true"] .view-context-selection p,
+body[data-high-contrast="true"] .view-context-selection b,
+body[data-high-contrast="true"] .presentation-panel .view-context-panel > summary span:last-child {
   color: #fff;
 }
 

@@ -8,6 +8,7 @@ import { createServer } from "vite";
 import packageManifest from "../package.json" with { type: "json" };
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const gitSafeDirectory = root.replaceAll("\\", "/");
 const outputDirectory = process.env.BRAIN_VASCULAR_AUDIT_DIR
   ? path.resolve(process.env.BRAIN_VASCULAR_AUDIT_DIR)
   : path.join(root, "artifacts", "vascular-audit");
@@ -20,6 +21,13 @@ const hashFields = [
 ];
 const expectedViews = ["cell", "electricity", "laminar", "neuron", "overview", "synapse"];
 const captures = [];
+
+function gitOutput(args) {
+  return execFileSync("git", ["-c", `safe.directory=${gitSafeDirectory}`, ...args], {
+    cwd: root,
+    encoding: "utf8",
+  }).trim();
+}
 
 function assertHashes(label, baseline, candidate) {
   const changed = hashFields.filter((field) => baseline[field] !== candidate[field]);
@@ -99,6 +107,10 @@ try {
   );
   await page.evaluate(async () => {
     await window.__BRAIN_ENGINE__.setCaptureMode(true);
+    const usageMode = document.querySelector("#usage-mode");
+    if (!(usageMode instanceof HTMLSelectElement)) throw new Error("modo de uso ausente");
+    usageMode.value = "explorer";
+    usageMode.dispatchEvent(new Event("change", { bubbles: true }));
     document.body.dataset.capture = "false";
   });
   const baseline = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
@@ -146,16 +158,23 @@ try {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       return {
         selectedId,
-        explorer: window.__BRAIN_ENGINE__.anatomyCatalogAudit().explorer,
-        diagnostics: window.__BRAIN_ENGINE__.diagnostics(),
-        detailsVisible: !document.querySelector("#vascular-selection-details")?.hidden,
-        expectedView,
+      explorer: window.__BRAIN_ENGINE__.anatomyCatalogAudit().explorer,
+      diagnostics: window.__BRAIN_ENGINE__.diagnostics(),
+      detailsVisible: !document.querySelector("#vascular-selection-details")?.hidden,
+      viewContext: {
+        selectionId: document.querySelector("#view-context-selection-id")?.textContent,
+        hypothesis: document.querySelector("#view-context-selection-hypothesis")?.textContent,
+        limitation: document.querySelector("#view-context-selection-limitation")?.textContent,
+      },
+      expectedView,
       };
     }, { id: entryId, expectedView: view });
     assertHashes(filename, baseline, evidence.diagnostics);
     if (
       evidence.selectedId !== entryId || evidence.explorer?.selectedId !== entryId ||
-      evidence.explorer?.activeView !== view || !evidence.detailsVisible
+      evidence.explorer?.activeView !== view || !evidence.detailsVisible ||
+      evidence.viewContext.selectionId !== entryId ||
+      !evidence.viewContext.hypothesis?.trim() || !evidence.viewContext.limitation?.trim()
     ) {
       throw new Error(`seleção vascular divergente: ${JSON.stringify(evidence)}`);
     }
@@ -211,11 +230,12 @@ try {
       documentWidth: document.documentElement.scrollWidth,
       panelVisible: Boolean(panel && panel.width > 0 && panel.right <= window.innerWidth + 1),
       vascularVisible: Boolean(vascular && vascular.width > 0 && vascular.right <= window.innerWidth + 1),
+      viewContextVisible: Boolean(document.querySelector("#view-context-panel")?.getClientRects().length),
     };
   });
   if (
     mobileLayout.documentWidth > mobileLayout.viewportWidth + 1 ||
-    !mobileLayout.panelVisible || !mobileLayout.vascularVisible
+    !mobileLayout.panelVisible || !mobileLayout.vascularVisible || !mobileLayout.viewContextVisible
   ) {
     throw new Error(`layout móvel vascular inválido: ${JSON.stringify(mobileLayout)}`);
   }
@@ -235,11 +255,8 @@ try {
     schemaVersion: 1,
     capturedAt: new Date().toISOString(),
     source: {
-      commit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
-      worktreeDirty: execFileSync("git", ["status", "--porcelain"], {
-        cwd: root,
-        encoding: "utf8",
-      }).trim().length > 0,
+      commit: gitOutput(["rev-parse", "HEAD"]),
+      worktreeDirty: gitOutput(["status", "--porcelain"]).length > 0,
       productVersion: packageManifest.version,
       command: "npm run audit:vascular",
     },

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-08-14T01:18:35.921Z",
+  "capturedAt": "2026-08-29T12:49:10.479Z",
   "source": {
-    "commit": "8267b97baec30894c376d1819f3a9f5c1e1cabec",
+    "commit": "5554d4563711692a620cde83872478404b1d3ce5",
     "worktreeDirty": true,
     "productVersion": "0.9.0",
     "command": "npm run audit:vascular"
@@ -60,11 +60,11 @@
   "catalog": {
     "schemaVersion": 1,
     "catalogId": "brain-pro-anatomy",
-    "version": "1.1.0",
-    "hash": "8ff191139a59e518",
+    "version": "1.2.0",
+    "hash": "320a1275724172b1",
     "entries": 76,
     "roots": 1,
-    "sources": 6,
+    "sources": 7,
     "transforms": 6,
     "externalAssets": 0,
     "evidenceLevels": {
@@ -265,11 +265,11 @@
         "catalog": {
           "schemaVersion": 1,
           "catalogId": "brain-pro-anatomy",
-          "version": "1.1.0",
-          "hash": "8ff191139a59e518",
+          "version": "1.2.0",
+          "hash": "320a1275724172b1",
           "entries": 76,
           "roots": 1,
-          "sources": 6,
+          "sources": 7,
           "transforms": 6,
           "externalAssets": 0,
           "evidenceLevels": {
@@ -340,11 +340,11 @@
         "catalog": {
           "schemaVersion": 1,
           "catalogId": "brain-pro-anatomy",
-          "version": "1.1.0",
-          "hash": "8ff191139a59e518",
+          "version": "1.2.0",
+          "hash": "320a1275724172b1",
           "entries": 76,
           "roots": 1,
-          "sources": 6,
+          "sources": 7,
           "transforms": 6,
           "externalAssets": 0,
           "evidenceLevels": {
@@ -415,11 +415,11 @@
         "catalog": {
           "schemaVersion": 1,
           "catalogId": "brain-pro-anatomy",
-          "version": "1.1.0",
-          "hash": "8ff191139a59e518",
+          "version": "1.2.0",
+          "hash": "320a1275724172b1",
           "entries": 76,
           "roots": 1,
-          "sources": 6,
+          "sources": 7,
           "transforms": 6,
           "externalAssets": 0,
           "evidenceLevels": {
@@ -468,11 +468,11 @@
         "catalog": {
           "schemaVersion": 1,
           "catalogId": "brain-pro-anatomy",
-          "version": "1.1.0",
-          "hash": "8ff191139a59e518",
+          "version": "1.2.0",
+          "hash": "320a1275724172b1",
           "entries": 76,
           "roots": 1,
-          "sources": 6,
+          "sources": 7,
           "transforms": 6,
           "externalAssets": 0,
           "evidenceLevels": {
@@ -640,7 +640,8 @@
     "viewportWidth": 390,
     "documentWidth": 390,
     "panelVisible": true,
-    "vascularVisible": true
+    "vascularVisible": true,
+    "viewContextVisible": true
   },
   "captures": [
     "01-overview-arterial.png",

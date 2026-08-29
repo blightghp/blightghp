@@ -6,6 +6,13 @@ import { auditWorkerLifecycle } from "./worker_lifecycle_audit.js";
 
 const EXPECTED_R09F_MATERIALS = 25;
 const EXPECTED_R10B_VASCULAR_MATERIALS = 12;
+const PRESENTATION_HASH_FIELDS = [
+  "stateHash",
+  "corticothalamicHash",
+  "cellPatchHash",
+  "chemicalHash",
+  "cellSpikeEventHash",
+];
 
 const server = await createServer({
   root: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
@@ -336,7 +343,6 @@ try {
     { timeout: 5_000 },
   );
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
-  const ui033Before = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   await page.select("#usage-mode", "explorer");
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("laminar"));
   await page.evaluate(() => {
@@ -435,7 +441,14 @@ try {
     };
   });
   await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
-  const ui033After = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
+  const ui033HashInvariant = await page.evaluate(() => {
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    window.__BRAIN_ENGINE__.setView("synapse");
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte");
+    window.__BRAIN_ENGINE__.setHighContrast(true);
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    return { before, after: window.__BRAIN_ENGINE__.diagnostics() };
+  });
   if (
     !keyboardAnatomyPreview.calloutVisible ||
     keyboardAnatomyPreview.id !== "brain-pro:anatomy/cortical-layer-4" ||
@@ -460,11 +473,97 @@ try {
     highContrastCallout.calloutProvenance !== "TOPOLOGY" ||
     highContrastCallout.selectedProvenance !== "TOPOLOGY" ||
     (!mobileAnatomyCallout?.hidden && !mobileAnatomyCallout.withinViewport) ||
-    hashFields.some((field) => ui033Before[field] !== ui033After[field])
+    PRESENTATION_HASH_FIELDS.some(
+      (field) => ui033HashInvariant.before[field] !== ui033HashInvariant.after[field],
+    )
   ) {
-    throw new Error(`UI-033 inválida: ${JSON.stringify({ keyboardAnatomyPreview, confirmedKeyboardSelection, selectedBeforePointerPreview, pointerAnatomyPreview, highContrastCallout, mobileAnatomyCallout, ui033Before, ui033After })}`);
+    throw new Error(`UI-033 inválida: ${JSON.stringify({ keyboardAnatomyPreview, confirmedKeyboardSelection, selectedBeforePointerPreview, pointerAnatomyPreview, highContrastCallout, mobileAnatomyCallout, ui033HashInvariant })}`);
   }
   await page.select("#usage-mode", "guided");
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
+  const ui034Views = [
+    ["overview", "VISÃO GERAL"],
+    ["laminar", "LÂMINAS"],
+    ["cell", "CÉLULA"],
+    ["neuron", "NEURÔNIO"],
+    ["electricity", "ELETRICIDADE"],
+    ["synapse", "SINAPSE"],
+  ];
+  const ui034Contexts = await page.evaluate(async (views) => {
+    const contexts = {};
+    for (const [view, label] of views) {
+      window.__BRAIN_ENGINE__.setView(view);
+      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+      contexts[view] = {
+        expectedLabel: label,
+        open: document.querySelector("#view-context-panel")?.open,
+        label: document.querySelector("#view-context-view")?.textContent,
+        model: document.querySelector("#view-context-model")?.textContent,
+        unit: document.querySelector("#view-context-unit")?.textContent,
+        hypothesis: document.querySelector("#view-context-hypothesis")?.textContent,
+        limitation: document.querySelector("#view-context-limitation")?.textContent,
+      };
+    }
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte");
+    await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+    return {
+      contexts,
+      selection: {
+        hidden: document.querySelector("#view-context-selection")?.hidden,
+        label: document.querySelector("#view-context-selection-name")?.textContent,
+        id: document.querySelector("#view-context-selection-id")?.textContent,
+        hypothesis: document.querySelector("#view-context-selection-hypothesis")?.textContent,
+        limitation: document.querySelector("#view-context-selection-limitation")?.textContent,
+        status: document.querySelector("#view-context-status")?.textContent,
+      },
+    };
+  }, ui034Views);
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobileViewContext = await page.evaluate(() => {
+    const panel = document.querySelector("#view-context-panel");
+    if (!(panel instanceof HTMLElement)) return undefined;
+    const bounds = panel.getBoundingClientRect();
+    return {
+      visible: getComputedStyle(panel).display !== "none",
+      withinViewport: bounds.left >= 0 && bounds.right <= window.innerWidth &&
+        bounds.top >= 0 && bounds.bottom <= window.innerHeight,
+      documentWidth: document.documentElement.scrollWidth,
+    };
+  });
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  const ui034PresentationInvariant = await page.evaluate(() => {
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    for (const view of ["overview", "laminar", "cell", "neuron", "electricity", "synapse"]) {
+      window.__BRAIN_ENGINE__.setView(view);
+    }
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte");
+    window.__BRAIN_ENGINE__.setHighContrast(true);
+    const modelColor = getComputedStyle(document.querySelector("#view-context-model")).color;
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    return { before, after: window.__BRAIN_ENGINE__.diagnostics(), modelColor };
+  });
+  const incompleteViewContext = Object.values(ui034Contexts.contexts).find((context) =>
+    !context.open || context.label !== context.expectedLabel ||
+    [context.model, context.unit, context.hypothesis, context.limitation]
+      .some((value) => !value?.trim())
+  );
+  if (
+    incompleteViewContext ||
+    ui034Contexts.selection.hidden ||
+    ui034Contexts.selection.label !== "Pericito ilustrativo" ||
+    ui034Contexts.selection.id !== "brain-pro:anatomy/pericyte" ||
+    !ui034Contexts.selection.hypothesis?.includes("pericito") ||
+    !ui034Contexts.selection.limitation?.includes("Não há fluxo") ||
+    !ui034Contexts.selection.status?.includes("Foco Pericito ilustrativo") ||
+    !mobileViewContext?.visible || !mobileViewContext.withinViewport ||
+    mobileViewContext.documentWidth > 390 ||
+    ui034PresentationInvariant.modelColor !== "rgb(255, 255, 255)" ||
+    PRESENTATION_HASH_FIELDS.some(
+      (field) => ui034PresentationInvariant.before[field] !== ui034PresentationInvariant.after[field],
+    )
+  ) {
+    throw new Error(`UI-034 inválida: ${JSON.stringify({ ui034Contexts, mobileViewContext, ui034PresentationInvariant })}`);
+  }
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
   const materialProfiles = await page.evaluate(
     () => window.__BRAIN_ENGINE__.materialProfileAudit(),

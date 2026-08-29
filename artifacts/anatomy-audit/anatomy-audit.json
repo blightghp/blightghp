@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-08-13T22:56:14.725Z",
+  "capturedAt": "2026-08-29T12:48:20.747Z",
   "source": {
-    "commit": "f32532f100f15f8574c2561f0d1ed4cb91816e72",
+    "commit": "5554d4563711692a620cde83872478404b1d3ce5",
     "worktreeDirty": true,
     "productVersion": "0.9.0",
     "command": "npm run audit:anatomy"
@@ -60,16 +60,16 @@
   "catalog": {
     "schemaVersion": 1,
     "catalogId": "brain-pro-anatomy",
-    "version": "1.0.0",
-    "hash": "c7ae661e5b2570cb",
-    "entries": 32,
+    "version": "1.2.0",
+    "hash": "320a1275724172b1",
+    "entries": 76,
     "roots": 1,
-    "sources": 5,
-    "transforms": 5,
+    "sources": 7,
+    "transforms": 6,
     "externalAssets": 0,
     "evidenceLevels": {
       "PROCEDURAL": 6,
-      "ILLUSTRATIVE": 6,
+      "ILLUSTRATIVE": 50,
       "DIDACTIC": 12,
       "FENOMENOLOGICAL": 2,
       "MODEL_BOUND": 6,
@@ -81,40 +81,40 @@
   },
   "views": {
     "overview": {
-      "totalRenderableObjects": 17,
-      "boundObjects": 16,
+      "totalRenderableObjects": 20,
+      "boundObjects": 19,
       "explicitlyNonAnatomicalObjects": 1,
-      "catalogEntriesReferenced": 5,
+      "catalogEntriesReferenced": 8,
       "missingDeclarations": [],
       "unknownEntryIds": [],
       "missingEvidence": [],
       "contractReady": true
     },
     "laminar": {
-      "totalRenderableObjects": 44,
-      "boundObjects": 29,
+      "totalRenderableObjects": 46,
+      "boundObjects": 31,
       "explicitlyNonAnatomicalObjects": 15,
-      "catalogEntriesReferenced": 9,
+      "catalogEntriesReferenced": 11,
       "missingDeclarations": [],
       "unknownEntryIds": [],
       "missingEvidence": [],
       "contractReady": true
     },
     "cell": {
-      "totalRenderableObjects": 5,
-      "boundObjects": 2,
+      "totalRenderableObjects": 7,
+      "boundObjects": 4,
       "explicitlyNonAnatomicalObjects": 3,
-      "catalogEntriesReferenced": 2,
+      "catalogEntriesReferenced": 4,
       "missingDeclarations": [],
       "unknownEntryIds": [],
       "missingEvidence": [],
       "contractReady": true
     },
     "neuron": {
-      "totalRenderableObjects": 10,
-      "boundObjects": 4,
+      "totalRenderableObjects": 11,
+      "boundObjects": 5,
       "explicitlyNonAnatomicalObjects": 6,
-      "catalogEntriesReferenced": 4,
+      "catalogEntriesReferenced": 5,
       "missingDeclarations": [],
       "unknownEntryIds": [],
       "missingEvidence": [],
@@ -131,10 +131,10 @@
       "contractReady": true
     },
     "synapse": {
-      "totalRenderableObjects": 11,
-      "boundObjects": 5,
+      "totalRenderableObjects": 15,
+      "boundObjects": 9,
       "explicitlyNonAnatomicalObjects": 6,
-      "catalogEntriesReferenced": 5,
+      "catalogEntriesReferenced": 9,
       "missingDeclarations": [],
       "unknownEntryIds": [],
       "missingEvidence": [],
@@ -152,6 +152,62 @@
       "brain-pro:anatomy/soma"
     ]
   },
+  "viewContextEvidence": [
+    {
+      "view": "cell",
+      "open": true,
+      "label": "CÉLULA",
+      "model": "MOD-040/050 · patch de 12 células AdEx e receptores.",
+      "unit": "V, A, Hz e s no motor; interface em mV, pA e ms.",
+      "hypothesis": "O patch substitui a contribuição macro no vértice selecionado.",
+      "limitation": "Sem canais dendríticos ativos, população calibrada ou amostra histológica."
+    },
+    {
+      "view": "electricity",
+      "open": true,
+      "label": "ELETRICIDADE",
+      "model": "MOD-040/050/091 · prancha de apresentação do patch.",
+      "unit": "mV, pA, nS e ms.",
+      "hypothesis": "Correntes e condutância derivada leem o snapshot; a prancha não calcula circuito.",
+      "limitation": "Esquema didático; atraso e ganho macro não são atributos celulares."
+    },
+    {
+      "view": "laminar",
+      "open": true,
+      "label": "LÂMINAS",
+      "model": "MOD-020/030 · circuito L1–L6, relé talâmico e TRN.",
+      "unit": "E/I, relé, TRN e rebote em [0,1] adimensional.",
+      "hypothesis": "Relé, TRN e rebote representam relações didáticas, não massa neural estimada.",
+      "limitation": "Sem canais de Ca²⁺ tipo T, morfologia ou calibração clínica."
+    },
+    {
+      "view": "neuron",
+      "open": true,
+      "label": "NEURÔNIO",
+      "model": "MOD-040/091 · uma célula AdEx e eventos carimbados.",
+      "unit": "V, A e s do snapshot; interface em mV, pA e ms.",
+      "hypothesis": "O gradiente apresenta somente os três potenciais publicados.",
+      "limitation": "Morfologia ilustrativa; sem tipo celular real ou condução ativa."
+    },
+    {
+      "view": "overview",
+      "open": true,
+      "label": "VISÃO GERAL",
+      "model": "MOD-001/010 · rede abstrata e campo E/I procedural.",
+      "unit": "Proxies/u.a. por vértice; taxa exibida em Hz por nó.",
+      "hypothesis": "Entradas do protocolo alteram disparos, atrasos e estados observáveis.",
+      "limitation": "Topologia procedural; não é atlas parcelado, indivíduo ou calibração clínica."
+    },
+    {
+      "view": "synapse",
+      "open": true,
+      "label": "SINAPSE",
+      "model": "MOD-060/070/080/081 · microdomínio químico representativo.",
+      "unit": "mol, mol·m⁻³ e fração; interface exibe amol e porcentagem.",
+      "hypothesis": "Concentrações, matéria e ocupações são publicadas pelo Rust.",
+      "limitation": "Fenda e escala ~1 µm são didáticas; não representa todas as sinapses nem ultraestrutura."
+    }
+  ],
   "uiSearch": {
     "count": 1,
     "label": "Tálamo didático",
@@ -160,7 +216,12 @@
   "uiSelection": {
     "selectedId": "brain-pro:anatomy/thalamus",
     "selectedTab": "laminar",
-    "liveRegion": "Tálamo didático selecionado; evidência DIDACTIC."
+    "liveRegion": "Tálamo didático selecionado; evidência DIDACTIC.",
+    "viewContext": {
+      "selectionId": "brain-pro:anatomy/thalamus",
+      "hypothesis": "Agrupa relé e TRN do contrato córtico-talâmico.",
+      "limitation": "Não representa núcleos talâmicos anatômicos individuais."
+    }
   },
   "selections": [
     {
@@ -172,16 +233,16 @@
         "catalog": {
           "schemaVersion": 1,
           "catalogId": "brain-pro-anatomy",
-          "version": "1.0.0",
-          "hash": "c7ae661e5b2570cb",
-          "entries": 32,
+          "version": "1.2.0",
+          "hash": "320a1275724172b1",
+          "entries": 76,
           "roots": 1,
-          "sources": 5,
-          "transforms": 5,
+          "sources": 7,
+          "transforms": 6,
           "externalAssets": 0,
           "evidenceLevels": {
             "PROCEDURAL": 6,
-            "ILLUSTRATIVE": 6,
+            "ILLUSTRATIVE": 50,
             "DIDACTIC": 12,
             "FENOMENOLOGICAL": 2,
             "MODEL_BOUND": 6,
@@ -201,7 +262,42 @@
           "brain-pro:anatomy/cerebral-hemisphere-right",
           "brain-pro:anatomy/cerebellum",
           "brain-pro:anatomy/brainstem",
-          "brain-pro:anatomy/neocortex"
+          "brain-pro:anatomy/neocortex",
+          "brain-pro:anatomy/vascular-system",
+          "brain-pro:anatomy/arterial-tree",
+          "brain-pro:anatomy/venous-tree",
+          "brain-pro:anatomy/internal-carotid-artery-left",
+          "brain-pro:anatomy/internal-carotid-artery-right",
+          "brain-pro:anatomy/vertebral-artery-left",
+          "brain-pro:anatomy/vertebral-artery-right",
+          "brain-pro:anatomy/basilar-artery",
+          "brain-pro:anatomy/circle-of-willis",
+          "brain-pro:anatomy/anterior-communicating-artery",
+          "brain-pro:anatomy/posterior-communicating-artery-left",
+          "brain-pro:anatomy/posterior-communicating-artery-right",
+          "brain-pro:anatomy/anterior-cerebral-artery-left",
+          "brain-pro:anatomy/anterior-cerebral-artery-right",
+          "brain-pro:anatomy/middle-cerebral-artery-left",
+          "brain-pro:anatomy/middle-cerebral-artery-right",
+          "brain-pro:anatomy/posterior-cerebral-artery-left",
+          "brain-pro:anatomy/posterior-cerebral-artery-right",
+          "brain-pro:anatomy/pial-arterial-network",
+          "brain-pro:anatomy/superficial-cortical-vein",
+          "brain-pro:anatomy/deep-cerebral-vein",
+          "brain-pro:anatomy/internal-cerebral-vein-left",
+          "brain-pro:anatomy/internal-cerebral-vein-right",
+          "brain-pro:anatomy/basal-vein",
+          "brain-pro:anatomy/great-cerebral-vein",
+          "brain-pro:anatomy/superior-sagittal-sinus",
+          "brain-pro:anatomy/inferior-sagittal-sinus",
+          "brain-pro:anatomy/straight-sinus",
+          "brain-pro:anatomy/confluence-of-sinuses",
+          "brain-pro:anatomy/transverse-sinus-left",
+          "brain-pro:anatomy/transverse-sinus-right",
+          "brain-pro:anatomy/sigmoid-sinus-left",
+          "brain-pro:anatomy/sigmoid-sinus-right",
+          "brain-pro:anatomy/internal-jugular-vein-left",
+          "brain-pro:anatomy/internal-jugular-vein-right"
         ]
       }
     },
@@ -214,16 +310,16 @@
         "catalog": {
           "schemaVersion": 1,
           "catalogId": "brain-pro-anatomy",
-          "version": "1.0.0",
-          "hash": "c7ae661e5b2570cb",
-          "entries": 32,
+          "version": "1.2.0",
+          "hash": "320a1275724172b1",
+          "entries": 76,
           "roots": 1,
-          "sources": 5,
-          "transforms": 5,
+          "sources": 7,
+          "transforms": 6,
           "externalAssets": 0,
           "evidenceLevels": {
             "PROCEDURAL": 6,
-            "ILLUSTRATIVE": 6,
+            "ILLUSTRATIVE": 50,
             "DIDACTIC": 12,
             "FENOMENOLOGICAL": 2,
             "MODEL_BOUND": 6,
@@ -250,7 +346,13 @@
           "brain-pro:anatomy/thalamus",
           "brain-pro:anatomy/thalamic-relay",
           "brain-pro:anatomy/thalamic-reticular-nucleus",
-          "brain-pro:anatomy/corticothalamic-pathway"
+          "brain-pro:anatomy/corticothalamic-pathway",
+          "brain-pro:anatomy/vascular-system",
+          "brain-pro:anatomy/arterial-tree",
+          "brain-pro:anatomy/venous-tree",
+          "brain-pro:anatomy/pial-arterial-network",
+          "brain-pro:anatomy/penetrating-arteriole",
+          "brain-pro:anatomy/postcapillary-venule"
         ]
       }
     },
@@ -263,16 +365,16 @@
         "catalog": {
           "schemaVersion": 1,
           "catalogId": "brain-pro-anatomy",
-          "version": "1.0.0",
-          "hash": "c7ae661e5b2570cb",
-          "entries": 32,
+          "version": "1.2.0",
+          "hash": "320a1275724172b1",
+          "entries": 76,
           "roots": 1,
-          "sources": 5,
-          "transforms": 5,
+          "sources": 7,
+          "transforms": 6,
           "externalAssets": 0,
           "evidenceLevels": {
             "PROCEDURAL": 6,
-            "ILLUSTRATIVE": 6,
+            "ILLUSTRATIVE": 50,
             "DIDACTIC": 12,
             "FENOMENOLOGICAL": 2,
             "MODEL_BOUND": 6,
@@ -296,7 +398,13 @@
           "brain-pro:anatomy/dendrite-proximal",
           "brain-pro:anatomy/dendrite-distal",
           "brain-pro:anatomy/axon",
-          "brain-pro:anatomy/ranvier-node"
+          "brain-pro:anatomy/ranvier-node",
+          "brain-pro:anatomy/vascular-system",
+          "brain-pro:anatomy/arterial-tree",
+          "brain-pro:anatomy/pial-arterial-network",
+          "brain-pro:anatomy/penetrating-arteriole",
+          "brain-pro:anatomy/precapillary-arteriole",
+          "brain-pro:anatomy/capillary-bed"
         ]
       }
     },
@@ -309,16 +417,16 @@
         "catalog": {
           "schemaVersion": 1,
           "catalogId": "brain-pro-anatomy",
-          "version": "1.0.0",
-          "hash": "c7ae661e5b2570cb",
-          "entries": 32,
+          "version": "1.2.0",
+          "hash": "320a1275724172b1",
+          "entries": 76,
           "roots": 1,
-          "sources": 5,
-          "transforms": 5,
+          "sources": 7,
+          "transforms": 6,
           "externalAssets": 0,
           "evidenceLevels": {
             "PROCEDURAL": 6,
-            "ILLUSTRATIVE": 6,
+            "ILLUSTRATIVE": 50,
             "DIDACTIC": 12,
             "FENOMENOLOGICAL": 2,
             "MODEL_BOUND": 6,
@@ -342,7 +450,18 @@
           "brain-pro:anatomy/synaptic-cleft",
           "brain-pro:anatomy/postsynaptic-membrane",
           "brain-pro:anatomy/vesicle-reserve",
-          "brain-pro:anatomy/receptor-site"
+          "brain-pro:anatomy/receptor-site",
+          "brain-pro:anatomy/vascular-system",
+          "brain-pro:anatomy/arterial-tree",
+          "brain-pro:anatomy/neurovascular-unit",
+          "brain-pro:anatomy/pial-arterial-network",
+          "brain-pro:anatomy/penetrating-arteriole",
+          "brain-pro:anatomy/precapillary-arteriole",
+          "brain-pro:anatomy/capillary-bed",
+          "brain-pro:anatomy/capillary-endothelium",
+          "brain-pro:anatomy/pericyte",
+          "brain-pro:anatomy/astrocyte-endfoot",
+          "brain-pro:anatomy/blood-brain-barrier"
         ]
       }
     }
@@ -351,20 +470,21 @@
     "viewportWidth": 390,
     "documentWidth": 390,
     "searchVisible": true,
-    "resultTreeVisible": true
+    "resultTreeVisible": true,
+    "viewContextVisible": true
   },
   "sceneGraphCost": {
     "baseline": {
-      "drawCalls": 48,
-      "triangles": 145778,
-      "geometries": 88,
-      "textures": 17
+      "drawCalls": 56,
+      "triangles": 35595,
+      "geometries": 99,
+      "textures": 20
     },
     "final": {
-      "drawCalls": 48,
-      "triangles": 145778,
-      "geometries": 88,
-      "textures": 17
+      "drawCalls": 56,
+      "triangles": 35595,
+      "geometries": 99,
+      "textures": 20
     },
     "delta": {
       "drawCalls": 0,

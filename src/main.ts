@@ -15,6 +15,7 @@ import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
 import {
   amperesToPicoamperes,
+  anatomicalDeclarationOf,
   auditAnatomicalScene,
   auditVisualMaterialReadiness,
   auditVisualProvenance,
@@ -59,6 +60,7 @@ import {
   ambientOcclusionDecision,
   freezeStaticPresentationMatrices,
   voltsToMillivolts,
+  visualProvenanceOf,
 } from "./render";
 import type {
   CutOrientation,
@@ -114,6 +116,7 @@ import {
   moveCommandPaletteSelection,
 } from "./command-palette";
 import type { CommandPaletteCommand } from "./command-palette";
+import { viewContextFor, viewContextSelectionFor } from "./view-context";
 
 declare global {
   interface Window {
@@ -1118,6 +1121,58 @@ function activeAnatomyFocus(): AnatomyFocusTarget | undefined {
   return pointerAnatomyFocus ?? keyboardAnatomyFocus ?? selectedAnatomyFocus;
 }
 
+/** Resolves only a visible, direct render declaration; never an aggregate representative. */
+function directAnatomyProvenance(entryId: string): VisualProvenance | undefined {
+  let provenance: VisualProvenance | undefined;
+  renderRootForView(activeView).traverseVisible((object) => {
+    if (provenance) return;
+    const declaration = anatomicalDeclarationOf(object);
+    if (declaration?.kind === "catalog-entry" && declaration.entryId === entryId) {
+      provenance = visualProvenanceOf(object);
+    }
+  });
+  return provenance;
+}
+
+function updateSelectedAnatomyProvenance(): void {
+  const label = selectedAnatomyFocus?.provenance?.toUpperCase() ??
+    "SEM REPRESENTAÇÃO DIRETA";
+  element("#anatomy-selected-provenance").textContent = label;
+}
+
+/** Keeps UI-034 explanatory text in the DOM-only presentation layer. */
+function updateViewContext(announce = true): void {
+  const context = viewContextFor(activeView);
+  element("#view-context-view").textContent = context.label.toUpperCase();
+  element("#view-context-model").textContent = context.model;
+  element("#view-context-unit").textContent = context.unit;
+  element("#view-context-hypothesis").textContent = context.hypothesis;
+  element("#view-context-limitation").textContent = context.limitation;
+
+  const selectionElement = element<HTMLElement>("#view-context-selection");
+  const entry = selectedAnatomyFocus?.entry;
+  if (!entry || !entry.views.includes(activeView)) {
+    selectionElement.hidden = true;
+    if (announce) {
+      element("#view-context-status").textContent =
+        `${context.label}. Modelo ${context.model}. Unidade ${context.unit}. ` +
+        `Hipótese ${context.hypothesis}. Limite ${context.limitation}.`;
+    }
+    return;
+  }
+  const selection = viewContextSelectionFor(entry);
+  selectionElement.hidden = false;
+  element("#view-context-selection-name").textContent = selection.label;
+  element("#view-context-selection-id").textContent = selection.id;
+  element("#view-context-selection-hypothesis").textContent = selection.hypothesis;
+  element("#view-context-selection-limitation").textContent = selection.limitation;
+  if (announce) {
+    element("#view-context-status").textContent =
+      `${context.label}. Modelo ${context.model}. Unidade ${context.unit}. ` +
+      `Foco ${selection.label}; hipótese ${selection.hypothesis}; limite ${selection.limitation}.`;
+  }
+}
+
 function anatomyFocusProvenance(
   focus: AnatomyFocusTarget,
 ): VisualProvenance | undefined {
@@ -1198,9 +1253,7 @@ function refreshAnatomyFocusPresentation(announce = false): void {
     highlight.status,
     highlight.highlightedMaterials,
   );
-  if (focus === selectedAnatomyFocus) {
-    element("#anatomy-selected-provenance").textContent = provenanceLabel;
-  }
+  updateSelectedAnatomyProvenance();
   if (announce) {
     element("#anatomy-focus-status").textContent =
       `${focus.entry.label}; ID ${focus.entry.id}; proveniência visual ${provenanceLabel}; ` +
@@ -1229,6 +1282,7 @@ function applyAnatomySelection(
     : undefined;
   pendingSceneAnatomyFocus = undefined;
   if (!entry.views.includes(activeView)) setActiveView(entry.views[0]);
+  const selectedProvenance = sceneFocus?.provenance ?? directAnatomyProvenance(entry.id);
   const overviewRegion = overviewRegionForAnatomy(entry.id);
   if (overviewRegion !== undefined) {
     currentFocusRegion = overviewRegion;
@@ -1256,8 +1310,10 @@ function applyAnatomySelection(
     origin: "selection",
     ...(sceneFocus?.object ? { object: sceneFocus.object } : {}),
     ...(sceneFocus?.point ? { point: sceneFocus.point } : {}),
-    ...(sceneFocus?.provenance ? { provenance: sceneFocus.provenance } : {}),
+    ...(selectedProvenance ? { provenance: selectedProvenance } : {}),
   };
+  updateSelectedAnatomyProvenance();
+  updateViewContext();
   refreshAnatomyFocusPresentation(true);
   if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
 }
@@ -1302,6 +1358,7 @@ function setActiveView(view: SimulationView): void {
     button.tabIndex = selected ? 0 : -1;
   }
   anatomyExplorer?.setActiveView(view);
+  updateViewContext();
   refreshAnatomyFocusPresentation();
   if (latestSnapshot) {
     renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
