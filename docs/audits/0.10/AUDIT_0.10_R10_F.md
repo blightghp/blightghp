@@ -1,15 +1,18 @@
 # Auditoria parcial · R10-F UI e interação
 
-**Estado:** preparação em andamento — **UI-031 · modos de uso** e **UI-032 ·
-paleta de comandos** estão implementados neste registro. Não promove R10-F, não
-promove R10-E e não altera a baseline 0.8.
+**Estado:** preparação em andamento — **UI-031 · modos de uso**, **UI-032 ·
+paleta de comandos** e **UI-033 · foco anatômico** estão implementados neste
+registro. Não promove R10-F, não promove R10-E e não altera a baseline 0.8.
 
 **Escopo deste corte:** acrescentar os modos `guided`, `explorer` e `laboratory`
 como estado de apresentação e uma paleta modal que aciona controles já existentes.
 O padrão dos modos é `guided`; a abertura, filtragem e navegação da paleta não
 criam caminho novo no Worker, no solver ou no snapshot. Cada comando preserva o
 escopo do controle que já invoca: vistas, busca, corte, câmera de corte, perfis e
-modo permanecem operações de interface/apresentação.
+modo permanecem operações de interface/apresentação. O foco anatômico acrescenta
+somente um rótulo DOM e uma mutação transitória de parâmetros de materiais já
+existentes durante o render; não cria geometria, passe, textura, objeto de cena ou
+mensagem ao Worker.
 
 ## Resultado implementado
 
@@ -41,35 +44,61 @@ modo permanecem operações de interface/apresentação.
   `listbox`, opção ativa e estado de resultados. Uma live region externa anuncia
   abertura, indisponibilidade e resultado do comando, sem depender apenas do
   foco visual.
+- UI-033 mantém prévia e confirmação separadas: foco por teclado ou ponteiro
+  atualiza o foco efêmero sem mudar `selectionId`; `Enter` ou clique convergem na
+  seleção canônica já usada pela árvore, cena e auditoria.
+- O rótulo de foco declara nome, ID estável, proveniência visual derivada do
+  renderizável direto e nível de evidência do catálogo. O equivalente de teclado
+  também anuncia o mesmo conteúdo por live region, e todos os campos são escritos
+  por `textContent`.
+- `SelectionHighlightController` só considera bindings anatômicos diretos e
+  visíveis. Ele ajusta `emissive` ou `rim` de materiais já alocados apenas entre
+  `beforeRender` e `afterRender`, restaura o valor original e registra zero
+  alocação. Materiais cuja cor codifica estado permanecem intactos e usam o
+  equivalente textual.
+- O picking vascular agora conserva o objeto e o ponto exatos do raycast para o
+  rótulo. Segmentos fundidos/instanciados sem binding direto recebem a ficha
+  textual correta, nunca o destaque enganoso do primeiro segmento representativo.
+- O callout usa projeção mundo→tela, é ocultado quando não há âncora visível ou em
+  captura, não aceita ponteiro, cabe em 390×844 e preserva o equivalente
+  preto/branco em alto contraste.
 
 ## Fronteira de estado
 
 `src/usage-mode.ts` contém somente a política pura de visibilidade e
 `src/command-palette.ts` a política pura de catálogo/pesquisa. `main.ts` mantém
 `usageMode` fora de `BrainSettings`; a paleta somente encaminha comandos para os
-controles canônicos já ligados ao DOM. Não foi criado comando adicional de Worker,
-mudança de ABI/snapshot, passe de renderização ou bifurcação de solver. O mesmo
-snapshot e motor atendem os três modos.
+controles canônicos já ligados ao DOM. O controlador de foco recebe o mesmo ID
+estável da árvore e do picking, mas não participa de `BrainSettings`, ABI, snapshot
+ou Worker. Não foi criado comando adicional de Worker, mudança de ABI/snapshot,
+passe de renderização ou bifurcação de solver. O mesmo snapshot e motor atendem os
+três modos.
 
 ## Evidência executada em 29 ago 2026
 
 | Prova | Resultado |
 | :-- | :-- |
 | `npm run typecheck` | passou |
-| `npm test -- --run` | passou: 33 arquivos, 170 testes, incluindo a política pura da paleta |
+| `npm test -- --run` | passou: 34 arquivos, 175 testes, incluindo paleta, picking rico vascular e destaque efêmero |
 | `npm run build` | passou; permanece apenas o aviso conhecido de chunk `three-core` acima de 563 kB |
-| `npm run test:wasm-browser` | passou: seletor real, UI-031 por `hidden`, foco restaurado, paleta com `Ctrl` e `Cmd`, filtro/seleção por teclado, diálogo em 390×844, comandos autorizados por modo e cinco hashes invariantes no mesmo turno JavaScript |
+| `npm run test:wasm-browser` | passou: seletor real, UI-031 por `hidden`, foco restaurado, paleta com `Ctrl` e `Cmd`, foco/hover UI-033, alto contraste, 390×844, material sem alocação e cinco hashes invariantes no mesmo turno JavaScript |
+| `npm run audit:anatomy` | passou: cobertura do catálogo, árvore/seleção e custo de cena continuam invariantes |
+| `npm run audit:vascular` | passou: cotas topológicas, picking/catálogo e cinco hashes continuam invariantes |
+| `npm run verify:presentation-budget` | passou: schema 1, seis vistas e hashes invariantes |
+| `npm run verify:procedural-surface` | passou: hash `7dfdd64207190121`, 5.780/1.500 triângulos e 12 capturas |
 
 O teste de navegador percorre os três modos e comandos representativos no DOM
-real — vista, modo, busca, corte, câmera e perfis — e compara os cinco hashes no
-mesmo turno JavaScript, onde a troca não entrega controle ao Worker. Essa prova é
-de fronteira de apresentação; não substitui os futuros testes de toque, leitura de
-tela, fluxo completo em movimento reduzido ou as demais entregas de R10-F.
+real — vista, modo, busca, corte, câmera, perfis e foco anatômico — e compara os
+cinco hashes no mesmo turno JavaScript, onde a troca não entrega controle ao
+Worker. Para UI-033 ele prova uma estrutura `STATE` por teclado e uma
+`TOPOLOGY`/`ILLUSTRATIVE` por ponteiro, confirma que a prévia não seleciona e que o
+material temporário não é alocado. Essa prova é de fronteira de apresentação; não
+substitui os futuros testes de toque, leitura de tela, fluxo completo em movimento
+reduzido ou as demais entregas de R10-F.
 
 ## Pendências para concluir R10-F
 
-1. UI-033/034/037: destaque, "O que estou vendo?" e selo persistente de
-   proveniência.
+1. UI-034/037: painel "O que estou vendo?" e selo persistente de proveniência.
 2. UI-035/036 e UX-003: câmera, retorno de foco, pontos de vista e transições de
    escala.
 3. Cobertura de toque, leitura de tela e fluxo completo em 390×844/movimento

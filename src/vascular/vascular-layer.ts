@@ -108,6 +108,13 @@ interface PickRecord {
   readonly resolve: (intersection: THREE.Intersection) => string | undefined;
 }
 
+/** Exact raycast context for a textual focus marker; it does not imply a new mesh or pass. */
+export interface VascularPickTarget {
+  readonly entry: AnatomicalCatalogEntry;
+  readonly object: THREE.Object3D;
+  readonly point: THREE.Vector3;
+}
+
 const VIEW_NAMES: readonly VascularView[] = [
   "overview",
   "laminar",
@@ -307,7 +314,7 @@ export class VascularTopologyModule {
   }
 
   /** Resolves a raycast hit to the same catalog identity used by the anatomy tree. */
-  pick(view: VascularView, raycaster: THREE.Raycaster): AnatomicalCatalogEntry | undefined {
+  pickTarget(view: VascularView, raycaster: THREE.Raycaster): VascularPickTarget | undefined {
     const records = this.pickRecords.get(view) ?? [];
     const objects = records.map((record) => record.object).filter((object) => object.visible);
     for (const intersection of raycaster.intersectObjects(objects, false)) {
@@ -315,9 +322,20 @@ export class VascularTopologyModule {
       const catalogId = record?.resolve(intersection);
       if (!catalogId) continue;
       const entry = anatomicalEntryById(catalogId);
-      if (entry) return entry;
+      if (entry) {
+        return {
+          entry,
+          object: intersection.object,
+          point: intersection.point.clone(),
+        };
+      }
     }
     return undefined;
+  }
+
+  /** Returns only the stable catalog entry for existing selection call sites. */
+  pick(view: VascularView, raycaster: THREE.Raycaster): AnatomicalCatalogEntry | undefined {
+    return this.pickTarget(view, raycaster)?.entry;
   }
 
   /** Applies the presentation-only skeleton preference; neuron context remains opt-in. */

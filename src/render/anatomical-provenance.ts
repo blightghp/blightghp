@@ -7,6 +7,10 @@ import type {
   AnatomicalCatalog,
   AnatomicalCatalogEntry,
 } from "../anatomy";
+import {
+  visualProvenanceOf,
+} from "./render-types";
+import type { VisualProvenance } from "./render-types";
 
 const ANATOMICAL_DECLARATION_KEY = "anatomicalDeclaration";
 
@@ -31,6 +35,14 @@ export interface AnatomicalSceneAudit {
   readonly unknownEntryIds: readonly string[];
   readonly missingEvidence: readonly string[];
   readonly contractReady: boolean;
+}
+
+/** A raycast hit with enough presentation context for a DOM selection callout. */
+export interface AnatomicalPickTarget {
+  readonly entry: AnatomicalCatalogEntry;
+  readonly object: THREE.Object3D;
+  readonly point: THREE.Vector3;
+  readonly provenance: VisualProvenance | undefined;
 }
 
 /** Binds one renderable object to a stable entry in the anatomical catalog. */
@@ -89,11 +101,11 @@ export function anatomicalEntryOf(
 }
 
 /** Resolves the first visible raycast hit that has a direct catalog binding. */
-export function pickAnatomicalEntry(
+export function pickAnatomicalTarget(
   root: THREE.Object3D,
   raycaster: THREE.Raycaster,
   catalog: AnatomicalCatalog = ANATOMICAL_CATALOG,
-): AnatomicalCatalogEntry | undefined {
+): AnatomicalPickTarget | undefined {
   for (const intersection of raycaster.intersectObject(root, true)) {
     let cursor: THREE.Object3D | null = intersection.object;
     let visible = true;
@@ -107,9 +119,25 @@ export function pickAnatomicalEntry(
     }
     if (!visible) continue;
     const entry = anatomicalEntryOf(intersection.object, catalog);
-    if (entry) return entry;
+    if (entry) {
+      return {
+        entry,
+        object: intersection.object,
+        point: intersection.point.clone(),
+        provenance: visualProvenanceOf(intersection.object),
+      };
+    }
   }
   return undefined;
+}
+
+/** Resolves only the catalog entry for callers that do not need render context. */
+export function pickAnatomicalEntry(
+  root: THREE.Object3D,
+  raycaster: THREE.Raycaster,
+  catalog: AnatomicalCatalog = ANATOMICAL_CATALOG,
+): AnatomicalCatalogEntry | undefined {
+  return pickAnatomicalTarget(root, raycaster, catalog)?.entry;
 }
 
 /** Audits direct per-object catalog bindings and explicit non-anatomical boundaries. */

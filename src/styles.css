@@ -164,6 +164,78 @@ a:focus-visible {
   font: 500 7px/1 "JetBrains Mono", monospace;
 }
 
+.anatomy-focus-callout {
+  position: fixed;
+  z-index: 5;
+  width: min(244px, calc(100vw - 32px));
+  padding: 10px 11px;
+  border: 1px solid rgba(118, 211, 255, .54);
+  border-radius: 8px;
+  color: #ddecff;
+  background: rgba(3, 14, 29, .94);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .42);
+  pointer-events: none;
+  transform: translate(12px, -50%);
+}
+
+.anatomy-focus-kicker {
+  margin: 0 0 5px;
+  color: #72cfff;
+  font: 600 7px/1 "JetBrains Mono", monospace;
+  letter-spacing: .12em;
+}
+
+.anatomy-focus-callout > strong {
+  display: block;
+  font: 600 11px/1.25 "JetBrains Mono", monospace;
+}
+
+.anatomy-focus-callout code {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: #7ea7c7;
+  font: 500 7px/1.35 "JetBrains Mono", monospace;
+}
+
+.anatomy-focus-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.anatomy-focus-facts span {
+  min-width: 0;
+  padding-top: 5px;
+  border-top: 1px solid rgba(121, 191, 236, .22);
+}
+
+.anatomy-focus-facts small,
+.anatomy-focus-facts b {
+  display: block;
+  overflow-wrap: anywhere;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.anatomy-focus-facts small {
+  color: #688da9;
+  font-size: 6px;
+  letter-spacing: .08em;
+}
+
+.anatomy-focus-facts b {
+  margin-top: 2px;
+  color: #ddf6ff;
+  font-size: 8px;
+}
+
+.anatomy-focus-representation {
+  margin: 8px 0 0;
+  color: #83a5bd;
+  font: 500 7px/1.4 "JetBrains Mono", monospace;
+}
+
 .command-palette {
   width: min(580px, calc(100vw - 32px));
   max-width: none;
@@ -606,6 +678,21 @@ body[data-high-contrast="true"] .command-palette-results [role="option"][aria-se
   border-color: #fff;
   color: #000;
   background: #fff;
+}
+
+body[data-high-contrast="true"] .anatomy-focus-callout {
+  border-color: #fff;
+  color: #fff;
+  background: #000;
+  box-shadow: none;
+}
+
+body[data-high-contrast="true"] .anatomy-focus-callout code,
+body[data-high-contrast="true"] .anatomy-focus-kicker,
+body[data-high-contrast="true"] .anatomy-focus-facts small,
+body[data-high-contrast="true"] .anatomy-focus-facts b,
+body[data-high-contrast="true"] .anatomy-focus-representation {
+  color: #fff;
 }
 
 .glass-panel {
@@ -1068,6 +1155,7 @@ body[data-capture="true"] .topbar,
 body[data-capture="true"] .view-tabs,
 body[data-capture="true"] .presentation-panel,
 body[data-capture="true"] .glass-panel,
+body[data-capture="true"] .anatomy-focus-callout,
 body[data-capture="true"] .interaction-hint { display: none !important; }
 
 @media (max-width: 820px) {

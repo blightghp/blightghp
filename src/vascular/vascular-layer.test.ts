@@ -99,4 +99,37 @@ describe("R10-B vascular topology layer", () => {
     expect([...disposeCounts.values()].every((count) => count === 1)).toBe(true);
     expect(root.children).toHaveLength(0);
   });
+
+  it("keeps the exact raycast object and point for a vascular focus marker", () => {
+    const module = new VascularTopologyModule();
+    const root = new THREE.Group();
+    module.attach("synapse", root);
+    root.updateMatrixWorld(true);
+
+    const pericyte = root.getObjectByName("vascular-synapse-pericyte") as THREE.Mesh;
+    expect(pericyte).toBeInstanceOf(THREE.Mesh);
+    root.traverse((object) => {
+      if (object !== pericyte && "material" in object) object.visible = false;
+    });
+    root.updateMatrixWorld(true);
+
+    const vertex = new THREE.Vector3().fromBufferAttribute(
+      pericyte.geometry.getAttribute("position"),
+      0,
+    );
+    const point = pericyte.localToWorld(vertex);
+    const center = pericyte.getWorldPosition(new THREE.Vector3());
+    const outward = point.clone().sub(center).normalize();
+    const raycaster = new THREE.Raycaster(
+      point.clone().addScaledVector(outward, 1),
+      outward.negate(),
+    );
+
+    expect(module.pickTarget("synapse", raycaster)).toMatchObject({
+      entry: { id: "brain-pro:anatomy/pericyte" },
+      object: pericyte,
+    });
+    expect(module.pick("synapse", raycaster)?.id).toBe("brain-pro:anatomy/pericyte");
+    module.dispose();
+  });
 });

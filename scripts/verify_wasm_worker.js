@@ -279,7 +279,9 @@ try {
     open: document.querySelector("#command-palette")?.open,
     status: document.querySelector("#command-palette-status")?.textContent,
   }));
-  await page.keyboard.press("Control+A");
+  await page.keyboard.down("Control");
+  await page.keyboard.press("KeyA");
+  await page.keyboard.up("Control");
   await page.keyboard.press("Backspace");
   await page.keyboard.type("laminas");
   await page.waitForFunction(
@@ -333,6 +335,136 @@ try {
       document.activeElement?.id === "open-command-palette",
     { timeout: 5_000 },
   );
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
+  const ui033Before = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
+  await page.select("#usage-mode", "explorer");
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("laminar"));
+  await page.evaluate(() => {
+    const input = document.querySelector("#anatomy-search");
+    if (!(input instanceof HTMLInputElement)) throw new Error("busca anatômica ausente");
+    input.value = "L4";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.waitForFunction(
+    () => document.querySelectorAll("#anatomy-results [role='treeitem']").length === 1,
+    { timeout: 5_000 },
+  );
+  await page.focus("#anatomy-results [data-anatomy-id='brain-pro:anatomy/cortical-layer-4']");
+  await page.waitForFunction(
+    () => document.querySelector("#anatomy-focus-id")?.textContent ===
+      "brain-pro:anatomy/cortical-layer-4",
+    { timeout: 5_000 },
+  );
+  const keyboardAnatomyPreview = await page.evaluate(() => ({
+    calloutVisible: !document.querySelector("#anatomy-focus-callout")?.hidden,
+    name: document.querySelector("#anatomy-focus-name")?.textContent,
+    id: document.querySelector("#anatomy-focus-id")?.textContent,
+    provenance: document.querySelector("#anatomy-focus-provenance")?.textContent,
+    evidence: document.querySelector("#anatomy-focus-evidence")?.textContent,
+    status: document.querySelector("#anatomy-focus-status")?.textContent,
+    selectedId: document.querySelector("#anatomy-selected-id")?.textContent,
+    highlight: window.__BRAIN_ENGINE__.presentationAudit().selectionHighlight,
+  }));
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(
+    () => document.querySelector("#anatomy-selected-id")?.textContent ===
+      "brain-pro:anatomy/cortical-layer-4",
+    { timeout: 5_000 },
+  );
+  const confirmedKeyboardSelection = await page.evaluate(() => ({
+    provenance: document.querySelector("#anatomy-selected-provenance")?.textContent,
+    selected: document.querySelector("#anatomy-selected-id")?.textContent,
+  }));
+
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("synapse"));
+  await page.evaluate(() => {
+    const input = document.querySelector("#anatomy-search");
+    if (!(input instanceof HTMLInputElement)) throw new Error("busca anatômica ausente");
+    input.value = "pericito";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.waitForFunction(
+    () => document.querySelectorAll("#anatomy-results [role='treeitem']").length === 1,
+    { timeout: 5_000 },
+  );
+  const selectedBeforePointerPreview = await page.evaluate(
+    () => document.querySelector("#anatomy-selected-id")?.textContent,
+  );
+  await page.hover("#anatomy-results [data-anatomy-id='brain-pro:anatomy/pericyte']");
+  await page.waitForFunction(
+    () => document.querySelector("#anatomy-focus-id")?.textContent ===
+      "brain-pro:anatomy/pericyte",
+    { timeout: 5_000 },
+  );
+  const pointerAnatomyPreview = await page.evaluate(() => ({
+    id: document.querySelector("#anatomy-focus-id")?.textContent,
+    provenance: document.querySelector("#anatomy-focus-provenance")?.textContent,
+    evidence: document.querySelector("#anatomy-focus-evidence")?.textContent,
+    selectedId: document.querySelector("#anatomy-selected-id")?.textContent,
+    highlight: window.__BRAIN_ENGINE__.presentationAudit().selectionHighlight,
+  }));
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte"));
+  await page.waitForFunction(
+    () => document.querySelector("#anatomy-selected-id")?.textContent ===
+      "brain-pro:anatomy/pericyte",
+    { timeout: 5_000 },
+  );
+  const highContrastCallout = await page.evaluate(() => {
+    window.__BRAIN_ENGINE__.setHighContrast(true);
+    const callout = document.querySelector("#anatomy-focus-callout");
+    const computed = callout ? getComputedStyle(callout) : undefined;
+    const result = {
+      background: computed?.backgroundColor,
+      color: computed?.color,
+      calloutId: document.querySelector("#anatomy-focus-id")?.textContent,
+      calloutProvenance: document.querySelector("#anatomy-focus-provenance")?.textContent,
+      selectedProvenance: document.querySelector("#anatomy-selected-provenance")?.textContent,
+    };
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    return result;
+  });
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobileAnatomyCallout = await page.evaluate(() => {
+    const callout = document.querySelector("#anatomy-focus-callout");
+    if (!(callout instanceof HTMLElement)) return undefined;
+    const bounds = callout.getBoundingClientRect();
+    return {
+      hidden: callout.hidden,
+      withinViewport: bounds.left >= 0 && bounds.right <= window.innerWidth &&
+        bounds.top >= 0 && bounds.bottom <= window.innerHeight,
+    };
+  });
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  const ui033After = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
+  if (
+    !keyboardAnatomyPreview.calloutVisible ||
+    keyboardAnatomyPreview.id !== "brain-pro:anatomy/cortical-layer-4" ||
+    keyboardAnatomyPreview.provenance !== "STATE" ||
+    keyboardAnatomyPreview.evidence !== "DIDACTIC" ||
+    keyboardAnatomyPreview.selectedId === "brain-pro:anatomy/cortical-layer-4" ||
+    !keyboardAnatomyPreview.status?.includes("cortical-layer-4") ||
+    keyboardAnatomyPreview.highlight.status !== "ready" ||
+    keyboardAnatomyPreview.highlight.materialAllocations !== 0 ||
+    confirmedKeyboardSelection.selected !== "brain-pro:anatomy/cortical-layer-4" ||
+    confirmedKeyboardSelection.provenance !== "STATE" ||
+    pointerAnatomyPreview.id !== "brain-pro:anatomy/pericyte" ||
+    pointerAnatomyPreview.provenance !== "TOPOLOGY" ||
+    pointerAnatomyPreview.evidence !== "ILLUSTRATIVE" ||
+    pointerAnatomyPreview.selectedId !== selectedBeforePointerPreview ||
+    pointerAnatomyPreview.highlight.status !== "ready" ||
+    pointerAnatomyPreview.highlight.highlightedMaterials < 1 ||
+    pointerAnatomyPreview.highlight.materialAllocations !== 0 ||
+    highContrastCallout.background !== "rgb(0, 0, 0)" ||
+    highContrastCallout.color !== "rgb(255, 255, 255)" ||
+    highContrastCallout.calloutId !== "brain-pro:anatomy/pericyte" ||
+    highContrastCallout.calloutProvenance !== "TOPOLOGY" ||
+    highContrastCallout.selectedProvenance !== "TOPOLOGY" ||
+    (!mobileAnatomyCallout?.hidden && !mobileAnatomyCallout.withinViewport) ||
+    hashFields.some((field) => ui033Before[field] !== ui033After[field])
+  ) {
+    throw new Error(`UI-033 inválida: ${JSON.stringify({ keyboardAnatomyPreview, confirmedKeyboardSelection, selectedBeforePointerPreview, pointerAnatomyPreview, highContrastCallout, mobileAnatomyCallout, ui033Before, ui033After })}`);
+  }
+  await page.select("#usage-mode", "guided");
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
   const materialProfiles = await page.evaluate(
     () => window.__BRAIN_ENGINE__.materialProfileAudit(),

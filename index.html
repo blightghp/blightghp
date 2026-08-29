@@ -15,6 +15,17 @@
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
     <div id="canvas-container" aria-label="Modelo neural tridimensional interativo"></div>
+    <aside id="anatomy-focus-callout" class="anatomy-focus-callout" aria-label="Estrutura em foco" hidden>
+      <p class="anatomy-focus-kicker">ESTRUTURA EM FOCO</p>
+      <strong id="anatomy-focus-name">—</strong>
+      <code id="anatomy-focus-id">—</code>
+      <div class="anatomy-focus-facts">
+        <span><small>PROVENIÊNCIA</small><b id="anatomy-focus-provenance">—</b></span>
+        <span><small>EVIDÊNCIA</small><b id="anatomy-focus-evidence">—</b></span>
+      </div>
+      <p id="anatomy-focus-representation" class="anatomy-focus-representation"></p>
+    </aside>
+    <p id="anatomy-focus-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
 
     <header class="topbar">
       <a class="brand" href="https://github.com/blightghp" aria-label="Perfil blightghp no GitHub">
@@ -128,6 +139,7 @@
             <div><dt>ID</dt><dd id="anatomy-selected-id">brain-pro:anatomy/encephalon</dd></div>
             <div><dt>LADO</dt><dd id="anatomy-selected-laterality">bilateral</dd></div>
             <div><dt>EVIDÊNCIA</dt><dd id="anatomy-selected-evidence">PROCEDURAL</dd></div>
+            <div><dt>PROVENIÊNCIA VISUAL</dt><dd id="anatomy-selected-provenance">—</dd></div>
             <div><dt>FONTE</dt><dd id="anatomy-selected-source">src/brain.ts#generateBrainData</dd></div>
             <div><dt>LICENÇA</dt><dd id="anatomy-selected-license">LicenseRef-BRAIN-PRO-INTERNAL</dd></div>
             <div><dt>TRANSFORMAÇÃO</dt><dd id="anatomy-selected-transform">coordenadas procedurais</dd></div>

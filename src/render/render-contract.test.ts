@@ -9,6 +9,7 @@ import {
   declareAnatomicalBinding,
   declareNonAnatomical,
   pickAnatomicalEntry,
+  pickAnatomicalTarget,
 } from "./anatomical-provenance";
 import { CellRenderLayer } from "./cell-layer";
 import { ElectricalBoardLayer } from "./electrical-board-layer";
@@ -179,6 +180,7 @@ describe("render presentation contract", () => {
       new THREE.MeshBasicMaterial(),
     );
     declareAnatomicalBinding(soma, ANATOMY_IDS.soma);
+    declareVisual(soma, "matter", "state");
     root.add(overlay, soma);
     root.updateMatrixWorld(true);
     const raycaster = new THREE.Raycaster(
@@ -186,6 +188,11 @@ describe("render presentation contract", () => {
       new THREE.Vector3(0, 0, -1),
     );
     expect(pickAnatomicalEntry(root, raycaster)?.id).toBe(ANATOMY_IDS.soma);
+    expect(pickAnatomicalTarget(root, raycaster)).toMatchObject({
+      entry: { id: ANATOMY_IDS.soma },
+      object: soma,
+      provenance: "state",
+    });
     overlay.geometry.dispose();
     overlay.material.dispose();
     soma.geometry.dispose();
