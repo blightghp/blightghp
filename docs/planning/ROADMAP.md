@@ -21,9 +21,11 @@ experimental. Ele conecta modelos neurais e bioquímicos explicitamente
 limitados a uma apresentação 3D auditável. Não é instrumento clínico,
 diagnóstico ou prognóstico; realismo visual nunca é evidência biológica.
 
-O Unrail Motor é uma direção arquitetural nativa de longo prazo. Ele poderá
-consumir `brain-engine`, mas não substitui a ciência, a ABI Wasm, a pilha web ou
-os gates visuais já promovidos.
+O **Projeto PROMETHEUS (Motor Nativo)** é a direção arquitetural principal
+para os gráficos de ultra-realismo. O workspace `engine/` avança em Fases
+(Φ-0 a Φ-5) importando as 13 bibliotecas do laboratório Unrail. O motor
+consome `brain-engine` mas não altera a ciência, a ABI Wasm, a pilha web
+ou os gates visuais já promovidos. (Ver [Projeto PROMETHEUS](../specifications/prometheus/README.md))
 
 ## Governança
 

@@ -1,0 +1,12 @@
+[package]
+name = "prometheus-alloc"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[dependencies]
+prometheus-error = { path = "../prometheus-error" }
+bytemuck = { version = "1.14", features = ["derive"] }
+
+[lints.rust]
+unsafe_code = "forbid"

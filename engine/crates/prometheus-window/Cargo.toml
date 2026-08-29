@@ -1,0 +1,14 @@
+[package]
+name = "prometheus-window"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[dependencies]
+prometheus-error = { path = "../prometheus-error" }
+prometheus-gpu = { path = "../prometheus-gpu" }
+winit = "0.30"
+wgpu = "0.20"
+pollster = "0.3"
+tracing = "0.1"
+thiserror = "1.0"

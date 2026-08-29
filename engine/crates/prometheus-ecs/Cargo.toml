@@ -1,0 +1,10 @@
+[package]
+name = "prometheus-ecs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+prometheus-error = { workspace = true }
+prometheus-math = { workspace = true }
+bytemuck = { workspace = true }

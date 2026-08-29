@@ -1,0 +1,12 @@
+[package]
+name = "prometheus-gpu"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[dependencies]
+prometheus-error = { path = "../prometheus-error" }
+wgpu = "0.20"
+tracing = "0.1"
+blake3 = "1.5"
+thiserror = "1.0"

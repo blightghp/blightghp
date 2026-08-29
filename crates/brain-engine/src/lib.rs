@@ -75,6 +75,25 @@ pub const LAYER_COUNT: usize = 6;
 pub const MAX_LAMINAR_GAIN: f64 = 4.0;
 pub const MAX_EXTERNAL_DRIVE: f64 = 16.0;
 
+/// Unidirectional extraction trait for the PROMETHEUS graphics engine.
+///
+/// Implements GFX-001 (Scientific Core Isolation):
+/// The rendering engine must NEVER modify scientific state. It can only
+/// extract immutable slices and verify deterministic integrity hashes.
+pub trait RenderExtractable: Send + Sync {
+    /// Extracts a flat slice of 3D positions (x, y, z) for all tracked entities.
+    fn extract_positions(&self) -> &[f32];
+
+    /// Extracts the current membrane potentials (or equivalent physical state).
+    fn extract_potentials(&self) -> &[f64];
+
+    /// Extracts the aggregate field activity (e.g., LFP or cortical surface fields).
+    fn extract_field_activity(&self) -> &[f32];
+
+    /// Returns the deterministic integrity hash (BLAKE3 or similar) of the core state.
+    fn state_hash(&self) -> u64;
+}
+
 /// A finite, strictly positive duration represented in SI seconds.
 ///
 /// Keeping the constructor fallible prevents milliseconds, zero and invalid

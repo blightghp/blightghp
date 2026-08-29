@@ -1,0 +1,9 @@
+[package]
+name = "prometheus-math"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[dependencies]
+glam = { workspace = true }
+bytemuck = { workspace = true, features = ["derive"] }

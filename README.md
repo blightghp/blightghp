@@ -121,52 +121,39 @@ ainda é hipótese.
 | anatomia visual | catálogo 1.2.0, vascular topológico e superfície procedural determinística |
 | desempenho | perfis `baseline`, `enhanced` e `cinema`, com orçamento medido em GPU física |
 | último gate | R10-E em andamento: material regional, AgX reversível, GTAO 0,5× contido e matriz física D3D11 |
-| próximo gate | promoção R10-E após auditoria agregada; R10-F segue planejado |
-| direção nativa | arquitetura Unrail adotada para depois da 1.0; zero código ou dependência nova |
+| próximo gate | Fases PROMETHEUS (Φ-1 a Φ-5) assumem a prioridade da arquitetura nativa |
+| direção nativa | **Projeto PROMETHEUS**: workspace `engine/` criado (Fase Φ-0 concluída). 7 crates base, integração WGPU + ECS zero-alloc, mantendo separação (GFX-001). |
 
 R10-E mantém a superfície regional R10-D e aplica luz, AgX reversível,
 cor-base quente por região e GTAO de meia resolução apenas no `overview`
 realista do perfil `cinema`. `enhanced` preserva seu teto de 64 draws sem GTAO;
 corte, alto contraste, outras vistas e `baseline` também removem o passe. A
-implementação não transforma o modelo em atlas,
-reconstrução clínica ou anatomia validada. O avanço e seus limites estão na
+implementação não transforma o modelo em atlas, reconstrução clínica ou
+anatomia validada. O avanço e seus limites estão na
 [auditoria R10-E](docs/audits/0.10/AUDIT_0.10_R10_E.md) e na
 [revisão visual](docs/reviews/VISUAL_REVIEW_R10_E.md).
 
 ### O que existe hoje
 
-- motor Rust/Wasm em Worker, passo fixo, replay determinístico, ABI v8 e cinco
-  hashes independentes;
-- rede procedural, coluna L1–L6, circuito relé–TRN, patch AdEx de 12 células e
-  cabo passivo soma→proximal→distal;
-- dinâmica sináptica de curto prazo, química local, ocupação de receptores e
-  solver com separação de Strang;
-- vistas **Visão Geral**, **Lâminas**, **Célula**, **Neurônio**,
-  **Eletricidade** e **Sinapse**, todas lendo o mesmo snapshot publicado;
-- catálogo anatômico pesquisável, grafo vascular ilustrativo, cortes
-  coronal/sagital/axial/oblíquo e superfície encefálica com dois LODs;
-- testes de contrato, segurança, acessibilidade, desempenho, captura e
-  invariância científica executados no CI.
+- **(Web Fallback)**: Motor Rust/Wasm em Worker, passo fixo, replay determinístico, ABI v8 e cinco hashes independentes;
+- **(Nativo - PROMETHEUS)**: Motor wgpu/Rust no workspace `engine/` estruturado em camadas (L0 a L4), com ECS arquetipal e zero alocação em hot path (Fase Φ-0).
+- rede procedural, coluna L1–L6, circuito relé–TRN, patch AdEx de 12 células e cabo passivo;
+- Vistas WebGL2: **Visão Geral**, **Lâminas**, **Célula**, **Neurônio**, **Eletricidade** e **Sinapse**;
+- Testes de contrato, segurança, acessibilidade, desempenho, captura e invariância científica.
 
-### Arquitetura
+### Arquitetura (Dual)
 
 ```text
 pergunta de estudo
       ↓
-brain-engine (Rust: estado, equações, unidades, limites e hashes)
-      └── brain-wasm → Web Worker → snapshot ABI v8
-                                      ↓
-                       TypeScript → DOM + Three.js
-                                      ↓
-                         interação e leitura espacial
+brain-engine (Rust: estado, equações, unidades, limites e hashes) [GFX-001 Intocável]
+      ├── brain-wasm → Web Worker → snapshot ABI v8 → TypeScript → Three.js (Web/Fallback)
+      └── prometheus-core → L0-L4 crates → WGPU Pipeline nativa (PROMETHEUS Engine)
 ```
 
-O navegador não replica equações do motor: apresenta apenas estados publicados.
-Perfis gráficos, câmera e materiais podem mudar sem alterar os hashes científicos.
+O navegador não replica equações do motor: apresenta apenas estados publicados. A nova ramificação nativa (PROMETHEUS) consome `brain-engine` através da trait `RenderExtractable`, protegendo matematicamente a ciência enquanto entrega renderização de ultra-realismo (Geometry Virtualization, GI, SSS).
 
-A direção futura [Unrail Motor](docs/specifications/unrail/README.md) prevê um
-workspace nativo separado, subordinado ao mesmo roadmap. Ela começa por runner
-headless e paridade dos cinco hashes; não substitui a aplicação web atual.
+A direção futura [Projeto PROMETHEUS](docs/specifications/prometheus/README.md) prevê um pipeline nativo acelerado (wgpu). Ela começou na fase Genesis e não substitui a aplicação web atual, atuando em paralelo.
 
 ### Limites
 
@@ -202,7 +189,7 @@ Auditorias que exigem GPU física, regeneração do GIF e demais comandos estão
 | [Roadmap](docs/planning/ROADMAP.md) | estado canônico e próximos gates |
 | [Plano 0.10](docs/planning/PLAN_0.10.md) | contratos executáveis do ciclo atual |
 | [Arquitetura](docs/specifications/ARCHITECTURE.md) | decisões e fronteiras do sistema |
-| [Unrail Motor](docs/specifications/unrail/README.md) | arquitetura nativa futura, condicionantes e limites |
+| [Projeto PROMETHEUS](docs/specifications/prometheus/README.md) | O experimento gráfico nativo (Fases Φ-0 a Φ-5), pipeline wgpu e arquitetura L0-L4 |
 | [Modelo](docs/specifications/MODEL_SPEC.md) | equações, unidades e limites científicos |
 | [Gráficos](docs/specifications/GRAPHICS_SPEC.md) | contratos de renderização e VFX |
 | [Validação](docs/quality/VALIDATION.md) | testes, ambientes e critérios de promoção |

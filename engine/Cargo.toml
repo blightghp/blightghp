@@ -1,0 +1,90 @@
+[workspace]
+members = [
+    "crates/prometheus-error",
+    "crates/prometheus-math",
+    "crates/prometheus-alloc",
+    "crates/prometheus-ecs",
+    "crates/prometheus-window",
+    "crates/prometheus-gpu",
+    "crates/prometheus-core",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.97.1"
+license = "MIT"
+repository = "https://github.com/blightghp/blightghp"
+
+[workspace.dependencies]
+# --- L0: Core ---
+prometheus-error = { path = "crates/prometheus-error" }
+prometheus-math  = { path = "crates/prometheus-math" }
+prometheus-alloc = { path = "crates/prometheus-alloc" }
+
+# --- L1: Data Substrate ---
+prometheus-ecs    = { path = "crates/prometheus-ecs" }
+prometheus-window = { path = "crates/prometheus-window" }
+
+# --- L2: GPU ---
+prometheus-gpu = { path = "crates/prometheus-gpu" }
+
+# --- L4: Facade ---
+prometheus-core = { path = "crates/prometheus-core" }
+
+# --- External: Graphics & Windowing ---
+wgpu    = { version = "30", default-features = false, features = ["wgsl", "dx12", "vulkan", "metal"] }
+naga    = { version = "30", features = ["wgsl-in"] }
+winit   = "0.30"
+pollster = "0.4"
+
+# --- External: Math & Memory Layout ---
+glam     = { version = "0.33", features = ["bytemuck", "serde"] }
+bytemuck = { version = "1", features = ["derive"] }
+half     = "2"
+libm     = "0.2"
+
+# --- External: Concurrency ---
+crossbeam-deque   = "0.8"
+crossbeam-channel = "0.5"
+crossbeam-utils   = "0.8"
+
+# --- External: Serialization & Diagnostics ---
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror  = "2"
+tracing    = "0.1"
+blake3     = "1"
+
+# --- External: Testing ---
+criterion = "0.8"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all      = "warn"
+pedantic = "warn"
+unwrap_used      = "deny"
+expect_used      = "deny"
+panic            = "deny"
+unimplemented    = "deny"
+float_cmp        = "deny"
+mem_forget       = "deny"
+module_name_repetitions = "allow"
+doc_markdown            = "allow"
+missing_errors_doc      = "allow"
+missing_panics_doc      = "allow"
+must_use_candidate      = "allow"
+
+[profile.release]
+opt-level    = 3
+lto          = "fat"
+codegen-units = 1
+panic        = "unwind"
+strip        = "debuginfo"
+debug        = 1
+
+[profile.dev.package."*"]
+opt-level = 3
