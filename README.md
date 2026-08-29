@@ -93,7 +93,7 @@ publicado neste repositório.
 <div align="center">
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=df85e290229e" width="760" alt="BRAIN PRO com superfície encefálica procedural e seis vistas interativas" />
+  <img src="assets/brain.gif?v=feee6713d3e0" width="760" alt="BRAIN PRO com superfície encefálica procedural e seis vistas interativas" />
 </a>
 
 <sub>▲ Estado visual R10-E: superfície procedural, material regional quente, luz reversível e seis vistas. O <a href="assets/brain-gif.json">manifesto</a> vincula a captura ao motor Rust/Wasm, à ABI e aos hashes auditados; a imagem continua ilustrativa, não clínica.</sub>
