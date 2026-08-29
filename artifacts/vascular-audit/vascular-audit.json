@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-08-29T12:49:10.479Z",
+  "capturedAt": "2026-08-29T13:05:33.856Z",
   "source": {
-    "commit": "5554d4563711692a620cde83872478404b1d3ce5",
+    "commit": "ee4c7b9d0153e567e34ed6493b15592c9e26b6c6",
     "worktreeDirty": true,
     "productVersion": "0.9.0",
     "command": "npm run audit:vascular"
@@ -641,7 +641,8 @@
     "documentWidth": 390,
     "panelVisible": true,
     "vascularVisible": true,
-    "viewContextVisible": true
+    "viewContextVisible": true,
+    "provenanceBadgeVisible": true
   },
   "captures": [
     "01-overview-arterial.png",

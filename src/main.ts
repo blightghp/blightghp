@@ -1134,10 +1134,21 @@ function directAnatomyProvenance(entryId: string): VisualProvenance | undefined 
   return provenance;
 }
 
-function updateSelectedAnatomyProvenance(): void {
-  const label = selectedAnatomyFocus?.provenance?.toUpperCase() ??
+function selectedAnatomyProvenanceLabel(): string {
+  return selectedAnatomyFocus?.provenance?.toUpperCase() ??
     "SEM REPRESENTAÇÃO DIRETA";
+}
+
+/** Updates the persistent UI-037 badge from confirmed selection only, never hover. */
+function updateSelectedAnatomyProvenance(): void {
+  const label = selectedAnatomyProvenanceLabel();
   element("#anatomy-selected-provenance").textContent = label;
+  const badge = element<HTMLElement>("#selection-provenance-badge");
+  const entry = selectedAnatomyFocus?.entry;
+  badge.dataset.provenance = selectedAnatomyFocus?.provenance ?? "unrepresented";
+  element("#selection-provenance-name").textContent = entry?.label ?? "Nenhuma estrutura selecionada";
+  element("#selection-provenance-class").textContent = label;
+  element("#selection-provenance-evidence").textContent = entry?.evidence.level ?? "—";
 }
 
 /** Keeps UI-034 explanatory text in the DOM-only presentation layer. */
@@ -1167,9 +1178,11 @@ function updateViewContext(announce = true): void {
   element("#view-context-selection-hypothesis").textContent = selection.hypothesis;
   element("#view-context-selection-limitation").textContent = selection.limitation;
   if (announce) {
+    const provenance = selectedAnatomyProvenanceLabel();
     element("#view-context-status").textContent =
       `${context.label}. Modelo ${context.model}. Unidade ${context.unit}. ` +
-      `Foco ${selection.label}; hipótese ${selection.hypothesis}; limite ${selection.limitation}.`;
+      `Foco ${selection.label}; classe visual ${provenance}; evidência ${entry.evidence.level}; ` +
+      `hipótese ${selection.hypothesis}; limite ${selection.limitation}.`;
   }
 }
 

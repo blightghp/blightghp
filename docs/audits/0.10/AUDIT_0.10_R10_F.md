@@ -2,8 +2,9 @@
 
 **Estado:** preparação em andamento — **UI-031 · modos de uso**, **UI-032 ·
 paleta de comandos** e **UI-033 · foco anatômico** estão implementados neste
-registro. **UI-034 · "O que estou vendo?"** também está implementada. Não
-promove R10-F, não promove R10-E e não altera a baseline 0.8.
+registro. **UI-034 · "O que estou vendo?"** e **UI-037 · selo de
+proveniência** também estão implementadas. Não promove R10-F, não promove R10-E
+e não altera a baseline 0.8.
 
 **Escopo deste corte:** acrescentar os modos `guided`, `explorer` e `laboratory`
 como estado de apresentação e uma paleta modal que aciona controles já existentes.
@@ -14,7 +15,9 @@ modo permanecem operações de interface/apresentação. O foco anatômico acres
 somente um rótulo DOM e uma mutação transitória de parâmetros de materiais já
 existentes durante o render; não cria geometria, passe, textura, objeto de cena ou
 mensagem ao Worker. O contexto de cada vista acrescenta somente texto DOM
-versionado, sem estado científico, preferência ou custo de GPU.
+versionado, sem estado científico, preferência ou custo de GPU. O selo de
+proveniência é DOM persistente da seleção confirmada, sem novo objeto de cena,
+material, passe ou estado científico.
 
 ## Resultado implementado
 
@@ -74,6 +77,15 @@ versionado, sem estado científico, preferência ou custo de GPU.
 - A proveniência persistida da seleção é resolvida a partir do binding direto
   visível ou do hit de cena exato, independentemente de um hover ativo. Não se
   infere a classe de um segmento vascular agregado pelo seu representante.
+- UI-037 expõe esse resultado em um selo semântico e *sticky*, fora dos
+  `<details>` e do catálogo: nome da seleção, classe visual e nível de evidência
+  ficam disponíveis também no modo Guiado e após rolagem do painel em 390×844.
+  `STATE`, `TOPOLOGY` e `DECORATION` são sempre texto, não uma pista apenas de
+  cor; a ausência de binding direto permanece explicitamente
+  `SEM REPRESENTAÇÃO DIRETA` e nunca é convertida em `DECORATION`.
+- O selo só lê `selectedAnatomyFocus`: prévia de teclado ou ponteiro não troca a
+  sua classe, nível ou nome. A live region do contexto inclui classe e evidência
+  quando há foco confirmado.
 - As auditorias anatômica e vascular escolhem explicitamente o modo Explorador
   antes de validar árvore, busca e topologia. Assim, testam o caminho autorizado
   pela UI-031 em vez de depender do modo Guiado padrão; seus subprocessos Git usam
@@ -89,7 +101,8 @@ estável da árvore e do picking, mas não participa de `BrainSettings`, ABI, sn
 ou Worker. `src/view-context.ts` é conteúdo estático de apresentação; a seleção
 acrescenta apenas evidência já presente no catálogo. Não foi criado comando
 adicional de Worker, mudança de ABI/snapshot, passe de renderização ou bifurcação
-de solver. O mesmo snapshot e motor atendem os três modos.
+de solver. O mesmo snapshot e motor atendem os três modos. O selo UI-037 não
+persiste preferência, não altera `BrainSettings` e não responde ao foco efêmero.
 
 ## Evidência executada em 29 ago 2026
 
@@ -98,9 +111,9 @@ de solver. O mesmo snapshot e motor atendem os três modos.
 | `npm run typecheck` | passou |
 | `npm test -- --run` | passou: 35 arquivos, 177 testes, incluindo contexto nas seis vistas, picking rico vascular e destaque efêmero |
 | `npm run build` | passou; permanece apenas o aviso conhecido de chunk `three-core` acima de 563 kB |
-| `npm run test:wasm-browser` | passou: seletor real, UI-031 por `hidden`, foco restaurado, paleta com `Ctrl` e `Cmd`, UI-033, UI-034 em seis vistas, alto contraste, 390×844, material sem alocação e hashes invariantes no mesmo turno JavaScript |
-| `npm run audit:anatomy` | passou: 76 entradas, cinco capturas, árvore/seleção/contexto UI-034 e custo de cena invariantes |
-| `npm run audit:vascular` | passou: 42 segmentos, seis capturas, picking/catálogo/contexto UI-034 e cinco hashes invariantes |
+| `npm run test:wasm-browser` | passou: seletor real, UI-031 por `hidden`, foco restaurado, paleta com `Ctrl` e `Cmd`, UI-033, UI-034 em seis vistas e UI-037 persistente em Guiado/contexto fechado, alto contraste, 390×844, material sem alocação e hashes invariantes no mesmo turno JavaScript |
+| `npm run audit:anatomy` | passou: 76 entradas, cinco capturas, árvore/seleção/contexto UI-034, selo UI-037 e custo de cena invariantes |
+| `npm run audit:vascular` | passou: 42 segmentos, seis capturas, picking/catálogo/contexto UI-034, selo UI-037 direto ou fallback honesto e cinco hashes invariantes |
 | `npm run verify:presentation-budget` | passou: schema 1, seis vistas e hashes invariantes |
 | `npm run verify:procedural-surface` | passou: hash `7dfdd64207190121`, 5.780/1.500 triângulos e 12 capturas |
 
@@ -111,16 +124,18 @@ entrega controle ao Worker. Para UI-033 ele prova uma estrutura `STATE` por tecl
 `TOPOLOGY`/`ILLUSTRATIVE` por ponteiro, confirma que a prévia não seleciona e que o
 material temporário não é alocado. Para UI-034 ele percorre as seis abas, confirma
 modelo/unidade/hipótese/limite, evidencia a seleção vascular, alto contraste e a
-largura móvel. Essa prova é de fronteira de apresentação; não substitui os futuros
-testes de toque, leitura de tela, fluxo completo em movimento reduzido ou as demais
-entregas de R10-F.
+largura móvel. Para UI-037 ele confirma o selo `STATE`/`DIDACTIC`, preserva-o
+durante uma prévia, confirma `TOPOLOGY`/`ILLUSTRATIVE`, esconde o catálogo e fecha
+o contexto no modo Guiado, percorre o scroll móvel e testa alto contraste. Essa
+prova é de fronteira de apresentação; não substitui os futuros testes de toque,
+leitura de tela, fluxo completo em movimento reduzido ou as demais entregas de
+R10-F.
 
 ## Pendências para concluir R10-F
 
-1. UI-037: selo persistente de proveniência, legível em 390×844.
-2. UI-035/036 e UX-003: câmera, retorno de foco, pontos de vista e transições de
+1. UI-035/036 e UX-003: câmera, retorno de foco, pontos de vista e transições de
    escala.
-3. Cobertura de toque, leitura de tela e fluxo completo em 390×844/movimento
+2. Cobertura de toque, leitura de tela e fluxo completo em 390×844/movimento
    reduzido; depois, auditoria agregada com desempenho e documentação coerentes.
 
 ## Decisão de integração

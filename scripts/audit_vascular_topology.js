@@ -166,6 +166,10 @@ try {
         hypothesis: document.querySelector("#view-context-selection-hypothesis")?.textContent,
         limitation: document.querySelector("#view-context-selection-limitation")?.textContent,
       },
+      provenanceBadge: {
+        visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+        evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+      },
       expectedView,
       };
     }, { id: entryId, expectedView: view });
@@ -174,7 +178,13 @@ try {
       evidence.selectedId !== entryId || evidence.explorer?.selectedId !== entryId ||
       evidence.explorer?.activeView !== view || !evidence.detailsVisible ||
       evidence.viewContext.selectionId !== entryId ||
-      !evidence.viewContext.hypothesis?.trim() || !evidence.viewContext.limitation?.trim()
+      !evidence.viewContext.hypothesis?.trim() || !evidence.viewContext.limitation?.trim() ||
+      !["TOPOLOGY", "SEM REPRESENTAÇÃO DIRETA"].includes(
+        evidence.provenanceBadge.visualClass,
+      ) ||
+      evidence.provenanceBadge.evidence !== "ILLUSTRATIVE" ||
+      (entryId === "brain-pro:anatomy/pericyte" &&
+        evidence.provenanceBadge.visualClass !== "TOPOLOGY")
     ) {
       throw new Error(`seleção vascular divergente: ${JSON.stringify(evidence)}`);
     }
@@ -231,11 +241,13 @@ try {
       panelVisible: Boolean(panel && panel.width > 0 && panel.right <= window.innerWidth + 1),
       vascularVisible: Boolean(vascular && vascular.width > 0 && vascular.right <= window.innerWidth + 1),
       viewContextVisible: Boolean(document.querySelector("#view-context-panel")?.getClientRects().length),
+      provenanceBadgeVisible: Boolean(document.querySelector("#selection-provenance-badge")?.getClientRects().length),
     };
   });
   if (
     mobileLayout.documentWidth > mobileLayout.viewportWidth + 1 ||
-    !mobileLayout.panelVisible || !mobileLayout.vascularVisible || !mobileLayout.viewContextVisible
+    !mobileLayout.panelVisible || !mobileLayout.vascularVisible || !mobileLayout.viewContextVisible ||
+    !mobileLayout.provenanceBadgeVisible
   ) {
     throw new Error(`layout móvel vascular inválido: ${JSON.stringify(mobileLayout)}`);
   }

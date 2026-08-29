@@ -434,6 +434,61 @@ a:focus-visible {
 .presentation-panel[data-slab="false"] #cut-thickness,
 .presentation-panel[data-slab="false"] label[for="cut-thickness"] { opacity: .42; }
 
+.selection-provenance-badge {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 9px 0 10px;
+  padding: 8px 9px;
+  border: 1px solid rgba(91, 184, 255, .36);
+  border-left: 3px solid #79c9ff;
+  border-radius: 8px;
+  background: rgba(4, 16, 31, .94);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .26);
+  pointer-events: none;
+}
+
+.selection-provenance-badge[data-provenance="topology"] { border-left-color: #d9b56d; }
+.selection-provenance-badge[data-provenance="decoration"] { border-left-style: double; }
+.selection-provenance-badge[data-provenance="unrepresented"] { border-left-color: #9aafc0; }
+
+.selection-provenance-badge > p {
+  margin: 0;
+  color: #77bde9;
+  font: 600 7px/1.25 "JetBrains Mono", monospace;
+  letter-spacing: .1em;
+}
+
+.selection-provenance-badge > strong {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: #e4f3ff;
+  font: 600 9px/1.3 "JetBrains Mono", monospace;
+}
+
+.selection-provenance-badge dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 7px 0 0;
+}
+
+.selection-provenance-badge dl div { min-width: 0; }
+
+.selection-provenance-badge dt {
+  color: #527fa7;
+  font: 600 6px/1.25 "JetBrains Mono", monospace;
+  letter-spacing: .08em;
+}
+
+.selection-provenance-badge dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+  color: #a9c5dc;
+  font: 600 7px/1.35 "JetBrains Mono", monospace;
+}
+
 .view-context-panel {
   margin-top: 9px;
   padding: 8px 0 2px;
@@ -780,6 +835,19 @@ body[data-high-contrast="true"] .view-context-selection code,
 body[data-high-contrast="true"] .view-context-selection p,
 body[data-high-contrast="true"] .view-context-selection b,
 body[data-high-contrast="true"] .presentation-panel .view-context-panel > summary span:last-child {
+  color: #fff;
+}
+
+body[data-high-contrast="true"] .selection-provenance-badge {
+  border-color: #fff;
+  background: #000;
+  box-shadow: none;
+}
+
+body[data-high-contrast="true"] .selection-provenance-badge > p,
+body[data-high-contrast="true"] .selection-provenance-badge > strong,
+body[data-high-contrast="true"] .selection-provenance-badge dt,
+body[data-high-contrast="true"] .selection-provenance-badge dd {
   color: #fff;
 }
 

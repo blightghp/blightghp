@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-08-29T12:48:20.747Z",
+  "capturedAt": "2026-08-29T13:04:00.348Z",
   "source": {
-    "commit": "5554d4563711692a620cde83872478404b1d3ce5",
+    "commit": "ee4c7b9d0153e567e34ed6493b15592c9e26b6c6",
     "worktreeDirty": true,
     "productVersion": "0.9.0",
     "command": "npm run audit:anatomy"
@@ -221,6 +221,11 @@
       "selectionId": "brain-pro:anatomy/thalamus",
       "hypothesis": "Agrupa relé e TRN do contrato córtico-talâmico.",
       "limitation": "Não representa núcleos talâmicos anatômicos individuais."
+    },
+    "provenanceBadge": {
+      "visible": true,
+      "visualClass": "SEM REPRESENTAÇÃO DIRETA",
+      "evidence": "DIDACTIC"
     }
   },
   "selections": [
@@ -471,7 +476,8 @@
     "documentWidth": 390,
     "searchVisible": true,
     "resultTreeVisible": true,
-    "viewContextVisible": true
+    "viewContextVisible": true,
+    "provenanceBadgeVisible": true
   },
   "sceneGraphCost": {
     "baseline": {

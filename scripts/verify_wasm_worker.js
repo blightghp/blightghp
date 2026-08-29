@@ -380,6 +380,11 @@ try {
   const confirmedKeyboardSelection = await page.evaluate(() => ({
     provenance: document.querySelector("#anatomy-selected-provenance")?.textContent,
     selected: document.querySelector("#anatomy-selected-id")?.textContent,
+    badge: {
+      name: document.querySelector("#selection-provenance-name")?.textContent,
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+    },
   }));
 
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("synapse"));
@@ -393,9 +398,14 @@ try {
     () => document.querySelectorAll("#anatomy-results [role='treeitem']").length === 1,
     { timeout: 5_000 },
   );
-  const selectedBeforePointerPreview = await page.evaluate(
-    () => document.querySelector("#anatomy-selected-id")?.textContent,
-  );
+  const selectedBeforePointerPreview = await page.evaluate(() => ({
+    id: document.querySelector("#anatomy-selected-id")?.textContent,
+    badge: {
+      name: document.querySelector("#selection-provenance-name")?.textContent,
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+    },
+  }));
   await page.hover("#anatomy-results [data-anatomy-id='brain-pro:anatomy/pericyte']");
   await page.waitForFunction(
     () => document.querySelector("#anatomy-focus-id")?.textContent ===
@@ -407,6 +417,11 @@ try {
     provenance: document.querySelector("#anatomy-focus-provenance")?.textContent,
     evidence: document.querySelector("#anatomy-focus-evidence")?.textContent,
     selectedId: document.querySelector("#anatomy-selected-id")?.textContent,
+    selectionBadge: {
+      name: document.querySelector("#selection-provenance-name")?.textContent,
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+    },
     highlight: window.__BRAIN_ENGINE__.presentationAudit().selectionHighlight,
   }));
   await page.evaluate(() => window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte"));
@@ -425,6 +440,8 @@ try {
       calloutId: document.querySelector("#anatomy-focus-id")?.textContent,
       calloutProvenance: document.querySelector("#anatomy-focus-provenance")?.textContent,
       selectedProvenance: document.querySelector("#anatomy-selected-provenance")?.textContent,
+      badgeClass: document.querySelector("#selection-provenance-class")?.textContent,
+      badgeEvidence: document.querySelector("#selection-provenance-evidence")?.textContent,
     };
     window.__BRAIN_ENGINE__.setHighContrast(false);
     return result;
@@ -460,10 +477,17 @@ try {
     keyboardAnatomyPreview.highlight.materialAllocations !== 0 ||
     confirmedKeyboardSelection.selected !== "brain-pro:anatomy/cortical-layer-4" ||
     confirmedKeyboardSelection.provenance !== "STATE" ||
+    confirmedKeyboardSelection.badge.name !== "Camada cortical L4" ||
+    confirmedKeyboardSelection.badge.visualClass !== "STATE" ||
+    confirmedKeyboardSelection.badge.evidence !== "DIDACTIC" ||
     pointerAnatomyPreview.id !== "brain-pro:anatomy/pericyte" ||
     pointerAnatomyPreview.provenance !== "TOPOLOGY" ||
     pointerAnatomyPreview.evidence !== "ILLUSTRATIVE" ||
-    pointerAnatomyPreview.selectedId !== selectedBeforePointerPreview ||
+    pointerAnatomyPreview.selectedId !== selectedBeforePointerPreview.id ||
+    pointerAnatomyPreview.selectionBadge.name !== selectedBeforePointerPreview.badge.name ||
+    pointerAnatomyPreview.selectionBadge.visualClass !==
+      selectedBeforePointerPreview.badge.visualClass ||
+    pointerAnatomyPreview.selectionBadge.evidence !== selectedBeforePointerPreview.badge.evidence ||
     pointerAnatomyPreview.highlight.status !== "ready" ||
     pointerAnatomyPreview.highlight.highlightedMaterials < 1 ||
     pointerAnatomyPreview.highlight.materialAllocations !== 0 ||
@@ -472,6 +496,8 @@ try {
     highContrastCallout.calloutId !== "brain-pro:anatomy/pericyte" ||
     highContrastCallout.calloutProvenance !== "TOPOLOGY" ||
     highContrastCallout.selectedProvenance !== "TOPOLOGY" ||
+    highContrastCallout.badgeClass !== "TOPOLOGY" ||
+    highContrastCallout.badgeEvidence !== "ILLUSTRATIVE" ||
     (!mobileAnatomyCallout?.hidden && !mobileAnatomyCallout.withinViewport) ||
     PRESENTATION_HASH_FIELDS.some(
       (field) => ui033HashInvariant.before[field] !== ui033HashInvariant.after[field],
@@ -563,6 +589,75 @@ try {
     )
   ) {
     throw new Error(`UI-034 inválida: ${JSON.stringify({ ui034Contexts, mobileViewContext, ui034PresentationInvariant })}`);
+  }
+  await page.evaluate(() => {
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/cortical-layer-4");
+    const context = document.querySelector("#view-context-panel");
+    if (context instanceof HTMLDetailsElement) context.open = false;
+  });
+  await page.waitForFunction(
+    () => document.querySelector("#selection-provenance-class")?.textContent === "STATE",
+    { timeout: 5_000 },
+  );
+  const guidedProvenanceBadge = await page.evaluate(() => {
+    const badge = document.querySelector("#selection-provenance-badge");
+    const explorer = document.querySelector("#anatomy-explorer");
+    const context = document.querySelector("#view-context-panel");
+    return {
+      visible: badge instanceof HTMLElement && !badge.hidden &&
+        getComputedStyle(badge).display !== "none",
+      name: document.querySelector("#selection-provenance-name")?.textContent,
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+      explorerHidden: explorer instanceof HTMLElement && explorer.hidden,
+      contextClosed: context instanceof HTMLDetailsElement && !context.open,
+    };
+  });
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobileProvenanceBadge = await page.evaluate(() => {
+    const panel = document.querySelector("#presentation-panel");
+    const badge = document.querySelector("#selection-provenance-badge");
+    if (!(panel instanceof HTMLElement) || !(badge instanceof HTMLElement)) return undefined;
+    panel.scrollTop = panel.scrollHeight;
+    const panelBounds = panel.getBoundingClientRect();
+    const badgeBounds = badge.getBoundingClientRect();
+    return {
+      visible: !badge.hidden && getComputedStyle(badge).display !== "none",
+      withinViewport: badgeBounds.left >= 0 && badgeBounds.right <= window.innerWidth &&
+        badgeBounds.top >= 0 && badgeBounds.bottom <= window.innerHeight,
+      withinPanel: badgeBounds.left >= panelBounds.left && badgeBounds.right <= panelBounds.right &&
+        badgeBounds.top >= panelBounds.top && badgeBounds.bottom <= panelBounds.bottom,
+      documentWidth: document.documentElement.scrollWidth,
+    };
+  });
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  const ui037PresentationInvariant = await page.evaluate(() => {
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    window.__BRAIN_ENGINE__.setView("synapse");
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte");
+    window.__BRAIN_ENGINE__.setHighContrast(true);
+    const badgeColor = getComputedStyle(document.querySelector("#selection-provenance-class")).color;
+    const badgeClass = document.querySelector("#selection-provenance-class")?.textContent;
+    const badgeEvidence = document.querySelector("#selection-provenance-evidence")?.textContent;
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    return { before, after: window.__BRAIN_ENGINE__.diagnostics(), badgeColor, badgeClass, badgeEvidence };
+  });
+  if (
+    !guidedProvenanceBadge.visible ||
+    guidedProvenanceBadge.name !== "Camada cortical L4" ||
+    guidedProvenanceBadge.visualClass !== "STATE" ||
+    guidedProvenanceBadge.evidence !== "DIDACTIC" ||
+    !guidedProvenanceBadge.explorerHidden || !guidedProvenanceBadge.contextClosed ||
+    !mobileProvenanceBadge?.visible || !mobileProvenanceBadge.withinViewport ||
+    !mobileProvenanceBadge.withinPanel || mobileProvenanceBadge.documentWidth > 390 ||
+    ui037PresentationInvariant.badgeColor !== "rgb(255, 255, 255)" ||
+    ui037PresentationInvariant.badgeClass !== "TOPOLOGY" ||
+    ui037PresentationInvariant.badgeEvidence !== "ILLUSTRATIVE" ||
+    PRESENTATION_HASH_FIELDS.some(
+      (field) => ui037PresentationInvariant.before[field] !== ui037PresentationInvariant.after[field],
+    )
+  ) {
+    throw new Error(`UI-037 inválida: ${JSON.stringify({ guidedProvenanceBadge, mobileProvenanceBadge, ui037PresentationInvariant })}`);
   }
   await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
   const materialProfiles = await page.evaluate(

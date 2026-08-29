@@ -219,6 +219,11 @@ try {
       hypothesis: document.querySelector("#view-context-selection-hypothesis")?.textContent,
       limitation: document.querySelector("#view-context-selection-limitation")?.textContent,
     },
+    provenanceBadge: {
+      visible: Boolean(document.querySelector("#selection-provenance-badge")?.getClientRects().length),
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+    },
   }));
   if (
     uiSearch.count !== 1 ||
@@ -228,7 +233,10 @@ try {
     !uiSelection.liveRegion?.includes("Tálamo didático") ||
     uiSelection.viewContext.selectionId !== "brain-pro:anatomy/thalamus" ||
     !uiSelection.viewContext.hypothesis?.trim() ||
-    !uiSelection.viewContext.limitation?.trim()
+    !uiSelection.viewContext.limitation?.trim() ||
+    !uiSelection.provenanceBadge.visible ||
+    !uiSelection.provenanceBadge.visualClass?.trim() ||
+    !uiSelection.provenanceBadge.evidence?.trim()
   ) {
     throw new Error(`UI do catálogo não convergiu: ${JSON.stringify({ uiSearch, uiSelection })}`);
   }
@@ -264,12 +272,14 @@ try {
     searchVisible: Boolean(document.querySelector("#anatomy-search")?.getClientRects().length),
     resultTreeVisible: Boolean(document.querySelector("#anatomy-results")?.getClientRects().length),
     viewContextVisible: Boolean(document.querySelector("#view-context-panel")?.getClientRects().length),
+    provenanceBadgeVisible: Boolean(document.querySelector("#selection-provenance-badge")?.getClientRects().length),
   }));
   if (
     mobileLayout.documentWidth > mobileLayout.viewportWidth ||
     !mobileLayout.searchVisible ||
     !mobileLayout.resultTreeVisible ||
-    !mobileLayout.viewContextVisible
+    !mobileLayout.viewContextVisible ||
+    !mobileLayout.provenanceBadgeVisible
   ) {
     throw new Error(`layout móvel do catálogo inválido: ${JSON.stringify(mobileLayout)}`);
   }
