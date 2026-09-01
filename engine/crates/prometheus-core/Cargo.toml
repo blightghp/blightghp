@@ -12,6 +12,7 @@ prometheus-math   = { workspace = true }
 prometheus-alloc  = { workspace = true }
 prometheus-ecs    = { workspace = true }
 prometheus-gpu    = { workspace = true }
+prometheus-render-graph = { workspace = true }
 prometheus-window = { workspace = true }
 tracing           = { workspace = true }
 blake3            = { workspace = true }

@@ -6,6 +6,7 @@ members = [
     "crates/prometheus-ecs",
     "crates/prometheus-window",
     "crates/prometheus-gpu",
+    "crates/prometheus-render-graph",
     "crates/prometheus-core",
 ]
 resolver = "2"
@@ -29,6 +30,7 @@ prometheus-window = { path = "crates/prometheus-window" }
 
 # --- L2: GPU ---
 prometheus-gpu = { path = "crates/prometheus-gpu" }
+prometheus-render-graph = { path = "crates/prometheus-render-graph" }
 
 # --- L4: Facade ---
 prometheus-core = { path = "crates/prometheus-core" }
@@ -64,8 +66,8 @@ criterion = "0.8"
 unsafe_code = "forbid"
 
 [workspace.lints.clippy]
-all      = "warn"
-pedantic = "warn"
+all      = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
 unwrap_used      = "deny"
 expect_used      = "deny"
 panic            = "deny"

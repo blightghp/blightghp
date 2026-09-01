@@ -1,0 +1,6 @@
+prometheus-render-graph
+Copyright 2026 the unraillibs contributors
+
+This crate is derived from the `susanna` render-graph prototype in
+https://github.com/lexikognosdvpm/unraillibs and remains available under the
+Apache License, Version 2.0.

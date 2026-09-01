@@ -13,7 +13,7 @@
 //! |:-----:|--------|---------|
 //! | **L0** | `error`, `math`, `alloc` | Zero-dependency foundation |
 //! | **L1** | `ecs`, `window` | Data substrate & platform |
-//! | **L2** | `gpu` | Hardware abstraction |
+//! | **L2** | `gpu`, `render-graph` | Hardware abstraction and frame planning |
 //! | **L4** | `core` (this crate) | Public facade |
 //!
 //! ## Invariant: Scientific Core Isolation (GFX-001)
@@ -50,7 +50,20 @@ pub mod ecs {
 
 /// GPU hardware abstraction over wgpu with VRAM leak tracking.
 pub mod gpu {
-    pub use prometheus_gpu::{RenderContext, ResourceFactory, VramLedger};
+    pub use prometheus_gpu::{
+        ImportedTexture, PassResources, RenderContext, RenderGraphExecutor, RenderGraphFrameSubmission,
+        RenderGraphPoolStats, ResourceFactory, VramLedger,
+    };
+}
+
+/// Deterministic, pre-allocated render-graph planning.
+pub mod render_graph {
+    pub use prometheus_render_graph::{
+        AccessId, Barrier, BarrierState, CapacityKind, CompiledGraph, GraphCapacity, GraphError, GraphStats,
+        PassBuilder, PassId, PassLabel, Queue, QueueDomain, Readable, RenderGraph, ResourceId, ResourceLabel,
+        SlotAssignment, SyncToken, TexHandle, TextureDesc, TextureFormat, TextureRef, TextureUsages, Undefined,
+        WritableTextureState, Written,
+    };
 }
 
 /// Window management and frame timing.
@@ -244,11 +257,15 @@ mod tests {
     // Verify that re-exports compile and are accessible
     #[test]
     fn reexports_are_accessible() {
-        let _ = error::EngineError::NotImplemented("test");
+        let _ = error::EngineError::NotImplemented {
+            crate_name: "prometheus-core",
+            symbol: "test",
+        };
         let _ = math::Vec3::default();
         let _ = math::Transform::default();
         let _ = alloc::DEFAULT_FRAME_ARENA_BYTES;
         let _ = ecs::Entity::new(0, 0);
         let _ = ecs::ArchetypeSignature::empty();
+        let _ = render_graph::GraphCapacity::desktop_default();
     }
 }

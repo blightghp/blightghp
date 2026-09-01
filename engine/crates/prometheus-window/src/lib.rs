@@ -51,33 +51,27 @@ impl AppWindow {
     /// Creates a new window and sets up the rendering surface.
     ///
     /// # Errors
-    /// Returns `EngineError::WindowError` if window creation fails.
-    pub fn new(
-        event_loop: &ActiveEventLoop,
-        config: &WindowConfig,
-        render_ctx: &RenderContext,
-    ) -> EngineResult<Self> {
+    /// Returns `EngineError::GraphicsDevice` if window or surface creation fails.
+    pub fn new(event_loop: &ActiveEventLoop, config: &WindowConfig, render_ctx: &RenderContext) -> EngineResult<Self> {
         let window_attributes = winit::window::Window::default_attributes()
             .with_title(&config.title)
             .with_inner_size(winit::dpi::PhysicalSize::new(config.width, config.height));
 
-        let window = Arc::new(
-            event_loop
-                .create_window(window_attributes)
-                .map_err(|_| EngineError::GraphicsDevice { reason: "Failed to create window" })?,
-        );
+        let window =
+            Arc::new(
+                event_loop
+                    .create_window(window_attributes)
+                    .map_err(|_| EngineError::GraphicsDevice {
+                        reason: "Failed to create window",
+                    })?,
+            );
 
         let surface = render_ctx
             .instance
             .create_surface(window.clone())
-            .map_err(|_| EngineError::GraphicsDevice { reason: "Failed to create surface" })?;
-
-        let caps = surface.get_capabilities(&render_ctx.adapter);
-        let format = caps
-            .formats
-            .into_iter()
-            .find(|f| f.is_srgb())
-            .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
+            .map_err(|_| EngineError::GraphicsDevice {
+                reason: "Failed to create surface",
+            })?;
 
         let present_mode = if config.vsync {
             wgpu::PresentMode::AutoVsync
@@ -85,16 +79,13 @@ impl AppWindow {
             wgpu::PresentMode::AutoNoVsync
         };
 
-        let surface_config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format,
-            width: config.width,
-            height: config.height,
-            present_mode,
-            alpha_mode: caps.alpha_modes[0],
-            view_formats: vec![],
-            desired_maximum_frame_latency: 2,
-        };
+        let mut surface_config = surface
+            .get_default_config(&render_ctx.adapter, config.width, config.height)
+            .ok_or(EngineError::GraphicsDevice {
+                reason: "GPU adapter does not support the window surface",
+            })?;
+        surface_config.present_mode = present_mode;
+        surface_config.desired_maximum_frame_latency = 2;
 
         surface.configure(&render_ctx.device, &surface_config);
 
@@ -117,11 +108,32 @@ impl AppWindow {
     /// Retrieves the current surface texture for rendering.
     ///
     /// # Errors
-    /// Returns `EngineError::GraphicsDevice` if fetching the texture fails.
+    /// Returns `EngineError::GraphicsDevice` when the surface cannot provide a frame.
     pub fn current_texture(&self) -> EngineResult<wgpu::SurfaceTexture> {
-        self.surface
-            .get_current_texture()
-            .map_err(|_| EngineError::GraphicsDevice { reason: "Failed to get current texture" })
+        match self.surface.get_current_texture() {
+            wgpu::CurrentSurfaceTexture::Success(texture) | wgpu::CurrentSurfaceTexture::Suboptimal(texture) => {
+                Ok(texture)
+            }
+            wgpu::CurrentSurfaceTexture::Timeout | wgpu::CurrentSurfaceTexture::Occluded => {
+                Err(EngineError::GraphicsDevice {
+                    reason: "Window surface is temporarily unavailable",
+                })
+            }
+            wgpu::CurrentSurfaceTexture::Outdated => Err(EngineError::GraphicsDevice {
+                reason: "Window surface configuration is outdated",
+            }),
+            wgpu::CurrentSurfaceTexture::Lost => Err(EngineError::GraphicsDevice {
+                reason: "Window surface was lost",
+            }),
+            wgpu::CurrentSurfaceTexture::Validation => Err(EngineError::GraphicsDevice {
+                reason: "Window surface validation failed",
+            }),
+        }
+    }
+
+    /// Presents a frame acquired by [`Self::current_texture`] after GPU submission.
+    pub fn present(&self, queue: &wgpu::Queue, texture: wgpu::SurfaceTexture) {
+        queue.present(texture);
     }
 
     /// Returns the logical size of the window surface.
@@ -200,7 +212,7 @@ mod tests {
     fn test_frame_timer() {
         let mut timer = FrameTimer::new();
         assert_eq!(timer.frame_count(), 0);
-        assert_eq!(timer.delta(), 0.0);
+        assert!(timer.delta().abs() <= f64::EPSILON);
 
         sleep(Duration::from_millis(10));
         timer.tick();

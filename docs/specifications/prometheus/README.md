@@ -17,9 +17,12 @@ A implementação trará 13 bibliotecas teóricas do laboratório para formar o 
 Estabelecimento do workspace nativo. L0-L4 instanciado com zero-unsafe e ECS em estilo columnar arquetipal, protegido por um provador VramLedger e isolamento científico estabelecido.
 - Crates principais: `prometheus-error`, `prometheus-math`, `prometheus-alloc`, `prometheus-ecs`, `prometheus-window`, `prometheus-gpu`, `prometheus-core`.
 
-### Φ-1: First Light
+### Φ-1: First Light (EM ANDAMENTO)
 Iluminação e Pipeline PBR inicial. A geometria simples e estática da ciência ganhará materialidade fotométrica autêntica.
 - Implementações: Render Graph dinâmico (`susanna`) e materialização de texturas procedurais base.
+- Promoção concluída: `prometheus-render-graph`, núcleo portátil derivado do `susanna`, com handles de textura tipados, culling de passes, barreiras abstratas, sincronização entre filas, pooling lógico conservador e checksum determinístico. A tradução do plano para recursos e comandos `wgpu` permanece como próximo passo da fase.
+- Executor concluído: `prometheus-gpu::RenderGraphExecutor` materializa slots transitórios em `wgpu 30`, valida views importadas e entrega um `CommandEncoder` ao callback de cada passe. O backend WebGPU possui uma única queue; portanto, os passes Graphics/Compute são gravados em ordem determinística e os tokens entre filas são preservados como metadados de dependência.
+- Plataforma unificada: os crates `prometheus-gpu` e `prometheus-window` usam exclusivamente a dependência de workspace `wgpu 30.0.1`; a implementação anterior em `wgpu 0.20` foi removida.
 
 ### Φ-2: Nanite Brain
 Injeção massiva da anatomia microscópica usando instanciamento infinito.

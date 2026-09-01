@@ -1,0 +1,11 @@
+[package]
+name = "prometheus-render-graph"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "Apache-2.0"
+repository.workspace = true
+description = "Deterministic, pre-allocated render-graph planner for PROMETHEUS"
+
+[lints]
+workspace = true
