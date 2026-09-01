@@ -93,8 +93,9 @@ testes, revisão humana, ruleset ou evidência versionada.
 Itens abaixo não são controlados por Git e precisam de auditoria periódica:
 
 - permissões padrão de workflow em leitura; a opção que permite ao
-  `GITHUB_TOKEN` criar PRs está habilitada exclusivamente para os writers.
-  A política versionada proíbe que eles aprovem PRs;
+  `GITHUB_TOKEN` criar PRs está habilitada porque os writers precisam dela.
+  Somente esses dois jobs recebem `pull-requests: write`, e a política
+  versionada proíbe que aprovem ou mesclem PRs;
 - allowlist apenas das Actions pinadas realmente usadas;
 - exigência de SHA completo na política de Actions (habilitada);
 - Dependabot alerts, security updates e automated security fixes habilitados;
