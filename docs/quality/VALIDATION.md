@@ -647,7 +647,11 @@ cargo fmt --all -- --check
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo check -p brain-wasm --target wasm32-unknown-unknown
+cargo fmt --manifest-path engine/Cargo.toml --all -- --check
+cargo test --manifest-path engine/Cargo.toml --workspace --all-targets
+cargo clippy --manifest-path engine/Cargo.toml --workspace --all-targets -- -D warnings
 npm run typecheck
+npm run verify:automation
 npx vitest run
 npm run build
 npm run check:shadow-replay
@@ -668,6 +672,12 @@ npm run verify:procedural-surface
 versionado e uma auditoria temporária. Defina `BRAIN_AUDIT_DIR` para escolher onde
 uma nova captura será escrita; a atualização versionada exige revisão visual e
 commit separado da implementação testada.
+
+Os gates do workspace PROMETHEUS são independentes dos comandos Cargo da raiz.
+O CI os executa em Linux e Windows. A política operacional, o lock comum dos
+bots de escrita e a cobertura de Dependabot são verificadas por
+`npm run verify:automation` e documentadas em
+[AUTOMATION.md](AUTOMATION.md).
 
 ## Gate de promoção 0.8 · concluído
 

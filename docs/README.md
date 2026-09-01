@@ -31,6 +31,11 @@ Os critérios de teste e promoção ficam no
 [guia de validação](quality/VALIDATION.md). As fontes científicas estão em
 [referências](references/REFERENCES.md).
 
+A operação de workflows, bots, agentes e Dependabot é definida na
+[política de automação](quality/AUTOMATION.md). A fotografia inicial e os riscos
+residuais estão na
+[auditoria de 2026-09-01](audits/AUTOMATION_AUDIT_2026-09-01.md).
+
 ## Evidências
 
 As auditorias são organizadas pelo ciclo em que foram produzidas:

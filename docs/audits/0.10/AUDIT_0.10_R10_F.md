@@ -133,9 +133,9 @@ hook de auditoria declara apenas schema, pose selecionada, degrau e transição.
 
 | Prova | Resultado |
 | :-- | :-- |
-| `npm run check` | passou: tipagem, 36 arquivos/181 testes, links, replay, build, Worker/Wasm, navegação de apresentação, promoção 0.8, orçamento, superfície e auditoria de runtime |
+| `npm run check` | passou: tipagem, 36 arquivos/182 testes, links, replay, build, Worker/Wasm, navegação de apresentação, promoção 0.8, orçamento, superfície e auditoria de runtime |
 | `npm run typecheck` | passou |
-| `npm test -- --run` | passou: 36 arquivos, 181 testes, incluindo contrato de navegação, contexto nas seis vistas, picking rico vascular e destaque efêmero |
+| `npm test -- --run` | passou: 36 arquivos, 182 testes, incluindo contrato de navegação, contexto nas seis vistas, picking rico vascular e destaque efêmero |
 | `npm run build` | passou; permanece apenas o aviso conhecido de chunk `three-core` acima de 563 kB |
 | `npm run test:wasm-browser` | passou: seletor real, UI-031 por `hidden`, foco restaurado, paleta com `Ctrl` e `Cmd`, UI-033, UI-034 em seis vistas e UI-037 persistente em Guiado/contexto fechado, alto contraste, 390×844, material sem alocação e hashes invariantes no mesmo turno JavaScript |
 | `npm run audit:anatomy` | passou: 76 entradas, cinco capturas, árvore/seleção/contexto UI-034, selo UI-037 e custo de cena invariantes |
