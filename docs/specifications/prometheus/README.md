@@ -6,8 +6,8 @@ A arquitetura do motor PROMETHEUS é a implementação nativa (em WGPU/Rust) de 
 
 A condição absoluta de existência do motor gráfico do PROMETHEUS é que a ciência contida em `brain-engine` (equações neurais, *hashes* de estado, química celular) seja inteiramente determinística e inviolável pela pipeline de renderização.
 
-- O Workspace PROMETHEUS (`d:\Projects\blightghp\engine\`) integra uma interface L0-L4 independente.
-- A comunicação com a ciência ocorre pela `RenderExtractable`, uma trait de interface puramente *read-only*. O PROMETHEUS consome fatias de memória flat contendo posições, voltagens e campos contínuos, e lê o Hash Científico BLAKE3 para se certificar de que nenhum pixel corrompeu um volt.
+- O Workspace PROMETHEUS (`engine/`) mantém uma interface L0-L4 independente.
+- `RenderExtractable` é o contrato puramente *read-only* definido em `brain-engine`. A ponte de runtime ainda não foi ligada ao workspace nativo: o PROMETHEUS só poderá consumir fatias de posições, voltagens, campos contínuos e hash científico depois que o adaptador e o runner forem implementados e auditados.
 
 ## Cronograma de Execução: Fases do PROMETHEUS (Φ)
 
@@ -15,12 +15,12 @@ A implementação trará 13 bibliotecas teóricas do laboratório para formar o 
 
 ### Φ-0: Genesis (COMPLETA)
 Estabelecimento do workspace nativo. L0-L4 instanciado com zero-unsafe e ECS em estilo columnar arquetipal, protegido por um provador VramLedger e isolamento científico estabelecido.
-- Crates principais: `prometheus-error`, `prometheus-math`, `prometheus-alloc`, `prometheus-ecs`, `prometheus-window`, `prometheus-gpu`, `prometheus-core`.
+- Crates principais: `prometheus-error`, `prometheus-math`, `prometheus-alloc`, `prometheus-ecs`, `prometheus-window`, `prometheus-gpu`, `prometheus-render-graph`, `prometheus-core`.
 
 ### Φ-1: First Light (EM ANDAMENTO)
 Iluminação e Pipeline PBR inicial. A geometria simples e estática da ciência ganhará materialidade fotométrica autêntica.
 - Implementações: Render Graph dinâmico (`susanna`) e materialização de texturas procedurais base.
-- Promoção concluída: `prometheus-render-graph`, núcleo portátil derivado do `susanna`, com handles de textura tipados, culling de passes, barreiras abstratas, sincronização entre filas, pooling lógico conservador e checksum determinístico. A tradução do plano para recursos e comandos `wgpu` permanece como próximo passo da fase.
+- Promoção concluída: `prometheus-render-graph`, núcleo portátil derivado do `susanna`, com handles de textura tipados, culling de passes, barreiras abstratas, sincronização entre filas, pooling lógico conservador e checksum determinístico.
 - Executor concluído: `prometheus-gpu::RenderGraphExecutor` materializa slots transitórios em `wgpu 30`, valida views importadas e entrega um `CommandEncoder` ao callback de cada passe. O backend WebGPU possui uma única queue; portanto, os passes Graphics/Compute são gravados em ordem determinística e os tokens entre filas são preservados como metadados de dependência.
 - Plataforma unificada: os crates `prometheus-gpu` e `prometheus-window` usam exclusivamente a dependência de workspace `wgpu 30.0.1`; a implementação anterior em `wgpu 0.20` foi removida.
 

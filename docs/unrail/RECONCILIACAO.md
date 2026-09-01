@@ -42,12 +42,12 @@ correção em mente até receberem a passagem:
 
 | Documento | O que muda | Prioridade |
 | :-- | :-- | :-- |
-| [arquitetura](UNRAIL_ARCHITECTURE.md) | anéis → as cinco camadas reais; remover a proposta de workspace local; manter as regras de fronteira | alta |
-| [roadmap](UNRAIL_ROADMAP.md) | U0–U9 → roteiro de integração `neuro_*` sobre o motor existente | alta |
-| [fatia vertical 0](UNRAIL_SLICE_0.md) | reescrever sobre as crates reais; virar especificação da camada de produto | média |
-| [escada de dependências](UNRAIL_DEPENDENCY_LADDER.md) | os empréstimos reais são os do motor, não os que imaginei | média |
-| [desmontagem](UNRAIL_REFERENCE_TEARDOWN.md) | conteúdo analítico continua válido; ajustar as colunas de destino | baixa |
-| [léxico](UNRAIL_GLOSSARY.md) | trocar a tabela de termos `um_*` pelos nomes reais | baixa |
+| [arquitetura](../specifications/prometheus/ARCHITECTURE.md) | anéis → as cinco camadas reais; remover a proposta de workspace local; manter as regras de fronteira | alta |
+| [roadmap](../planning/ROADMAP.md) | U0–U9 → roteiro de integração `neuro_*` sobre o motor existente | alta |
+| [fatia vertical 0](../planning/PLAN_UNRAIL_UM0.md) | reescrever sobre as crates reais; virar especificação da camada de produto | média |
+| [escada de dependências](../specifications/prometheus/DEPENDENCY_POLICY.md) | os empréstimos reais são os do motor, não os que imaginei | média |
+| [desmontagem](../references/unrail/REFERENCE_TEARDOWN.md) | conteúdo analítico continua válido; ajustar as colunas de destino | baixa |
+| [léxico](../specifications/prometheus/GLOSSARY.md) | trocar a tabela de termos `um_*` pelos nomes reais | baixa |
 
 ## 5 · O achado que a reconciliação produziu
 

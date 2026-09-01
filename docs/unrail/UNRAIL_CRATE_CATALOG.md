@@ -3,7 +3,7 @@
 **Estado documental:** reescrito em 22 de agosto de 2026
 **Substitui:** a versão de 21 de agosto de 2026, que planejava 84 crates com prefixo `um_*`
 **Motivo da reescrita:** o programa já existe e tem código. O catálogo anterior descrevia um motor imaginário e violava a convenção de nomes vigente. Ver [reconciliação](RECONCILIACAO.md).
-**Pré-requisitos de leitura:** [léxico](UNRAIL_GLOSSARY.md) e [arquitetura](UNRAIL_ARCHITECTURE.md)
+**Pré-requisitos de leitura:** [léxico](../specifications/prometheus/GLOSSARY.md) e [arquitetura](../specifications/prometheus/ARCHITECTURE.md)
 
 Este documento não planeja bibliotecas. Ele inventaria as que existem, nomeia as
 que faltam para o simulador anatômico e separa uma coisa da outra com clareza.
@@ -119,5 +119,5 @@ modificada. Essa fronteira não muda.
 | crates de produto `neuro_*` existentes | 0 |
 
 A ordem de ataque, o esforço e o critério de parada estão no
-[roadmap](UNRAIL_ROADMAP.md), que também precisa de uma passagem de
+[roadmap](../planning/ROADMAP.md), que também precisa de uma passagem de
 reconciliação — ver [RECONCILIACAO.md](RECONCILIACAO.md).
