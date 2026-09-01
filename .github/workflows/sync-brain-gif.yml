@@ -91,6 +91,7 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "chore(profile): sincronizar BRAIN PRO com ${GITHUB_SHA::12}"
           git pull --rebase origin main
+          gh auth setup-git
           remote_sha="$(git ls-remote --heads origin "refs/heads/$branch" | awk '{print $1}')"
           if [ -n "$remote_sha" ]; then
             git push --force-with-lease="refs/heads/$branch:$remote_sha" origin HEAD:"refs/heads/$branch"
