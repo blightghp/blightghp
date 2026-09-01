@@ -39,15 +39,19 @@ APIs de Actions/Pages/branch protection/security, `npm audit`, `cargo audit`,
   ativos); code scanning continua sem análise, fora do escopo deste corte.
 
 O ruleset exige PR, uma aprovação, revisão de CODEOWNERS, resolução de threads,
-checks de CI estritos, e bloqueia deleção/force-push. O único bypass é a
-integração oficial GitHub Actions (`actor_id=15368`), usado pelos dois writers;
-isso preserva a escrita direta serializada sem abrir bypass para usuários.
+checks de CI estritos, e bloqueia deleção/force-push. O único bypass é o usuário
+de automação `github-actions[bot]` (`actor_id=41898282`), usado pelos dois
+writers; os checks identificam a integração GitHub Actions (`integration_id=15368`).
+Isso preserva a escrita direta serializada sem abrir bypass para usuários.
 
 ## Risco residual aceito
 
 O perfil ainda usa commits diretos do `github-actions[bot]` em `main`, por meio do
 bypass restrito do ruleset. A superfície foi reduzida por token tardio, `git add`
-limitado e serialização. `cargo audit` também
+limitado e serialização. Há um alerta Dependabot aberto (GHSA-wrw7-89jp-8q8g)
+para `glib 0.18.5`, transitivo da pilha GTK3 do Tauri; não existe atualização
+isolada compatível no lockfile, então a evolução do Tauri/GTK deve ser acompanhada.
+`cargo audit` também
 reporta avisos permitidos de crates não mantidos/unsound transitivos (17 na raiz,
 1 em `engine/`) sem vulnerabilidade ativa; atualizações futuras devem reduzir
 essa dívida sem ignorá-la globalmente.

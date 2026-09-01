@@ -95,8 +95,9 @@ Itens abaixo não são controlados por Git e precisam de auditoria periódica:
 - secret scanning e push protection habilitados;
 - Pages limitado à branch `main` pelo ambiente `github-pages`;
 - ruleset `main-protection` ativo em `main`, exigindo PR/aprovação/CODEOWNERS,
-  resolução de threads e os quatro checks CI; o único bypass é a integração
-  GitHub Actions (`actor_id=15368`), compatível com os dois writers.
+  resolução de threads e os quatro checks CI; o único bypass é o usuário
+  `github-actions[bot]` (`actor_id=41898282`), e os checks usam a integração
+  GitHub Actions (`integration_id=15368`), compatível com os dois writers.
 
 Referências operacionais: [Dependabot](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/configure-version-updates),
 [uso seguro de Actions](https://docs.github.com/en/actions/reference/security/secure-use),
