@@ -8,6 +8,7 @@ import puppeteer from "puppeteer";
 import packageManifest from "../package.json" with { type: "json" };
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const gitSafeDirectory = root.replaceAll("\\", "/");
 const outputDirectory = process.env.BRAIN_ANATOMY_AUDIT_DIR
   ? path.resolve(process.env.BRAIN_ANATOMY_AUDIT_DIR)
   : path.join(root, "artifacts", "anatomy-audit");
@@ -20,6 +21,13 @@ const hashFields = [
 ];
 const expectedViews = ["cell", "electricity", "laminar", "neuron", "overview", "synapse"];
 const captures = [];
+
+function gitOutput(args) {
+  return execFileSync("git", ["-c", `safe.directory=${gitSafeDirectory}`, ...args], {
+    cwd: root,
+    encoding: "utf8",
+  }).trim();
+}
 
 function assertHashes(label, baseline, candidate) {
   const changed = hashFields.filter((field) => baseline[field] !== candidate[field]);
@@ -82,17 +90,43 @@ try {
   await page.evaluate(async () => {
     window.__BRAIN_ENGINE__.setView("overview");
     await window.__BRAIN_ENGINE__.setCaptureMode(true);
+    const usageMode = document.querySelector("#usage-mode");
+    if (!(usageMode instanceof HTMLSelectElement)) throw new Error("modo de uso ausente");
+    usageMode.value = "explorer";
+    usageMode.dispatchEvent(new Event("change", { bubbles: true }));
     document.body.dataset.capture = "false";
   });
 
-  await page.evaluate(async (views) => {
+  const viewContextEvidence = await page.evaluate(async (views) => {
+    const contexts = [];
     for (const view of views) {
       window.__BRAIN_ENGINE__.setView(view);
       await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+      const panel = document.querySelector("#view-context-panel");
+      contexts.push({
+        view,
+        open: panel instanceof HTMLDetailsElement && panel.open,
+        label: document.querySelector("#view-context-view")?.textContent,
+        model: document.querySelector("#view-context-model")?.textContent,
+        unit: document.querySelector("#view-context-unit")?.textContent,
+        hypothesis: document.querySelector("#view-context-hypothesis")?.textContent,
+        limitation: document.querySelector("#view-context-limitation")?.textContent,
+      });
     }
     window.__BRAIN_ENGINE__.setView("overview");
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return contexts;
   }, expectedViews);
+  if (
+    viewContextEvidence.length !== expectedViews.length ||
+    viewContextEvidence.some((context) =>
+      !context.open ||
+      [context.label, context.model, context.unit, context.hypothesis, context.limitation]
+        .some((value) => !value?.trim())
+    )
+  ) {
+    throw new Error(`contexto UI-034 incompleto: ${JSON.stringify(viewContextEvidence)}`);
+  }
 
   const baseline = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   const baselineRenderer = await page.evaluate(
@@ -180,13 +214,29 @@ try {
     selectedId: document.querySelector("#anatomy-selected-id")?.textContent,
     selectedTab: document.querySelector("[role='tab'][aria-selected='true']")?.getAttribute("data-view"),
     liveRegion: document.querySelector("#anatomy-selection-status")?.textContent,
+    viewContext: {
+      selectionId: document.querySelector("#view-context-selection-id")?.textContent,
+      hypothesis: document.querySelector("#view-context-selection-hypothesis")?.textContent,
+      limitation: document.querySelector("#view-context-selection-limitation")?.textContent,
+    },
+    provenanceBadge: {
+      visible: Boolean(document.querySelector("#selection-provenance-badge")?.getClientRects().length),
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+    },
   }));
   if (
     uiSearch.count !== 1 ||
     uiSearch.activeDescendant !== "brain-pro:anatomy/thalamus" ||
     uiSelection.selectedId !== "brain-pro:anatomy/thalamus" ||
     uiSelection.selectedTab !== "laminar" ||
-    !uiSelection.liveRegion?.includes("Tálamo didático")
+    !uiSelection.liveRegion?.includes("Tálamo didático") ||
+    uiSelection.viewContext.selectionId !== "brain-pro:anatomy/thalamus" ||
+    !uiSelection.viewContext.hypothesis?.trim() ||
+    !uiSelection.viewContext.limitation?.trim() ||
+    !uiSelection.provenanceBadge.visible ||
+    !uiSelection.provenanceBadge.visualClass?.trim() ||
+    !uiSelection.provenanceBadge.evidence?.trim()
   ) {
     throw new Error(`UI do catálogo não convergiu: ${JSON.stringify({ uiSearch, uiSelection })}`);
   }
@@ -221,11 +271,15 @@ try {
     documentWidth: document.documentElement.scrollWidth,
     searchVisible: Boolean(document.querySelector("#anatomy-search")?.getClientRects().length),
     resultTreeVisible: Boolean(document.querySelector("#anatomy-results")?.getClientRects().length),
+    viewContextVisible: Boolean(document.querySelector("#view-context-panel")?.getClientRects().length),
+    provenanceBadgeVisible: Boolean(document.querySelector("#selection-provenance-badge")?.getClientRects().length),
   }));
   if (
     mobileLayout.documentWidth > mobileLayout.viewportWidth ||
     !mobileLayout.searchVisible ||
-    !mobileLayout.resultTreeVisible
+    !mobileLayout.resultTreeVisible ||
+    !mobileLayout.viewContextVisible ||
+    !mobileLayout.provenanceBadgeVisible
   ) {
     throw new Error(`layout móvel do catálogo inválido: ${JSON.stringify(mobileLayout)}`);
   }
@@ -246,11 +300,8 @@ try {
     schemaVersion: 1,
     capturedAt: new Date().toISOString(),
     source: {
-      commit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
-      worktreeDirty: execFileSync("git", ["status", "--porcelain"], {
-        cwd: root,
-        encoding: "utf8",
-      }).trim().length > 0,
+      commit: gitOutput(["rev-parse", "HEAD"]),
+      worktreeDirty: gitOutput(["status", "--porcelain"]).length > 0,
       productVersion: packageManifest.version,
       command: "npm run audit:anatomy",
     },
@@ -275,6 +326,7 @@ try {
     catalog: finalAudit.catalog,
     views: finalAudit.views,
     searchEvidence,
+    viewContextEvidence,
     uiSearch,
     uiSelection,
     selections,

@@ -15,12 +15,33 @@
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
     <div id="canvas-container" aria-label="Modelo neural tridimensional interativo"></div>
+    <aside id="anatomy-focus-callout" class="anatomy-focus-callout" aria-label="Estrutura em foco" hidden>
+      <p class="anatomy-focus-kicker">ESTRUTURA EM FOCO</p>
+      <strong id="anatomy-focus-name">—</strong>
+      <code id="anatomy-focus-id">—</code>
+      <div class="anatomy-focus-facts">
+        <span><small>PROVENIÊNCIA</small><b id="anatomy-focus-provenance">—</b></span>
+        <span><small>EVIDÊNCIA</small><b id="anatomy-focus-evidence">—</b></span>
+      </div>
+      <p id="anatomy-focus-representation" class="anatomy-focus-representation"></p>
+    </aside>
+    <p id="anatomy-focus-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
 
     <header class="topbar">
       <a class="brand" href="https://github.com/blightghp" aria-label="Perfil blightghp no GitHub">
         <span class="brand-mark" aria-hidden="true"></span>
         <span>BRAIN PRO [v. 0.9.0]</span>
       </a>
+      <div class="usage-mode-selector">
+        <label for="usage-mode">MODO</label>
+        <select id="usage-mode" class="glass-select" aria-describedby="usage-mode-status">
+          <option value="guided" selected>Guiado</option>
+          <option value="explorer">Explorador</option>
+          <option value="laboratory">Laboratório</option>
+        </select>
+        <p id="usage-mode-status" class="sr-only" role="status" aria-live="polite">Modo guiado: navegação e leituras essenciais; o motor permanece o mesmo.</p>
+      </div>
+      <button id="open-command-palette" class="command-palette-trigger" type="button" aria-haspopup="dialog" aria-controls="command-palette"><span>COMANDOS</span><kbd>CTRL K</kbd></button>
       <div class="runtime"><span class="runtime-dot"></span><span id="runtime-status">INICIALIZANDO MOTOR</span></div>
     </header>
 
@@ -35,6 +56,31 @@
 
     <aside class="glass-panel presentation-panel" id="presentation-panel" aria-labelledby="presentation-title">
       <div class="eyebrow" id="presentation-title">R10-C · ORÇAMENTO & GOVERNADOR</div>
+      <section id="selection-provenance-badge" class="selection-provenance-badge" aria-labelledby="selection-provenance-title">
+        <p id="selection-provenance-title">SELO DA SELEÇÃO</p>
+        <strong id="selection-provenance-name">Encéfalo procedural</strong>
+        <dl>
+          <div><dt>CLASSE VISUAL</dt><dd id="selection-provenance-class">SEM REPRESENTAÇÃO DIRETA</dd></div>
+          <div><dt>EVIDÊNCIA</dt><dd id="selection-provenance-evidence">PROCEDURAL</dd></div>
+        </dl>
+      </section>
+      <details id="view-context-panel" class="view-context-panel" open>
+        <summary><span>O QUE ESTOU VENDO?</span><span id="view-context-view">VISÃO GERAL</span></summary>
+        <dl class="view-context-facts">
+          <div><dt>MODELO</dt><dd id="view-context-model">MOD-001/010 · rede abstrata e campo E/I procedural.</dd></div>
+          <div><dt>UNIDADE</dt><dd id="view-context-unit">Proxies/u.a. por vértice; taxa exibida em Hz por nó.</dd></div>
+          <div><dt>HIPÓTESE</dt><dd id="view-context-hypothesis">Entradas do protocolo alteram disparos, atrasos e estados observáveis.</dd></div>
+          <div><dt>LIMITE</dt><dd id="view-context-limitation">Topologia procedural; não é atlas parcelado, indivíduo ou calibração clínica.</dd></div>
+        </dl>
+        <section id="view-context-selection" class="view-context-selection" aria-labelledby="view-context-selection-title">
+          <h2 id="view-context-selection-title">FOCO DO CATÁLOGO</h2>
+          <strong id="view-context-selection-name">Encéfalo procedural</strong>
+          <code id="view-context-selection-id">brain-pro:anatomy/encephalon</code>
+          <p><b>HIPÓTESE:</b> <span id="view-context-selection-hypothesis">Agrupa a topologia neural procedural publicada.</span></p>
+          <p><b>LIMITE:</b> <span id="view-context-selection-limitation">Não é atlas parcelado.</span></p>
+        </section>
+      </details>
+      <p id="view-context-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
       <details open>
         <summary>PERFIL DE RENDERIZAÇÃO</summary>
         <div class="control-group compact">
@@ -48,7 +94,7 @@
         <button id="recover-render-profile" class="presentation-reset" type="button" disabled>RECUPERAR ENHANCED</button>
         <p class="cut-shortcuts">O governador reduz o perfil após pressão sustentada. A recuperação é manual e só libera após a janela de histerese.</p>
       </details>
-      <details>
+      <details id="presentation-effects-panel" data-usage-mode-minimum="explorer">
         <summary>PELÍCULA & CORTE</summary>
         <div class="control-group compact">
           <label for="material-profile"><span>Materialidade</span><span id="material-profile-status" class="material-profile-status" role="status" aria-live="polite">Esquemática</span></label>
@@ -104,7 +150,7 @@
         </dl>
         <p class="cut-shortcuts">Teclado: C alterna orientação; [ e ] movem; X raio-X; I isolamento; R câmera. Controles deslizantes aceitam toque.</p>
       </details>
-      <details id="anatomy-explorer" open>
+      <details id="anatomy-explorer" data-usage-mode-minimum="explorer" open>
         <summary>CATÁLOGO ANATÔMICO</summary>
         <div class="control-group compact anatomy-search-control">
           <label for="anatomy-search"><span>Buscar estrutura</span><output id="anatomy-result-count">—</output></label>
@@ -118,6 +164,7 @@
             <div><dt>ID</dt><dd id="anatomy-selected-id">brain-pro:anatomy/encephalon</dd></div>
             <div><dt>LADO</dt><dd id="anatomy-selected-laterality">bilateral</dd></div>
             <div><dt>EVIDÊNCIA</dt><dd id="anatomy-selected-evidence">PROCEDURAL</dd></div>
+            <div><dt>PROVENIÊNCIA VISUAL</dt><dd id="anatomy-selected-provenance">—</dd></div>
             <div><dt>FONTE</dt><dd id="anatomy-selected-source">src/brain.ts#generateBrainData</dd></div>
             <div><dt>LICENÇA</dt><dd id="anatomy-selected-license">LicenseRef-BRAIN-PRO-INTERNAL</dd></div>
             <div><dt>TRANSFORMAÇÃO</dt><dd id="anatomy-selected-transform">coordenadas procedurais</dd></div>
@@ -128,7 +175,7 @@
         <button id="anatomy-reset" class="presentation-reset" type="button">RESTAURAR CATÁLOGO</button>
         <p class="cut-shortcuts">Árvore, busca e picking usam o mesmo ID. Setas percorrem os resultados; a seleção é somente apresentação.</p>
       </details>
-      <details id="vascular-explorer" open>
+      <details id="vascular-explorer" data-usage-mode-minimum="explorer" open>
         <summary>TOPOLOGIA VASCULAR</summary>
         <div class="vascular-legend" aria-label="Legenda vascular sem dependência exclusiva de cor">
           <span><i class="vascular-arterial" aria-hidden="true"></i><strong>A</strong> · arterial · circular/chevron</span>
@@ -162,7 +209,7 @@
         <div><strong id="activity-rate">0.0</strong><span>HZ / NÓ</span></div>
       </div>
 
-      <section>
+      <section data-usage-mode-minimum="laboratory">
         <div class="section-heading"><span>DINÂMICA</span><span>SIMULAÇÃO</span></div>
         <div class="control-group">
           <label for="rotation-speed"><span>Rotação orbital</span><output id="rot-speed-val">0.6×</output></label>
@@ -180,9 +227,10 @@
           <label for="learning-rate"><span>Plasticidade STDP</span><output id="learning-rate-val">0.004</output></label>
           <input type="range" id="learning-rate" min="0" max="0.02" step="0.001" value="0.004" />
         </div>
+        <p class="control-envelope">Limites declarados: parede 0,1–3,0× sem alterar <code>dt</code>; 10–300 sinais apenas visuais; STDP é coeficiente fenomenológico adimensional em 0,000–0,020.</p>
       </section>
 
-      <section>
+      <section data-usage-mode-minimum="laboratory">
         <div class="section-heading"><span>FOTÔNICA</span><span>GPU</span></div>
         <div class="control-group compact">
           <label for="bloom-strength"><span>Bloom</span><output id="bloom-strength-val">1.2</output></label>
@@ -195,9 +243,10 @@
         <div class="toggle-grid visual-mode-toggle">
           <label><input type="checkbox" id="color-mode-monochrome" /><span></span>Modo sem cor</label>
         </div>
+        <p class="control-envelope">Envelope de apresentação: bloom 0,0–4,0 e dispersão 0,00–2,00; não há passe, snapshot ou equação adicional.</p>
       </section>
 
-      <section>
+      <section data-usage-mode-minimum="explorer">
         <div class="section-heading"><span>ANATOMIA</span><span>FOCO & CAMADAS</span></div>
         <div class="control-group compact">
           <label for="circuit-focus"><span>Foco de Circuito</span></label>
@@ -233,7 +282,7 @@
         <div><strong id="rebound-activity">0.000</strong><span>REBOTE</span></div>
       </div>
 
-      <section>
+      <section data-usage-mode-minimum="laboratory">
         <div class="section-heading"><span>APRESENTAÇÃO</span><span>LOD</span></div>
         <div class="control-group compact">
           <label for="laminar-lod"><span>Detalhe geométrico</span></label>
@@ -252,9 +301,10 @@
             <option value="6">10 Hz · 6 ticks</option>
           </select>
         </div>
+        <p class="control-envelope">Envelope: LOD baixo/médio/alto e publicação a cada 1, 2, 4 ou 6 ticks; a cadência reduz mensagens, não o passo científico.</p>
       </section>
 
-      <section>
+      <section data-usage-mode-minimum="laboratory">
         <div class="section-heading"><span>PERFIL</span><span>CPU/GPU/MEMÓRIA</span></div>
         <dl class="runtime-profile" aria-label="Perfil de desempenho em tempo real">
           <div><dt>Worker p95</dt><dd id="worker-latency">0.0 ms</dd></div>
@@ -368,7 +418,7 @@
         <div><strong id="board-conductance">0.000 nS</strong><span>CONDUTÂNCIA</span></div>
       </div>
 
-      <section>
+      <section data-usage-mode-minimum="explorer">
         <div class="section-heading"><span>LEITURA</span><span>SÓ APRESENTAÇÃO</span></div>
         <div class="control-group compact">
           <label for="electrical-detail"><span>Nível de processamento</span></label>
@@ -484,6 +534,24 @@
         <button id="btn-intensity-up" type="button" aria-label="Aumentar estímulo">+</button>
       </div>
     </section>
+
+    <dialog id="command-palette" class="command-palette" role="dialog" aria-modal="true" aria-labelledby="command-palette-title">
+      <div class="command-palette-card">
+        <div class="command-palette-heading">
+          <div>
+            <div class="eyebrow">UI-032 · NAVEGAÇÃO POR TECLADO</div>
+            <h2 id="command-palette-title">Comandos</h2>
+          </div>
+          <button id="command-palette-close" class="command-palette-close" type="button">ESC · FECHAR</button>
+        </div>
+        <label class="sr-only" for="command-palette-input">Filtrar comandos</label>
+        <input id="command-palette-input" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="command-palette-results" aria-describedby="command-palette-status" autocomplete="off" spellcheck="false" placeholder="Buscar vista, corte, perfil ou modo" />
+        <p id="command-palette-status" class="command-palette-status" role="status" aria-live="polite">Digite para filtrar comandos.</p>
+        <ul id="command-palette-results" class="command-palette-results" role="listbox" aria-label="Resultados de comandos"></ul>
+        <p class="command-palette-hint">↑ ↓ selecionar · Enter executar · Esc fechar</p>
+      </div>
+    </dialog>
+    <p id="command-palette-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
 
     <div class="interaction-hint">ARRASTE PARA ORBITAR · SCROLL PARA APROXIMAR</div>
   </body>

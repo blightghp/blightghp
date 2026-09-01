@@ -15,6 +15,7 @@ import type {
 } from "./anatomical-catalog";
 
 export type AnatomySelectionOrigin = "tree" | "scene" | "api" | "reset" | "view";
+export type AnatomyPreviewOrigin = "keyboard" | "pointer";
 
 export interface AnatomyExplorerElements {
   readonly search: HTMLInputElement;
@@ -44,6 +45,11 @@ export interface AnatomyExplorerAudit {
 type SelectionListener = (
   entry: AnatomicalCatalogEntry,
   origin: AnatomySelectionOrigin,
+) => void;
+
+type PreviewListener = (
+  entry: AnatomicalCatalogEntry | undefined,
+  origin: AnatomyPreviewOrigin,
 ) => void;
 
 function entriesForView(view: AnatomyView): readonly AnatomicalCatalogEntry[] {
@@ -94,16 +100,29 @@ export class AnatomyExplorerController {
     event.preventDefault();
     buttons[target].focus();
   };
+  private readonly handleResultsPointerLeave = (): void => {
+    this.onPreview?.(undefined, "pointer");
+  };
+  private readonly handleResultsFocusOut = (): void => {
+    queueMicrotask(() => {
+      if (!this.elements.results.contains(document.activeElement)) {
+        this.onPreview?.(undefined, "keyboard");
+      }
+    });
+  };
 
   constructor(
     private readonly elements: AnatomyExplorerElements,
     private readonly onSelection: SelectionListener,
+    private readonly onPreview?: PreviewListener,
   ) {
     const audit = auditAnatomicalCatalog();
     if (!audit.contractReady) throw new Error("embedded anatomical catalog is invalid");
     elements.search.addEventListener("input", this.handleSearch);
     elements.reset.addEventListener("click", this.handleReset);
     elements.results.addEventListener("keydown", this.handleResultsKeydown);
+    elements.results.addEventListener("pointerleave", this.handleResultsPointerLeave);
+    elements.results.addEventListener("focusout", this.handleResultsFocusOut);
     this.render();
   }
 
@@ -150,6 +169,8 @@ export class AnatomyExplorerController {
     this.elements.search.removeEventListener("input", this.handleSearch);
     this.elements.reset.removeEventListener("click", this.handleReset);
     this.elements.results.removeEventListener("keydown", this.handleResultsKeydown);
+    this.elements.results.removeEventListener("pointerleave", this.handleResultsPointerLeave);
+    this.elements.results.removeEventListener("focusout", this.handleResultsFocusOut);
   }
 
   private render(): void {
@@ -168,6 +189,8 @@ export class AnatomyExplorerController {
       button.setAttribute("aria-level", String(anatomicalDepth(entry.id) + 1));
       button.setAttribute("aria-selected", String(entry.id === this.selectedId));
       button.textContent = entry.label;
+      button.addEventListener("focus", () => this.onPreview?.(entry, "keyboard"));
+      button.addEventListener("pointerenter", () => this.onPreview?.(entry, "pointer"));
       button.addEventListener("click", () => this.select(entry.id, "tree"), { once: true });
       item.appendChild(button);
       this.elements.results.appendChild(item);

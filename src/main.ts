@@ -15,6 +15,7 @@ import { BrainData, BrainRegion, generateBrainData } from "./brain";
 import { FixedStepClock } from "./clock";
 import {
   amperesToPicoamperes,
+  anatomicalDeclarationOf,
   auditAnatomicalScene,
   auditVisualMaterialReadiness,
   auditVisualProvenance,
@@ -39,7 +40,7 @@ import {
   parseRenderProfile,
   parseSimulationView,
   parseVisualColorMode,
-  pickAnatomicalEntry,
+  pickAnatomicalTarget,
   PresentationBudgetMonitor,
   PresentationResourceCache,
   receptorCurrentTotals,
@@ -48,6 +49,7 @@ import {
   failClosedForWebGlShaderCompilation,
   auditRenderedStatePixels,
   SelectiveBloomPipeline,
+  SelectionHighlightController,
   PresentationMaterialEffects,
   REALISTIC_ILLUSTRATIVE_MANIFEST,
   RealisticIllustrativeMaterialManager,
@@ -58,8 +60,10 @@ import {
   ambientOcclusionDecision,
   freezeStaticPresentationMatrices,
   voltsToMillivolts,
+  visualProvenanceOf,
 } from "./render";
 import type {
+  CutOrientation,
   CutPlaneState,
   MaterialProfileAudit,
   PresentationBudgetAudit,
@@ -68,6 +72,7 @@ import type {
   ToneMappingMode,
   VisualColorMode,
   VisualMaterialProfile,
+  VisualProvenance,
 } from "./render";
 import type { ElectricalBoardTopologyObservables } from "./render";
 import { directNeuralStimulus } from "./direct-stimulus";
@@ -98,6 +103,20 @@ import {
   VascularTopologyModule,
   vascularTopologyDetailsFor,
 } from "./vascular";
+import {
+  DEFAULT_USAGE_MODE,
+  isUsageModeControlVisible,
+  parseUsageMode,
+  USAGE_MODE_DEFINITIONS,
+} from "./usage-mode";
+import type { UsageMode } from "./usage-mode";
+import {
+  assertCommandPaletteCommands,
+  filterCommandPaletteCommands,
+  moveCommandPaletteSelection,
+} from "./command-palette";
+import type { CommandPaletteCommand } from "./command-palette";
+import { viewContextFor, viewContextSelectionFor } from "./view-context";
 
 declare global {
   interface Window {
@@ -173,6 +192,7 @@ declare global {
         surface: ReturnType<BrainRenderLayers["surfaceAudit"]>;
         clipping: ReturnType<ClippingSystem["audit"]>;
         effects: ReturnType<PresentationMaterialEffects["audit"]>;
+        selectionHighlight: ReturnType<SelectionHighlightController["audit"]>;
         effectsCache: ReturnType<PresentationMaterialEffects["cacheAudit"]>;
         clippingCache: ReturnType<ClippingSystem["cacheAudit"]>;
         bloom: ReturnType<SelectiveBloomPipeline["audit"]>;
@@ -207,6 +227,20 @@ interface RuntimeInfo {
   brainEngineSchema: number;
 }
 
+interface ApplicationCommand extends CommandPaletteCommand {
+  readonly execute: () => string;
+}
+
+type AnatomyFocusOrigin = "selection" | "keyboard" | "pointer";
+
+interface AnatomyFocusTarget {
+  readonly entry: AnatomicalCatalogEntry;
+  readonly origin: AnatomyFocusOrigin;
+  readonly object?: THREE.Object3D;
+  readonly point?: THREE.Vector3;
+  readonly provenance?: VisualProvenance;
+}
+
 const state: BrainSettings = getInitialBrainSettings();
 const taskExperiment = new BayesianObservationExperiment(0.35);
 const simulationClock = new FixedStepClock({
@@ -217,6 +251,9 @@ const runtimeProfiler = new RuntimeProfiler();
 const renderProfileGovernor = new RenderProfileGovernor();
 const presentationBudgetMonitor = new PresentationBudgetMonitor();
 const presentationResourceCache = new PresentationResourceCache();
+const anatomyFocusBounds = new THREE.Box3();
+const anatomyFocusWorldPoint = new THREE.Vector3();
+const anatomyFocusProjectedPoint = new THREE.Vector3();
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
@@ -227,6 +264,7 @@ let toneMappingController: ToneMappingController;
 let clippingSystem: ClippingSystem;
 let materialProfileManager: RealisticIllustrativeMaterialManager;
 let presentationEffects: PresentationMaterialEffects;
+let selectionHighlight: SelectionHighlightController;
 let anatomyExplorer: AnatomyExplorerController | undefined;
 let layers: BrainRenderLayers;
 let laminarLayer: LaminarRenderLayer;
@@ -248,6 +286,18 @@ let captureTime = 0;
 let metricAccumulator = 0;
 let currentFocusRegion: BrainRegion | "all" = "all";
 let activeView: SimulationView = "overview";
+let usageMode: UsageMode = parseUsageMode(
+  new URLSearchParams(window.location.search).get("usageMode"),
+) ?? DEFAULT_USAGE_MODE;
+let commandPaletteOpen = false;
+let commandPaletteReturnFocus: HTMLElement | undefined;
+let commandPaletteCommands: readonly ApplicationCommand[] = [];
+let commandPaletteResults: readonly ApplicationCommand[] = [];
+let commandPaletteSelectedIndex = -1;
+let selectedAnatomyFocus: AnatomyFocusTarget | undefined;
+let keyboardAnatomyFocus: AnatomyFocusTarget | undefined;
+let pointerAnatomyFocus: AnatomyFocusTarget | undefined;
+let pendingSceneAnatomyFocus: AnatomyFocusTarget | undefined;
 let selectedCellId = 0;
 let selectionReturnFocus: HTMLElement | undefined;
 let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
@@ -592,6 +642,7 @@ function anatomyCatalogAuditReport() {
   return {
     catalog: auditAnatomicalCatalog(),
     explorer: anatomyExplorer?.audit(),
+    selectionHighlight: selectionHighlight.audit(),
     views: {
       overview: auditAnatomicalScene(layers.group),
       laminar: auditAnatomicalScene(laminarLayer.group),
@@ -694,6 +745,7 @@ function setMaterialProfile(profile: VisualMaterialProfile): VisualMaterialProfi
   synchronizeAmbientOcclusion();
   updateMaterialProfileUi(active);
   updatePresentationCostUi();
+  refreshAnatomyFocusPresentation();
   if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   return active;
 }
@@ -923,13 +975,21 @@ function renderFrame(
   clippingSystem.update();
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta, alpha);
   controls.update();
+  camera.updateMatrixWorld();
+  updateAnatomyFocusCalloutPosition();
   renderer.info.reset();
-  presentationEffects.beforeRender(renderRootForView(activeView), sceneGraphRevision);
+  const activeRenderRoot = renderRootForView(activeView);
+  presentationEffects.beforeRender(activeRenderRoot, sceneGraphRevision);
   try {
-    renderPipeline.render({
-      bloomEnabled: renderProfileGovernor.profile() !== "baseline",
-      sceneRevision: sceneGraphRevision,
-    });
+    selectionHighlight.beforeRender();
+    try {
+      renderPipeline.render({
+        bloomEnabled: renderProfileGovernor.profile() !== "baseline",
+        sceneRevision: sceneGraphRevision,
+      });
+    } finally {
+      selectionHighlight.afterRender();
+    }
   } finally {
     presentationEffects.afterRender();
   }
@@ -1056,11 +1116,186 @@ function overviewRegionForAnatomy(entryId: string): BrainRegion | "all" | undefi
   return undefined;
 }
 
+function activeAnatomyFocus(): AnatomyFocusTarget | undefined {
+  if (!isUsageModeControlVisible(usageMode, "explorer")) return undefined;
+  return pointerAnatomyFocus ?? keyboardAnatomyFocus ?? selectedAnatomyFocus;
+}
+
+/** Resolves only a visible, direct render declaration; never an aggregate representative. */
+function directAnatomyProvenance(entryId: string): VisualProvenance | undefined {
+  let provenance: VisualProvenance | undefined;
+  renderRootForView(activeView).traverseVisible((object) => {
+    if (provenance) return;
+    const declaration = anatomicalDeclarationOf(object);
+    if (declaration?.kind === "catalog-entry" && declaration.entryId === entryId) {
+      provenance = visualProvenanceOf(object);
+    }
+  });
+  return provenance;
+}
+
+function selectedAnatomyProvenanceLabel(): string {
+  return selectedAnatomyFocus?.provenance?.toUpperCase() ??
+    "SEM REPRESENTAÇÃO DIRETA";
+}
+
+/** Updates the persistent UI-037 badge from confirmed selection only, never hover. */
+function updateSelectedAnatomyProvenance(): void {
+  const label = selectedAnatomyProvenanceLabel();
+  element("#anatomy-selected-provenance").textContent = label;
+  const badge = element<HTMLElement>("#selection-provenance-badge");
+  const entry = selectedAnatomyFocus?.entry;
+  badge.dataset.provenance = selectedAnatomyFocus?.provenance ?? "unrepresented";
+  element("#selection-provenance-name").textContent = entry?.label ?? "Nenhuma estrutura selecionada";
+  element("#selection-provenance-class").textContent = label;
+  element("#selection-provenance-evidence").textContent = entry?.evidence.level ?? "—";
+}
+
+/** Keeps UI-034 explanatory text in the DOM-only presentation layer. */
+function updateViewContext(announce = true): void {
+  const context = viewContextFor(activeView);
+  element("#view-context-view").textContent = context.label.toUpperCase();
+  element("#view-context-model").textContent = context.model;
+  element("#view-context-unit").textContent = context.unit;
+  element("#view-context-hypothesis").textContent = context.hypothesis;
+  element("#view-context-limitation").textContent = context.limitation;
+
+  const selectionElement = element<HTMLElement>("#view-context-selection");
+  const entry = selectedAnatomyFocus?.entry;
+  if (!entry || !entry.views.includes(activeView)) {
+    selectionElement.hidden = true;
+    if (announce) {
+      element("#view-context-status").textContent =
+        `${context.label}. Modelo ${context.model}. Unidade ${context.unit}. ` +
+        `Hipótese ${context.hypothesis}. Limite ${context.limitation}.`;
+    }
+    return;
+  }
+  const selection = viewContextSelectionFor(entry);
+  selectionElement.hidden = false;
+  element("#view-context-selection-name").textContent = selection.label;
+  element("#view-context-selection-id").textContent = selection.id;
+  element("#view-context-selection-hypothesis").textContent = selection.hypothesis;
+  element("#view-context-selection-limitation").textContent = selection.limitation;
+  if (announce) {
+    const provenance = selectedAnatomyProvenanceLabel();
+    element("#view-context-status").textContent =
+      `${context.label}. Modelo ${context.model}. Unidade ${context.unit}. ` +
+      `Foco ${selection.label}; classe visual ${provenance}; evidência ${entry.evidence.level}; ` +
+      `hipótese ${selection.hypothesis}; limite ${selection.limitation}.`;
+  }
+}
+
+function anatomyFocusProvenance(
+  focus: AnatomyFocusTarget,
+): VisualProvenance | undefined {
+  return focus.provenance ?? selectionHighlight.anchor()?.provenance;
+}
+
+function anatomyFocusRepresentation(
+  status: ReturnType<SelectionHighlightController["audit"]>["status"],
+  highlightedMaterials: number,
+): string {
+  if (status === "no-match") {
+    return "Sem representação direta nesta vista; a ficha textual permanece autoritativa.";
+  }
+  if (status === "unknown-entry") return "ID sem representação no catálogo local.";
+  if (highlightedMaterials > 0) {
+    return "Destaque transitório aplicado somente a material de apresentação já alocado.";
+  }
+  return "Equivalente textual ativo; a codificação científica por cor não é sobrescrita.";
+}
+
+function updateAnatomyFocusCalloutPosition(): void {
+  const callout = element<HTMLElement>("#anatomy-focus-callout");
+  const focus = activeAnatomyFocus();
+  if (!focus || captureMode) {
+    callout.hidden = true;
+    return;
+  }
+  const anchor = focus.object ?? selectionHighlight.anchorObject();
+  if (focus.point) {
+    anatomyFocusWorldPoint.copy(focus.point);
+  } else if (anchor) {
+    anatomyFocusBounds.setFromObject(anchor);
+    if (anatomyFocusBounds.isEmpty()) anchor.getWorldPosition(anatomyFocusWorldPoint);
+    else anatomyFocusBounds.getCenter(anatomyFocusWorldPoint);
+  } else {
+    callout.hidden = true;
+    return;
+  }
+
+  anatomyFocusProjectedPoint.copy(anatomyFocusWorldPoint).project(camera);
+  if (
+    !Number.isFinite(anatomyFocusProjectedPoint.x) ||
+    !Number.isFinite(anatomyFocusProjectedPoint.y) ||
+    anatomyFocusProjectedPoint.z < -1 || anatomyFocusProjectedPoint.z > 1 ||
+    Math.abs(anatomyFocusProjectedPoint.x) > 1 || Math.abs(anatomyFocusProjectedPoint.y) > 1
+  ) {
+    callout.hidden = true;
+    return;
+  }
+  callout.hidden = false;
+  const canvasBounds = renderer.domElement.getBoundingClientRect();
+  const desiredX = canvasBounds.left + (anatomyFocusProjectedPoint.x + 1) * 0.5 * canvasBounds.width;
+  const desiredY = canvasBounds.top + (1 - anatomyFocusProjectedPoint.y) * 0.5 * canvasBounds.height;
+  const width = callout.offsetWidth;
+  const height = callout.offsetHeight;
+  const x = THREE.MathUtils.clamp(desiredX, 8, window.innerWidth - width - 18);
+  const y = THREE.MathUtils.clamp(desiredY, height * 0.5 + 8, window.innerHeight - height * 0.5 - 8);
+  callout.style.left = `${x}px`;
+  callout.style.top = `${y}px`;
+}
+
+function refreshAnatomyFocusPresentation(announce = false): void {
+  const callout = element<HTMLElement>("#anatomy-focus-callout");
+  const focus = activeAnatomyFocus();
+  if (!focus || captureMode) {
+    selectionHighlight.clear();
+    callout.hidden = true;
+    return;
+  }
+  const highlight = selectionHighlight.setEntry(focus.entry.id, renderRootForView(activeView));
+  const provenance = anatomyFocusProvenance(focus);
+  const provenanceLabel = provenance?.toUpperCase() ?? "SEM REPRESENTAÇÃO DIRETA";
+  element("#anatomy-focus-name").textContent = focus.entry.label;
+  element("#anatomy-focus-id").textContent = focus.entry.id;
+  element("#anatomy-focus-provenance").textContent = provenanceLabel;
+  element("#anatomy-focus-evidence").textContent = focus.entry.evidence.level;
+  element("#anatomy-focus-representation").textContent = anatomyFocusRepresentation(
+    highlight.status,
+    highlight.highlightedMaterials,
+  );
+  updateSelectedAnatomyProvenance();
+  if (announce) {
+    element("#anatomy-focus-status").textContent =
+      `${focus.entry.label}; ID ${focus.entry.id}; proveniência visual ${provenanceLabel}; ` +
+      `evidência ${focus.entry.evidence.level}.`;
+  }
+  updateAnatomyFocusCalloutPosition();
+}
+
+function previewAnatomyEntry(
+  entry: AnatomicalCatalogEntry | undefined,
+  origin: Exclude<AnatomyFocusOrigin, "selection">,
+  source?: Pick<AnatomyFocusTarget, "object" | "point" | "provenance">,
+): void {
+  const next = entry ? { entry, origin, ...source } satisfies AnatomyFocusTarget : undefined;
+  if (origin === "keyboard") keyboardAnatomyFocus = next;
+  else pointerAnatomyFocus = next;
+  refreshAnatomyFocusPresentation(origin === "keyboard" && entry !== undefined);
+}
+
 function applyAnatomySelection(
   entry: AnatomicalCatalogEntry,
   _origin: AnatomySelectionOrigin,
 ): void {
+  const sceneFocus = pendingSceneAnatomyFocus?.entry.id === entry.id
+    ? pendingSceneAnatomyFocus
+    : undefined;
+  pendingSceneAnatomyFocus = undefined;
   if (!entry.views.includes(activeView)) setActiveView(entry.views[0]);
+  const selectedProvenance = sceneFocus?.provenance ?? directAnatomyProvenance(entry.id);
   const overviewRegion = overviewRegionForAnatomy(entry.id);
   if (overviewRegion !== undefined) {
     currentFocusRegion = overviewRegion;
@@ -1083,6 +1318,16 @@ function applyAnatomySelection(
       element("#vascular-selected-views").textContent = vascular.views.join(", ");
     }
   }
+  selectedAnatomyFocus = {
+    entry,
+    origin: "selection",
+    ...(sceneFocus?.object ? { object: sceneFocus.object } : {}),
+    ...(sceneFocus?.point ? { point: sceneFocus.point } : {}),
+    ...(selectedProvenance ? { provenance: selectedProvenance } : {}),
+  };
+  updateSelectedAnatomyProvenance();
+  updateViewContext();
+  refreshAnatomyFocusPresentation(true);
   if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
 }
 
@@ -1126,14 +1371,434 @@ function setActiveView(view: SimulationView): void {
     button.tabIndex = selected ? 0 : -1;
   }
   anatomyExplorer?.setActiveView(view);
+  updateViewContext();
+  refreshAnatomyFocusPresentation();
   if (latestSnapshot) {
     renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   }
 }
 
+function setUsageMode(requested: UsageMode | string): UsageMode {
+  const nextMode = parseUsageMode(requested) ?? usageMode;
+  const focused = document.activeElement;
+  usageMode = nextMode;
+  document.body.dataset.usageMode = nextMode;
+
+  const selector = element<HTMLSelectElement>("#usage-mode");
+  selector.value = nextMode;
+  element("#usage-mode-status").textContent = USAGE_MODE_DEFINITIONS[nextMode].summary;
+
+  for (const control of document.querySelectorAll<HTMLElement>("[data-usage-mode-minimum]")) {
+    const minimumMode = parseUsageMode(control.dataset.usageModeMinimum);
+    control.hidden = minimumMode === undefined ||
+      !isUsageModeControlVisible(nextMode, minimumMode);
+  }
+
+  if (
+    focused instanceof HTMLElement &&
+    focused.closest("[data-usage-mode-minimum][hidden]")
+  ) {
+    selector.focus();
+  }
+
+  refreshAnatomyFocusPresentation();
+
+  return nextMode;
+}
+
+function setupUsageModeInterface(): void {
+  const selector = element<HTMLSelectElement>("#usage-mode");
+  selector.addEventListener("change", () => {
+    const requested = parseUsageMode(selector.value);
+    if (!requested) {
+      selector.value = usageMode;
+      return;
+    }
+    setUsageMode(requested);
+  });
+  setUsageMode(usageMode);
+}
+
+const COMMAND_VIEW_LABELS: Readonly<Record<SimulationView, string>> = {
+  overview: "Visão geral",
+  laminar: "Lâminas",
+  cell: "Célula",
+  neuron: "Neurônio",
+  electricity: "Eletricidade",
+  synapse: "Sinapse",
+};
+
+function revealExplorerPanel(selector: string): void {
+  const panel = element<HTMLDetailsElement>(selector);
+  panel.open = true;
+}
+
+function executePaletteView(view: SimulationView): string {
+  setActiveView(view);
+  element<HTMLButtonElement>(`#tab-${view}`).focus();
+  return `Vista alterada para ${COMMAND_VIEW_LABELS[view]}.`;
+}
+
+function executePaletteCut(orientation: CutOrientation): string {
+  revealExplorerPanel("#presentation-effects-panel");
+  setCutPlaneState({ enabled: true, orientation });
+  element<HTMLSelectElement>("#cut-orientation").focus();
+  return `Corte ${orientation} ativado.`;
+}
+
+function createCommandPaletteCommands(): readonly ApplicationCommand[] {
+  const viewCommands: ApplicationCommand[] = (
+    Object.entries(COMMAND_VIEW_LABELS) as Array<[SimulationView, string]>
+  ).map(([view, label]) => ({
+    id: `view-${view}`,
+    label: `Abrir ${label}`,
+    category: "Vistas",
+    keywords: [view, label, "navegação"],
+    minimumMode: "guided",
+    execute: () => executePaletteView(view),
+  }));
+
+  return [
+    ...viewCommands,
+    {
+      id: "mode-guided",
+      label: "Usar modo Guiado",
+      category: "Modos",
+      keywords: ["essencial", "inicial", "modo"],
+      minimumMode: "guided",
+      execute: () => {
+        setUsageMode("guided");
+        element<HTMLSelectElement>("#usage-mode").focus();
+        return "Modo Guiado ativado.";
+      },
+    },
+    {
+      id: "mode-explorer",
+      label: "Usar modo Explorador",
+      category: "Modos",
+      keywords: ["busca", "corte", "comparação", "modo"],
+      minimumMode: "guided",
+      execute: () => {
+        setUsageMode("explorer");
+        element<HTMLSelectElement>("#usage-mode").focus();
+        return "Modo Explorador ativado.";
+      },
+    },
+    {
+      id: "mode-laboratory",
+      label: "Usar modo Laboratório",
+      category: "Modos",
+      keywords: ["avançado", "parâmetros", "envelope", "modo"],
+      minimumMode: "guided",
+      execute: () => {
+        setUsageMode("laboratory");
+        element<HTMLSelectElement>("#usage-mode").focus();
+        return "Modo Laboratório ativado.";
+      },
+    },
+    {
+      id: "render-profile-baseline",
+      label: "Usar perfil gráfico Baseline",
+      category: "Perfis",
+      keywords: ["render", "econômico", "qualidade"],
+      minimumMode: "guided",
+      execute: () => {
+        const active = requestRenderProfile("baseline");
+        element<HTMLSelectElement>("#render-profile").focus();
+        return `Perfil gráfico ${active} ativado.`;
+      },
+    },
+    {
+      id: "render-profile-enhanced",
+      label: "Usar perfil gráfico Enhanced",
+      category: "Perfis",
+      keywords: ["render", "interativo", "qualidade"],
+      minimumMode: "guided",
+      execute: () => {
+        const active = requestRenderProfile("enhanced");
+        element<HTMLSelectElement>("#render-profile").focus();
+        return `Perfil gráfico ${active} ativado.`;
+      },
+    },
+    {
+      id: "anatomy-search",
+      label: "Buscar estrutura anatômica",
+      category: "Anatomia",
+      keywords: ["catálogo", "cérebro", "breadcrumb", "busca"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#anatomy-explorer");
+        element<HTMLInputElement>("#anatomy-search").focus();
+        return "Busca anatômica pronta para consulta.";
+      },
+    },
+    {
+      id: "material-profile-schematic",
+      label: "Usar materialidade Esquemática",
+      category: "Perfis",
+      keywords: ["material", "fallback", "apresentação"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#presentation-effects-panel");
+        const active = setMaterialProfile("schematic");
+        element<HTMLSelectElement>("#material-profile").focus();
+        return `Materialidade ${active === "schematic" ? "Esquemática" : "Realista"} ativada.`;
+      },
+    },
+    {
+      id: "material-profile-realistic",
+      label: "Usar materialidade Realista-ilustrativa",
+      category: "Perfis",
+      keywords: ["material", "realista", "ilustrativa", "apresentação"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#presentation-effects-panel");
+        const active = setMaterialProfile("realistic-illustrative");
+        element<HTMLSelectElement>("#material-profile").focus();
+        return `Materialidade ${active === "realistic-illustrative" ? "Realista-ilustrativa" : "Esquemática"} ativada.`;
+      },
+    },
+    {
+      id: "cut-disable",
+      label: "Desativar corte",
+      category: "Corte",
+      keywords: ["plano", "clipping", "seção"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#presentation-effects-panel");
+        setCutPlaneState({ enabled: false });
+        element<HTMLSelectElement>("#cut-orientation").focus();
+        return "Corte desativado.";
+      },
+    },
+    ...(["coronal", "sagittal", "axial", "oblique"] as const).map((orientation) => ({
+      id: `cut-${orientation}`,
+      label: `Ativar corte ${orientation}`,
+      category: "Corte",
+      keywords: ["plano", "clipping", "seção", orientation],
+      minimumMode: "explorer" as const,
+      execute: () => executePaletteCut(orientation),
+    })),
+    {
+      id: "camera-reset-cut",
+      label: "Restaurar câmera do corte",
+      category: "Câmera",
+      keywords: ["enquadramento", "reset", "corte"],
+      minimumMode: "explorer",
+      execute: () => {
+        revealExplorerPanel("#presentation-effects-panel");
+        resetCameraForCut();
+        element<HTMLButtonElement>("#reset-cut-camera").focus();
+        return "Câmera do corte restaurada.";
+      },
+    },
+  ];
+}
+
+function commandPaletteDialog(): HTMLDialogElement {
+  return element<HTMLDialogElement>("#command-palette");
+}
+
+function announceCommandPalette(message: string): void {
+  element("#command-palette-announcement").textContent = message;
+}
+
+function renderCommandPaletteResults(): void {
+  const input = element<HTMLInputElement>("#command-palette-input");
+  const results = element<HTMLUListElement>("#command-palette-results");
+  const status = element("#command-palette-status");
+  commandPaletteResults = filterCommandPaletteCommands(
+    commandPaletteCommands,
+    input.value,
+    usageMode,
+  );
+  if (commandPaletteResults.length === 0) {
+    commandPaletteSelectedIndex = -1;
+  } else if (commandPaletteSelectedIndex < 0 ||
+    commandPaletteSelectedIndex >= commandPaletteResults.length) {
+    commandPaletteSelectedIndex = 0;
+  }
+
+  results.replaceChildren();
+  if (commandPaletteResults.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "command-palette-empty";
+    empty.textContent = "Nenhum comando disponível para esta busca e modo.";
+    results.appendChild(empty);
+    input.removeAttribute("aria-activedescendant");
+    status.textContent = "Nenhum comando disponível.";
+    return;
+  }
+
+  for (const [index, command] of commandPaletteResults.entries()) {
+    const option = document.createElement("li");
+    option.id = `command-palette-option-${command.id}`;
+    option.dataset.commandId = command.id;
+    option.setAttribute("role", "option");
+    option.setAttribute("aria-selected", String(index === commandPaletteSelectedIndex));
+    const label = document.createElement("span");
+    label.textContent = command.label;
+    const category = document.createElement("span");
+    category.className = "command-palette-category";
+    category.textContent = command.category;
+    option.append(label, category);
+    results.appendChild(option);
+  }
+
+  const selected = commandPaletteResults[commandPaletteSelectedIndex];
+  input.setAttribute("aria-activedescendant", `command-palette-option-${selected.id}`);
+  status.textContent = commandPaletteResults.length === 1
+    ? "1 comando disponível."
+    : `${commandPaletteResults.length} comandos disponíveis.`;
+}
+
+function closeCommandPalette(restoreFocus = true): void {
+  if (!commandPaletteOpen) return;
+  const dialog = commandPaletteDialog();
+  const input = element<HTMLInputElement>("#command-palette-input");
+  commandPaletteOpen = false;
+  input.setAttribute("aria-expanded", "false");
+  input.removeAttribute("aria-activedescendant");
+  commandPaletteResults = [];
+  commandPaletteSelectedIndex = -1;
+  if (dialog.open) dialog.close();
+
+  const returnFocus = commandPaletteReturnFocus;
+  commandPaletteReturnFocus = undefined;
+  if (!restoreFocus) return;
+  if (returnFocus && document.contains(returnFocus) && !returnFocus.closest("[hidden]")) {
+    returnFocus.focus();
+  } else {
+    element<HTMLButtonElement>("#open-command-palette").focus();
+  }
+}
+
+function openCommandPalette(): void {
+  if (captureMode || commandPaletteOpen) return;
+  const dialog = commandPaletteDialog();
+  const input = element<HTMLInputElement>("#command-palette-input");
+  commandPaletteReturnFocus = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : undefined;
+  commandPaletteOpen = true;
+  commandPaletteSelectedIndex = 0;
+  input.value = "";
+  dialog.showModal();
+  input.setAttribute("aria-expanded", "true");
+  renderCommandPaletteResults();
+  input.focus();
+  announceCommandPalette("Paleta de comandos aberta.");
+}
+
+function executeCommandPaletteSelection(): void {
+  const command = commandPaletteResults[commandPaletteSelectedIndex];
+  if (!command) return;
+  if (!isUsageModeControlVisible(usageMode, command.minimumMode)) {
+    commandPaletteSelectedIndex = 0;
+    renderCommandPaletteResults();
+    announceCommandPalette("Comando indisponível no modo de uso atual.");
+    return;
+  }
+
+  closeCommandPalette(false);
+  try {
+    announceCommandPalette(`Comando executado: ${command.execute()}`);
+  } catch (error) {
+    element<HTMLButtonElement>("#open-command-palette").focus();
+    announceCommandPalette(
+      `Não foi possível executar o comando: ${error instanceof Error ? error.message : "erro seguro"}.`,
+    );
+  }
+}
+
+function setupCommandPaletteInterface(): void {
+  commandPaletteCommands = createCommandPaletteCommands();
+  assertCommandPaletteCommands(commandPaletteCommands);
+
+  const dialog = commandPaletteDialog();
+  const input = element<HTMLInputElement>("#command-palette-input");
+  const close = element<HTMLButtonElement>("#command-palette-close");
+  const results = element<HTMLUListElement>("#command-palette-results");
+  element<HTMLButtonElement>("#open-command-palette").addEventListener("click", openCommandPalette);
+  close.addEventListener("click", () => closeCommandPalette());
+  input.addEventListener("input", () => {
+    commandPaletteSelectedIndex = 0;
+    renderCommandPaletteResults();
+  });
+  results.addEventListener("click", (event) => {
+    const option = (event.target as HTMLElement).closest<HTMLElement>("[data-command-id]");
+    if (!option) return;
+    const index = commandPaletteResults.findIndex((command) => command.id === option.dataset.commandId);
+    if (index < 0) return;
+    commandPaletteSelectedIndex = index;
+    executeCommandPaletteSelection();
+  });
+  dialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeCommandPalette();
+  });
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) closeCommandPalette();
+  });
+  document.addEventListener("keydown", (event) => {
+    const keyboardShortcut = (event.ctrlKey || event.metaKey) && !event.altKey &&
+      event.code === "KeyK";
+    if (keyboardShortcut) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (commandPaletteOpen) closeCommandPalette();
+      else openCommandPalette();
+      return;
+    }
+    if (!commandPaletteOpen) return;
+
+    const closeButton = element<HTMLButtonElement>("#command-palette-close");
+    if (event.key === "Escape") {
+      closeCommandPalette();
+    } else if (event.key === "ArrowDown") {
+      commandPaletteSelectedIndex = moveCommandPaletteSelection(
+        commandPaletteSelectedIndex,
+        1,
+        commandPaletteResults.length,
+      );
+      renderCommandPaletteResults();
+    } else if (event.key === "ArrowUp") {
+      commandPaletteSelectedIndex = moveCommandPaletteSelection(
+        commandPaletteSelectedIndex,
+        -1,
+        commandPaletteResults.length,
+      );
+      renderCommandPaletteResults();
+    } else if (event.key === "Home") {
+      commandPaletteSelectedIndex = commandPaletteResults.length > 0 ? 0 : -1;
+      renderCommandPaletteResults();
+    } else if (event.key === "End") {
+      commandPaletteSelectedIndex = commandPaletteResults.length - 1;
+      renderCommandPaletteResults();
+    } else if (event.key === "Enter" && document.activeElement !== closeButton) {
+      executeCommandPaletteSelection();
+    } else if (
+      (event.key === "Enter" || event.key === " ") && document.activeElement === closeButton
+    ) {
+      closeCommandPalette();
+    } else if (event.key === "Tab") {
+      const current = document.activeElement;
+      if (event.shiftKey || current === closeButton) input.focus();
+      else closeButton.focus();
+    } else {
+      event.stopImmediatePropagation();
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+}
+
 function setupInterface(): void {
   element("#node-count").textContent = formatCount(brainData.nodes.length);
   element("#synapse-count").textContent = formatCount(brainData.synapses.length);
+  setupUsageModeInterface();
+  setupCommandPaletteInterface();
 
   anatomyExplorer = new AnatomyExplorerController({
     search: element<HTMLInputElement>("#anatomy-search"),
@@ -1150,8 +1815,9 @@ function setupInterface(): void {
     limitation: element("#anatomy-selected-limitation"),
     status: element("#anatomy-selection-status"),
     reset: element<HTMLButtonElement>("#anatomy-reset"),
-  }, applyAnatomySelection);
+  }, applyAnatomySelection, previewAnatomyEntry);
   anatomyExplorer.setActiveView(activeView);
+  anatomyExplorer.select(anatomyExplorer.selectionId(), "api");
 
   const cellSelector = element<HTMLDivElement>("#cell-selector");
   for (let cellId = 0; cellId < NEURON_CELL_COUNT; cellId += 1) {
@@ -1176,15 +1842,73 @@ function setupInterface(): void {
   }
   element<HTMLButtonElement>("#neuron-back").addEventListener("click", leaveNeuron);
   document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || activeView !== "neuron") return;
+    if (commandPaletteOpen || event.key !== "Escape" || activeView !== "neuron") return;
     event.preventDefault();
     leaveNeuron();
   });
 
+  const previewSceneAtPointer = (event: PointerEvent): void => {
+    if (captureMode || commandPaletteOpen || !isUsageModeControlVisible(usageMode, "explorer")) {
+      previewAnatomyEntry(undefined, "pointer");
+      return;
+    }
+    const bounds = renderer.domElement.getBoundingClientRect();
+    pointerCoordinates.set(
+      ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+      -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
+    );
+    cellRaycaster.setFromCamera(pointerCoordinates, camera);
+    const vascularTarget = vascularModule.pickTarget(activeView, cellRaycaster);
+    if (vascularTarget) {
+      previewAnatomyEntry(vascularTarget.entry, "pointer", {
+        object: vascularTarget.object,
+        point: vascularTarget.point,
+        provenance: "topology",
+      });
+      return;
+    }
+    const target = pickAnatomicalTarget(renderRootForView(activeView), cellRaycaster);
+    previewAnatomyEntry(target?.entry, "pointer", target && {
+      object: target.object,
+      point: target.point,
+      provenance: target.provenance,
+    });
+  };
+
   let pointerStart: { x: number; y: number } | undefined;
+  let queuedPointerPreview: PointerEvent | undefined;
+  let pointerPreviewFrame: number | undefined;
+  const cancelPointerPreview = (): void => {
+    queuedPointerPreview = undefined;
+    if (pointerPreviewFrame !== undefined) {
+      cancelAnimationFrame(pointerPreviewFrame);
+      pointerPreviewFrame = undefined;
+    }
+  };
+  renderer.domElement.addEventListener("pointermove", (event) => {
+    if (event.buttons !== 0) {
+      cancelPointerPreview();
+      previewAnatomyEntry(undefined, "pointer");
+      return;
+    }
+    queuedPointerPreview = event;
+    if (pointerPreviewFrame !== undefined) return;
+    pointerPreviewFrame = requestAnimationFrame(() => {
+      pointerPreviewFrame = undefined;
+      const queued = queuedPointerPreview;
+      queuedPointerPreview = undefined;
+      if (queued) previewSceneAtPointer(queued);
+    });
+  });
+  renderer.domElement.addEventListener("pointerleave", () => {
+    cancelPointerPreview();
+    previewAnatomyEntry(undefined, "pointer");
+  });
   renderer.domElement.addEventListener("pointerdown", (event) => {
     if (event.button === 0) {
       pointerStart = { x: event.clientX, y: event.clientY };
+      cancelPointerPreview();
+      previewAnatomyEntry(undefined, "pointer");
     }
   });
   renderer.domElement.addEventListener("pointerup", (event) => {
@@ -1205,9 +1929,26 @@ function setupInterface(): void {
         return;
       }
     }
-    const entry = vascularModule.pick(activeView, cellRaycaster) ??
-      pickAnatomicalEntry(renderRootForView(activeView), cellRaycaster);
-    if (entry) anatomyExplorer?.select(entry.id, "scene");
+    const vascularTarget = vascularModule.pickTarget(activeView, cellRaycaster);
+    const target = vascularTarget
+      ? {
+        entry: vascularTarget.entry,
+        object: vascularTarget.object,
+        point: vascularTarget.point,
+        provenance: "topology" as const,
+      }
+      : pickAnatomicalTarget(renderRootForView(activeView), cellRaycaster);
+    if (target) {
+      const directTarget = "object" in target ? target : undefined;
+      pendingSceneAnatomyFocus = {
+        entry: target.entry,
+        origin: "selection",
+        ...(directTarget ? { object: directTarget.object } : {}),
+        ...(directTarget ? { point: directTarget.point } : {}),
+        ...(target.provenance ? { provenance: target.provenance } : {}),
+      };
+      anatomyExplorer?.select(target.entry.id, "scene");
+    }
   });
 
   const tabButtons = Array.from(
@@ -1381,6 +2122,7 @@ function setupInterface(): void {
     presentationResourceCache.invalidate();
     clippingSystem.refresh();
     updateMaterialProfileUi(materialProfileManager.profile());
+    refreshAnatomyFocusPresentation();
     if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   });
   element<HTMLButtonElement>("#reset-cut-camera").addEventListener("click", resetCameraForCut);
@@ -1388,8 +2130,9 @@ function setupInterface(): void {
 
   document.addEventListener("keydown", (event) => {
     const target = event.target;
-    if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement ||
+    if (commandPaletteOpen || target instanceof HTMLInputElement || target instanceof HTMLSelectElement ||
         target instanceof HTMLTextAreaElement) return;
+    if (!isUsageModeControlVisible(usageMode, "explorer")) return;
     const order = ["coronal", "sagittal", "axial", "oblique"] as const;
     if (event.code === "KeyC") {
       const state = clippingSystem.getState();
@@ -1664,6 +2407,7 @@ async function init(): Promise<void> {
   materialEnvironmentTextureBytes = materialProfileManager.audit()
     .estimatedEnvironmentTextureBytes;
   presentationEffects = new PresentationMaterialEffects();
+  selectionHighlight = new SelectionHighlightController();
   clippingSystem = new ClippingSystem(renderer, scene);
   for (const view of [
     "overview",
@@ -1725,9 +2469,12 @@ async function init(): Promise<void> {
       return searchAnatomicalCatalog(query);
     },
     async setCaptureMode(enabled) {
+      if (enabled) closeCommandPalette(false);
       captureMode = enabled;
       document.body.dataset.capture = String(enabled);
       if (enabled) {
+        selectionHighlight.clear();
+        element<HTMLElement>("#anatomy-focus-callout").hidden = true;
         await sendCommand({ type: "reset" });
         simulationClock.synchronize(0);
         captureTime = 0;
@@ -1748,6 +2495,7 @@ async function init(): Promise<void> {
         const governor = renderProfileGovernor.leaveCaptureMode();
         if (governor.profile !== previousRenderProfile) applyRenderProfile(governor.profile);
         simulationClock.rebase(performance.now());
+        refreshAnatomyFocusPresentation();
       }
     },
     async capture(time, rotation) {
@@ -1913,6 +2661,7 @@ async function init(): Promise<void> {
       synchronizeAmbientOcclusion();
       const profile = materialProfileManager.profile();
       updateMaterialProfileUi(profile);
+      refreshAnatomyFocusPresentation();
       if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
       return profile;
     },
@@ -1937,6 +2686,7 @@ async function init(): Promise<void> {
         surface: layers.surfaceAudit(),
         clipping: clippingSystem.audit(),
         effects: presentationEffects.audit(),
+        selectionHighlight: selectionHighlight.audit(),
         effectsCache: presentationEffects.cacheAudit(),
         clippingCache: clippingSystem.cacheAudit(),
         bloom: renderPipeline.audit(),

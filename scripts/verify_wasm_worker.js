@@ -6,6 +6,13 @@ import { auditWorkerLifecycle } from "./worker_lifecycle_audit.js";
 
 const EXPECTED_R09F_MATERIALS = 25;
 const EXPECTED_R10B_VASCULAR_MATERIALS = 12;
+const PRESENTATION_HASH_FIELDS = [
+  "stateHash",
+  "corticothalamicHash",
+  "cellPatchHash",
+  "chemicalHash",
+  "cellSpikeEventHash",
+];
 
 const server = await createServer({
   root: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
@@ -41,6 +48,618 @@ try {
   );
   const diagnostics = await page.evaluate(() => window.__BRAIN_ENGINE__.diagnostics());
   const abi = await page.evaluate(() => window.__BRAIN_ENGINE__.abiEvidence());
+  const usageModes = await page.evaluate(() => {
+    const selector = document.querySelector("#usage-mode");
+    const learningRate = document.querySelector("#learning-rate");
+    if (!(selector instanceof HTMLSelectElement) || !(learningRate instanceof HTMLInputElement)) {
+      throw new Error("controles de modo de uso indisponíveis");
+    }
+    const groups = (minimum) =>
+      Array.from(document.querySelectorAll(`[data-usage-mode-minimum="${minimum}"]`));
+    const groupVisibility = (minimum) => groups(minimum).map((element) => !element.hidden);
+    const changeMode = (value) => {
+      selector.value = value;
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+      return {
+        mode: selector.value,
+        explorer: groupVisibility("explorer"),
+        laboratory: groupVisibility("laboratory"),
+      };
+    };
+    const hashFields = [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash",
+    ];
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    const guided = {
+      mode: selector.value,
+      label: selector.labels?.[0]?.textContent?.trim(),
+      status: document.querySelector("#usage-mode-status")?.textContent,
+      explorer: groupVisibility("explorer"),
+      laboratory: groupVisibility("laboratory"),
+      learningRate: learningRate.value,
+    };
+    const explorer = changeMode("explorer");
+    const laboratory = changeMode("laboratory");
+    learningRate.focus();
+    const restored = changeMode("guided");
+    const after = window.__BRAIN_ENGINE__.diagnostics();
+    return {
+      before,
+      after,
+      hashFields,
+      guided,
+      explorer,
+      laboratory,
+      restored,
+      restoredFocus: document.activeElement?.id,
+      restoredLearningRate: learningRate.value,
+    };
+  });
+  if (
+    usageModes.guided.mode !== "guided" ||
+    usageModes.guided.label !== "MODO" ||
+    !usageModes.guided.status?.startsWith("Modo guiado:") ||
+    usageModes.guided.explorer.length === 0 ||
+    usageModes.guided.laboratory.length === 0 ||
+    usageModes.guided.explorer.some(Boolean) ||
+    usageModes.guided.laboratory.some(Boolean) ||
+    usageModes.explorer.mode !== "explorer" ||
+    usageModes.explorer.explorer.some((visible) => !visible) ||
+    usageModes.explorer.laboratory.some(Boolean) ||
+    usageModes.laboratory.mode !== "laboratory" ||
+    usageModes.laboratory.explorer.some((visible) => !visible) ||
+    usageModes.laboratory.laboratory.some((visible) => !visible) ||
+    usageModes.restored.mode !== "guided" ||
+    usageModes.restoredFocus !== "usage-mode" ||
+    usageModes.restoredLearningRate !== usageModes.guided.learningRate ||
+    usageModes.hashFields.some((field) => usageModes.before[field] !== usageModes.after[field])
+  ) {
+    throw new Error(`modo de uso inválido: ${JSON.stringify(usageModes)}`);
+  }
+  await page.focus("#usage-mode");
+  await page.keyboard.press("ArrowDown");
+  await page.waitForFunction(
+    () => document.querySelector("#usage-mode")?.value === "explorer",
+    { timeout: 5_000 },
+  );
+  await page.select("#usage-mode", "guided");
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobileUsageMode = await page.evaluate(() => {
+    const selector = document.querySelector("#usage-mode");
+    if (!(selector instanceof HTMLSelectElement)) return undefined;
+    const bounds = selector.getBoundingClientRect();
+    return {
+      visible: getComputedStyle(selector).display !== "none",
+      withinViewport: bounds.left >= 0 && bounds.right <= window.innerWidth,
+    };
+  });
+  if (!mobileUsageMode?.visible || !mobileUsageMode.withinViewport) {
+    throw new Error(`seletor de modo não cabe no móvel: ${JSON.stringify(mobileUsageMode)}`);
+  }
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  const paletteCommands = await page.evaluate(() => {
+    const trigger = document.querySelector("#open-command-palette");
+    const dialog = document.querySelector("#command-palette");
+    const input = document.querySelector("#command-palette-input");
+    const selector = document.querySelector("#usage-mode");
+    const cut = document.querySelector("#cut-orientation");
+    if (
+      !(trigger instanceof HTMLButtonElement) ||
+      !(dialog instanceof HTMLDialogElement) ||
+      !(input instanceof HTMLInputElement) ||
+      !(selector instanceof HTMLSelectElement) ||
+      !(cut instanceof HTMLSelectElement)
+    ) {
+      throw new Error("paleta de comandos indisponível");
+    }
+    const hashFields = [
+      "stateHash",
+      "corticothalamicHash",
+      "cellPatchHash",
+      "chemicalHash",
+      "cellSpikeEventHash",
+    ];
+    const press = (key, options = {}) => input.dispatchEvent(new KeyboardEvent("keydown", {
+      key,
+      bubbles: true,
+      cancelable: true,
+      ...options,
+    }));
+    const choose = (query, id) => {
+      trigger.click();
+      if (!dialog.open) throw new Error("paleta não abriu");
+      input.value = query;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      const options = [...document.querySelectorAll("#command-palette-results [role='option']")];
+      if (options.length !== 1 || options[0].getAttribute("data-command-id") !== id) {
+        throw new Error(`resultado inesperado para ${query}: ${options.map((option) => option.getAttribute("data-command-id")).join(",")}`);
+      }
+      press("Enter");
+      if (dialog.open) throw new Error(`comando não fechou a paleta: ${id}`);
+      return document.activeElement?.id;
+    };
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    trigger.click();
+    const guidedCommands = [...document.querySelectorAll("#command-palette-results [role='option']")]
+      .map((option) => option.getAttribute("data-command-id"));
+    press("Escape");
+    const viewFocus = choose("abrir laminas", "view-laminar");
+    const explorerFocus = choose("usar modo explorador", "mode-explorer");
+    const anatomyFocus = choose("buscar estrutura anatomica", "anatomy-search");
+    const cutFocus = choose("ativar corte coronal", "cut-coronal");
+    const cameraFocus = choose("restaurar camera", "camera-reset-cut");
+    const baselineFocus = choose("perfil grafico baseline", "render-profile-baseline");
+    const enhancedFocus = choose("perfil grafico enhanced", "render-profile-enhanced");
+    choose("desativar corte", "cut-disable");
+    const guidedFocus = choose("usar modo guiado", "mode-guided");
+    const after = window.__BRAIN_ENGINE__.diagnostics();
+    return {
+      before,
+      after,
+      hashFields,
+      guidedCommands,
+      viewFocus,
+      explorerFocus,
+      anatomyFocus,
+      cutFocus,
+      cameraFocus,
+      baselineFocus,
+      enhancedFocus,
+      guidedFocus,
+      mode: selector.value,
+      cut: cut.value,
+      activeTab: document.querySelector("[role='tab'][aria-selected='true']")?.id,
+      announcement: document.querySelector("#command-palette-announcement")?.textContent,
+    };
+  });
+  if (
+    paletteCommands.guidedCommands.includes("anatomy-search") ||
+    paletteCommands.guidedCommands.some((id) => id?.startsWith("cut-")) ||
+    paletteCommands.viewFocus !== "tab-laminar" ||
+    paletteCommands.explorerFocus !== "usage-mode" ||
+    paletteCommands.anatomyFocus !== "anatomy-search" ||
+    paletteCommands.cutFocus !== "cut-orientation" ||
+    paletteCommands.cameraFocus !== "reset-cut-camera" ||
+    paletteCommands.baselineFocus !== "render-profile" ||
+    paletteCommands.enhancedFocus !== "render-profile" ||
+    paletteCommands.guidedFocus !== "usage-mode" ||
+    paletteCommands.mode !== "guided" ||
+    paletteCommands.cut !== "none" ||
+    paletteCommands.activeTab !== "tab-laminar" ||
+    !paletteCommands.announcement?.startsWith("Comando executado: Modo Guiado") ||
+    paletteCommands.hashFields.some((field) =>
+      paletteCommands.before[field] !== paletteCommands.after[field],
+    )
+  ) {
+    throw new Error(`paleta de comandos inválida: ${JSON.stringify(paletteCommands)}`);
+  }
+  await page.focus("#open-command-palette");
+  await page.keyboard.down("Control");
+  await page.keyboard.press("KeyK");
+  await page.keyboard.up("Control");
+  await page.waitForFunction(
+    () => document.querySelector("#command-palette")?.open === true &&
+      document.activeElement?.id === "command-palette-input",
+    { timeout: 5_000 },
+  );
+  const paletteAccessibility = await page.evaluate(() => ({
+    role: document.querySelector("#command-palette")?.getAttribute("role"),
+    modal: document.querySelector("#command-palette")?.getAttribute("aria-modal"),
+    expanded: document.querySelector("#command-palette-input")?.getAttribute("aria-expanded"),
+    controls: document.querySelector("#command-palette-input")?.getAttribute("aria-controls"),
+    initialActive: document.querySelector("#command-palette-input")?.getAttribute("aria-activedescendant"),
+  }));
+  await page.keyboard.press("ArrowDown");
+  const movedPaletteOption = await page.evaluate(
+    () => document.querySelector("#command-palette-input")?.getAttribute("aria-activedescendant"),
+  );
+  await page.keyboard.press("End");
+  const lastPaletteOption = await page.evaluate(
+    () => document.querySelector("#command-palette-input")?.getAttribute("aria-activedescendant"),
+  );
+  await page.keyboard.press("Home");
+  const firstPaletteOption = await page.evaluate(
+    () => document.querySelector("#command-palette-input")?.getAttribute("aria-activedescendant"),
+  );
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobilePalette = await page.evaluate(() => {
+    const card = document.querySelector(".command-palette-card");
+    if (!(card instanceof HTMLElement)) return undefined;
+    const bounds = card.getBoundingClientRect();
+    return {
+      visible: getComputedStyle(card).display !== "none",
+      withinViewport: bounds.left >= 0 && bounds.right <= window.innerWidth,
+    };
+  });
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  await page.keyboard.type("resultado ausente");
+  await page.waitForFunction(
+    () => document.querySelectorAll("#command-palette-results [role='option']").length === 0,
+    { timeout: 5_000 },
+  );
+  await page.keyboard.press("Enter");
+  const emptyPalette = await page.evaluate(() => ({
+    open: document.querySelector("#command-palette")?.open,
+    status: document.querySelector("#command-palette-status")?.textContent,
+  }));
+  await page.keyboard.down("Control");
+  await page.keyboard.press("KeyA");
+  await page.keyboard.up("Control");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("laminas");
+  await page.waitForFunction(
+    () => document.querySelectorAll("#command-palette-results [role='option']").length === 1,
+    { timeout: 5_000 },
+  );
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(
+    () => !document.querySelector("#command-palette")?.open &&
+      document.querySelector("#tab-laminar")?.getAttribute("aria-selected") === "true",
+    { timeout: 5_000 },
+  );
+  if (
+    paletteAccessibility.role !== "dialog" ||
+    paletteAccessibility.modal !== "true" ||
+    paletteAccessibility.expanded !== "true" ||
+    paletteAccessibility.controls !== "command-palette-results" ||
+    !paletteAccessibility.initialActive ||
+    !movedPaletteOption || movedPaletteOption === paletteAccessibility.initialActive ||
+    !lastPaletteOption || lastPaletteOption === firstPaletteOption ||
+    firstPaletteOption !== paletteAccessibility.initialActive ||
+    emptyPalette.open !== true || emptyPalette.status !== "Nenhum comando disponível." ||
+    !mobilePalette?.visible || !mobilePalette.withinViewport
+  ) {
+    throw new Error(`acessibilidade da paleta inválida: ${JSON.stringify({ paletteAccessibility, movedPaletteOption, lastPaletteOption, firstPaletteOption, emptyPalette, mobilePalette })}`);
+  }
+  const metaPaletteOpen = await page.evaluate(() => {
+    const trigger = document.querySelector("#open-command-palette");
+    if (!(trigger instanceof HTMLElement)) return false;
+    trigger.dispatchEvent(new KeyboardEvent("keydown", {
+      key: "k",
+      code: "KeyK",
+      metaKey: true,
+      bubbles: true,
+      cancelable: true,
+    }));
+    return document.querySelector("#command-palette")?.open === true;
+  });
+  if (!metaPaletteOpen) throw new Error("atalho Cmd+K não abriu a paleta");
+  await page.evaluate(() => document.querySelector("#command-palette-close")?.click());
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("neuron"));
+  await page.focus("#open-command-palette");
+  await page.keyboard.down("Control");
+  await page.keyboard.press("KeyK");
+  await page.keyboard.up("Control");
+  await page.waitForFunction(() => document.querySelector("#command-palette")?.open === true);
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(
+    () => !document.querySelector("#command-palette")?.open &&
+      document.querySelector("#tab-neuron")?.getAttribute("aria-selected") === "true" &&
+      document.activeElement?.id === "open-command-palette",
+    { timeout: 5_000 },
+  );
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
+  await page.select("#usage-mode", "explorer");
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("laminar"));
+  await page.evaluate(() => {
+    const input = document.querySelector("#anatomy-search");
+    if (!(input instanceof HTMLInputElement)) throw new Error("busca anatômica ausente");
+    input.value = "L4";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.waitForFunction(
+    () => document.querySelectorAll("#anatomy-results [role='treeitem']").length === 1,
+    { timeout: 5_000 },
+  );
+  await page.focus("#anatomy-results [data-anatomy-id='brain-pro:anatomy/cortical-layer-4']");
+  await page.waitForFunction(
+    () => document.querySelector("#anatomy-focus-id")?.textContent ===
+      "brain-pro:anatomy/cortical-layer-4",
+    { timeout: 5_000 },
+  );
+  const keyboardAnatomyPreview = await page.evaluate(() => ({
+    calloutVisible: !document.querySelector("#anatomy-focus-callout")?.hidden,
+    name: document.querySelector("#anatomy-focus-name")?.textContent,
+    id: document.querySelector("#anatomy-focus-id")?.textContent,
+    provenance: document.querySelector("#anatomy-focus-provenance")?.textContent,
+    evidence: document.querySelector("#anatomy-focus-evidence")?.textContent,
+    status: document.querySelector("#anatomy-focus-status")?.textContent,
+    selectedId: document.querySelector("#anatomy-selected-id")?.textContent,
+    highlight: window.__BRAIN_ENGINE__.presentationAudit().selectionHighlight,
+  }));
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(
+    () => document.querySelector("#anatomy-selected-id")?.textContent ===
+      "brain-pro:anatomy/cortical-layer-4",
+    { timeout: 5_000 },
+  );
+  const confirmedKeyboardSelection = await page.evaluate(() => ({
+    provenance: document.querySelector("#anatomy-selected-provenance")?.textContent,
+    selected: document.querySelector("#anatomy-selected-id")?.textContent,
+    badge: {
+      name: document.querySelector("#selection-provenance-name")?.textContent,
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+    },
+  }));
+
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("synapse"));
+  await page.evaluate(() => {
+    const input = document.querySelector("#anatomy-search");
+    if (!(input instanceof HTMLInputElement)) throw new Error("busca anatômica ausente");
+    input.value = "pericito";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.waitForFunction(
+    () => document.querySelectorAll("#anatomy-results [role='treeitem']").length === 1,
+    { timeout: 5_000 },
+  );
+  const selectedBeforePointerPreview = await page.evaluate(() => ({
+    id: document.querySelector("#anatomy-selected-id")?.textContent,
+    badge: {
+      name: document.querySelector("#selection-provenance-name")?.textContent,
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+    },
+  }));
+  await page.hover("#anatomy-results [data-anatomy-id='brain-pro:anatomy/pericyte']");
+  await page.waitForFunction(
+    () => document.querySelector("#anatomy-focus-id")?.textContent ===
+      "brain-pro:anatomy/pericyte",
+    { timeout: 5_000 },
+  );
+  const pointerAnatomyPreview = await page.evaluate(() => ({
+    id: document.querySelector("#anatomy-focus-id")?.textContent,
+    provenance: document.querySelector("#anatomy-focus-provenance")?.textContent,
+    evidence: document.querySelector("#anatomy-focus-evidence")?.textContent,
+    selectedId: document.querySelector("#anatomy-selected-id")?.textContent,
+    selectionBadge: {
+      name: document.querySelector("#selection-provenance-name")?.textContent,
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+    },
+    highlight: window.__BRAIN_ENGINE__.presentationAudit().selectionHighlight,
+  }));
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte"));
+  await page.waitForFunction(
+    () => document.querySelector("#anatomy-selected-id")?.textContent ===
+      "brain-pro:anatomy/pericyte",
+    { timeout: 5_000 },
+  );
+  const highContrastCallout = await page.evaluate(() => {
+    window.__BRAIN_ENGINE__.setHighContrast(true);
+    const callout = document.querySelector("#anatomy-focus-callout");
+    const computed = callout ? getComputedStyle(callout) : undefined;
+    const result = {
+      background: computed?.backgroundColor,
+      color: computed?.color,
+      calloutId: document.querySelector("#anatomy-focus-id")?.textContent,
+      calloutProvenance: document.querySelector("#anatomy-focus-provenance")?.textContent,
+      selectedProvenance: document.querySelector("#anatomy-selected-provenance")?.textContent,
+      badgeClass: document.querySelector("#selection-provenance-class")?.textContent,
+      badgeEvidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+    };
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    return result;
+  });
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobileAnatomyCallout = await page.evaluate(() => {
+    const callout = document.querySelector("#anatomy-focus-callout");
+    if (!(callout instanceof HTMLElement)) return undefined;
+    const bounds = callout.getBoundingClientRect();
+    return {
+      hidden: callout.hidden,
+      withinViewport: bounds.left >= 0 && bounds.right <= window.innerWidth &&
+        bounds.top >= 0 && bounds.bottom <= window.innerHeight,
+    };
+  });
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  const ui033HashInvariant = await page.evaluate(() => {
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    window.__BRAIN_ENGINE__.setView("synapse");
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte");
+    window.__BRAIN_ENGINE__.setHighContrast(true);
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    return { before, after: window.__BRAIN_ENGINE__.diagnostics() };
+  });
+  if (
+    !keyboardAnatomyPreview.calloutVisible ||
+    keyboardAnatomyPreview.id !== "brain-pro:anatomy/cortical-layer-4" ||
+    keyboardAnatomyPreview.provenance !== "STATE" ||
+    keyboardAnatomyPreview.evidence !== "DIDACTIC" ||
+    keyboardAnatomyPreview.selectedId === "brain-pro:anatomy/cortical-layer-4" ||
+    !keyboardAnatomyPreview.status?.includes("cortical-layer-4") ||
+    keyboardAnatomyPreview.highlight.status !== "ready" ||
+    keyboardAnatomyPreview.highlight.materialAllocations !== 0 ||
+    confirmedKeyboardSelection.selected !== "brain-pro:anatomy/cortical-layer-4" ||
+    confirmedKeyboardSelection.provenance !== "STATE" ||
+    confirmedKeyboardSelection.badge.name !== "Camada cortical L4" ||
+    confirmedKeyboardSelection.badge.visualClass !== "STATE" ||
+    confirmedKeyboardSelection.badge.evidence !== "DIDACTIC" ||
+    pointerAnatomyPreview.id !== "brain-pro:anatomy/pericyte" ||
+    pointerAnatomyPreview.provenance !== "TOPOLOGY" ||
+    pointerAnatomyPreview.evidence !== "ILLUSTRATIVE" ||
+    pointerAnatomyPreview.selectedId !== selectedBeforePointerPreview.id ||
+    pointerAnatomyPreview.selectionBadge.name !== selectedBeforePointerPreview.badge.name ||
+    pointerAnatomyPreview.selectionBadge.visualClass !==
+      selectedBeforePointerPreview.badge.visualClass ||
+    pointerAnatomyPreview.selectionBadge.evidence !== selectedBeforePointerPreview.badge.evidence ||
+    pointerAnatomyPreview.highlight.status !== "ready" ||
+    pointerAnatomyPreview.highlight.highlightedMaterials < 1 ||
+    pointerAnatomyPreview.highlight.materialAllocations !== 0 ||
+    highContrastCallout.background !== "rgb(0, 0, 0)" ||
+    highContrastCallout.color !== "rgb(255, 255, 255)" ||
+    highContrastCallout.calloutId !== "brain-pro:anatomy/pericyte" ||
+    highContrastCallout.calloutProvenance !== "TOPOLOGY" ||
+    highContrastCallout.selectedProvenance !== "TOPOLOGY" ||
+    highContrastCallout.badgeClass !== "TOPOLOGY" ||
+    highContrastCallout.badgeEvidence !== "ILLUSTRATIVE" ||
+    (!mobileAnatomyCallout?.hidden && !mobileAnatomyCallout.withinViewport) ||
+    PRESENTATION_HASH_FIELDS.some(
+      (field) => ui033HashInvariant.before[field] !== ui033HashInvariant.after[field],
+    )
+  ) {
+    throw new Error(`UI-033 inválida: ${JSON.stringify({ keyboardAnatomyPreview, confirmedKeyboardSelection, selectedBeforePointerPreview, pointerAnatomyPreview, highContrastCallout, mobileAnatomyCallout, ui033HashInvariant })}`);
+  }
+  await page.select("#usage-mode", "guided");
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
+  const ui034Views = [
+    ["overview", "VISÃO GERAL"],
+    ["laminar", "LÂMINAS"],
+    ["cell", "CÉLULA"],
+    ["neuron", "NEURÔNIO"],
+    ["electricity", "ELETRICIDADE"],
+    ["synapse", "SINAPSE"],
+  ];
+  const ui034Contexts = await page.evaluate(async (views) => {
+    const contexts = {};
+    for (const [view, label] of views) {
+      window.__BRAIN_ENGINE__.setView(view);
+      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+      contexts[view] = {
+        expectedLabel: label,
+        open: document.querySelector("#view-context-panel")?.open,
+        label: document.querySelector("#view-context-view")?.textContent,
+        model: document.querySelector("#view-context-model")?.textContent,
+        unit: document.querySelector("#view-context-unit")?.textContent,
+        hypothesis: document.querySelector("#view-context-hypothesis")?.textContent,
+        limitation: document.querySelector("#view-context-limitation")?.textContent,
+      };
+    }
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte");
+    await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+    return {
+      contexts,
+      selection: {
+        hidden: document.querySelector("#view-context-selection")?.hidden,
+        label: document.querySelector("#view-context-selection-name")?.textContent,
+        id: document.querySelector("#view-context-selection-id")?.textContent,
+        hypothesis: document.querySelector("#view-context-selection-hypothesis")?.textContent,
+        limitation: document.querySelector("#view-context-selection-limitation")?.textContent,
+        status: document.querySelector("#view-context-status")?.textContent,
+      },
+    };
+  }, ui034Views);
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobileViewContext = await page.evaluate(() => {
+    const panel = document.querySelector("#view-context-panel");
+    if (!(panel instanceof HTMLElement)) return undefined;
+    const bounds = panel.getBoundingClientRect();
+    return {
+      visible: getComputedStyle(panel).display !== "none",
+      withinViewport: bounds.left >= 0 && bounds.right <= window.innerWidth &&
+        bounds.top >= 0 && bounds.bottom <= window.innerHeight,
+      documentWidth: document.documentElement.scrollWidth,
+    };
+  });
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  const ui034PresentationInvariant = await page.evaluate(() => {
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    for (const view of ["overview", "laminar", "cell", "neuron", "electricity", "synapse"]) {
+      window.__BRAIN_ENGINE__.setView(view);
+    }
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte");
+    window.__BRAIN_ENGINE__.setHighContrast(true);
+    const modelColor = getComputedStyle(document.querySelector("#view-context-model")).color;
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    return { before, after: window.__BRAIN_ENGINE__.diagnostics(), modelColor };
+  });
+  const incompleteViewContext = Object.values(ui034Contexts.contexts).find((context) =>
+    !context.open || context.label !== context.expectedLabel ||
+    [context.model, context.unit, context.hypothesis, context.limitation]
+      .some((value) => !value?.trim())
+  );
+  if (
+    incompleteViewContext ||
+    ui034Contexts.selection.hidden ||
+    ui034Contexts.selection.label !== "Pericito ilustrativo" ||
+    ui034Contexts.selection.id !== "brain-pro:anatomy/pericyte" ||
+    !ui034Contexts.selection.hypothesis?.includes("pericito") ||
+    !ui034Contexts.selection.limitation?.includes("Não há fluxo") ||
+    !ui034Contexts.selection.status?.includes("Foco Pericito ilustrativo") ||
+    !mobileViewContext?.visible || !mobileViewContext.withinViewport ||
+    mobileViewContext.documentWidth > 390 ||
+    ui034PresentationInvariant.modelColor !== "rgb(255, 255, 255)" ||
+    PRESENTATION_HASH_FIELDS.some(
+      (field) => ui034PresentationInvariant.before[field] !== ui034PresentationInvariant.after[field],
+    )
+  ) {
+    throw new Error(`UI-034 inválida: ${JSON.stringify({ ui034Contexts, mobileViewContext, ui034PresentationInvariant })}`);
+  }
+  await page.evaluate(() => {
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/cortical-layer-4");
+    const context = document.querySelector("#view-context-panel");
+    if (context instanceof HTMLDetailsElement) context.open = false;
+  });
+  await page.waitForFunction(
+    () => document.querySelector("#selection-provenance-class")?.textContent === "STATE",
+    { timeout: 5_000 },
+  );
+  const guidedProvenanceBadge = await page.evaluate(() => {
+    const badge = document.querySelector("#selection-provenance-badge");
+    const explorer = document.querySelector("#anatomy-explorer");
+    const context = document.querySelector("#view-context-panel");
+    return {
+      visible: badge instanceof HTMLElement && !badge.hidden &&
+        getComputedStyle(badge).display !== "none",
+      name: document.querySelector("#selection-provenance-name")?.textContent,
+      visualClass: document.querySelector("#selection-provenance-class")?.textContent,
+      evidence: document.querySelector("#selection-provenance-evidence")?.textContent,
+      explorerHidden: explorer instanceof HTMLElement && explorer.hidden,
+      contextClosed: context instanceof HTMLDetailsElement && !context.open,
+    };
+  });
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  const mobileProvenanceBadge = await page.evaluate(() => {
+    const panel = document.querySelector("#presentation-panel");
+    const badge = document.querySelector("#selection-provenance-badge");
+    if (!(panel instanceof HTMLElement) || !(badge instanceof HTMLElement)) return undefined;
+    panel.scrollTop = panel.scrollHeight;
+    const panelBounds = panel.getBoundingClientRect();
+    const badgeBounds = badge.getBoundingClientRect();
+    return {
+      visible: !badge.hidden && getComputedStyle(badge).display !== "none",
+      withinViewport: badgeBounds.left >= 0 && badgeBounds.right <= window.innerWidth &&
+        badgeBounds.top >= 0 && badgeBounds.bottom <= window.innerHeight,
+      withinPanel: badgeBounds.left >= panelBounds.left && badgeBounds.right <= panelBounds.right &&
+        badgeBounds.top >= panelBounds.top && badgeBounds.bottom <= panelBounds.bottom,
+      documentWidth: document.documentElement.scrollWidth,
+    };
+  });
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  const ui037PresentationInvariant = await page.evaluate(() => {
+    const before = window.__BRAIN_ENGINE__.diagnostics();
+    window.__BRAIN_ENGINE__.setView("synapse");
+    window.__BRAIN_ENGINE__.setAnatomySelection("brain-pro:anatomy/pericyte");
+    window.__BRAIN_ENGINE__.setHighContrast(true);
+    const badgeColor = getComputedStyle(document.querySelector("#selection-provenance-class")).color;
+    const badgeClass = document.querySelector("#selection-provenance-class")?.textContent;
+    const badgeEvidence = document.querySelector("#selection-provenance-evidence")?.textContent;
+    window.__BRAIN_ENGINE__.setHighContrast(false);
+    return { before, after: window.__BRAIN_ENGINE__.diagnostics(), badgeColor, badgeClass, badgeEvidence };
+  });
+  if (
+    !guidedProvenanceBadge.visible ||
+    guidedProvenanceBadge.name !== "Camada cortical L4" ||
+    guidedProvenanceBadge.visualClass !== "STATE" ||
+    guidedProvenanceBadge.evidence !== "DIDACTIC" ||
+    !guidedProvenanceBadge.explorerHidden || !guidedProvenanceBadge.contextClosed ||
+    !mobileProvenanceBadge?.visible || !mobileProvenanceBadge.withinViewport ||
+    !mobileProvenanceBadge.withinPanel || mobileProvenanceBadge.documentWidth > 390 ||
+    ui037PresentationInvariant.badgeColor !== "rgb(255, 255, 255)" ||
+    ui037PresentationInvariant.badgeClass !== "TOPOLOGY" ||
+    ui037PresentationInvariant.badgeEvidence !== "ILLUSTRATIVE" ||
+    PRESENTATION_HASH_FIELDS.some(
+      (field) => ui037PresentationInvariant.before[field] !== ui037PresentationInvariant.after[field],
+    )
+  ) {
+    throw new Error(`UI-037 inválida: ${JSON.stringify({ guidedProvenanceBadge, mobileProvenanceBadge, ui037PresentationInvariant })}`);
+  }
+  await page.evaluate(() => window.__BRAIN_ENGINE__.setView("overview"));
   const materialProfiles = await page.evaluate(
     () => window.__BRAIN_ENGINE__.materialProfileAudit(),
   );
