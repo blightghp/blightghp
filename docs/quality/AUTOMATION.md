@@ -57,8 +57,7 @@ silenciados globalmente.
 
 O arquivo `dependabot.yml` habilita atualizações de versão quando chegar à branch
 padrão. Alertas e atualizações automáticas de segurança são settings remotos
-separados e devem permanecer habilitados no GitHub. Também deve permanecer ativa
-a proteção de push de secrets.
+separados e estão habilitados no GitHub, assim como a proteção de push de secrets.
 
 ## Agentes
 
@@ -85,18 +84,19 @@ testes, revisão humana, ruleset ou evidência versionada.
 - Action nova: fixe SHA, atualize a allowlist remota de Actions e valide a origem
   antes de fazer merge.
 
-## Settings remotos esperados
+## Settings remotos verificados
 
 Itens abaixo não são controlados por Git e precisam de auditoria periódica:
 
 - permissões padrão de workflow em leitura e sem aprovação de PR;
 - allowlist apenas das Actions pinadas realmente usadas;
-- exigência de SHA completo na política de Actions;
-- Dependabot alerts e security updates habilitados;
+- exigência de SHA completo na política de Actions (habilitada);
+- Dependabot alerts, security updates e automated security fixes habilitados;
 - secret scanning e push protection habilitados;
 - Pages limitado à branch `main` pelo ambiente `github-pages`;
-- proteção/ruleset de `main` compatível com os dois writers ou migração dos bots
-  para PR/GitHub App antes de exigir checks sem bypass.
+- ruleset `main-protection` ativo em `main`, exigindo PR/aprovação/CODEOWNERS,
+  resolução de threads e os quatro checks CI; o único bypass é a integração
+  GitHub Actions (`actor_id=15368`), compatível com os dois writers.
 
 Referências operacionais: [Dependabot](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/configure-version-updates),
 [uso seguro de Actions](https://docs.github.com/en/actions/reference/security/secure-use),
