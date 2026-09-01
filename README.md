@@ -96,7 +96,7 @@ experimento Web/Wasm. Um não deve ser interpretado como evidência do outro.
 <div align="center">
 
 <a href="https://blightghp.github.io/blightghp/">
-  <img src="assets/brain.gif?v=feee6713d3e0" width="760" alt="BRAIN PRO com superfície encefálica procedural e seis vistas interativas" />
+  <img src="assets/brain.gif?v=b8fc540b57bc" width="760" alt="BRAIN PRO com superfície encefálica procedural e seis vistas interativas" />
 </a>
 
 <sub>▲ Registro visual publicado em R10-E: superfície procedural, material regional quente, luz reversível e seis vistas. O <a href="assets/brain-gif.json">manifesto</a> schema 3 fixa a captura ao commit de origem, ao motor Rust/Wasm, à ABI v8 e a cinco hashes auditados. Ele documenta o Web/Fallback no momento da captura — não o estado do engine nativo — e continua ilustrativo, não clínico.</sub>
