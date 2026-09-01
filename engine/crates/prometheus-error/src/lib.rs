@@ -133,10 +133,16 @@ mod tests {
 
     #[test]
     fn test_error_classes() {
-        let degradable = EngineError::NotImplemented { crate_name: "test", symbol: "test" };
+        let degradable = EngineError::NotImplemented {
+            crate_name: "test",
+            symbol: "test",
+        };
         assert_eq!(degradable.class(), ErrorClass::Degradable);
 
-        let frame_fatal = EngineError::ArenaExhausted { requested: 100, available: 0 };
+        let frame_fatal = EngineError::ArenaExhausted {
+            requested: 100,
+            available: 0,
+        };
         assert_eq!(frame_fatal.class(), ErrorClass::FrameFatal);
 
         let session_fatal = EngineError::GraphicsDevice { reason: "OOM" };

@@ -53,7 +53,7 @@ impl ComponentId {
     pub const fn new(index: u8) -> Self {
         Self(index)
     }
-    
+
     /// Returns the bit index.
     #[must_use]
     #[inline]
@@ -159,7 +159,7 @@ impl Chunk {
     pub fn is_empty(&self) -> bool {
         self.entities.is_empty()
     }
-    
+
     /// Pushes an entity and its raw component data.
     pub fn push(&mut self, entity: Entity, components_data: &[&[u8]]) {
         self.entities.push(entity);
@@ -175,7 +175,6 @@ pub struct Archetype {
     signature: ArchetypeSignature,
     /// List of chunks in this archetype.
     pub chunks: Vec<Chunk>,
-    component_sizes: Vec<usize>,
 }
 
 impl Archetype {
@@ -183,8 +182,7 @@ impl Archetype {
     pub fn new(signature: ArchetypeSignature, component_sizes: Vec<usize>) -> Self {
         Self {
             signature,
-            chunks: vec![Chunk::new(component_sizes.clone())],
-            component_sizes,
+            chunks: vec![Chunk::new(component_sizes)],
         }
     }
 
@@ -276,17 +274,17 @@ impl World {
                 reason: "Entity is not alive",
             });
         }
-        
+
         let slot = self.slots[entity.index() as usize];
         let arch = &mut self.archetypes[slot.archetype_index];
         let chunk = &mut arch.chunks[slot.chunk_index];
-        
+
         // Swap remove logic (not strictly implemented for components to keep example simple,
         // but required for true ECS. Here we just mark as dead for simplicity, or we do actual swap remove).
         // Since we are creating a functional ECS, let's do a basic swap remove.
         let row = slot.row_index;
         let last_row = chunk.len() - 1;
-        
+
         if row != last_row {
             // Swap entities
             chunk.entities.swap(row, last_row);
@@ -303,19 +301,19 @@ impl World {
             let swapped_entity = chunk.entities[row];
             self.slots[swapped_entity.index() as usize].row_index = row;
         }
-        
+
         // Remove the last element
         chunk.entities.pop();
         for (col, size) in chunk.columns.iter_mut().zip(chunk.component_sizes.iter()) {
             col.truncate(col.len() - size);
         }
-        
+
         let slot_mut = &mut self.slots[entity.index() as usize];
         slot_mut.alive = false;
         slot_mut.generation = slot_mut.generation.wrapping_add(1);
         self.free_list.push(entity.index());
         self.live_count -= 1;
-        
+
         Ok(())
     }
 
@@ -396,6 +394,11 @@ impl<'a, T: Component> ColumnView<'a, T> {
     pub fn as_slice(&self) -> &'a [T] {
         self.items
     }
+
+    /// Returns the entities aligned with the component slice.
+    pub fn entities(&self) -> &'a [Entity] {
+        self.entities
+    }
 }
 
 /// Mutable contiguous slice of a component column.
@@ -414,6 +417,11 @@ impl<'a, T: Component> ColumnViewMut<'a, T> {
     /// Returns the mutable slice of components.
     pub fn as_mut_slice(&mut self) -> &mut [T] {
         self.items
+    }
+
+    /// Returns the entities aligned with the mutable component slice.
+    pub fn entities(&self) -> &'a [Entity] {
+        self.entities
     }
 }
 
@@ -461,13 +469,27 @@ impl CommandBuffer {
         self.resolved.clear();
         for cmd in &self.commands {
             match cmd {
-                Command::Spawn(_) => {
+                Command::Spawn(reserved) => {
+                    if reserved.index() as usize != self.resolved.len() {
+                        return Err(EngineError::InvalidArgument {
+                            crate_name: "prometheus-ecs",
+                            symbol: "CommandBuffer::apply",
+                            reason: "Spawn reservation order is inconsistent",
+                        });
+                    }
                     let e = world.spawn();
                     self.resolved.push(e);
                 }
                 Command::Despawn(e) => {
                     let actual = if e.generation() == u32::MAX {
-                        self.resolved[e.index() as usize]
+                        self.resolved
+                            .get(e.index() as usize)
+                            .copied()
+                            .ok_or(EngineError::InvalidArgument {
+                                crate_name: "prometheus-ecs",
+                                symbol: "CommandBuffer::apply",
+                                reason: "Despawn references an unresolved reservation",
+                            })?
                     } else {
                         *e
                     };
@@ -525,7 +547,9 @@ mod tests {
 
     #[test]
     fn test_query_plan() {
-        let plan = QueryPlan::new().require(ComponentId::new(1)).exclude(ComponentId::new(3));
+        let plan = QueryPlan::new()
+            .require(ComponentId::new(1))
+            .exclude(ComponentId::new(3));
         let sig1 = ArchetypeSignature::empty().with(ComponentId::new(1));
         let sig2 = sig1.with(ComponentId::new(3));
         assert!(plan.matches(&sig1));

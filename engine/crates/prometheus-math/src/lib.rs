@@ -21,9 +21,13 @@ impl Deref for Vec2 {
 
 impl Vec2 {
     /// Returns the x component.
-    pub fn x(&self) -> f32 { self.0.x }
+    pub fn x(&self) -> f32 {
+        self.0.x
+    }
     /// Returns the y component.
-    pub fn y(&self) -> f32 { self.0.y }
+    pub fn y(&self) -> f32 {
+        self.0.y
+    }
 }
 
 /// A 3-dimensional vector.
@@ -40,11 +44,17 @@ impl Deref for Vec3 {
 
 impl Vec3 {
     /// Returns the x component.
-    pub fn x(&self) -> f32 { self.0.x }
+    pub fn x(&self) -> f32 {
+        self.0.x
+    }
     /// Returns the y component.
-    pub fn y(&self) -> f32 { self.0.y }
+    pub fn y(&self) -> f32 {
+        self.0.y
+    }
     /// Returns the z component.
-    pub fn z(&self) -> f32 { self.0.z }
+    pub fn z(&self) -> f32 {
+        self.0.z
+    }
 }
 
 /// A 4-dimensional vector.
@@ -61,13 +71,21 @@ impl Deref for Vec4 {
 
 impl Vec4 {
     /// Returns the x component.
-    pub fn x(&self) -> f32 { self.0.x }
+    pub fn x(&self) -> f32 {
+        self.0.x
+    }
     /// Returns the y component.
-    pub fn y(&self) -> f32 { self.0.y }
+    pub fn y(&self) -> f32 {
+        self.0.y
+    }
     /// Returns the z component.
-    pub fn z(&self) -> f32 { self.0.z }
+    pub fn z(&self) -> f32 {
+        self.0.z
+    }
     /// Returns the w component.
-    pub fn w(&self) -> f32 { self.0.w }
+    pub fn w(&self) -> f32 {
+        self.0.w
+    }
 }
 
 /// A quaternion for rotations.
@@ -159,7 +177,7 @@ pub const GRAVITY_Y: f32 = -9.81;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use core::mem::{size_of, align_of};
+    use core::mem::{align_of, size_of};
 
     #[test]
     fn test_transform_layout() {
@@ -190,7 +208,7 @@ mod tests {
     fn test_basic_arithmetic() {
         let v1 = Vec3(glam::Vec3::new(1.0, 2.0, 3.0));
         let v2 = Vec3(glam::Vec3::new(2.0, 3.0, 4.0));
-        
+
         let sum = *v1 + *v2;
         assert_eq!(sum, glam::Vec3::new(3.0, 5.0, 7.0));
     }

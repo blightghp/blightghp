@@ -4,9 +4,9 @@
 //! Two-ended frame arena for zero-heap-allocation per tick.
 //! Pool with frame and level lifetimes, strictly bounds-checked and safe.
 
-use std::alloc::Layout;
 use bytemuck::{Pod, Zeroable};
 use prometheus_error::{EngineError, EngineResult};
+use std::alloc::Layout;
 
 /// Default frame arena size in bytes (16 MiB).
 pub const DEFAULT_FRAME_ARENA_BYTES: usize = 16 * 1024 * 1024;
@@ -138,13 +138,15 @@ impl FrameArena {
 
     /// Allocate a typed slice safely.
     pub fn alloc_slice<T: Pod>(&mut self, end: ArenaEnd, count: usize) -> EngineResult<&mut [T]> {
-        let size = count.checked_mul(std::mem::size_of::<T>()).ok_or(EngineError::InvalidArgument {
-            crate_name: "prometheus-alloc",
-            symbol: "alloc_slice",
-            reason: "Size calculation overflow",
-        })?;
+        let size = count
+            .checked_mul(std::mem::size_of::<T>())
+            .ok_or(EngineError::InvalidArgument {
+                crate_name: "prometheus-alloc",
+                symbol: "alloc_slice",
+                reason: "Size calculation overflow",
+            })?;
         let align = std::mem::align_of::<T>();
-        
+
         if size == 0 {
             return Err(EngineError::InvalidArgument {
                 crate_name: "prometheus-alloc",
@@ -258,13 +260,13 @@ mod tests {
     #[test]
     fn test_alloc_and_read_back() {
         let mut arena = FrameArena::new(1024);
-        
+
         let slice1 = arena.alloc_slice::<u32>(ArenaEnd::Frame, 4).unwrap();
         slice1.copy_from_slice(&[1, 2, 3, 4]);
-        
+
         let slice2 = arena.alloc_slice::<u32>(ArenaEnd::Frame, 4).unwrap();
         slice2.copy_from_slice(&[5, 6, 7, 8]);
-        
+
         assert_eq!(arena.frame_used(), 32);
     }
 
@@ -273,7 +275,7 @@ mod tests {
         let mut arena = FrameArena::new(1024);
         let _ = arena.alloc_slice::<u32>(ArenaEnd::Frame, 10).unwrap();
         assert_eq!(arena.frame_used(), 40);
-        
+
         arena.reset_frame();
         assert_eq!(arena.frame_used(), 0);
     }
@@ -289,12 +291,12 @@ mod tests {
     fn test_mark_and_rewind() {
         let mut arena = FrameArena::new(1024);
         let _ = arena.alloc_slice::<u32>(ArenaEnd::Frame, 2).unwrap();
-        
+
         let marker = arena.mark(ArenaEnd::Frame);
         let _ = arena.alloc_slice::<u32>(ArenaEnd::Frame, 4).unwrap();
-        
+
         assert_eq!(arena.frame_used(), 24);
-        
+
         arena.rewind(marker).unwrap();
         assert_eq!(arena.frame_used(), 8);
     }
@@ -302,16 +304,16 @@ mod tests {
     #[test]
     fn test_frame_and_level_dont_overlap() {
         let mut arena = FrameArena::new(128); // 128 bytes total
-        
+
         // Allocate 64 bytes from frame
         let _ = arena.alloc_slice::<u32>(ArenaEnd::Frame, 16).unwrap();
         assert_eq!(arena.frame_used(), 64);
-        
+
         // Allocate 64 bytes from level
         let _ = arena.alloc_slice::<u32>(ArenaEnd::Level, 16).unwrap();
         assert_eq!(arena.level_used(), 64);
         assert_eq!(arena.remaining(), 0);
-        
+
         // Next allocation should fail
         let err = arena.alloc_slice::<u32>(ArenaEnd::Frame, 1).unwrap_err();
         assert!(matches!(err, EngineError::ArenaExhausted { .. }));
@@ -320,15 +322,15 @@ mod tests {
     #[test]
     fn test_alignment_correctness() {
         let mut arena = FrameArena::new(128);
-        
+
         // 1-byte aligned allocation
         let layout = Layout::from_size_align(1, 1).unwrap();
         let ptr1 = arena.alloc(ArenaEnd::Frame, layout).unwrap();
-        
+
         // 16-byte aligned allocation
         let layout16 = Layout::from_size_align(16, 16).unwrap();
         let ptr2 = arena.alloc(ArenaEnd::Frame, layout16).unwrap();
-        
+
         assert_eq!(ptr2 as usize % 16, 0);
         // ptr1 was 1 byte, so ptr2 needs 15 bytes padding
         assert_eq!(ptr2 as usize - ptr1 as usize, 16);
