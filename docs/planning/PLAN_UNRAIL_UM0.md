@@ -3,7 +3,7 @@
 **Estado documental:** candidato; bloqueado até `UM0-ENTRY`, 21 de agosto de 2026
 **Cortes cobertos:** `UM0-A0` a `UM0-F`, subordinados ao [roadmap canônico](ROADMAP.md)
 **Entrega final candidata:** runner científico headless provado antes de janela, GPU e superfície encefálica
-**Pré-requisitos de leitura:** [arquitetura](../specifications/unrail/ARCHITECTURE.md) e [política de dependências](../specifications/unrail/DEPENDENCY_POLICY.md)
+**Pré-requisitos de leitura:** [arquitetura](../specifications/prometheus/ARCHITECTURE.md) e [política de dependências](../specifications/prometheus/DEPENDENCY_POLICY.md)
 
 Este documento preserva a intenção da proposta, mas não autoriza implementação.
 O gate `UM0-ENTRY` precisa escolher runner versus Tauri, fixar toolchain,
@@ -346,5 +346,5 @@ Nada além disso conta como pronto — e nada disso pode ser afirmado antes de
 existir.
 
 Ver também: [roadmap canônico](ROADMAP.md) ·
-[catálogo de capacidades](../specifications/unrail/CAPABILITY_CATALOG.md) ·
+[catálogo de capacidades](../specifications/prometheus/CAPABILITY_CATALOG.md) ·
 [horizontes não agendados](backlog/UNRAIL_HORIZONS.md).

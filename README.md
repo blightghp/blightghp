@@ -81,8 +81,11 @@ diagnóstico, avaliação e intervenção na aprendizagem.
 O gráfico funciona como um traço longitudinal do trabalho público. Ele não
 inventa atividade anterior ao Git: a indicação “desde 2025” pertence à linha de
 aprendizagem descrita neste perfil; os pontos vêm das contribuições registradas
-pelo GitHub. O artefato é atualizado diariamente e também a cada novo commit
-publicado neste repositório.
+pelo GitHub. O artefato é atualizado diariamente e a cada `push` em `main`.
+
+Há dois artefatos de sincronização distintos nesta página: o gráfico acompanha
+a atividade pública, enquanto o GIF registra uma captura versionada do
+experimento Web/Wasm. Um não deve ser interpretado como evidência do outro.
 
 ### CONTRIBUIÇÕES
 
@@ -96,7 +99,7 @@ publicado neste repositório.
   <img src="assets/brain.gif?v=feee6713d3e0" width="760" alt="BRAIN PRO com superfície encefálica procedural e seis vistas interativas" />
 </a>
 
-<sub>▲ Estado visual R10-E: superfície procedural, material regional quente, luz reversível e seis vistas. O <a href="assets/brain-gif.json">manifesto</a> vincula a captura ao motor Rust/Wasm, à ABI e aos hashes auditados; a imagem continua ilustrativa, não clínica.</sub>
+<sub>▲ Registro visual publicado em R10-E: superfície procedural, material regional quente, luz reversível e seis vistas. O <a href="assets/brain-gif.json">manifesto</a> schema 3 fixa a captura ao commit de origem, ao motor Rust/Wasm, à ABI v8 e a cinco hashes auditados. Ele documenta o Web/Fallback no momento da captura — não o estado do engine nativo — e continua ilustrativo, não clínico.</sub>
 
 </div>
 
@@ -106,7 +109,7 @@ aplicação combina um motor determinístico em Rust/Wasm com uma leitura espaci
 em Three.js, mantendo separados o que é cálculo, o que é visualização e o que
 ainda é hipótese.
 
-## BRAIN PRO · ciclo 0.10
+## BRAIN PRO · 0.9.0 · ciclo 0.10
 
 [Abrir o experimento](https://blightghp.github.io/blightghp/) ·
 [consultar o roadmap](docs/planning/ROADMAP.md) ·
@@ -116,27 +119,35 @@ ainda é hipótese.
 
 | Frente | Situação |
 | :-- | :-- |
-| baseline científica/computacional | 0.8 promovida, com replay, ABI e química local auditados |
-| experiência interativa | seis vistas sincronizadas, Worker Rust/Wasm e acessibilidade por teclado |
+| baseline científica/computacional | 0.8 promovida, com replay determinístico, ABI e química local auditados |
+| referência Web | seis vistas sincronizadas por Worker Rust/Wasm; snapshot ABI v8 e cinco hashes independentes |
 | anatomia visual | catálogo 1.2.0, vascular topológico e superfície procedural determinística |
-| desempenho | perfis `baseline`, `enhanced` e `cinema`, com orçamento medido em GPU física |
-| último gate | R10-E em andamento: material regional, AgX reversível, GTAO 0,5× contido e matriz física D3D11 |
-| próximo gate | Fases PROMETHEUS (Φ-1 a Φ-5) assumem a prioridade da arquitetura nativa |
-| direção nativa | **Projeto PROMETHEUS**: workspace `engine/` criado (Fase Φ-0 concluída). 7 crates base, integração WGPU + ECS zero-alloc, mantendo separação (GFX-001). |
+| desempenho de apresentação | perfis `baseline`, `enhanced` e `cinema`, com orçamento medido em GPU física |
+| último gate visual | R10-E teve a evidência física fechada em 28 de agosto; a etapa ainda não foi promovida |
+| artefato publicado | `assets/brain.gif` + `assets/brain-gif.json`: 60 quadros, seis vistas e proveniência verificável do Web/Fallback |
+| direção nativa | **PROMETHEUS**: workspace `engine/` com oito crates; Φ-0 concluída e Φ-1 em andamento, com grafo compilado e executor `wgpu` 30 |
+| ponte científica → nativa | `RenderExtractable` já define extração somente de leitura em `brain-engine`, mas ainda não há dependência de `engine/` nem runner nativo conectando os dois workspaces |
 
 R10-E mantém a superfície regional R10-D e aplica luz, AgX reversível,
 cor-base quente por região e GTAO de meia resolução apenas no `overview`
 realista do perfil `cinema`. `enhanced` preserva seu teto de 64 draws sem GTAO;
 corte, alto contraste, outras vistas e `baseline` também removem o passe. A
-implementação não transforma o modelo em atlas, reconstrução clínica ou
-anatomia validada. O avanço e seus limites estão na
+evidência foi aceita como apresentação reversível, mas não constitui promoção
+do ciclo nem transforma o modelo em atlas, reconstrução clínica ou anatomia
+validada. O avanço, os limites e a decisão pendente estão na
 [auditoria R10-E](docs/audits/0.10/AUDIT_0.10_R10_E.md) e na
 [revisão visual](docs/reviews/VISUAL_REVIEW_R10_E.md).
 
 ### O que existe hoje
 
-- **(Web Fallback)**: Motor Rust/Wasm em Worker, passo fixo, replay determinístico, ABI v8 e cinco hashes independentes;
-- **(Nativo - PROMETHEUS)**: Motor wgpu/Rust no workspace `engine/` estruturado em camadas (L0 a L4), com ECS arquetipal e zero alocação em hot path (Fase Φ-0).
+- **(Web/Fallback, referência operacional)**: motor Rust/Wasm em Worker, passo
+  fixo, replay determinístico, ABI v8 e cinco hashes independentes;
+- **(PROMETHEUS, em desenvolvimento)**: workspace Rust independente em
+  `engine/`, organizado em L0–L4. São oito crates, Φ-0 concluída e Φ-1 com
+  grafo de renderização compilado e executor em `wgpu` 30.0.1;
+- **(Integração nativa, pendente)**: o contrato `RenderExtractable` está no
+  núcleo científico, mas ainda não existe uma dependência de `engine/` para
+  `brain-engine`, uma ponte de snapshots ou um executável nativo que os una;
 - rede procedural, coluna L1–L6, circuito relé–TRN, patch AdEx de 12 células e cabo passivo;
 - Vistas WebGL2: **Visão Geral**, **Lâminas**, **Célula**, **Neurônio**, **Eletricidade** e **Sinapse**;
 - Testes de contrato, segurança, acessibilidade, desempenho, captura e invariância científica.
@@ -147,13 +158,33 @@ anatomia validada. O avanço e seus limites estão na
 pergunta de estudo
       ↓
 brain-engine (Rust: estado, equações, unidades, limites e hashes) [GFX-001 Intocável]
-      ├── brain-wasm → Web Worker → snapshot ABI v8 → TypeScript → Three.js (Web/Fallback)
-      └── prometheus-core → L0-L4 crates → WGPU Pipeline nativa (PROMETHEUS Engine)
+      ├── brain-wasm → Web Worker → snapshot ABI v8 → TypeScript → Three.js [ativo]
+      └── RenderExtractable (somente leitura; contrato já definido)
+              └── ponte + runner nativos [pendentes]
+                    → prometheus-core → grafo compilado → executor wgpu 30 [Φ-1]
 ```
 
-O navegador não replica equações do motor: apresenta apenas estados publicados. A nova ramificação nativa (PROMETHEUS) consome `brain-engine` através da trait `RenderExtractable`, protegendo matematicamente a ciência enquanto entrega renderização de ultra-realismo (Geometry Virtualization, GI, SSS).
+O navegador não replica equações do motor: apresenta apenas estados publicados.
+`RenderExtractable` preserva a direção correta da futura integração — extração
+imutável e hash de integridade —, mas hoje é um contrato, não uma ligação de
+runtime. Portanto, os testes do engine nativo validam suas APIs, seu plano de
+recursos e a execução `wgpu`; eles ainda não validam uma sincronização
+fim-a-fim entre o estado científico e a renderização nativa.
 
-A direção futura [Projeto PROMETHEUS](docs/specifications/prometheus/README.md) prevê um pipeline nativo acelerado (wgpu). Ela começou na fase Genesis e não substitui a aplicação web atual, atuando em paralelo.
+A direção futura [Projeto PROMETHEUS](docs/specifications/prometheus/README.md)
+prevê um pipeline nativo acelerado. Ela não substitui a aplicação web atual nem
+altera o GIF publicado: ambos os workspaces seguem em paralelo até que a ponte
+científica seja implementada e auditada.
+
+### Contratos de sincronização
+
+| Fronteira | Fonte de verdade e escopo | Verificação ou atualização |
+| :-- | :-- | :-- |
+| ciência → Web | `brain-engine` publica snapshots somente de leitura; `brain-wasm` os expõe na ABI v8 | `npm run check` e `npm run test:wasm-browser` exercitam o caminho Web/Worker; os cinco hashes evitam confundir mudança visual com mudança científica |
+| Rust/Wasm → `src/wasm` | os bindings WebAssembly são artefatos gerados e versionados, nunca uma API a editar manualmente | `npm run build:wasm` recompila o crate e regenera os bindings usados pelo navegador |
+| captura → README | `assets/brain.gif` e `assets/brain-gif.json` formam um par: bytes, commit de origem, ABI, hashes e distribuição de quadros por vista | `npm run verify:brain-gif` confere a proveniência; o workflow de GIF recompila, captura, atualiza o selo do README e versiona o conjunto |
+| alterações nativas → GIF | `engine/**` é um workspace separado e não integra os filtros do workflow de captura atual | mudanças apenas em PROMETHEUS não renovam o GIF; isso evita que a mídia Web/Fallback seja apresentada como prova do renderizador nativo |
+| ciência → PROMETHEUS | `RenderExtractable` em `brain-engine` define a fronteira de leitura; ainda não há adaptador nem runner | os testes de `engine/` são locais ao renderizador até que a ponte exista e a paridade de hashes seja auditada |
 
 ### Limites
 
@@ -165,31 +196,44 @@ Realismo visual não é tratado como evidência biológica.
 ### Executar
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Para executar os gates principais:
+`npm ci` preserva as versões do `package-lock.json`. O workspace nativo não é
+membro do workspace Cargo da raiz; por isso, os comandos na raiz não o testam.
+
+Para executar os gates Web e científicos da aplicação atual:
 
 ```bash
 npm run check
-cargo test --workspace
-cargo clippy --workspace --all-targets -- -D warnings
-cargo check -p brain-wasm --target wasm32-unknown-unknown
+cargo test --locked --workspace
+cargo clippy --locked --workspace --all-targets -- -D warnings
+cargo check --locked -p brain-wasm --target wasm32-unknown-unknown
 ```
 
-Auditorias que exigem GPU física, regeneração do GIF e demais comandos estão no
-[guia de validação](docs/quality/VALIDATION.md).
+Para validar o estado atual de PROMETHEUS, use explicitamente seu manifesto:
+
+```bash
+cargo test --manifest-path engine/Cargo.toml --locked --workspace
+cargo clippy --manifest-path engine/Cargo.toml --locked -p prometheus-render-graph -p prometheus-gpu -p prometheus-window --all-targets -- -D warnings
+```
+
+O segundo comando é estrito para os crates de renderização tocados em Φ-1. As
+auditorias que exigem GPU física, a regeneração deliberada do GIF e os demais
+comandos estão no [guia de validação](docs/quality/VALIDATION.md).
 
 ### Documentação
 
 | Documento | Finalidade |
 | :-- | :-- |
 | [Índice](docs/README.md) | entrada única para a documentação |
-| [Roadmap](docs/planning/ROADMAP.md) | estado canônico e próximos gates |
+| [Roadmap](docs/planning/ROADMAP.md) | roteiro de produto e próximos gates; o resultado de um gate é fixado pela auditoria correspondente |
 | [Plano 0.10](docs/planning/PLAN_0.10.md) | contratos executáveis do ciclo atual |
 | [Arquitetura](docs/specifications/ARCHITECTURE.md) | decisões e fronteiras do sistema |
-| [Projeto PROMETHEUS](docs/specifications/prometheus/README.md) | O experimento gráfico nativo (Fases Φ-0 a Φ-5), pipeline wgpu e arquitetura L0-L4 |
+| [Projeto PROMETHEUS](docs/specifications/prometheus/README.md) | engine gráfico nativo: Φ-0 concluída, Φ-1 em desenvolvimento, `wgpu` 30 e arquitetura L0–L4 |
+| [Manifesto do GIF](assets/brain-gif.json) | proveniência da captura publicada: commit, ABI, hashes, frames e perfil de apresentação |
+| [Auditoria R10-E](docs/audits/0.10/AUDIT_0.10_R10_E.md) | evidência física aceita, limites visuais e promoção ainda pendente |
 | [Modelo](docs/specifications/MODEL_SPEC.md) | equações, unidades e limites científicos |
 | [Gráficos](docs/specifications/GRAPHICS_SPEC.md) | contratos de renderização e VFX |
 | [Validação](docs/quality/VALIDATION.md) | testes, ambientes e critérios de promoção |

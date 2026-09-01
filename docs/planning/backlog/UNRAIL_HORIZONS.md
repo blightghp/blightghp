@@ -3,7 +3,7 @@
 **Estado documental:** inventário subordinado, revisado em 21 de agosto de 2026
 **Estado de implementação:** nenhum crate existe. Zero linhas escritas.
 **Relação com o [ROADMAP canônico](../ROADMAP.md):** este arquivo **não governa execução**. É um inventário de horizontes e hipóteses; somente cortes promovidos ao roadmap canônico podem ser iniciados.
-**Pré-requisitos de leitura:** [léxico](../../specifications/unrail/GLOSSARY.md) · [arquitetura](../../specifications/unrail/ARCHITECTURE.md) · [catálogo](../../specifications/unrail/CAPABILITY_CATALOG.md)
+**Pré-requisitos de leitura:** [léxico](../../specifications/prometheus/GLOSSARY.md) · [arquitetura](../../specifications/prometheus/ARCHITECTURE.md) · [catálogo](../../specifications/prometheus/CAPABILITY_CATALOG.md)
 
 ## 1 · A ambição, dita sem eufemismo
 

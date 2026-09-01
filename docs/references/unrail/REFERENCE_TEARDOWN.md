@@ -1,7 +1,7 @@
 # Revisão de referências · problemas reutilizáveis e soluções a reavaliar
 
 **Estado documental:** análise de engenharia, 21 de agosto de 2026
-**Regra de leitura:** ler [o léxico](../../specifications/unrail/GLOSSARY.md) antes deste arquivo
+**Regra de leitura:** ler [o léxico](../../specifications/prometheus/GLOSSARY.md) antes deste arquivo
 **Natureza:** síntese conceitual, não desmontagem de um produto específico; fontes técnicas concretas permanecem atribuídas
 
 MERIDIANO é o codinome de uma classe de motores maduros de simulação em tempo
@@ -126,4 +126,4 @@ que está na tela.
 Fontes primárias usadas para validar as premissas Rust/Cargo/GPU:
 [referências técnicas](PRIMARY_REFERENCES.md).
 
-Próximo documento: [arquitetura do Unrail Motor](../../specifications/unrail/ARCHITECTURE.md).
+Próximo documento: [arquitetura do Unrail Motor](../../specifications/prometheus/ARCHITECTURE.md).

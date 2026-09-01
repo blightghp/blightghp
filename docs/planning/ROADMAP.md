@@ -52,7 +52,7 @@ ou os gates visuais já promovidos. (Ver [Projeto PROMETHEUS](../specifications/
 | visual web | seis vistas, catálogo anatômico, vascular e superfície procedural em dois LODs | [auditorias 0.10](../audits/0.10/) |
 | orçamento gráfico | perfis `baseline`, `enhanced`, `cinema`; GPU física registrada | R10-E deve provar custo contra R10-C |
 | último gate | R10-D, 5.780/1.500 triângulos, build 77,9 ms, hash `7dfdd64207190121` | [auditoria](../audits/0.10/AUDIT_0.10_R10_D.md) |
-| Unrail | direção documental adotada; zero código, zero dependência, zero `engine/` | [índice arquitetural](../specifications/unrail/README.md) |
+| Unrail | direção documental adotada; zero código, zero dependência, zero `engine/` | [índice arquitetural](../specifications/prometheus/README.md) |
 | contradição C-09 | host Tauri publica apenas schema; runner científico nativo ausente | só pode fechar em `UM0-F` |
 
 ## Fila global
@@ -164,7 +164,7 @@ Se promovido, UM0 segue esta ordem:
 | UM0-F | bancada, comparação web/nativa, orçamento e decisão final de host |
 
 Os [horizontes U1–U9](backlog/UNRAIL_HORIZONS.md) não têm data, gate ou versão
-prometida. O [catálogo de capacidades](../specifications/unrail/CAPABILITY_CATALOG.md)
+prometida. O [catálogo de capacidades](../specifications/prometheus/CAPABILITY_CATALOG.md)
 é mapa superior, não estrutura física do repositório.
 
 ## R12 · experimentos e observáveis do BRAIN PRO 1.1

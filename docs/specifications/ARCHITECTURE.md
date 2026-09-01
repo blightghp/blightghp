@@ -43,7 +43,7 @@ como planejada e nunca é descrita como implementada.
 | ARC-026 | existe um único roadmap e WIP global 1; planos e horizontes de programa são subordinados | aceita | ampliação comprovada de mantenedores e governança aprovada |
 | ARC-027 | a primeira implementação Unrail prova `brain-engine` headless antes de janela/GPU; crates só são extraídos por fronteira observável | aceita para `UM0-ENTRY` | evidência de que uma dependência gráfica é indispensável à prova científica |
 
-O [programa arquitetural Unrail](unrail/README.md) amplia a direção futura sem
+O [programa arquitetural Unrail](prometheus/README.md) amplia a direção futura sem
 alterar o estado atual. O catálogo de 84 capacidades é limite superior
 provisório, não árvore de diretórios nem compromisso de implementação.
 
