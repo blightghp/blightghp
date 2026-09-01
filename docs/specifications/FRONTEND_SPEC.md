@@ -193,6 +193,14 @@ Encéfalo → região → coluna → patch → neurônio → sinapse. Breadcrumb
 resolução mostram qual estado é autoritativo. `Escape` volta; foco retorna ao
 elemento de origem. Zoom orbital isolado não troca modelo.
 
+R10-F declara as poses e a trilha em `src/presentation-navigation.ts`, schema 1,
+separado de `BrainSettings` e de qualquer preset científico. Quatro pontos de
+vista salvos e um cubo SVG/DOM são apenas orientação de apresentação. A escada
+troca para a entrada canônica/vista correspondente, interpola câmera/alvo,
+permite pulo e usa corte instantâneo sob `prefers-reduced-motion`. Como as raízes
+das vistas são locais e sem calibração comum, a continuidade preservada é de
+orientação/foco, nunca uma alegação de zoom anatômico métrico.
+
 ### Seleção anatômica/celular
 
 - busca/árvore e picking convergem para o mesmo `selectionId`;

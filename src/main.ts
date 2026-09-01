@@ -117,6 +117,23 @@ import {
 } from "./command-palette";
 import type { CommandPaletteCommand } from "./command-palette";
 import { viewContextFor, viewContextSelectionFor } from "./view-context";
+import {
+  easePresentationTransition,
+  framePresentationCameraPose,
+  interpolatePresentationCameraPose,
+  PRESENTATION_NAVIGATION_CONTRACT,
+  PRESENTATION_SCALE_TRAIL,
+  PRESENTATION_TRANSITION_DURATION_MS,
+  presentationScaleStepById,
+  presentationScaleStepFor,
+  savedViewpointById,
+} from "./presentation-navigation";
+import type {
+  PresentationCameraPose,
+  PresentationScaleStep,
+  SavedViewpointId,
+  ScaleStepId,
+} from "./presentation-navigation";
 
 declare global {
   interface Window {
@@ -166,6 +183,15 @@ declare global {
       setRenderProfile: (profile: RenderProfile) => RenderProfile;
       setToneMapping: (mode: ToneMappingMode, exposure?: number) => ToneMappingMode;
       toneMappingAudit: () => ReturnType<ToneMappingController["audit"]>;
+      presentationNavigationAudit: () => {
+        schemaVersion: number;
+        savedViewpoints: readonly SavedViewpointId[];
+        scaleTrail: readonly ScaleStepId[];
+        activeScale?: ScaleStepId;
+        selectedViewpoint?: SavedViewpointId;
+        framingSelection: boolean;
+        transition?: "selection-frame" | "selection-return" | "viewpoint" | "scale" | "scale-return";
+      };
       resetPresentationBudgetSamples: () => void;
       setClipping: (state: Partial<CutPlaneState>) => CutPlaneState;
       setPresentationEffects: (state: {
@@ -241,6 +267,34 @@ interface AnatomyFocusTarget {
   readonly provenance?: VisualProvenance;
 }
 
+type PresentationTransitionKind =
+  | "selection-frame"
+  | "selection-return"
+  | "viewpoint"
+  | "scale"
+  | "scale-return";
+
+interface PresentationCameraTransition {
+  readonly from: PresentationCameraPose;
+  readonly to: PresentationCameraPose;
+  readonly kind: PresentationTransitionKind;
+  readonly startedAt: number;
+  readonly duration: number;
+  readonly onSettled?: () => void;
+}
+
+interface SelectionCameraReturn {
+  readonly pose: PresentationCameraPose;
+  readonly focus?: HTMLElement;
+}
+
+interface ScaleNavigationReturn {
+  readonly view: SimulationView;
+  readonly selectionId?: string;
+  readonly pose: PresentationCameraPose;
+  readonly focus?: HTMLElement;
+}
+
 const state: BrainSettings = getInitialBrainSettings();
 const taskExperiment = new BayesianObservationExperiment(0.35);
 const simulationClock = new FixedStepClock({
@@ -254,6 +308,9 @@ const presentationResourceCache = new PresentationResourceCache();
 const anatomyFocusBounds = new THREE.Box3();
 const anatomyFocusWorldPoint = new THREE.Vector3();
 const anatomyFocusProjectedPoint = new THREE.Vector3();
+const presentationNavigationBounds = new THREE.Box3();
+const presentationNavigationCenter = new THREE.Vector3();
+const presentationNavigationSize = new THREE.Vector3();
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
@@ -300,6 +357,11 @@ let pointerAnatomyFocus: AnatomyFocusTarget | undefined;
 let pendingSceneAnatomyFocus: AnatomyFocusTarget | undefined;
 let selectedCellId = 0;
 let selectionReturnFocus: HTMLElement | undefined;
+let presentationCameraTransition: PresentationCameraTransition | undefined;
+let selectionCameraReturn: SelectionCameraReturn | undefined;
+let selectedSavedViewpoint: SavedViewpointId | undefined;
+let applyingScaleNavigation = false;
+const scaleNavigationHistory: ScaleNavigationReturn[] = [];
 let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
 let visualColorMode = parseVisualColorMode(
   new URLSearchParams(window.location.search).get("colorMode"),
@@ -803,7 +865,321 @@ function updateCutProbe(snapshot: NeuralSnapshot, alpha: number): void {
   if (sampling) sampling.textContent = lastCutProbe.sampling;
 }
 
+function currentPresentationCameraPose(): PresentationCameraPose {
+  return {
+    position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+    target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+    up: { x: camera.up.x, y: camera.up.y, z: camera.up.z },
+  };
+}
+
+function applyPresentationCameraPose(pose: PresentationCameraPose): void {
+  camera.position.set(pose.position.x, pose.position.y, pose.position.z);
+  camera.up.set(pose.up.x, pose.up.y, pose.up.z).normalize();
+  controls.target.set(pose.target.x, pose.target.y, pose.target.z);
+  camera.lookAt(controls.target);
+}
+
+function prefersReducedPresentationMotion(): boolean {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+}
+
+function focusPresentationNavigationTarget(target: HTMLElement | undefined): void {
+  if (
+    !target ||
+    !document.contains(target) ||
+    target.closest("[hidden]") ||
+    (target instanceof HTMLButtonElement && target.disabled)
+  ) {
+    return;
+  }
+  requestAnimationFrame(() => target.focus());
+}
+
+function activePresentationScaleStep(): ScaleStepId | undefined {
+  return presentationScaleStepFor(activeView, selectedAnatomyFocus?.entry.scale);
+}
+
+function selectedPresentationFrameTarget(): {
+  center: { x: number; y: number; z: number };
+  radius: number;
+} | undefined {
+  const selection = selectedAnatomyFocus;
+  if (!selection || !selection.entry.views.includes(activeView)) return undefined;
+
+  let target = selection.object;
+  if (!target) {
+    renderRootForView(activeView).traverseVisible((object) => {
+      if (target) return;
+      const declaration = anatomicalDeclarationOf(object);
+      if (declaration?.kind === "catalog-entry" && declaration.entryId === selection.entry.id) {
+        target = object;
+      }
+    });
+  }
+  if (!target) return undefined;
+
+  presentationNavigationBounds.setFromObject(target);
+  if (presentationNavigationBounds.isEmpty()) {
+    target.getWorldPosition(presentationNavigationCenter);
+    return {
+      center: {
+        x: presentationNavigationCenter.x,
+        y: presentationNavigationCenter.y,
+        z: presentationNavigationCenter.z,
+      },
+      radius: 0.18,
+    };
+  }
+  presentationNavigationBounds.getCenter(presentationNavigationCenter);
+  presentationNavigationBounds.getSize(presentationNavigationSize);
+  return {
+    center: {
+      x: presentationNavigationCenter.x,
+      y: presentationNavigationCenter.y,
+      z: presentationNavigationCenter.z,
+    },
+    radius: Math.max(presentationNavigationSize.length() * 0.5, 0.18),
+  };
+}
+
+function updatePresentationNavigationUi(): void {
+  const scaleStep = activePresentationScaleStep();
+  document.body.dataset.presentationScale = scaleStep ?? "unmapped";
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-scale-step]")) {
+    const current = button.dataset.scaleStep === scaleStep;
+    button.setAttribute("aria-current", current ? "step" : "false");
+    button.dataset.current = String(current);
+  }
+
+  const frameButton = element<HTMLButtonElement>("#frame-selection");
+  const frameTarget = selectedPresentationFrameTarget();
+  frameButton.disabled = frameTarget === undefined;
+  frameButton.setAttribute("aria-disabled", String(frameButton.disabled));
+  element("#presentation-navigation-selection").textContent = selectedAnatomyFocus?.entry.label ??
+    "Nenhuma estrutura selecionada";
+
+  const restoreButton = element<HTMLButtonElement>("#restore-selection-camera");
+  restoreButton.hidden = selectionCameraReturn === undefined;
+  const skipButton = element<HTMLButtonElement>("#skip-scale-transition");
+  skipButton.hidden = presentationCameraTransition?.kind !== "scale" &&
+    presentationCameraTransition?.kind !== "scale-return";
+
+  const cube = document.querySelector<SVGElement>("#orientation-cube");
+  if (cube) cube.dataset.orientation = selectedSavedViewpoint ?? "custom";
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-saved-viewpoint]")) {
+    button.setAttribute("aria-pressed", String(button.dataset.savedViewpoint === selectedSavedViewpoint));
+  }
+}
+
+function settlePresentationCameraTransition(transition: PresentationCameraTransition): void {
+  if (presentationCameraTransition !== transition) return;
+  applyPresentationCameraPose(transition.to);
+  presentationCameraTransition = undefined;
+  controls.enabled = true;
+  delete document.body.dataset.presentationTransition;
+  transition.onSettled?.();
+  updatePresentationNavigationUi();
+}
+
+function beginPresentationCameraTransition(
+  to: PresentationCameraPose,
+  kind: PresentationTransitionKind,
+  onSettled?: () => void,
+): void {
+  const from = currentPresentationCameraPose();
+  const reducedMotion = captureMode || prefersReducedPresentationMotion();
+  if (reducedMotion) {
+    applyPresentationCameraPose(to);
+    controls.enabled = true;
+    delete document.body.dataset.presentationTransition;
+    onSettled?.();
+    updatePresentationNavigationUi();
+    return;
+  }
+  const transition: PresentationCameraTransition = {
+    from,
+    to,
+    kind,
+    startedAt: performance.now(),
+    duration: PRESENTATION_TRANSITION_DURATION_MS,
+    ...(onSettled ? { onSettled } : {}),
+  };
+  presentationCameraTransition = transition;
+  controls.enabled = false;
+  document.body.dataset.presentationTransition = kind;
+  updatePresentationNavigationUi();
+}
+
+function updatePresentationCameraTransition(timestamp: number): void {
+  const transition = presentationCameraTransition;
+  if (!transition) return;
+  const progress = Math.min(1, Math.max(0, (timestamp - transition.startedAt) / transition.duration));
+  applyPresentationCameraPose(
+    interpolatePresentationCameraPose(
+      transition.from,
+      transition.to,
+      easePresentationTransition(progress),
+    ),
+  );
+  if (progress >= 1) settlePresentationCameraTransition(transition);
+}
+
+function cancelPresentationCameraTransition(): boolean {
+  if (!presentationCameraTransition) return false;
+  presentationCameraTransition = undefined;
+  controls.enabled = true;
+  delete document.body.dataset.presentationTransition;
+  updatePresentationNavigationUi();
+  return true;
+}
+
+function skipScalePresentationTransition(): boolean {
+  const transition = presentationCameraTransition;
+  if (!transition || (transition.kind !== "scale" && transition.kind !== "scale-return")) {
+    return false;
+  }
+  settlePresentationCameraTransition(transition);
+  return true;
+}
+
+function announcePresentationNavigation(message: string): void {
+  element("#presentation-navigation-status").textContent = message;
+}
+
+function frameSelectedAnatomy(source: HTMLElement): string {
+  const target = selectedPresentationFrameTarget();
+  if (!target) {
+    const message = "A seleção atual não possui limite visual direto nesta vista.";
+    announcePresentationNavigation(message);
+    return message;
+  }
+  if (!selectionCameraReturn) {
+    selectionCameraReturn = { pose: currentPresentationCameraPose(), focus: source };
+  }
+  selectedSavedViewpoint = undefined;
+  const framed = framePresentationCameraPose(currentPresentationCameraPose(), target, {
+    verticalFovDegrees: camera.fov,
+    aspect: camera.aspect,
+    minDistance: controls.minDistance,
+    maxDistance: controls.maxDistance,
+  });
+  beginPresentationCameraTransition(framed, "selection-frame");
+  const message = `Câmera enquadrada em ${selectedAnatomyFocus?.entry.label ?? "a seleção"}. Escape retorna.`;
+  announcePresentationNavigation(message);
+  return message;
+}
+
+function restoreSelectionCamera(): boolean {
+  const restore = selectionCameraReturn;
+  if (!restore) return false;
+  selectionCameraReturn = undefined;
+  beginPresentationCameraTransition(restore.pose, "selection-return", () => {
+    focusPresentationNavigationTarget(restore.focus);
+  });
+  announcePresentationNavigation("Enquadramento anterior restaurado; foco devolvido ao controle de origem.");
+  return true;
+}
+
+function selectSavedViewpoint(id: string): string {
+  const viewpoint = savedViewpointById(id);
+  if (!viewpoint) throw new Error("ponto de vista de apresentação desconhecido");
+  selectionCameraReturn = undefined;
+  selectedSavedViewpoint = viewpoint.id;
+  beginPresentationCameraTransition(viewpoint.pose, "viewpoint");
+  const message = `Ponto de vista ${viewpoint.label} aplicado; contrato de apresentação v${PRESENTATION_NAVIGATION_CONTRACT.schemaVersion}.`;
+  announcePresentationNavigation(message);
+  return message;
+}
+
+function clearScaleNavigationHistory(): void {
+  if (scaleNavigationHistory.length === 0) return;
+  scaleNavigationHistory.length = 0;
+  updatePresentationNavigationUi();
+}
+
+function navigateToPresentationScale(step: PresentationScaleStep, source: HTMLElement): void {
+  if (!anatomyExplorer) return;
+  const currentStep = activePresentationScaleStep();
+  if (currentStep === step.id && activeView === step.view) {
+    announcePresentationNavigation(`${step.label} já é a escala de apresentação ativa.`);
+    return;
+  }
+  cancelPresentationCameraTransition();
+  scaleNavigationHistory.push({
+    view: activeView,
+    ...(selectedAnatomyFocus ? { selectionId: selectedAnatomyFocus.entry.id } : {}),
+    pose: currentPresentationCameraPose(),
+    focus: source,
+  });
+  selectionCameraReturn = undefined;
+  selectedSavedViewpoint = undefined;
+  applyingScaleNavigation = true;
+  try {
+    anatomyExplorer.select(step.selectionId, "api");
+    if (activeView !== step.view) setActiveView(step.view);
+  } finally {
+    applyingScaleNavigation = false;
+  }
+  beginPresentationCameraTransition(step.pose, "scale");
+  announcePresentationNavigation(
+    `${step.label}. ${step.note} Use Pular transição para ir direto ao enquadramento final; Escape retorna.`,
+  );
+}
+
+function returnFromPresentationScale(): boolean {
+  const previous = scaleNavigationHistory.pop();
+  if (!previous || !anatomyExplorer) return false;
+  cancelPresentationCameraTransition();
+  applyingScaleNavigation = true;
+  try {
+    if (previous.selectionId) anatomyExplorer.select(previous.selectionId, "api");
+    if (activeView !== previous.view) setActiveView(previous.view);
+  } finally {
+    applyingScaleNavigation = false;
+  }
+  selectionCameraReturn = undefined;
+  selectedSavedViewpoint = undefined;
+  beginPresentationCameraTransition(previous.pose, "scale-return", () => {
+    focusPresentationNavigationTarget(previous.focus);
+  });
+  announcePresentationNavigation("Escala anterior restaurada; foco devolvido ao degrau de origem.");
+  return true;
+}
+
+function setupPresentationNavigationInterface(): void {
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-scale-step]")) {
+    const step = presentationScaleStepById(button.dataset.scaleStep ?? "");
+    if (!step) throw new Error("degrau de escala sem contrato de apresentação");
+    button.addEventListener("click", () => navigateToPresentationScale(step, button));
+  }
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-saved-viewpoint]")) {
+    const viewpoint = savedViewpointById(button.dataset.savedViewpoint ?? "");
+    if (!viewpoint) throw new Error("ponto de vista sem contrato de apresentação");
+    button.addEventListener("click", () => selectSavedViewpoint(viewpoint.id));
+  }
+  element<HTMLButtonElement>("#frame-selection").addEventListener("click", () => {
+    frameSelectedAnatomy(element<HTMLButtonElement>("#frame-selection"));
+  });
+  element<HTMLButtonElement>("#restore-selection-camera").addEventListener("click", () => {
+    restoreSelectionCamera();
+  });
+  element<HTMLButtonElement>("#skip-scale-transition").addEventListener("click", () => {
+    if (skipScalePresentationTransition()) {
+      announcePresentationNavigation("Transição de escala pulada; enquadramento final aplicado.");
+    }
+  });
+  renderer.domElement.addEventListener("pointerdown", () => {
+    cancelPresentationCameraTransition();
+  });
+  updatePresentationNavigationUi();
+}
+
 function resetCameraForCut(): void {
+  cancelPresentationCameraTransition();
+  selectionCameraReturn = undefined;
+  selectedSavedViewpoint = undefined;
   const state = clippingSystem.getState();
   camera.up.set(0, 1, 0);
   if (state.orientation === "sagittal") camera.position.set(4.82, 0.08, 0.01);
@@ -815,6 +1191,7 @@ function resetCameraForCut(): void {
   controls.target.set(0, -0.05, 0);
   camera.lookAt(controls.target);
   controls.update();
+  updatePresentationNavigationUi();
 }
 
 function updatePresentationUi(state: CutPlaneState): void {
@@ -974,6 +1351,7 @@ function renderFrame(
   scene.updateMatrixWorld(true);
   clippingSystem.update();
   if (frameDelta > 0) updateMetrics(snapshot, frameDelta, alpha);
+  updatePresentationCameraTransition(nowTimestamp);
   controls.update();
   camera.updateMatrixWorld();
   updateAnatomyFocusCalloutPosition();
@@ -1290,6 +1668,12 @@ function applyAnatomySelection(
   entry: AnatomicalCatalogEntry,
   _origin: AnatomySelectionOrigin,
 ): void {
+  const selectionChanged = selectedAnatomyFocus?.entry.id !== entry.id;
+  if (!applyingScaleNavigation) clearScaleNavigationHistory();
+  if (selectionChanged) {
+    selectionCameraReturn = undefined;
+    selectedSavedViewpoint = undefined;
+  }
   const sceneFocus = pendingSceneAnatomyFocus?.entry.id === entry.id
     ? pendingSceneAnatomyFocus
     : undefined;
@@ -1328,6 +1712,7 @@ function applyAnatomySelection(
   updateSelectedAnatomyProvenance();
   updateViewContext();
   refreshAnatomyFocusPresentation(true);
+  updatePresentationNavigationUi();
   if (latestSnapshot) renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
 }
 
@@ -1373,6 +1758,7 @@ function setActiveView(view: SimulationView): void {
   anatomyExplorer?.setActiveView(view);
   updateViewContext();
   refreshAnatomyFocusPresentation();
+  updatePresentationNavigationUi();
   if (latestSnapshot) {
     renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
   }
@@ -1402,6 +1788,7 @@ function setUsageMode(requested: UsageMode | string): UsageMode {
   }
 
   refreshAnatomyFocusPresentation();
+  updatePresentationNavigationUi();
 
   return nextMode;
 }
@@ -1434,6 +1821,7 @@ function revealExplorerPanel(selector: string): void {
 }
 
 function executePaletteView(view: SimulationView): string {
+  clearScaleNavigationHistory();
   setActiveView(view);
   element<HTMLButtonElement>(`#tab-${view}`).focus();
   return `Vista alterada para ${COMMAND_VIEW_LABELS[view]}.`;
@@ -1592,6 +1980,22 @@ function createCommandPaletteCommands(): readonly ApplicationCommand[] {
         return "Câmera do corte restaurada.";
       },
     },
+    {
+      id: "camera-frame-selection",
+      label: "Enquadrar seleção anatômica",
+      category: "Câmera",
+      keywords: ["seleção", "estrutura", "foco", "enquadramento"],
+      minimumMode: "explorer",
+      execute: () => frameSelectedAnatomy(element<HTMLButtonElement>("#frame-selection")),
+    },
+    ...PRESENTATION_NAVIGATION_CONTRACT.savedViewpoints.map((viewpoint) => ({
+      id: `camera-viewpoint-${viewpoint.id}`,
+      label: `Usar ponto de vista ${viewpoint.label}`,
+      category: "Câmera",
+      keywords: ["câmera", "orientação", "cubo", viewpoint.label],
+      minimumMode: "explorer" as const,
+      execute: () => selectSavedViewpoint(viewpoint.id),
+    })),
   ];
 }
 
@@ -1818,6 +2222,7 @@ function setupInterface(): void {
   }, applyAnatomySelection, previewAnatomyEntry);
   anatomyExplorer.setActiveView(activeView);
   anatomyExplorer.select(anatomyExplorer.selectionId(), "api");
+  setupPresentationNavigationInterface();
 
   const cellSelector = element<HTMLDivElement>("#cell-selector");
   for (let cellId = 0; cellId < NEURON_CELL_COUNT; cellId += 1) {
@@ -1842,7 +2247,12 @@ function setupInterface(): void {
   }
   element<HTMLButtonElement>("#neuron-back").addEventListener("click", leaveNeuron);
   document.addEventListener("keydown", (event) => {
-    if (commandPaletteOpen || event.key !== "Escape" || activeView !== "neuron") return;
+    if (commandPaletteOpen || event.key !== "Escape") return;
+    if (restoreSelectionCamera() || returnFromPresentationScale()) {
+      event.preventDefault();
+      return;
+    }
+    if (activeView !== "neuron") return;
     event.preventDefault();
     leaveNeuron();
   });
@@ -1958,6 +2368,7 @@ function setupInterface(): void {
     button.addEventListener("click", () => {
       const view = parseSimulationView(button.dataset.view);
       if (!view) return;
+      clearScaleNavigationHistory();
       if (view === "neuron") selectionReturnFocus = button;
       setActiveView(view);
     });
@@ -1975,6 +2386,7 @@ function setupInterface(): void {
       const nextButton = tabButtons[nextIndex];
       const view = parseSimulationView(nextButton.dataset.view);
       if (!view) return;
+      clearScaleNavigationHistory();
       if (view === "neuron") selectionReturnFocus = nextButton;
       setActiveView(view);
       nextButton.focus();
@@ -2459,6 +2871,7 @@ async function init(): Promise<void> {
     setView(view) {
       const parsed = parseSimulationView(view);
       if (!parsed) throw new Error("vista desconhecida");
+      clearScaleNavigationHistory();
       setActiveView(parsed);
     },
     setAnatomySelection(entryId) {
@@ -2613,6 +3026,17 @@ async function init(): Promise<void> {
     },
     toneMappingAudit() {
       return toneMappingController.audit();
+    },
+    presentationNavigationAudit() {
+      return {
+        schemaVersion: PRESENTATION_NAVIGATION_CONTRACT.schemaVersion,
+        savedViewpoints: PRESENTATION_NAVIGATION_CONTRACT.savedViewpoints.map(({ id }) => id),
+        scaleTrail: PRESENTATION_SCALE_TRAIL.map(({ id }) => id),
+        ...(activePresentationScaleStep() ? { activeScale: activePresentationScaleStep() } : {}),
+        ...(selectedSavedViewpoint ? { selectedViewpoint: selectedSavedViewpoint } : {}),
+        framingSelection: selectionCameraReturn !== undefined,
+        ...(presentationCameraTransition ? { transition: presentationCameraTransition.kind } : {}),
+      };
     },
     resetPresentationBudgetSamples() {
       presentationBudgetMonitor.reset();

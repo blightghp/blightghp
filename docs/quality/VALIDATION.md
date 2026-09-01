@@ -652,6 +652,7 @@ npx vitest run
 npm run build
 npm run check:shadow-replay
 npm run test:wasm-browser
+npm run verify:presentation-navigation
 npm run audit:runtime
 npm run verify:runtime-audit
 npm run verify:hardware-audit
@@ -662,10 +663,11 @@ npm run audit:procedural-surface
 npm run verify:procedural-surface
 ```
 
-`npm run check` inclui build, navegador, verificação do artefato versionado e
-uma auditoria temporária. Defina `BRAIN_AUDIT_DIR` para escolher onde uma nova
-captura será escrita; a atualização versionada exige revisão visual e commit
-separado da implementação testada.
+`npm run check` inclui build, Worker/Wasm no navegador, navegação de apresentação
+(câmera, escala, movimento reduzido e invariância), verificação do artefato
+versionado e uma auditoria temporária. Defina `BRAIN_AUDIT_DIR` para escolher onde
+uma nova captura será escrita; a atualização versionada exige revisão visual e
+commit separado da implementação testada.
 
 ## Gate de promoção 0.8 · concluído
 

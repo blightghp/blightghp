@@ -1,10 +1,9 @@
 # Auditoria parcial · R10-F UI e interação
 
-**Estado:** preparação em andamento — **UI-031 · modos de uso**, **UI-032 ·
-paleta de comandos** e **UI-033 · foco anatômico** estão implementados neste
-registro. **UI-034 · "O que estou vendo?"** e **UI-037 · selo de
-proveniência** também estão implementadas. Não promove R10-F, não promove R10-E
-e não altera a baseline 0.8.
+**Estado:** implementação funcional em andamento — **UI-031..037** e
+**UX-003** estão implementados neste registro. Ainda não promove R10-F, não
+promove R10-E e não altera a baseline 0.8: cobertura integral de toque/leitor de
+tela e a auditoria agregada seguem pendentes.
 
 **Escopo deste corte:** acrescentar os modos `guided`, `explorer` e `laboratory`
 como estado de apresentação e uma paleta modal que aciona controles já existentes.
@@ -18,6 +17,12 @@ mensagem ao Worker. O contexto de cada vista acrescenta somente texto DOM
 versionado, sem estado científico, preferência ou custo de GPU. O selo de
 proveniência é DOM persistente da seleção confirmada, sem novo objeto de cena,
 material, passe ou estado científico.
+
+UI-035/036 e UX-003 acrescentam o contrato
+`src/presentation-navigation.ts` (schema 1): poses salvas, trilha de escalas e
+transições continuam fora de `BrainSettings`, do preset científico, da ABI e das
+mensagens do Worker. A continuidade é de orientação e foco entre raízes locais
+de apresentação; não afirma zoom físico ou coordenadas anatômicas calibradas.
 
 ## Resultado implementado
 
@@ -42,9 +47,9 @@ material, passe ou estado científico.
   de comando duplicados. A execução verifica novamente a permissão antes de
   chamar o controle existente.
 - A paleta cobre as categorias previstas para UI-032: vistas, mudança de modo,
-  busca anatômica, cortes, restauração da câmera de corte e perfis gráfico e de
-  materialidade. Busca, corte, câmera de corte e materialidade só são ofertados a
-  partir de Explorador; Guiado não cria atalho oculto para esses controles.
+  busca anatômica, cortes, enquadramento/poses de câmera e perfis gráfico e de
+  materialidade. Busca, corte, câmera e materialidade só são ofertados a partir
+  de Explorador; Guiado não cria atalho oculto para esses controles.
 - O diálogo declara `role="dialog"` e `aria-modal`; a busca usa combobox com
   `listbox`, opção ativa e estado de resultados. Uma live region externa anuncia
   abertura, indisponibilidade e resultado do comando, sem depender apenas do
@@ -86,6 +91,23 @@ material, passe ou estado científico.
 - O selo só lê `selectedAnatomyFocus`: prévia de teclado ou ponteiro não troca a
   sua classe, nível ou nome. A live region do contexto inclui classe e evidência
   quando há foco confirmado.
+- UI-035 enquadra apenas o limite visual direto da seleção confirmada. O estado
+  anterior da câmera e o elemento de origem ficam em memória efêmera; `Escape`
+  os restaura. Não há limite visual inventado para entradas que só têm ficha
+  textual, e o botão fica desabilitado nesse caso.
+- UI-036 declara quatro pontos de vista salvos (`frontal`, `lateral`,
+  `superior`, `oblique`) no contrato de apresentação schema 1. O cubo de
+  orientação é SVG/DOM, não objeto WebGL, e a paleta também oferece as poses
+  autorizadas no modo Explorador.
+- UX-003 materializa a trilha Encéfalo → Região → Coluna → Patch → Neurônio →
+  Sinapse. Cada degrau seleciona a entrada canônica e a vista correspondente;
+  histórico permite voltar em ordem inversa por `Escape`, devolvendo o foco ao
+  degrau de origem. A transição interpola pose/alvo da câmera, tem botão de pulo
+  e aplica o enquadramento final sem animação sob `prefers-reduced-motion`.
+- As distâncias da trilha são poses legíveis de raízes locais de apresentação,
+  não conversão entre escalas científicas. Dessa forma, o movimento preserva
+  orientação espacial sem alegar uma continuidade métrica que o modelo não
+  publica.
 - As auditorias anatômica e vascular escolhem explicitamente o modo Explorador
   antes de validar árvore, busca e topologia. Assim, testam o caminho autorizado
   pela UI-031 em vez de depender do modo Guiado padrão; seus subprocessos Git usam
@@ -103,19 +125,24 @@ acrescenta apenas evidência já presente no catálogo. Não foi criado comando
 adicional de Worker, mudança de ABI/snapshot, passe de renderização ou bifurcação
 de solver. O mesmo snapshot e motor atendem os três modos. O selo UI-037 não
 persiste preferência, não altera `BrainSettings` e não responde ao foco efêmero.
+`src/presentation-navigation.ts` aplica a mesma fronteira a câmera, vistas salvas
+e escala: as únicas mutações são câmera/DOM/histórico efêmero, e seu relatório no
+hook de auditoria declara apenas schema, pose selecionada, degrau e transição.
 
-## Evidência executada em 29 ago 2026
+## Evidência executada em 29 ago e 1 set 2026
 
 | Prova | Resultado |
 | :-- | :-- |
+| `npm run check` | passou: tipagem, 36 arquivos/181 testes, links, replay, build, Worker/Wasm, navegação de apresentação, promoção 0.8, orçamento, superfície e auditoria de runtime |
 | `npm run typecheck` | passou |
-| `npm test -- --run` | passou: 35 arquivos, 177 testes, incluindo contexto nas seis vistas, picking rico vascular e destaque efêmero |
+| `npm test -- --run` | passou: 36 arquivos, 181 testes, incluindo contrato de navegação, contexto nas seis vistas, picking rico vascular e destaque efêmero |
 | `npm run build` | passou; permanece apenas o aviso conhecido de chunk `three-core` acima de 563 kB |
 | `npm run test:wasm-browser` | passou: seletor real, UI-031 por `hidden`, foco restaurado, paleta com `Ctrl` e `Cmd`, UI-033, UI-034 em seis vistas e UI-037 persistente em Guiado/contexto fechado, alto contraste, 390×844, material sem alocação e hashes invariantes no mesmo turno JavaScript |
 | `npm run audit:anatomy` | passou: 76 entradas, cinco capturas, árvore/seleção/contexto UI-034, selo UI-037 e custo de cena invariantes |
 | `npm run audit:vascular` | passou: 42 segmentos, seis capturas, picking/catálogo/contexto UI-034, selo UI-037 direto ou fallback honesto e cinco hashes invariantes |
 | `npm run verify:presentation-budget` | passou: schema 1, seis vistas e hashes invariantes |
 | `npm run verify:procedural-surface` | passou: hash `7dfdd64207190121`, 5.780/1.500 triângulos e 12 capturas |
+| `npm run verify:presentation-navigation` | passou: contrato schema 1, UI-035 com `Escape`/foco, quatro poses, cubo SVG/DOM, UX-003 reversível/pulável, 390×844, movimento reduzido instantâneo e cinco hashes invariantes com motor congelado |
 
 O teste de navegador percorre os três modos e comandos representativos no DOM
 real — vista, modo, busca, corte, câmera, perfis, foco anatômico e contexto por
@@ -128,18 +155,17 @@ largura móvel. Para UI-037 ele confirma o selo `STATE`/`DIDACTIC`, preserva-o
 durante uma prévia, confirma `TOPOLOGY`/`ILLUSTRATIVE`, esconde o catálogo e fecha
 o contexto no modo Guiado, percorre o scroll móvel e testa alto contraste. Essa
 prova é de fronteira de apresentação; não substitui os futuros testes de toque,
-leitura de tela, fluxo completo em movimento reduzido ou as demais entregas de
-R10-F.
+leitura de tela e fluxo integral de todas as interações em 390×844.
 
 ## Pendências para concluir R10-F
 
-1. UI-035/036 e UX-003: câmera, retorno de foco, pontos de vista e transições de
-   escala.
-2. Cobertura de toque, leitura de tela e fluxo completo em 390×844/movimento
-   reduzido; depois, auditoria agregada com desempenho e documentação coerentes.
+1. Cobertura de toque, leitura de tela e fluxo completo de R10-F em
+   390×844/movimento reduzido.
+2. Auditoria agregada de desempenho, documentação coerente e decisão de promoção
+   R10-P.
 
 ## Decisão de integração
 
-Este é um incremento reversível de UI sem custo GPU e fica na branch de trabalho
-até a promoção agregada. Não há merge para `main` nesta etapa: R10-E, R10-F e a
-promoção R10-P ainda têm gates explícitos pendentes.
+O incremento reversível de UI está integrado em `main`, sem custo GPU adicional.
+R10-E, a cobertura final de R10-F e a promoção R10-P ainda têm gates explícitos
+pendentes; esta auditoria não promove a baseline 0.8.

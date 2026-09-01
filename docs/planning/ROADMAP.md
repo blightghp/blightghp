@@ -6,7 +6,7 @@
 
 **Baseline promovida:** `0.8`
 
-**Desenvolvimento:** R09-A..R09-F e R10-A..R10-D concluídos; R10-E com evidência fechada e R10-F parcial incorporada
+**Desenvolvimento:** R09-A..R09-F e R10-A..R10-D concluídos; R10-E com evidência fechada e R10-F funcional incorporada
 
 **Próximo gate global:** `R10-P` · promoção agregada de 0.10 após R10-E/R10-F
 
@@ -60,7 +60,7 @@ ou os gates visuais já promovidos. (Ver [Projeto PROMETHEUS](../specifications/
 | Ordem | Gate | Estado | Resultado promovível |
 | --: | :-- | :-- | :-- |
 | 1 | `R10-E` · luz/materialidade | evidência fechada; promoção pendente | volume, separação de planos e pele úmida ilustrativa sem regressão científica ou de baseline |
-| 2 | `R10-F` · UI/interação | parcial incorporada; promoção pendente | modos, escala, foco, proveniência e navegação acessível |
+| 2 | `R10-F` · UI/interação | implementação funcional incorporada; promoção pendente | modos, escala, foco, proveniência e navegação acessível |
 | 3 | `R10-H` · asset dormente | planejado | pipeline estrito provado por fixture sintética; zero asset externo distribuído |
 | 4 | `R10-G` · captura/GIF | planejado | perfil cinema e manifesto sincronizado com gerador visual |
 | 5 | `R10-P` · promoção 0.10 | planejado | auditoria agregada, docs e artefatos coerentes |
@@ -72,7 +72,7 @@ ou os gates visuais já promovidos. (Ver [Projeto PROMETHEUS](../specifications/
 
 ```mermaid
 flowchart LR
-    D["R10-D ✓"] --> E["R10-E · evidência fechada"] --> F["R10-F · parcial"] --> H["R10-H"]
+    D["R10-D ✓"] --> E["R10-E · evidência fechada"] --> F["R10-F · implementação funcional"] --> H["R10-H"]
     H --> G["R10-G"] --> P["R10-P"] --> R11["R11 · 1.0"]
     R11 --> ENTRY["UM0-ENTRY"] --> A0["UM0-A0 headless"] --> A1["UM0-A1 GPU"]
     A1 --> UM0["UM0-B..F"] --> R12["R12 · 1.1"]
@@ -90,7 +90,7 @@ O contrato executável completo está no [plano 0.10](PLAN_0.10.md).
 | R10-C · orçamento | concluído em 20 ago 2026 | seis vistas × 24 amostras, governador e baseline física | manter `enhanced`, desligar governador |
 | R10-D · superfície procedural | concluído em 21 ago 2026 | dois LODs, hash, atributos assados e p95 no orçamento | `ConvexGeometry` atômica |
 | R10-E · luz/materialidade | evidência fechada; promoção pendente | matriz física, GTAO 0,5× apenas em `cinema`, gates de cor/acessibilidade, GIF/README e cinco hashes concluídos | feature para ACES/material anterior |
-| R10-F · UI/interação | parcial incorporada; promoção pendente | UI-031/032/033/034/037 implementadas; UI-035/036, UX-003 e auditoria agregada restantes | manter painel atual |
+| R10-F · UI/interação | implementação funcional incorporada; promoção pendente | UI-031..037 e UX-003 implementadas; toque/leitor de tela, fluxo integral móvel e auditoria agregada restantes | manter painel atual |
 | R10-H · asset dormente | planejado | oito rejeições, manifesto/licença/hash, zero asset distribuído | remover pipeline |
 | R10-G · captura/GIF | planejado | determinismo, bytes/tempo e manifesto schema 4 sincronizado | schema 3 |
 | R10-P · promoção | planejado | auditoria agregada sem achado alto e documentação sincronizada | manter 0.9.0 |
