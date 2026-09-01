@@ -1,8 +1,6 @@
 name: Atualizar CONTRIBUIÇÕES
 
 on:
-  push:
-    branches: [main]
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
@@ -46,6 +44,8 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write
+      pull-requests: write
+      actions: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -60,15 +60,28 @@ jobs:
           test -s assets/activity_flow.svg
           grep -q '<svg' assets/activity_flow.svg
           grep -q '</svg>' assets/activity_flow.svg
-      - name: Commit e push
+      - name: Atualizar branch de automação e pull request
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          branch="automation/activity-graph"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/activity_flow.svg
           git diff --cached --quiet && exit 0
           git commit -m "chore(profile): atualizar CONTRIBUIÇÕES"
           git pull --rebase origin main
-          gh auth setup-git
-          git push origin HEAD:main
+          remote_sha="$(git ls-remote --heads origin "refs/heads/$branch" | awk '{print $1}')"
+          if [ -n "$remote_sha" ]; then
+            git push --force-with-lease="refs/heads/$branch:$remote_sha" origin HEAD:"refs/heads/$branch"
+          else
+            git push origin HEAD:"refs/heads/$branch"
+          fi
+          pr_url="$(gh pr list --head "$branch" --base main --state open --json url --jq '.[0].url')"
+          if [ -z "$pr_url" ]; then
+            pr_url="$(gh pr create --base main --head "$branch" --title "chore(profile): atualizar CONTRIBUIÇÕES" --body "SVG gerado com dados oficiais do GitHub. O CI foi disparado nesta branch; revise e mescle este PR.")"
+          else
+            gh pr edit "$pr_url" --title "chore(profile): atualizar CONTRIBUIÇÕES" --body "SVG atualizado com dados oficiais do GitHub. O CI foi disparado nesta branch; revise e mescle este PR."
+          fi
+          gh workflow run ci.yml --ref "$branch"
+          echo "Pull request de automação: $pr_url" >> "$GITHUB_STEP_SUMMARY"
