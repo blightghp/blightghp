@@ -8,25 +8,61 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: update-contributions-main
-  cancel-in-progress: true
+  group: profile-writers-main
+  cancel-in-progress: false
 
 jobs:
-  update-graph:
+  generate:
+    name: Gerar SVG com dados oficiais
+    if: github.repository == 'blightghp/blightghp' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      svg: ${{ steps.graph.outputs.svg }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
       - name: Atualizar SVG
         run: node scripts/animate_graph.cjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Exportar artefato validado
+        id: graph
+        run: echo "svg=$(base64 -w 0 assets/activity_flow.svg)" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Versionar SVG validado
+    needs: generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Materializar artefato
+        env:
+          GRAPH_SVG_BASE64: ${{ needs.generate.outputs.svg }}
+        run: |
+          printf '%s' "$GRAPH_SVG_BASE64" | base64 --decode > assets/activity_flow.svg
+          test -s assets/activity_flow.svg
+          grep -q '<svg' assets/activity_flow.svg
+          grep -q '</svg>' assets/activity_flow.svg
       - name: Commit e push
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -34,4 +70,5 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "chore(profile): atualizar CONTRIBUIÇÕES"
           git pull --rebase origin main
-          git push
+          gh auth setup-git
+          git push origin HEAD:main

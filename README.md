@@ -81,7 +81,8 @@ diagnóstico, avaliação e intervenção na aprendizagem.
 O gráfico funciona como um traço longitudinal do trabalho público. Ele não
 inventa atividade anterior ao Git: a indicação “desde 2025” pertence à linha de
 aprendizagem descrita neste perfil; os pontos vêm das contribuições registradas
-pelo GitHub. O artefato é atualizado diariamente e a cada `push` em `main`.
+pelo GitHub. O artefato é gerado localmente a partir da API GraphQL oficial, sem
+SVG remoto incorporado, e é atualizado diariamente e a cada `push` em `main`.
 
 Há dois artefatos de sincronização distintos nesta página: o gráfico acompanha
 a atividade pública, enquanto o GIF registra uma captura versionada do
@@ -90,7 +91,7 @@ experimento Web/Wasm. Um não deve ser interpretado como evidência do outro.
 ### CONTRIBUIÇÕES
 
 <div align="center">
-  <img src="assets/activity_flow.svg?v=4" width="850" alt="Contribuições públicas no GitHub como fluxo longitudinal de produção" />
+  <img src="assets/activity_flow.svg?v=5" width="850" alt="Contribuições públicas no GitHub como fluxo longitudinal de produção" />
 </div>
 
 <div align="center">
