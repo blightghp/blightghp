@@ -1,0 +1,13 @@
+# Automação e instruções de agentes exigem revisão do mantenedor do perfil.
+/.github/ @blightghp
+/AGENTS.md @blightghp
+/scripts/animate_graph.cjs @blightghp
+/scripts/animate_graph.test.js @blightghp
+/scripts/brain_gif_manifest.js @blightghp
+/scripts/gen_brain_gif.js @blightghp
+/scripts/stamp_brain_gif.js @blightghp
+/scripts/verify_brain_gif.js @blightghp
+
+# Workspaces científicos e nativos têm contratos de promoção independentes.
+/crates/ @blightghp
+/engine/ @blightghp

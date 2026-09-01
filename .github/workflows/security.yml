@@ -1,0 +1,74 @@
+name: Auditar cadeia de dependências
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/dependabot.yml"
+      - ".github/workflows/**"
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "engine/Cargo.lock"
+      - "engine/Cargo.toml"
+      - "engine/crates/**/Cargo.toml"
+      - "package-lock.json"
+      - "package.json"
+      - "src-tauri/Cargo.toml"
+      - "crates/**/Cargo.toml"
+  pull_request:
+    paths:
+      - ".github/dependabot.yml"
+      - ".github/workflows/**"
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "engine/Cargo.lock"
+      - "engine/Cargo.toml"
+      - "engine/crates/**/Cargo.toml"
+      - "package-lock.json"
+      - "package.json"
+      - "src-tauri/Cargo.toml"
+      - "crates/**/Cargo.toml"
+  schedule:
+    - cron: "23 8 * * 4"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm:
+    name: npm audit · todas as dependências
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - name: Auditar lockfile npm
+        run: npm audit --audit-level=high
+
+  rustsec:
+    name: RustSec · dois workspaces
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Instalar cargo-audit reproduzível
+        run: cargo install cargo-audit --version 0.22.2 --locked
+      - name: Auditar workspace BRAIN PRO
+        run: cargo audit --file Cargo.lock
+      - name: Auditar workspace PROMETHEUS
+        run: cargo audit --file engine/Cargo.lock

@@ -20,9 +20,10 @@ function collectMarkdownFiles(directory, relativeDirectory = "") {
 }
 
 const markdownFiles = collectMarkdownFiles(projectRoot).sort();
+const allowedRootMarkdown = new Set(["AGENTS.md", "README.md"]);
 
 const unexpectedRootDocs = markdownFiles.filter(
-  (file) => path.dirname(file) === "." && file !== "README.md",
+  (file) => path.dirname(file) === "." && !allowedRootMarkdown.has(file),
 );
 const errors = unexpectedRootDocs.map(
   (file) => `${file}: documento solto na raiz; mova-o para docs/`,

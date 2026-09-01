@@ -19,20 +19,26 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: sync-brain-gif-main
-  cancel-in-progress: true
+  group: profile-writers-main
+  cancel-in-progress: false
 
 jobs:
   capture:
     name: Capturar simulador e atualizar perfil
+    if: github.repository == 'blightghp/blightghp' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -72,6 +78,8 @@ jobs:
         env:
           GITHUB_SHA: ${{ github.sha }}
       - name: Commit sincronizado
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -79,4 +87,5 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "chore(profile): sincronizar BRAIN PRO com ${GITHUB_SHA::12}"
           git pull --rebase origin main
+          gh auth setup-git
           git push origin HEAD:main
