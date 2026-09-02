@@ -81,10 +81,25 @@ function verifyWorkflow(file, errors) {
       fail(errors, file, "profile writers must finish instead of being cancelled mid-write");
     }
     if (writePermissionCount !== 1 || !/^permissions:\r?\n  contents:\s*read/m.test(source)) {
-      fail(errors, file, "write permission must be narrowed to exactly one job");
+      fail(errors, file, "contents: write must be narrowed to exactly one job");
+    }
+    if ((source.match(/pull-requests:\s*write/g) ?? []).length !== 1) {
+      fail(errors, file, "pull-requests: write must be narrowed to exactly one job");
+    }
+    if ((source.match(/actions:\s*write/g) ?? []).length !== 1) {
+      fail(errors, file, "actions: write must be narrowed to exactly one job");
     }
     if (!/GH_TOKEN:\s*\$\{\{ github\.token \}\}/.test(source)) {
       fail(errors, file, "write token must be exposed only in the final authenticated step");
+    }
+    if (!/gh pr (?:create|list)/.test(source) || !/gh workflow run ci\.yml/.test(source)) {
+      fail(errors, file, "profile writers must create or update a PR and dispatch CI for its head commit");
+    }
+    if (/git push origin HEAD:main/.test(source)) {
+      fail(errors, file, "profile writers must never push directly to main");
+    }
+    if (/gh pr (?:review|merge)|--approve/.test(source)) {
+      fail(errors, file, "profile writers must not approve or merge pull requests");
     }
   } else if (writePermissionCount > 0) {
     fail(errors, file, "only approved profile writers may request contents: write");

@@ -20,7 +20,7 @@ APIs de Actions/Pages/branch protection/security, `npm audit`, `cargo audit`,
 | alta | `update-graph.yml` falhava repetidamente com HTTP 402 do agregador externo desde 25/08 | substituído por consulta autenticada à API GraphQL do GitHub e renderer SVG local, validado e autocontido |
 | alta | PROMETHEUS não existia no CI; `fmt --check` e `clippy -D warnings` falhavam localmente | dívida de formato/código corrigida e matrix Linux/Windows adicionada |
 | alta | Dependabot alerts/security updates estavam desativados e não havia `dependabot.yml` | cobertura versionada criada para npm, dois Cargo e Actions; alerts e security updates habilitados após o push |
-| média | os dois bots escreviam em `main` em grupos de concorrência distintos | lock compartilhado sem cancelamento e rebase antes do push |
+| média | os dois bots escreviam diretamente em `main` e o bypass de `GITHUB_TOKEN` não era aplicável no ruleset de repositório pessoal | lock compartilhado; writers agora atualizam branches `automation/*`, abrem PR e disparam o CI explicitamente |
 | média | jobs de escrita mantinham credencial no checkout durante instalação/build/parsing | checkout sem persistência e token exposto somente no passo final |
 | média | não havia auditoria RustSec nem npm completa agendada | workflow semanal/read-only adicionado; nenhuma vulnerabilidade ativa foi encontrada localmente |
 | média | toolchain raiz seguia `stable` enquanto PROMETHEUS fixava 1.97.1 | ambos fixados em Rust 1.97.1 |
@@ -32,22 +32,27 @@ APIs de Actions/Pages/branch protection/security, `npm audit`, `cargo audit`,
 - ruleset ativo `main-protection` aplicado a `refs/heads/main`;
 - Actions habilitadas por allowlist; todas as Actions usadas estavam fixadas em
   SHAs existentes e `sha_pinning_required` está habilitado;
-- permissão padrão de workflow em leitura e sem aprovação de PR;
+- permissão padrão de workflow em leitura; o `GITHUB_TOKEN` pode criar PRs
+  para os dois writers, mas a política versionada impede autoaprovação;
 - Pages por workflow, HTTPS obrigatório e ambiente restrito a `main`;
 - secret scanning e push protection habilitados;
 - Dependabot alerts e security updates habilitados (com automated security fixes
   ativos); code scanning continua sem análise, fora do escopo deste corte.
 
 O ruleset exige PR, uma aprovação, revisão de CODEOWNERS, resolução de threads,
-checks de CI estritos, e bloqueia deleção/force-push. O único bypass é a
-integração oficial GitHub Actions (`actor_id=15368`), usado pelos dois writers;
-isso preserva a escrita direta serializada sem abrir bypass para usuários.
+checks de CI estritos, e bloqueia deleção/force-push. Não há bypass. Os dois
+writers usam branches `automation/*`, criam ou atualizam PRs e disparam `ci.yml`
+na cabeça do PR, pois eventos gerados pelo `GITHUB_TOKEN` não iniciam
+automaticamente um novo workflow.
 
 ## Risco residual aceito
 
-O perfil ainda usa commits diretos do `github-actions[bot]` em `main`, por meio do
-bypass restrito do ruleset. A superfície foi reduzida por token tardio, `git add`
-limitado e serialização. `cargo audit` também
+Os bots não fazem commits diretos em `main`; a superfície de escrita continua
+reduzida por token tardio, `git add` limitado, serialização e revisão obrigatória
+do PR. Há um alerta Dependabot aberto (GHSA-wrw7-89jp-8q8g)
+para `glib 0.18.5`, transitivo da pilha GTK3 do Tauri; não existe atualização
+isolada compatível no lockfile, então a evolução do Tauri/GTK deve ser acompanhada.
+`cargo audit` também
 reporta avisos permitidos de crates não mantidos/unsound transitivos (17 na raiz,
-1 em `engine/`) sem vulnerabilidade ativa; atualizações futuras devem reduzir
+1 em `engine/`), incluindo o alerta aberto; atualizações futuras devem reduzir
 essa dívida sem ignorá-la globalmente.

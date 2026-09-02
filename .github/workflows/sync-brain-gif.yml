@@ -6,6 +6,7 @@ on:
     paths:
       - "crates/**"
       - "src/**"
+      - "!src/wasm/**"
       - "index.html"
       - "package.json"
       - "package-lock.json"
@@ -33,6 +34,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
+      pull-requests: write
+      actions: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -77,10 +80,11 @@ jobs:
         run: npm run verify:brain-gif
         env:
           GITHUB_SHA: ${{ github.sha }}
-      - name: Commit sincronizado
+      - name: Atualizar branch de automação e pull request
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          branch="automation/brain-gif"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/brain.gif assets/brain-gif.json README.md src/wasm
@@ -88,4 +92,17 @@ jobs:
           git commit -m "chore(profile): sincronizar BRAIN PRO com ${GITHUB_SHA::12}"
           git pull --rebase origin main
           gh auth setup-git
-          git push origin HEAD:main
+          remote_sha="$(git ls-remote --heads origin "refs/heads/$branch" | awk '{print $1}')"
+          if [ -n "$remote_sha" ]; then
+            git push --force-with-lease="refs/heads/$branch:$remote_sha" origin HEAD:"refs/heads/$branch"
+          else
+            git push origin HEAD:"refs/heads/$branch"
+          fi
+          pr_url="$(gh pr list --head "$branch" --base main --state open --json url --jq '.[0].url')"
+          if [ -z "$pr_url" ]; then
+            pr_url="$(gh pr create --base main --head "$branch" --title "chore(profile): sincronizar BRAIN PRO" --body "Artefatos do perfil gerados a partir de ${GITHUB_SHA::12}. O CI foi disparado nesta branch; revise e mescle este PR.")"
+          else
+            gh pr edit "$pr_url" --title "chore(profile): sincronizar BRAIN PRO" --body "Artefatos do perfil atualizados a partir de ${GITHUB_SHA::12}. O CI foi disparado nesta branch; revise e mescle este PR."
+          fi
+          gh workflow run ci.yml --ref "$branch"
+          echo "Pull request de automação: $pr_url" >> "$GITHUB_STEP_SUMMARY"
