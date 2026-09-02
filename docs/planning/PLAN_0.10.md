@@ -1,6 +1,6 @@
 # Plano detalhado 0.10 · A CAPA
 
-**Estado documental:** plano vigente; R10-A..R10-D concluídos, R10-E próximo
+**Estado documental:** plano vigente; R10-A..R10-D concluídos, R10-E/R10-F com evidência fechada e R10-H próximo
 **Baseline original:** produto `0.9.0` · protocolo/ABI/snapshot `8` · 37 buffers · cinco hashes
 **Relação com o [ROADMAP](ROADMAP.md):** este arquivo detalha R10-B..R10-H;
 o roadmap é a única fila e as auditorias em `../audits/0.10/` registram o estado

@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="/src/styles.css" />
     <script type="module" src="/src/main.ts"></script>
   </head>
-  <body>
+  <body data-mobile-sheet="view">
     <div class="ambient-grid" aria-hidden="true"></div>
     <div id="canvas-container" aria-label="Modelo neural tridimensional interativo"></div>
     <aside id="anatomy-focus-callout" class="anatomy-focus-callout" aria-label="Estrutura em foco" hidden>
@@ -54,6 +54,27 @@
       <button id="tab-synapse" type="button" role="tab" aria-selected="false" aria-controls="synapse-panel" data-view="synapse" tabindex="-1">SINAPSE</button>
     </nav>
 
+    <nav id="scale-trail" class="scale-trail" aria-label="Trilha de escala de apresentação">
+      <p>ESCALA · APRESENTAÇÃO V1</p>
+      <ol>
+        <li><button type="button" data-scale-step="encephalon" aria-current="step">ENCÉFALO</button></li>
+        <li><button type="button" data-scale-step="region" aria-current="false">REGIÃO</button></li>
+        <li><button type="button" data-scale-step="column" aria-current="false">COLUNA</button></li>
+        <li><button type="button" data-scale-step="patch" aria-current="false">PATCH</button></li>
+        <li><button type="button" data-scale-step="neuron" aria-current="false">NEURÔNIO</button></li>
+        <li><button type="button" data-scale-step="synapse" aria-current="false">SINAPSE</button></li>
+      </ol>
+      <button id="skip-scale-transition" class="skip-scale-transition" type="button" hidden>PULAR TRANSIÇÃO</button>
+    </nav>
+    <p id="presentation-navigation-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+
+    <nav id="mobile-sheet-switch" class="mobile-sheet-switch" aria-label="Painéis móveis">
+      <span class="mobile-sheet-switch-label">PAINEL MÓVEL</span>
+      <button id="mobile-sheet-view" type="button" data-mobile-sheet="view" aria-pressed="true" aria-controls="overview-panel">LEITURA DA VISTA</button>
+      <button id="mobile-sheet-presentation" type="button" data-mobile-sheet="presentation" aria-pressed="false" aria-controls="presentation-panel">CONTEXTO &amp; NAVEGAÇÃO</button>
+    </nav>
+    <p id="mobile-sheet-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+
     <aside class="glass-panel presentation-panel" id="presentation-panel" aria-labelledby="presentation-title">
       <div class="eyebrow" id="presentation-title">R10-C · ORÇAMENTO & GOVERNADOR</div>
       <section id="selection-provenance-badge" class="selection-provenance-badge" aria-labelledby="selection-provenance-title">
@@ -81,6 +102,39 @@
         </section>
       </details>
       <p id="view-context-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+      <details id="presentation-navigation" class="presentation-navigation" data-usage-mode-minimum="explorer">
+        <summary><span>NAVEGAÇÃO DE APRESENTAÇÃO</span><span>V1</span></summary>
+        <p class="presentation-navigation-copy">Câmera, orientação e escala são preferências versionadas; não alteram preset, Worker, snapshot ou hashes.</p>
+        <p class="presentation-navigation-selection"><b>SELEÇÃO:</b> <span id="presentation-navigation-selection">Nenhuma estrutura selecionada</span></p>
+        <div class="presentation-navigation-actions">
+          <button id="frame-selection" type="button" aria-describedby="presentation-navigation-selection" disabled>ENQUADRAR SELEÇÃO</button>
+          <button id="restore-selection-camera" type="button" hidden>ESC · RETORNAR</button>
+        </div>
+        <section class="saved-viewpoints" aria-labelledby="saved-viewpoints-title">
+          <h2 id="saved-viewpoints-title">PONTOS DE VISTA SALVOS</h2>
+          <div class="saved-viewpoint-actions" role="group" aria-label="Pontos de vista salvos">
+            <button type="button" data-saved-viewpoint="frontal" aria-pressed="false">FRENTE</button>
+            <button type="button" data-saved-viewpoint="lateral" aria-pressed="false">LATERAL</button>
+            <button type="button" data-saved-viewpoint="superior" aria-pressed="false">SUPERIOR</button>
+            <button type="button" data-saved-viewpoint="oblique" aria-pressed="false">OBLÍQUA</button>
+          </div>
+        </section>
+        <section class="orientation-cube-panel" aria-labelledby="orientation-cube-title">
+          <h2 id="orientation-cube-title">CUBO DE ORIENTAÇÃO</h2>
+          <div class="orientation-cube-layout">
+            <svg id="orientation-cube" viewBox="0 0 120 120" role="img" aria-label="Cubo de orientação visual da câmera" data-orientation="custom">
+              <polygon class="cube-face cube-face-top" points="60,8 103,29 60,50 17,29"></polygon>
+              <polygon class="cube-face cube-face-front" points="17,29 60,50 60,102 17,81"></polygon>
+              <polygon class="cube-face cube-face-side" points="60,50 103,29 103,81 60,102"></polygon>
+              <path class="cube-edge" d="M60 8 60 50M17 29 17 81 60 102 103 81"></path>
+              <text x="60" y="33" text-anchor="middle">SUP</text>
+              <text x="38" y="72" text-anchor="middle">FRT</text>
+              <text x="82" y="72" text-anchor="middle">LAT</text>
+            </svg>
+            <p>SVG/DOM: a orientação é uma ajuda de leitura; não é uma estrutura renderizada nem uma coordenada anatômica.</p>
+          </div>
+        </section>
+      </details>
       <details open>
         <summary>PERFIL DE RENDERIZAÇÃO</summary>
         <div class="control-group compact">

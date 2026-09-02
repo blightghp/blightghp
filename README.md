@@ -122,11 +122,11 @@ ainda é hipótese.
 | :-- | :-- |
 | baseline científica/computacional | 0.8 promovida, com replay determinístico, ABI e química local auditados |
 | referência Web | seis vistas sincronizadas por Worker Rust/Wasm; snapshot ABI v8 e cinco hashes independentes |
-| experiência interativa | R10-F parcial incorporada: modos Guiado/Explorador/Laboratório, paleta de comandos, foco/contexto anatômico e selo de proveniência |
+| experiência interativa | R10-F com evidência fechada: modos, paleta, foco/contexto, proveniência, câmera reversível, vistas salvas, trilha de escalas e bottom sheet móvel acessível |
 | anatomia visual | catálogo 1.2.0, vascular topológico e superfície procedural determinística |
 | desempenho de apresentação | perfis `baseline`, `enhanced` e `cinema`, com orçamento medido em GPU física |
 | último gate visual | R10-E teve a evidência física fechada em 28 de agosto; a etapa ainda não foi promovida |
-| último corte de interação | R10-F implementa UI-031/032/033/034/037; UI-035/036, UX-003 e a promoção agregada continuam pendentes |
+| último corte de interação | R10-F fecha UI-031..037 e UX-003: toque, árvore de acessibilidade, `390×844` e movimento reduzido foram verificados; a promoção agregada 0.10 continua pendente |
 | artefato publicado | `assets/brain.gif` + `assets/brain-gif.json`: 60 quadros, seis vistas e proveniência verificável do Web/Fallback |
 | direção nativa | **PROMETHEUS**: workspace `engine/` com oito crates; Φ-0 concluída e Φ-1 em andamento, com grafo compilado e executor `wgpu` 30 |
 | ponte científica → nativa | `RenderExtractable` já define extração somente de leitura em `brain-engine`, mas ainda não há dependência de `engine/` nem runner nativo conectando os dois workspaces |
@@ -151,9 +151,12 @@ validada. O avanço, os limites e a decisão pendente estão na
 - **(Integração nativa, pendente)**: o contrato `RenderExtractable` está no
   núcleo científico, mas ainda não existe uma dependência de `engine/` para
   `brain-engine`, uma ponte de snapshots ou um executável nativo que os una;
-- **(R10-F, parcial)**: modos `guided`, `explorer` e `laboratory`, paleta modal
-  acessível, contexto por vista, foco anatômico efêmero e selo persistente de
-  proveniência, todos sem alterar Worker, ABI, snapshot ou solver;
+- **(R10-F, evidência fechada)**: modos `guided`, `explorer` e `laboratory`, paleta modal
+  acessível, contexto por vista, foco anatômico efêmero, selo persistente de
+  proveniência, enquadramento reversível por `Escape`, quatro vistas salvas e
+  escada de escala pulável. Em `390×844`, a alternância de bottom sheet expõe
+  separadamente leitura da vista e contexto/navegação com alvos de toque de
+  44 px e anúncios de estado, todos sem alterar Worker, ABI, snapshot ou solver;
 - rede procedural, coluna L1–L6, circuito relé–TRN, patch AdEx de 12 células e cabo passivo;
 - Vistas WebGL2: **Visão Geral**, **Lâminas**, **Célula**, **Neurônio**, **Eletricidade** e **Sinapse**;
 - Testes de contrato, segurança, acessibilidade, desempenho, captura e invariância científica.
@@ -187,6 +190,7 @@ científica seja implementada e auditada.
 | Fronteira | Fonte de verdade e escopo | Verificação ou atualização |
 | :-- | :-- | :-- |
 | ciência → Web | `brain-engine` publica snapshots somente de leitura; `brain-wasm` os expõe na ABI v8 | `npm run check` e `npm run test:wasm-browser` exercitam o caminho Web/Worker; os cinco hashes evitam confundir mudança visual com mudança científica |
+| navegação R10-F → ciência | `src/presentation-navigation.ts` schema 1 guarda somente poses/trilha; câmera, escala, foco e alternância móvel não entram em preset, ABI ou Worker | `npm run verify:presentation-navigation` e `npm run verify:r10-f-accessibility` provam `Escape`, cubo SVG/DOM, toque, árvore de acessibilidade, bottom sheet, `390×844`, movimento reduzido e invariância dos cinco hashes com motor congelado |
 | Rust/Wasm → `src/wasm` | os bindings WebAssembly são artefatos gerados e versionados, nunca uma API a editar manualmente | `npm run build:wasm` recompila o crate e regenera os bindings usados pelo navegador |
 | captura → README | `assets/brain.gif` e `assets/brain-gif.json` formam um par: bytes, commit de origem, ABI, hashes e distribuição de quadros por vista | `npm run verify:brain-gif` confere a proveniência; o workflow de GIF recompila, captura, atualiza o selo do README e versiona o conjunto |
 | UI R10-F → captura | as mudanças de interação ficam em `src/**` e podem disparar o workflow de captura; o GIF continua sendo a referência visual versionada do Web/Fallback | a automação só altera a mídia quando a captura e seu manifesto forem regenerados; não se deve trocar o `?v=` manualmente |
@@ -241,7 +245,7 @@ comandos estão no [guia de validação](docs/quality/VALIDATION.md).
 | [Projeto PROMETHEUS](docs/specifications/prometheus/README.md) | engine gráfico nativo: Φ-0 concluída, Φ-1 em desenvolvimento, `wgpu` 30 e arquitetura L0–L4 |
 | [Manifesto do GIF](assets/brain-gif.json) | proveniência da captura publicada: commit, ABI, hashes, frames e perfil de apresentação |
 | [Auditoria R10-E](docs/audits/0.10/AUDIT_0.10_R10_E.md) | evidência física aceita, limites visuais e promoção ainda pendente |
-| [Auditoria R10-F](docs/audits/0.10/AUDIT_0.10_R10_F.md) | corte parcial de UI/interação incorporado, itens restantes e promoção ainda pendente |
+| [Auditoria R10-F](docs/audits/0.10/AUDIT_0.10_R10_F.md) | evidência de UI/interação fechada; promoção 0.10 ainda pendente |
 | [Modelo](docs/specifications/MODEL_SPEC.md) | equações, unidades e limites científicos |
 | [Gráficos](docs/specifications/GRAPHICS_SPEC.md) | contratos de renderização e VFX |
 | [Validação](docs/quality/VALIDATION.md) | testes, ambientes e critérios de promoção |

@@ -583,6 +583,7 @@ erro e estabilidade no regime em que será usado.
 | WRK-001..003 | fila serial, cotas, backpressure, fallback inerte, reset/dispose | Vitest + navegador forçando falha |
 | UI-001..010 | estado, unidades, controles e acessibilidade | unitário/DOM/E2E |
 | UI-021/QA-093 | seleção celular, `Tab`/`Enter`/`Escape`, foco e hashes invariantes | Vitest + auditoria de navegador |
+| UI-031..037/UX-003 | modos, paleta, foco/contexto, proveniência, câmera, escala, toque, leitor de tela e `390×844` | `npm run verify:presentation-navigation` + `npm run verify:r10-f-accessibility` |
 | GFX-001..010 | hash invariável, proveniência e estado→pixel | testes estruturais + render target + capturas |
 | GFX-050/AST-010 | geometria determinística, origem visual e ausência de evento inventado | Vitest + auditoria de navegador |
 | MOD-100/ENG-025/QA-100 | cabo de três compartimentos, conservação, convergência, determinismo e orçamento | Cargo + replay + auditoria R09-E |
@@ -613,6 +614,13 @@ Além dos testes existentes, cada promoção de wire cobre:
 - persistência/import/export: schema, cota, corrupção, migração e sanitização;
 - modos Guiado/Explorador/Laboratório usam o mesmo motor;
 - seleção por cena e árvore produz o mesmo ID.
+
+R10-F acrescenta uma prova de navegador com viewport/touch reais em `390×844`.
+Ela verifica o bottom sheet alternável, alvos de 44 CSS px, `aria-pressed`, live
+regions e árvore de acessibilidade, paleta modal, seleção, enquadramento,
+vistas/escala e o corte instantâneo de movimento reduzido. A comparação de hashes
+ocorre com o motor congelado; nenhum dos controles de apresentação entrega uma
+mensagem ao Worker.
 
 ## Segurança e supply chain
 
@@ -656,6 +664,8 @@ npx vitest run
 npm run build
 npm run check:shadow-replay
 npm run test:wasm-browser
+npm run verify:presentation-navigation
+npm run verify:r10-f-accessibility
 npm run audit:runtime
 npm run verify:runtime-audit
 npm run verify:hardware-audit
@@ -666,10 +676,12 @@ npm run audit:procedural-surface
 npm run verify:procedural-surface
 ```
 
-`npm run check` inclui build, navegador, verificação do artefato versionado e
-uma auditoria temporária. Defina `BRAIN_AUDIT_DIR` para escolher onde uma nova
-captura será escrita; a atualização versionada exige revisão visual e commit
-separado da implementação testada.
+`npm run check` inclui build, Worker/Wasm no navegador, navegação de apresentação
+(câmera, escala, movimento reduzido e invariância), o fluxo R10-F de toque/leitor
+de tela em `390×844`, verificação do artefato versionado e uma auditoria temporária.
+Defina `BRAIN_AUDIT_DIR` para escolher onde uma nova captura será escrita; a
+atualização versionada exige revisão visual e commit separado da implementação
+testada.
 
 Os gates do workspace PROMETHEUS são independentes dos comandos Cargo da raiz.
 O CI os executa em Linux e Windows. A política operacional, o lock comum dos

@@ -193,6 +193,14 @@ Encéfalo → região → coluna → patch → neurônio → sinapse. Breadcrumb
 resolução mostram qual estado é autoritativo. `Escape` volta; foco retorna ao
 elemento de origem. Zoom orbital isolado não troca modelo.
 
+R10-F declara as poses e a trilha em `src/presentation-navigation.ts`, schema 1,
+separado de `BrainSettings` e de qualquer preset científico. Quatro pontos de
+vista salvos e um cubo SVG/DOM são apenas orientação de apresentação. A escada
+troca para a entrada canônica/vista correspondente, interpola câmera/alvo,
+permite pulo e usa corte instantâneo sob `prefers-reduced-motion`. Como as raízes
+das vistas são locais e sem calibração comum, a continuidade preservada é de
+orientação/foco, nunca uma alegação de zoom anatômico métrico.
+
 ### Seleção anatômica/celular
 
 - busca/árvore e picking convergem para o mesmo `selectionId`;
@@ -282,6 +290,16 @@ Som é opcional, desligado por padrão, pausável e com equivalente visual/textu
 Alvos mínimos e gestos precisam de alternativa de botão/teclado. Orientação e
 redimensionamento não escondem controles críticos. Painéis sobre o canvas não
 devem bloquear navegação ou leitores de tela.
+
+Em `390×844`, R10-F substitui os dois painéis laterais sobrepostos por um bottom
+sheet único, alternado por `LEITURA DA VISTA` e `CONTEXTO & NAVEGAÇÃO`. Os botões
+permanecem num `nav` nomeado, usam `aria-pressed`, anunciam a troca por uma live
+region e o botão de leitura aponta para o `tabpanel` ativo. Somente a superfície
+inativa é removida da árvore visual/acessível; a outra continua rolável, com
+conteúdo e equivalente textual intactos. A trilha de escala, a alternância, abas,
+paleta, sumários e comandos R10-F têm alvo de toque de pelo menos 44 CSS px;
+`touch-action` permite pan vertical dentro do sheet. O estado `mobileSheet` é
+efêmero de DOM e não entra em preferências, preset, Worker, ABI ou snapshot.
 
 ## Personalização de cores
 
