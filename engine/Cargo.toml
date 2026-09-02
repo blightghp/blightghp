@@ -39,7 +39,7 @@ prometheus-core = { path = "crates/prometheus-core" }
 wgpu    = { version = "30", default-features = false, features = ["wgsl", "dx12", "vulkan", "metal"] }
 naga    = { version = "30", features = ["wgsl-in"] }
 winit   = "0.30"
-pollster = "0.4"
+pollster = "1.0"
 
 # --- External: Math & Memory Layout ---
 glam     = { version = "0.33", features = ["bytemuck", "serde"] }
