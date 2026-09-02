@@ -476,6 +476,8 @@ a:focus-visible {
   white-space: nowrap;
 }
 
+.mobile-sheet-switch { display: none; }
+
 .presentation-panel {
   position: fixed;
   top: 92px;
@@ -1030,6 +1032,7 @@ body[data-high-contrast="true"] .selection-provenance-badge dd {
 }
 
 body[data-high-contrast="true"] .scale-trail,
+body[data-high-contrast="true"] .mobile-sheet-switch,
 body[data-high-contrast="true"] .presentation-navigation-actions button,
 body[data-high-contrast="true"] .saved-viewpoint-actions button {
   border-color: #fff;
@@ -1039,6 +1042,7 @@ body[data-high-contrast="true"] .saved-viewpoint-actions button {
 }
 
 body[data-high-contrast="true"] .scale-trail ol button[aria-current="step"],
+body[data-high-contrast="true"] .mobile-sheet-switch button[aria-pressed="true"],
 body[data-high-contrast="true"] .saved-viewpoint-actions button[aria-pressed="true"] {
   color: #000;
   background: #fff;
@@ -1538,19 +1542,102 @@ body[data-capture="true"] .interaction-hint { display: none !important; }
 }
 
 @media (max-width: 560px) {
-  #usage-mode { width: 128px; }
+  #usage-mode { width: 128px; min-height: 44px; }
   .command-palette { width: calc(100vw - 28px); margin-top: 82px; }
   .command-palette-card { max-height: calc(100vh - 98px); padding: 15px; }
   .view-tabs { max-width: calc(100vw - 20px); overflow-x: auto; }
-  .view-tabs button { padding-inline: 9px; white-space: nowrap; }
-  .scale-trail { grid-template-columns: 1fr auto; gap: 5px; padding: 5px 6px; }
+  .view-tabs button { min-height: 44px; padding-inline: 9px; white-space: nowrap; touch-action: manipulation; }
+  .scale-trail {
+    top: 130px;
+    bottom: auto;
+    grid-template-columns: 1fr auto;
+    gap: 5px;
+    width: calc(100vw - 28px);
+    min-height: 52px;
+    padding: 4px 6px;
+  }
   .scale-trail > p { display: none; }
-  .scale-trail ol button { padding-inline: 5px; }
-  .scale-trail .skip-scale-transition { padding-inline: 5px; font-size: 6px; }
-  .control-panel { width: 210px; }
-  .presentation-panel { width: 180px; }
-  .inference-panel { width: calc(100vw - 28px); }
-  .inference-copy { padding: 15px 18px; }
+  .scale-trail ol button { min-height: 44px; padding-inline: 5px; touch-action: manipulation; }
+  .scale-trail .skip-scale-transition { min-height: 44px; padding-inline: 7px; font-size: 6px; touch-action: manipulation; }
+  .mobile-sheet-switch {
+    position: fixed;
+    top: 194px;
+    left: 14px;
+    right: 14px;
+    z-index: 9;
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    gap: 5px;
+    padding: 5px;
+    border: 1px solid rgba(99, 174, 255, .18);
+    border-radius: 10px;
+    background: rgba(3, 10, 22, .84);
+    backdrop-filter: blur(14px);
+  }
+  .mobile-sheet-switch-label {
+    grid-column: 1 / -1;
+    padding: 1px 3px 0;
+    color: #5c95bd;
+    font: 600 6px/1.25 "JetBrains Mono", monospace;
+    letter-spacing: .1em;
+  }
+  .mobile-sheet-switch button {
+    min-width: 0;
+    min-height: 44px;
+    padding: 7px 6px;
+    border: 1px solid rgba(91, 184, 255, .24);
+    border-radius: 6px;
+    color: #80b8de;
+    background: rgba(10, 35, 61, .58);
+    font: 600 7px/1.15 "JetBrains Mono", monospace;
+    letter-spacing: .05em;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .mobile-sheet-switch button[aria-pressed="true"] {
+    border-color: rgba(117, 205, 255, .65);
+    color: #e0f7ff;
+    background: rgba(36, 144, 226, .24);
+  }
+  .presentation-panel,
+  .control-panel {
+    top: auto;
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    left: 14px;
+    z-index: 8;
+    width: auto;
+    max-height: min(52dvh, calc(100dvh - 250px));
+    padding: 15px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 18px 18px 12px 12px;
+    touch-action: pan-y;
+  }
+  body[data-mobile-sheet="view"] .presentation-panel,
+  body[data-mobile-sheet="presentation"] .control-panel:not([hidden]),
+  .inference-panel { display: none; }
+  .presentation-panel details > summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  .command-palette-trigger,
+  .command-palette-close,
+  .presentation-navigation-actions button,
+  .saved-viewpoint-actions button,
+  .anatomy-results button,
+  .cell-selector button,
+  .back-button,
+  .toggle-grid label {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  .glass-select,
+  .presentation-panel input[type="range"],
+  .control-panel input[type="range"] { min-height: 44px; }
+  .anatomy-results { max-height: 230px; }
   .interaction-hint { display: none; }
 }
 

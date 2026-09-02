@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="/src/styles.css" />
     <script type="module" src="/src/main.ts"></script>
   </head>
-  <body>
+  <body data-mobile-sheet="view">
     <div class="ambient-grid" aria-hidden="true"></div>
     <div id="canvas-container" aria-label="Modelo neural tridimensional interativo"></div>
     <aside id="anatomy-focus-callout" class="anatomy-focus-callout" aria-label="Estrutura em foco" hidden>
@@ -67,6 +67,13 @@
       <button id="skip-scale-transition" class="skip-scale-transition" type="button" hidden>PULAR TRANSIÇÃO</button>
     </nav>
     <p id="presentation-navigation-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+
+    <nav id="mobile-sheet-switch" class="mobile-sheet-switch" aria-label="Painéis móveis">
+      <span class="mobile-sheet-switch-label">PAINEL MÓVEL</span>
+      <button id="mobile-sheet-view" type="button" data-mobile-sheet="view" aria-pressed="true" aria-controls="overview-panel">LEITURA DA VISTA</button>
+      <button id="mobile-sheet-presentation" type="button" data-mobile-sheet="presentation" aria-pressed="false" aria-controls="presentation-panel">CONTEXTO &amp; NAVEGAÇÃO</button>
+    </nav>
+    <p id="mobile-sheet-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
 
     <aside class="glass-panel presentation-panel" id="presentation-panel" aria-labelledby="presentation-title">
       <div class="eyebrow" id="presentation-title">R10-C · ORÇAMENTO & GOVERNADOR</div>

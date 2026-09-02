@@ -274,6 +274,8 @@ type PresentationTransitionKind =
   | "scale"
   | "scale-return";
 
+type MobileSheet = "view" | "presentation";
+
 interface PresentationCameraTransition {
   readonly from: PresentationCameraPose;
   readonly to: PresentationCameraPose;
@@ -360,6 +362,7 @@ let selectionReturnFocus: HTMLElement | undefined;
 let presentationCameraTransition: PresentationCameraTransition | undefined;
 let selectionCameraReturn: SelectionCameraReturn | undefined;
 let selectedSavedViewpoint: SavedViewpointId | undefined;
+let mobileSheet: MobileSheet = "view";
 let applyingScaleNavigation = false;
 const scaleNavigationHistory: ScaleNavigationReturn[] = [];
 let engineReady: Extract<EngineEvent, { type: "ready" }> | undefined;
@@ -971,6 +974,38 @@ function updatePresentationNavigationUi(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-saved-viewpoint]")) {
     button.setAttribute("aria-pressed", String(button.dataset.savedViewpoint === selectedSavedViewpoint));
   }
+}
+
+function updateMobileSheetUi(): void {
+  document.body.dataset.mobileSheet = mobileSheet;
+  const viewButton = element<HTMLButtonElement>("#mobile-sheet-view");
+  const presentationButton = element<HTMLButtonElement>("#mobile-sheet-presentation");
+  viewButton.setAttribute("aria-pressed", String(mobileSheet === "view"));
+  viewButton.setAttribute("aria-controls", `${activeView}-panel`);
+  presentationButton.setAttribute("aria-pressed", String(mobileSheet === "presentation"));
+}
+
+function setMobileSheet(sheet: MobileSheet, announce = true): MobileSheet {
+  if (mobileSheet === sheet) return mobileSheet;
+  mobileSheet = sheet;
+  updateMobileSheetUi();
+  if (announce) {
+    element("#mobile-sheet-status").textContent = sheet === "view"
+      ? "Painel móvel: leitura da vista ativa."
+      : "Painel móvel: contexto e navegação ativos.";
+  }
+  return mobileSheet;
+}
+
+function setupMobileSheetInterface(): void {
+  for (const button of document.querySelectorAll<HTMLButtonElement>("button[data-mobile-sheet]")) {
+    const sheet = button.dataset.mobileSheet;
+    if (sheet !== "view" && sheet !== "presentation") {
+      throw new Error("painel móvel sem destino de apresentação válido");
+    }
+    button.addEventListener("click", () => setMobileSheet(sheet));
+  }
+  updateMobileSheetUi();
 }
 
 function settlePresentationCameraTransition(transition: PresentationCameraTransition): void {
@@ -1758,6 +1793,7 @@ function setActiveView(view: SimulationView): void {
   anatomyExplorer?.setActiveView(view);
   updateViewContext();
   refreshAnatomyFocusPresentation();
+  updateMobileSheetUi();
   updatePresentationNavigationUi();
   if (latestSnapshot) {
     renderFrame(latestSnapshot, simulationClock.renderTimeSeconds);
@@ -2202,6 +2238,7 @@ function setupInterface(): void {
   element("#node-count").textContent = formatCount(brainData.nodes.length);
   element("#synapse-count").textContent = formatCount(brainData.synapses.length);
   setupUsageModeInterface();
+  setupMobileSheetInterface();
   setupCommandPaletteInterface();
 
   anatomyExplorer = new AnatomyExplorerController({

@@ -1,9 +1,8 @@
-# Auditoria parcial · R10-F UI e interação
+# Auditoria · R10-F UI e interação
 
-**Estado:** implementação funcional em andamento — **UI-031..037** e
-**UX-003** estão implementados neste registro. Ainda não promove R10-F, não
-promove R10-E e não altera a baseline 0.8: cobertura integral de toque/leitor de
-tela e a auditoria agregada seguem pendentes.
+**Estado:** evidência fechada — **UI-031..037** e **UX-003** estão implementados
+e verificados neste registro. R10-F não promove R10-E, a 0.10 ou a baseline 0.8:
+R10-H, R10-G e a auditoria agregada R10-P continuam pendentes.
 
 **Escopo deste corte:** acrescentar os modos `guided`, `explorer` e `laboratory`
 como estado de apresentação e uma paleta modal que aciona controles já existentes.
@@ -112,6 +111,17 @@ de apresentação; não afirma zoom físico ou coordenadas anatômicas calibrada
   antes de validar árvore, busca e topologia. Assim, testam o caminho autorizado
   pela UI-031 em vez de depender do modo Guiado padrão; seus subprocessos Git usam
   a exceção local `safe.directory`, sem alterar a configuração global do usuário.
+- Em `390×844`, os dois painéis laterais deixam de se sobrepor: o bottom sheet
+  alterna explicitamente entre `LEITURA DA VISTA` e `CONTEXTO & NAVEGAÇÃO`.
+  Os dois botões têm nome, `aria-pressed`, `aria-controls` e anúncio por live
+  region; a superfície inativa sai da árvore visual/acessível, mas permanece
+  alcançável pela alternância. A trilha, abas, paleta, sumários, pontos de vista,
+  enquadramento e árvore recebem alvo de toque de pelo menos 44 CSS px.
+- `scripts/verify_r10_f_accessibility.js` usa Chromium com touch, viewport
+  `390×844` e `prefers-reduced-motion: reduce`. Ele toca a alternância, paleta,
+  ponto de vista, trilha, árvore e enquadramento; consulta a árvore de
+  acessibilidade do navegador, confirma foco/announcements e compara os cinco
+  hashes em uma segunda passagem com o motor congelado.
 
 ## Fronteira de estado
 
@@ -128,8 +138,10 @@ persiste preferência, não altera `BrainSettings` e não responde ao foco efêm
 `src/presentation-navigation.ts` aplica a mesma fronteira a câmera, vistas salvas
 e escala: as únicas mutações são câmera/DOM/histórico efêmero, e seu relatório no
 hook de auditoria declara apenas schema, pose selecionada, degrau e transição.
+`mobileSheet` segue a mesma regra: seleciona somente a superfície DOM exposta no
+viewport móvel e não persiste nem alcança o motor.
 
-## Evidência executada em 29 ago e 1 set 2026
+## Evidência executada em 29 de agosto, 1 e 2 de setembro de 2026
 
 | Prova | Resultado |
 | :-- | :-- |
@@ -143,6 +155,7 @@ hook de auditoria declara apenas schema, pose selecionada, degrau e transição.
 | `npm run verify:presentation-budget` | passou: schema 1, seis vistas e hashes invariantes |
 | `npm run verify:procedural-surface` | passou: hash `7dfdd64207190121`, 5.780/1.500 triângulos e 12 capturas |
 | `npm run verify:presentation-navigation` | passou: contrato schema 1, UI-035 com `Escape`/foco, quatro poses, cubo SVG/DOM, UX-003 reversível/pulável, 390×844, movimento reduzido instantâneo e cinco hashes invariantes com motor congelado |
+| `npm run verify:r10-f-accessibility` | passou: bottom sheet de 44 px, touch, árvore de acessibilidade, live regions, paleta, seleção, enquadramento, escala e movimento reduzido em `390×844`; cinco hashes invariantes com motor congelado |
 
 O teste de navegador percorre os três modos e comandos representativos no DOM
 real — vista, modo, busca, corte, câmera, perfis, foco anatômico e contexto por
@@ -153,19 +166,21 @@ material temporário não é alocado. Para UI-034 ele percorre as seis abas, con
 modelo/unidade/hipótese/limite, evidencia a seleção vascular, alto contraste e a
 largura móvel. Para UI-037 ele confirma o selo `STATE`/`DIDACTIC`, preserva-o
 durante uma prévia, confirma `TOPOLOGY`/`ILLUSTRATIVE`, esconde o catálogo e fecha
-o contexto no modo Guiado, percorre o scroll móvel e testa alto contraste. Essa
-prova é de fronteira de apresentação; não substitui os futuros testes de toque,
-leitura de tela e fluxo integral de todas as interações em 390×844.
+o contexto no modo Guiado, percorre o scroll móvel e testa alto contraste. A prova
+R10-F adicional cobre a navegação de touch e a árvore de acessibilidade no layout
+real de `390×844`; o corte instantâneo sob movimento reduzido, os alvos de 44 px,
+o foco devolvido e os cinco hashes invariantes também são verificados.
 
-## Pendências para concluir R10-F
+## Pendências para promoção 0.10
 
-1. Cobertura de toque, leitura de tela e fluxo completo de R10-F em
-   390×844/movimento reduzido.
-2. Auditoria agregada de desempenho, documentação coerente e decisão de promoção
-   R10-P.
+1. R10-H deve provar o pipeline dormente de asset externo sem distribuir asset de
+   terceiros; R10-G deve recapturar e sincronizar o GIF no contrato visual estável.
+2. R10-P deve agregar desempenho, documentação e todas as auditorias 0.10 antes
+   de qualquer decisão de promoção.
 
 ## Decisão de integração
 
 O incremento reversível de UI está integrado em `main`, sem custo GPU adicional.
-R10-E, a cobertura final de R10-F e a promoção R10-P ainda têm gates explícitos
-pendentes; esta auditoria não promove a baseline 0.8.
+R10-F está fechado como evidência de interação; R10-E permanece pendente de
+promoção e R10-H/R10-G/R10-P têm gates explícitos antes da promoção 0.10. Esta
+auditoria não promove a baseline 0.8.

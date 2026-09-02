@@ -16,6 +16,7 @@
     "check:shadow-replay": "node scripts/shadow_replay.js",
     "test:wasm-browser": "node scripts/verify_wasm_worker.js",
     "verify:presentation-navigation": "node scripts/verify_presentation_navigation.js",
+    "verify:r10-f-accessibility": "node scripts/verify_r10_f_accessibility.js",
     "audit:runtime": "node scripts/audit_runtime.js",
     "audit:hardware": "node scripts/audit_runtime.js",
     "audit:material": "node scripts/audit_material_profile.js",
@@ -34,7 +35,7 @@
     "verify:promotion-0.8": "node scripts/verify_promotion_0_8.js",
     "build:wasm": "cargo build -p brain-wasm --release --target wasm32-unknown-unknown && wasm-bindgen target/wasm32-unknown-unknown/release/brain_wasm.wasm --out-dir src/wasm --target web --typescript",
     "stamp:brain-gif": "node scripts/stamp_brain_gif.js",
-    "check": "npm run typecheck && npm run verify:automation && npm run verify:docs && npm run check:shadow-replay && npm run test && npm run build && npm run test:wasm-browser && npm run verify:presentation-navigation && npm run verify:promotion-0.8 && npm run verify:presentation-budget && npm run verify:procedural-surface && npm run audit:runtime"
+    "check": "npm run typecheck && npm run verify:automation && npm run verify:docs && npm run check:shadow-replay && npm run test && npm run build && npm run test:wasm-browser && npm run verify:presentation-navigation && npm run verify:r10-f-accessibility && npm run verify:promotion-0.8 && npm run verify:presentation-budget && npm run verify:procedural-surface && npm run audit:runtime"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

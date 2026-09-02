@@ -291,6 +291,16 @@ Alvos mínimos e gestos precisam de alternativa de botão/teclado. Orientação 
 redimensionamento não escondem controles críticos. Painéis sobre o canvas não
 devem bloquear navegação ou leitores de tela.
 
+Em `390×844`, R10-F substitui os dois painéis laterais sobrepostos por um bottom
+sheet único, alternado por `LEITURA DA VISTA` e `CONTEXTO & NAVEGAÇÃO`. Os botões
+permanecem num `nav` nomeado, usam `aria-pressed`, anunciam a troca por uma live
+region e o botão de leitura aponta para o `tabpanel` ativo. Somente a superfície
+inativa é removida da árvore visual/acessível; a outra continua rolável, com
+conteúdo e equivalente textual intactos. A trilha de escala, a alternância, abas,
+paleta, sumários e comandos R10-F têm alvo de toque de pelo menos 44 CSS px;
+`touch-action` permite pan vertical dentro do sheet. O estado `mobileSheet` é
+efêmero de DOM e não entra em preferências, preset, Worker, ABI ou snapshot.
+
 ## Personalização de cores
 
 Tokens semânticos vêm de GRAPHICS_SPEC. Preferências:
