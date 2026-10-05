@@ -36,15 +36,15 @@
     "check": "npm run typecheck && npm run verify:automation && npm run verify:docs && npm run check:shadow-replay && npm run test && npm run build && npm run test:wasm-browser && npm run verify:promotion-0.8 && npm run verify:presentation-budget && npm run verify:procedural-surface && npm run audit:runtime"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/api": "^2.12.1",
     "gif-encoder-2": "^1.0.5",
     "pngjs": "^7.0.0",
-    "puppeteer": "^25.3.0",
-    "three": "^0.185.1",
-    "zod": "^4.4.3"
+    "puppeteer": "^25.12.0",
+    "three": "^0.186.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@types/three": "^0.185.1",
+    "@types/three": "^0.186.0",
     "typescript": "~5.6.2",
     "vite": "^6.0.3",
     "vitest": "^4.1.10"
